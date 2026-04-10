@@ -1,0 +1,288 @@
+<!-- 觅食图 - 发现页 v5.0 -->
+<view class="container">
+  <!-- 顶部标题区 -->
+  <view class="header">
+    <view class="header-left">
+      <view class="app-brand">
+        <text class="app-name">觅食图</text>
+      </view>
+      <view class="location-row">
+        <text class="location-icon">📍</text>
+        <text class="location-text">{{currentDistrict}}</text>
+        <view class="weather-badge">
+          <text class="weather-icon">{{weatherIcon}}</text>
+          <text class="weather-temp">{{weatherTemp}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="header-right">
+      <view class="header-btn" bindtap="onOpenImport">📝</view>
+      <view class="header-btn" bindtap="onAddShop">➕</view>
+    </view>
+  </view>
+
+  <!-- 快捷入口卡片 -->
+  <view class="quick-entry">
+    <view class="entry-card primary" bindtap="onOpenImport">
+      <view class="entry-icon">📝</view>
+      <view class="entry-text">
+        <text class="entry-title">导入攻略</text>
+        <text class="entry-desc">小红书/大众点评</text>
+      </view>
+      <view class="entry-arrow">›</view>
+    </view>
+    <view class="entry-card" bindtap="onAddShop">
+      <view class="entry-icon">🏪</view>
+      <view class="entry-text">
+        <text class="entry-title">添加店铺</text>
+        <text class="entry-desc">未收录的新店</text>
+      </view>
+      <view class="entry-arrow">›</view>
+    </view>
+  </view>
+
+  <!-- 攻略推荐轮播 -->
+  <view class="featured-section" wx:if="{{guideRecommendations.length > 0}}">
+    <view class="featured-header">
+      <text class="featured-title">📖 攻略推荐</text>
+      <text class="featured-subtitle">精选探店攻略</text>
+    </view>
+    <swiper class="featured-swiper guide-swiper" indicator-dots autoplay interval="4000" duration="500" circular>
+      <swiper-item wx:for="{{guideRecommendations}}" wx:key="id">
+        <view class="guide-card-large" bindtap="onGuideTap" data-guide="{{item}}">
+          <image class="guide-cover" src="{{item.coverImage}}" mode="aspectFill" />
+          <view class="guide-overlay">
+            <view class="guide-content">
+              <text class="guide-title-large">{{item.title}}</text>
+              <text class="guide-author">{{item.author}}</text>
+              <view class="guide-stats">
+                <text class="guide-shops">🏪 {{item.shopCount}} 家店铺</text>
+                <text class="guide-tag" wx:if="{{item.tag}}">{{item.tag}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <!-- 深圳各区标签 -->
+  <view class="district-row">
+    <view 
+      wx:for="{{districts}}"
+      wx:key="name"
+      class="district-item {{currentDistrict === item.name ? 'active' : ''}}"
+      bindtap="onDistrictChange"
+      data-district="{{item.name}}"
+    >{{item.name}}</view>
+  </view>
+
+  <!-- 各区美食攻略 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">{{currentDistrict}}美食攻略</text>
+      <text class="section-more" bindtap="onRefreshGuides">换一批 🔄</text>
+    </view>
+    
+    <view class="guide-grid">
+      <view 
+        wx:for="{{currentGuides}}"
+        wx:key="id"
+        class="guide-card"
+        bindtap="onDistrictGuideTap"
+        data-guide="{{item}}"
+      >
+        <view class="guide-img-wrap">
+          <image 
+            class="guide-img"
+            src="{{item.coverImage}}"
+            mode="aspectFill"
+          />
+          <view class="guide-img-overlay">
+            <text class="guide-shop-count">{{item.shopCount}} 家店铺</text>
+          </view>
+        </view>
+        <view class="guide-card-info">
+          <text class="guide-card-title">{{item.title}}</text>
+          <text class="guide-card-author">{{item.author}}</text>
+          <view class="guide-card-tags">
+            <text wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag" class="guide-tag-item">{{tag}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 我的攻略 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">我的攻略</text>
+      <text class="section-more" bindtap="onManageGuides">管理</text>
+    </view>
+    
+    <view wx:if="{{myGuides.length > 0}}" class="guide-list">
+      <view 
+        wx:for="{{myGuides}}" 
+        wx:key="index"
+        class="guide-card"
+        bindtap="onLoadGuide"
+        data-guide="{{item}}"
+      >
+        <view class="guide-icon">📖</view>
+        <view class="guide-content">
+          <text class="guide-title">{{item.title}}</text>
+          <text class="guide-meta">{{item.shopCount}}家店铺 · {{item.dateStr}}</text>
+        </view>
+        <text class="guide-arrow">›</text>
+      </view>
+    </view>
+    
+    <view wx:else class="guide-empty" bindtap="onOpenImport">
+      <text class="empty-icon">📝</text>
+      <text class="empty-title">还没有攻略</text>
+      <text class="empty-desc">导入小红书攻略开始探索</text>
+    </view>
+  </view>
+
+  <!-- 导入攻略弹窗 -->
+  <view class="modal-mask {{showImportModal ? 'show' : ''}}" bindtap="onCloseImport">
+    <view class="import-modal" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">导入攻略</text>
+        <text class="modal-close" bindtap="onCloseImport">✕</text>
+      </view>
+      
+      <!-- Tab -->
+      <view class="import-tabs">
+        <view 
+          class="tab {{importTab === 'text' ? 'active' : ''}}"
+          bindtap="onSwitchTab"
+          data-tab="text"
+        >📝 文本粘贴</view>
+        <view 
+          class="tab {{importTab === 'my' ? 'active' : ''}}"
+          bindtap="onSwitchTab"
+          data-tab="my"
+        >📖 我的攻略</view>
+      </view>
+      
+      <!-- 文本输入 -->
+      <view wx:if="{{importTab === 'text'}}" class="tab-content">
+        <view class="import-tip">
+          <text class="tip-icon">💡</text>
+          <text class="tip-text">复制小红书/大众点评正文，粘贴即可识别店铺</text>
+        </view>
+        
+        <textarea 
+          class="guide-input"
+          placeholder="粘贴攻略正文，每行一个店名也可以识别"
+          value="{{importText}}"
+          bindinput="onTextInput"
+          maxlength="5000"
+        ></textarea>
+        
+        <view class="input-actions">
+          <text class="char-count">{{importText.length}}/5000</text>
+          <button class="btn-parse" bindtap="onParseGuide" disabled="{{!importText.trim()}}">
+            🔍 智能识别
+          </button>
+        </view>
+      </view>
+      
+      <!-- 我的攻略列表 -->
+      <view wx:if="{{importTab === 'my'}}" class="tab-content">
+        <view wx:if="{{myGuides.length > 0}}" class="guide-select-list">
+          <view 
+            wx:for="{{myGuides}}" 
+            wx:key="index"
+            class="guide-select-item"
+            bindtap="onSelectGuide"
+            data-guide="{{item}}"
+          >
+            <text class="guide-select-icon">📖</text>
+            <view class="guide-select-info">
+              <text class="guide-select-title">{{item.title}}</text>
+              <text class="guide-select-count">{{item.shopCount}} 家店铺</text>
+            </view>
+          </view>
+        </view>
+        <view wx:else class="empty-select">
+          <text>还没有保存的攻略</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 识别结果弹窗 -->
+  <view class="modal-mask {{showResultModal ? 'show' : ''}}" bindtap="onCloseResult">
+    <view class="result-modal" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">识别结果</text>
+        <text class="modal-close" bindtap="onCloseResult">✕</text>
+      </view>
+      
+      <view wx:if="{{foundShops.length + notFoundShops.length === 0}}" class="empty-result">
+        <text class="empty-icon">🔍</text>
+        <text>未识别到任何店铺</text>
+        <text class="empty-hint">请检查格式或直接输入店名</text>
+      </view>
+      
+      <view wx:if="{{foundShops.length + notFoundShops.length > 0}}" class="result-summary">
+        <text>识别到 {{foundShops.length + notFoundShops.length}} 家</text>
+        <text class="result-hint">（{{foundShops.length}} 已收录 + {{notFoundShops.length}} 新店）</text>
+      </view>
+      
+      <!-- 已收录店铺 -->
+      <view wx:if="{{foundShops.length > 0}}" class="result-section">
+        <view class="result-section-title">✅ 已收录店铺</view>
+        <view 
+          wx:for="{{foundShops}}" 
+          wx:key="id"
+          class="result-item found"
+          bindtap="onShopTap"
+          data-shop="{{item}}"
+        >
+          <image 
+            class="result-thumb"
+            src="https://apis.map.qq.com/ws/staticmap/v2?key=YLOBZ-VDFWB-AMSUJ-JCOQQ-GJ633-CTBR5&center={{item.lat}},{{item.lng}}&zoom=16&size=100x100&markers={{item.lat}},{{item.lng}},red"
+            mode="aspectFill"
+          />
+          <view class="result-info">
+            <text class="result-name">{{item.name}}</text>
+            <text class="result-meta">⭐ {{item.rating}} · {{item.category}}{{item.price ? ' · ¥' + item.price + '/人' : ''}}</text>
+          </view>
+          <text class="result-arrow">›</text>
+        </view>
+      </view>
+      
+      <!-- 新发现的店 -->
+      <view wx:if="{{notFoundShops.length > 0}}" class="result-section">
+        <view class="result-section-title">🏪 新发现的店</view>
+        <view 
+          wx:for="{{notFoundShops}}" 
+          wx:key="index"
+          class="result-item new"
+        >
+          <view class="result-header">
+            <text class="result-emoji">🏪</text>
+            <text class="result-name">{{item.name}}</text>
+          </view>
+          <view class="result-detail">
+            <text wx:if="{{item.address}}">📍 {{item.address}}</text>
+            <text wx:if="{{item.dishes && item.dishes.length > 0}}">👏🏻 {{item.dishes.join('、')}}</text>
+          </view>
+          <button class="btn-add" bindtap="onAddNewShop" data-shop="{{item}}">
+            + 添加到地图
+          </button>
+        </view>
+      </view>
+      
+      <!-- 批量添加 -->
+      <view wx:if="{{notFoundShops.length > 1}}" class="batch-add">
+        <button class="btn-batch" bindtap="onBatchAdd">
+          批量添加 {{notFoundShops.length}} 家新店
+        </button>
+      </view>
+    </view>
+  </view>
+</view>

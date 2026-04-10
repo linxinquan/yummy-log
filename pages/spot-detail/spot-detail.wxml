@@ -1,0 +1,129 @@
+<!-- 觅食图 V2 - 景点详情页 -->
+<view class="container" wx:if="{{spot}}">
+
+  <!-- ── 顶部图片 ── -->
+  <view class="hero-wrap">
+    <image class="hero-img" src="{{spot.image}}" mode="aspectFill" />
+    <!-- 返回按钮 -->
+    <view class="back-btn" bindtap="onBack">
+      <text class="back-icon">←</text>
+    </view>
+    <!-- 想去按钮 -->
+    <view class="hero-want {{isLiked ? 'liked' : ''}}" bindtap="onWant">
+      <text>{{isLiked ? '❤️' : '🤍'}}</text>
+    </view>
+    <!-- 评分悬浮标签 -->
+    <view class="hero-rating">
+      <text class="hero-rating-text">⭐ {{spot.rating}}</text>
+    </view>
+    <!-- 分类+免费标签 -->
+    <view class="hero-badges">
+      <view class="hero-cat">{{spot.category}}</view>
+      <view class="hero-free {{spot.free ? 'free' : 'paid'}}">
+        {{spot.free ? '🆓 免费' : '🎫 收费'}}
+      </view>
+    </view>
+  </view>
+
+  <!-- ── 基本信息 ── -->
+  <view class="info-card">
+    <text class="spot-name">{{spot.name}}</text>
+
+    <!-- 标签 -->
+    <scroll-view class="tags-scroll" scroll-x enable-flex>
+      <view class="tags-row">
+        <text
+          wx:for="{{spot.tags}}"
+          wx:key="*this"
+          wx:for-item="tag"
+          class="tag"
+        >{{tag}}</text>
+      </view>
+    </scroll-view>
+
+    <!-- 简介 -->
+    <view class="desc-section">
+      <text class="desc-label">💡 编辑推荐</text>
+      <text class="desc-text">{{spot.desc}}</text>
+    </view>
+
+    <!-- 详情行 -->
+    <view class="detail-rows">
+      <view class="detail-row">
+        <text class="detail-icon">📍</text>
+        <text class="detail-val">{{spot.address}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-icon">🕐</text>
+        <text class="detail-val">{{spot.openHours}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ── 地图小卡片 ── -->
+  <view class="map-card">
+    <view class="map-card-title">
+      <text class="map-title-text">📍 景点位置</text>
+    </view>
+    <map
+      class="mini-map"
+      latitude="{{spot.lat}}"
+      longitude="{{spot.lng}}"
+      scale="15"
+      markers="{{mapMarkers}}"
+      show-location
+      enable-zoom="{{false}}"
+      enable-scroll="{{false}}"
+    ></map>
+  </view>
+
+  <!-- ── 附近美食推荐 ── -->
+  <view class="nearby-section" wx:if="{{nearbyShops.length > 0}}">
+    <view class="section-header">
+      <text class="section-title">🍜 附近美食</text>
+      <text class="section-sub">逛完景点可以去</text>
+    </view>
+    <scroll-view class="nearby-scroll" scroll-x enable-flex>
+      <view class="nearby-list">
+        <view
+          class="nearby-card"
+          wx:for="{{nearbyShops}}"
+          wx:key="id"
+          bindtap="onGoShop"
+          data-id="{{item.id}}"
+        >
+          <image class="nearby-img" src="{{item.logo}}" mode="aspectFill" />
+          <view class="nearby-info">
+            <text class="nearby-name">{{item.name}}</text>
+            <text class="nearby-cat">{{item.category}}</text>
+            <view class="nearby-meta">
+              <text class="nearby-rating">⭐{{item.rating}}</text>
+              <text class="nearby-dist">{{item.distText}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- ── 底部操作栏 ── -->
+  <view class="bottom-bar">
+    <view class="btn-nav" bindtap="onNavigate">
+      <text class="btn-icon">🧭</text>
+      <text class="btn-text">到这里</text>
+    </view>
+    <view class="btn-want {{isLiked ? 'liked' : ''}}" bindtap="onWant">
+      <text class="btn-icon">{{isLiked ? '❤️' : '🤍'}}</text>
+      <text class="btn-text">{{isLiked ? '已收藏' : '想去'}}</text>
+    </view>
+    <view class="btn-route" bindtap="onPlanRoute">
+      <text class="btn-icon">🗺️</text>
+      <text class="btn-text">规划路线</text>
+    </view>
+    <view class="btn-food" bindtap="onFindFood" wx:if="{{nearbyShops.length > 0}}">
+      <text class="btn-icon">🍜</text>
+      <text class="btn-text">附近美食</text>
+    </view>
+  </view>
+
+</view>

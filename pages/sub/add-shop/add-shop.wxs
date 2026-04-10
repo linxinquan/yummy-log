@@ -1,0 +1,9 @@
+// add-shop.wxs - 添加店铺页工具函数
+function joinArray(arr, separator) {
+  if (!arr || !arr.length) return '';
+  return arr.join(separator || '、');
+}
+
+module.exports = {
+  joinArray: joinArray
+};

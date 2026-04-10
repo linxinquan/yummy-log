@@ -1,0 +1,134 @@
+<!-- 觅食图 V1 - 想去清单页（美食/景点/已到访，拖拽排序） -->
+<view class="container">
+
+  <!-- ── 顶部导航栏 ── -->
+  <view class="nav-bar">
+    <view class="nav-back" bindtap="onBack">
+      <text class="nav-back-icon">‹</text>
+    </view>
+    <view class="nav-title-wrap">
+      <text class="nav-title">想去清单</text>
+    </view>
+    <view class="nav-shortcuts">
+      <view class="shortcut-btn" bindtap="onGoHome">
+        <text>🏠</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ── Tab切换 ── -->
+  <view class="tab-bar">
+    <view
+      class="tab-item {{tab === 'food' ? 'active' : ''}}"
+      bindtap="onTabChange"
+      data-tab="food"
+    >
+      <text>🍜 美食</text>
+      <view class="tab-line" wx:if="{{tab === 'food'}}"></view>
+    </view>
+    <view
+      class="tab-item {{tab === 'spot' ? 'active' : ''}}"
+      bindtap="onTabChange"
+      data-tab="spot"
+    >
+      <text>🏔️ 景点</text>
+      <view class="tab-line" wx:if="{{tab === 'spot'}}"></view>
+    </view>
+    <view
+      class="tab-item {{tab === 'visited' ? 'active' : ''}}"
+      bindtap="onTabChange"
+      data-tab="visited"
+    >
+      <text>📍 已到访</text>
+      <view class="tab-line" wx:if="{{tab === 'visited'}}"></view>
+    </view>
+  </view>
+
+  <!-- ── 空状态 ── -->
+  <view wx:if="{{empty}}" class="empty-wrap">
+    <view class="empty-illustration">
+      <text class="empty-icon">{{tab === 'spot' ? '🏔️' : (tab === 'visited' ? '📍' : '🍜')}}</text>
+    </view>
+    <text class="empty-title">{{titles[tab]}}</text>
+    <text class="empty-hint">{{tab === 'spot' ? '去景点页收藏心仪的地点吧' : (tab === 'visited' ? '还没标记任何到访记录' : '去首页点击 ♡ 收藏心仪的美食')}}</text>
+    <view class="empty-btn" bindtap="onGoHome">{{tab === 'spot' ? '去景点' : '去首页'}}</view>
+  </view>
+
+  <!-- ── 有数据时 ── -->
+  <block wx:else>
+
+    <!-- 规划路线横幅 -->
+    <view class="route-banner" bindtap="onPlanRoute">
+      <view class="banner-icon-wrap">
+        <text class="banner-icon">🗺️</text>
+      </view>
+      <view class="banner-info">
+        <text class="banner-title">规划最优路线</text>
+        <text class="banner-sub">{{items.length}}个地点 · 长按拖拽调整顺序</text>
+      </view>
+      <view class="banner-arrow-wrap">
+        <text class="banner-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 提示：长按拖拽 -->
+    <view class="sort-tip" wx:if="{{items.length > 1}}">
+      <text class="tip-icon">✋</text>
+      <text class="tip-text">长按拖拽卡片可自定义出行顺序</text>
+    </view>
+
+    <!-- 可拖拽列表（普通滚动列表 + 长按拖拽） -->
+    <scroll-view class="item-list" scroll-y>
+      <block wx:for="{{items}}" wx:key="id">
+        <view
+          class="item-card {{dragging && dragIndex === index ? 'dragging' : ''}}"
+          data-index="{{index}}"
+          bindtap="onItemTap"
+          data-item="{{item}}"
+          bindlongpress="onDragStart"
+        >
+          <!-- 拖拽手柄 -->
+          <view class="drag-handle" catchtap="onDragStart" data-index="{{index}}">
+            <text>☰</text>
+          </view>
+
+          <!-- 序号 -->
+          <view class="item-num">
+            <text>{{index + 1}}</text>
+          </view>
+
+          <!-- 图片 -->
+          <image
+            class="item-img"
+            src="{{item.logo || item.image || (tab === 'spot' ? '' : '/images/app-logo.jpg')}}"
+            mode="aspectFill"
+            wx:if="{{item.logo || item.image}}"
+          />
+          <view class="item-img placeholder" wx:else>
+            <text>{{tab === 'spot' ? '🏔️' : '🍜'}}</text>
+          </view>
+
+          <!-- 信息 -->
+          <view class="item-info">
+            <text class="item-name">{{item.name}}</text>
+            <text class="item-meta">{{item.category || item.district || ''}}{{item.rating || item.score ? ' · ⭐ ' + (item.rating || item.score) : ''}}</text>
+            <text class="item-address" wx:if="{{item.address || item.district}}">{{item.district || item.address}}</text>
+          </view>
+
+          <!-- 操作 -->
+          <view class="item-actions">
+            <view class="navi-btn" catchtap="onNavigate" data-item="{{item}}">
+              <text>🧭</text>
+            </view>
+            <view class="remove-btn" catchtap="onRemove" data-id="{{item.id}}">
+              <text>✕</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </scroll-view>
+  </block>
+
+  <!-- 底部安全区 -->
+  <view style="height: calc(32rpx + env(safe-area-inset-bottom))"></view>
+</view>

@@ -1,0 +1,378 @@
+/* 觅食图 V2 - 景点详情页样式 */
+
+.container {
+  background: #F0F9F8;
+  min-height: 100vh;
+  padding-bottom: 160rpx;
+}
+
+/* ── Hero 图片 ── */
+.hero-wrap {
+  position: relative;
+  width: 100%;
+  height: 480rpx;
+}
+
+.hero-img {
+  width: 100%;
+  height: 100%;
+}
+
+.back-btn {
+  position: absolute;
+  top: 80rpx;
+  left: 28rpx;
+  width: 68rpx;
+  height: 68rpx;
+  background: rgba(0,0,0,0.45);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.back-icon {
+  font-size: 30rpx;
+  color: #ffffff;
+}
+
+.hero-rating {
+  position: absolute;
+  top: 84rpx;
+  right: 24rpx;
+  background: rgba(0,0,0,0.5);
+  padding: 8rpx 18rpx;
+  border-radius: 20rpx;
+  backdrop-filter: blur(4px);
+}
+
+.hero-rating-text {
+  font-size: 24rpx;
+  color: #FFB800;
+  font-weight: 700;
+}
+
+.hero-badges {
+  position: absolute;
+  bottom: 20rpx;
+  left: 24rpx;
+  display: flex;
+  gap: 12rpx;
+}
+
+.hero-cat {
+  background: rgba(0,0,0,0.55);
+  color: #ffffff;
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+}
+
+.hero-free.free {
+  background: rgba(82,196,26,0.85);
+  color: #ffffff;
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+}
+
+.hero-free.paid {
+  background: rgba(250,140,22,0.85);
+  color: #ffffff;
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+}
+
+/* ── 基本信息卡片 ── */
+.info-card {
+  margin: -24rpx 0 0;
+  background: #ffffff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 32rpx 32rpx 24rpx;
+}
+
+.spot-name {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #1F2937;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+/* 标签 */
+.tags-scroll {
+  margin-bottom: 20rpx;
+  white-space: nowrap;
+}
+
+.tags-row {
+  display: flex;
+  gap: 10rpx;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 22rpx;
+  color: #00B5A6;
+  background: #E8FAF8;
+  padding: 6rpx 16rpx;
+  border-radius: 10rpx;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 简介 */
+.desc-section {
+  background: #F0F9F8;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.desc-label {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #00B5A6;
+  display: block;
+  margin-bottom: 10rpx;
+}
+
+.desc-text {
+  font-size: 26rpx;
+  color: #374151;
+  line-height: 1.8;
+}
+
+/* 详情行 */
+.detail-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+}
+
+.detail-icon {
+  font-size: 26rpx;
+  flex-shrink: 0;
+  margin-top: 2rpx;
+}
+
+.detail-val {
+  font-size: 26rpx;
+  color: #6B7280;
+  line-height: 1.6;
+}
+
+/* ── 地图卡片 ── */
+.map-card {
+  margin: 16rpx 24rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+}
+
+.map-card-title {
+  padding: 20rpx 24rpx 12rpx;
+}
+
+.map-title-text {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.mini-map {
+  width: 100%;
+  height: 260rpx;
+}
+
+/* ── 附近美食 ── */
+.nearby-section {
+  margin: 16rpx 0;
+  padding: 0 24rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.section-sub {
+  font-size: 22rpx;
+  color: #9CA3AF;
+}
+
+.nearby-scroll {
+  white-space: nowrap;
+}
+
+.nearby-list {
+  display: flex;
+  gap: 16rpx;
+}
+
+.nearby-card {
+  width: 200rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+}
+
+.nearby-img {
+  width: 200rpx;
+  height: 140rpx;
+}
+
+.nearby-info {
+  padding: 14rpx;
+}
+
+.nearby-name {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #1F2937;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6rpx;
+}
+
+.nearby-cat {
+  font-size: 20rpx;
+  color: #9CA3AF;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.nearby-meta {
+  display: flex;
+  justify-content: space-between;
+}
+
+.nearby-rating {
+  font-size: 20rpx;
+  color: #FFB800;
+}
+
+.nearby-dist {
+  font-size: 20rpx;
+  color: #9CA3AF;
+}
+
+/* ── 底部操作栏 ── */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  padding: 24rpx 32rpx;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 16rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.08);
+}
+
+.btn-nav {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  background: #00D9C0;
+  border-radius: 20rpx;
+  padding: 24rpx 0;
+}
+
+.btn-food {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  background: #FF8B7E;
+  border-radius: 20rpx;
+  padding: 24rpx 0;
+}
+
+.btn-want {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  background: #FFF0F0;
+  border-radius: 20rpx;
+  padding: 24rpx 0;
+}
+
+.btn-want.liked {
+  background: #FFE8E8;
+}
+
+.btn-want.liked .btn-text {
+  color: #FF6B6B;
+}
+
+.btn-route {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10rpx;
+  background: #00B5A6;
+  border-radius: 20rpx;
+  padding: 24rpx 0;
+}
+
+.btn-icon {
+  font-size: 30rpx;
+}
+
+.btn-text {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* ── Hero 想去按钮 ── */
+.hero-want {
+  position: absolute;
+  top: 84rpx;
+  right: 140rpx;
+  width: 68rpx;
+  height: 68rpx;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.hero-want.liked {
+  background: rgba(255, 107, 107, 0.85);
+}
+
+.hero-want.liked text {
+  font-size: 30rpx;
+}

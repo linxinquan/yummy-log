@@ -1,0 +1,4 @@
+<!-- 觅食图 · WebView页面 -->
+<view class="container">
+  <web-view src="{{webUrl}}" bindmessage="onWebViewMessage"></web-view>
+</view>

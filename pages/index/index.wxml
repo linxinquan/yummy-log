@@ -1,0 +1,266 @@
+<!-- 觅食图 · 首页 v7.0 小红书定位风格 -->
+<view class="container">
+
+  <!-- ── Header ── -->
+  <view class="header">
+    <view class="header-left">
+      <!-- Logo：图片 -->
+      <view class="app-brand">
+        <image class="logo-img" src="/images/app-logo.jpg" mode="aspectFit" />
+        <text class="logo-text">觅食图</text>
+      </view>
+      <!-- 城市/区域选择器 -->
+      <view class="location-selector" bindtap="onOpenLocationPicker">
+        <text class="location-main">{{locationMode === 'my' ? myLocationDesc : (currentDistrict || currentCity)}}</text>
+        <text class="location-arrow">▼</text>
+      </view>
+    </view>
+    <view class="header-right">
+      <view class="weather">
+        <text class="weather-icon">☀️</text>
+        <text class="weather-temp">25°C</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ── 地理探索卡片 ── -->
+  <view class="explore-section">
+    <!-- 小地图预览 -->
+    <view class="mini-map-card" bindtap="onOpenRoute">
+      <map
+        id="miniMap"
+        class="mini-map"
+        latitude="{{mapCenter.lat}}"
+        longitude="{{mapCenter.lng}}"
+        scale="14"
+        show-location
+        markers="{{allMarkers}}"
+        enable-zoom="{{false}}"
+        enable-scroll="{{false}}"
+      ></map>
+      <view class="mini-map-overlay">
+        <text class="mini-map-text">{{filteredShops.length}}家店铺</text>
+      </view>
+    </view>
+
+    <!-- 距离筛选胶囊 -->
+    <scroll-view class="distance-scroll" scroll-x enable-flex>
+      <view class="distance-list">
+        <view
+          wx:for="{{distanceOptions}}"
+          wx:key="value"
+          class="distance-pill {{currentDistance === item.value ? 'active' : ''}}"
+          bindtap="onDistanceChange"
+          data-distance="{{item.value}}"
+        >{{item.label}}</view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- ── Map ── -->
+  <view class="map-container">
+    <map
+      id="mainMap"
+      class="map"
+      latitude="{{mapCenter.lat}}"
+      longitude="{{mapCenter.lng}}"
+      scale="15"
+      show-location
+      markers="{{allMarkers}}"
+      bindmarkertap="onMarkerTap"
+      enable-rotate
+      enable-overlooking
+    ></map>
+    <!-- 地图图层切换（美食/景点/全部） -->
+    <view class="map-layer-btns">
+      <view class="layer-btn {{mapLayer === 'food' ? 'active' : ''}}" bindtap="onMapLayerChange" data-layer="food">🍜 美食</view>
+      <view class="layer-btn {{mapLayer === 'spots' ? 'active' : ''}}" bindtap="onMapLayerChange" data-layer="spots">🏔️ 景点</view>
+      <view class="layer-btn {{mapLayer === 'all' ? 'active' : ''}}" bindtap="onMapLayerChange" data-layer="all">🗺️ 全部</view>
+    </view>
+    <view class="location-btn" bindtap="onMyLocation">
+      <text class="location-icon">◎</text>
+    </view>
+  </view>
+
+  <!-- ── Shop List ── -->
+  <view class="shop-list-container">
+
+    <!-- 搜索栏 -->
+    <view class="search-bar">
+      <view class="search-box">
+        <text class="search-icon">🔍</text>
+        <input
+          class="search-input"
+          placeholder="搜索店铺、菜品…"
+          placeholder-style="color:#999999;"
+          value="{{searchKeyword}}"
+          bindinput="onSearchInput"
+          bindconfirm="onSearchConfirm"
+        />
+      </view>
+    </view>
+
+    <!-- 美食分类列表（紧凑版，放在搜索栏下方） -->
+    <view class="category-section-compact">
+      <scroll-view class="category-scroll" scroll-x enable-flex>
+        <view class="category-list-compact">
+          <view
+            wx:for="{{districts}}"
+            wx:key="id"
+            class="category-chip-compact {{currentCategory === item.name ? 'active' : ''}}"
+            bindtap="onDistrictChange"
+            data-district="{{item.name}}"
+          >
+            <text class="category-icon-compact">{{item.icon}}</text>
+            <text class="category-name-compact">{{item.name}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 列表头 -->
+    <view class="list-header">
+      <text class="list-count">{{filteredShops.length}} 家</text>
+      <view class="sort-btns">
+        <view
+          class="sort-btn {{sortType === 'distance' ? 'active' : ''}}"
+          bindtap="onSortChange"
+          data-sort="distance"
+        >📍 距离</view>
+        <view
+          class="sort-btn {{sortType === 'rating' ? 'active' : ''}}"
+          bindtap="onSortChange"
+          data-sort="rating"
+        >⭐ 好评</view>
+      </view>
+    </view>
+
+    <!-- 卡片列表 -->
+    <scroll-view class="shop-list" scroll-y bindscrolltolower="onLoadMore">
+      <view
+        wx:for="{{filteredShops}}"
+        wx:key="id"
+        class="shop-card"
+        bindtap="onShopTap"
+        data-shop="{{item}}"
+      >
+        <!-- 图片/LOGO -->
+        <view class="shop-thumb-wrapper">
+          <!-- 有LOGO的显示LOGO图片 -->
+          <block wx:if="{{item.logo}}">
+            <image
+              class="shop-thumb shop-logo"
+              src="{{item.logo}}"
+              mode="aspectFill"
+              binderror="onImageError"
+              data-index="{{index}}"
+            />
+          </block>
+          <!-- 没有LOGO的显示emoji和提示 -->
+          <block wx:else>
+            <view class="shop-emoji-placeholder">
+              <text class="shop-emoji">{{item.emoji}}</text>
+              <text class="shop-emoji-hint">等待您觅食探店</text>
+            </view>
+          </block>
+          <!-- 分类标签 -->
+          <view class="shop-category-badge">{{item.category}}</view>
+          <!-- 距离标签 -->
+          <view class="distance-badge" wx:if="{{item.distance}}">
+            <text>{{item.distance}}</text>
+          </view>
+        </view>
+
+        <!-- 信息 -->
+        <view class="shop-info">
+          <view class="shop-name">{{item.name}}</view>
+          <view class="shop-meta">
+            <text class="shop-rating">★ {{item.rating}}</text>
+            <view class="rating-dot"></view>
+            <text class="shop-price">¥{{item.price || '--'}}/人</text>
+            <view class="rating-dot"></view>
+            <text class="shop-category">{{item.category}}</text>
+          </view>
+          <view class="shop-tags">
+            <text
+              wx:for="{{item.tags}}"
+              wx:for-item="tag"
+              wx:key="index"
+              class="tag"
+            >{{tag}}</text>
+          </view>
+
+          <!-- 底部：数字统计 + 操作按钮 -->
+          <view class="shop-bottom-row">
+            <!-- 左侧：社交数据统计 -->
+            <view class="shop-stats">
+              <view class="stat-item">
+                <text class="stat-icon">❤️</text>
+                <text class="stat-num">{{item.displayWantCount || item.wantCount || 0}}</text>
+                <text class="stat-label">想去</text>
+              </view>
+            </view>
+            <!-- 右侧：小图标操作按钮 -->
+            <view class="shop-action-icons">
+              <view
+                class="icon-btn want-icon {{item.isLiked ? 'liked' : ''}}"
+                catchtap="onToggleLike"
+                data-shopid="{{item.id}}"
+              >
+                <text class="icon-btn-text">{{item.isLiked ? '❤️' : '🤍'}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{hasMore}}" class="load-more" bindtap="onLoadMore">
+        <text>查看更多</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 想去清单浮动按钮 -->
+  <view class="route-float-btn {{likedCount > 0 ? 'show' : ''}}" bindtap="onOpenRoute">
+    <text class="route-icon">❤️</text>
+    <text class="route-float-label">想去</text>
+    <text class="route-count" wx:if="{{likedCount > 0}}">{{likedCount}}</text>
+  </view>
+
+  <!-- 位置选择器弹窗 -->
+  <view class="location-picker-mask {{showLocationPicker ? 'show' : ''}}" bindtap="onCloseLocationPicker">
+    <view class="location-picker-panel">
+      <view class="picker-handle"></view>
+      <view class="picker-header">
+        <text class="picker-title">选择位置</text>
+        <text class="picker-close" bindtap="onCloseLocationPicker">✕</text>
+      </view>
+      <view class="picker-content">
+        <view class="picker-section">
+          <text class="section-title">全城</text>
+          <view class="city-list">
+            <view
+              wx:for="{{allDistricts}}"
+              wx:key="id"
+              class="city-item {{currentDistrict === item.name ? 'active' : ''}} {{item.isLocation ? 'location-item' : ''}}"
+              bindtap="onSelectDistrict"
+              data-district="{{item.name}}"
+              data-item="{{item}}"
+            >
+              <text class="city-item-icon">{{item.icon}}</text>
+              <text class="city-item-name">{{item.displayName || item.name}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 隐藏Canvas：用于生成标记图标（降级方案） -->
+  <canvas
+    id="iconGenCanvas"
+    class="hidden-canvas"
+    style="width:{{iconCanvasSize}}px;height:{{iconCanvasSize}}px;"
+  ></canvas>
+
+</view>

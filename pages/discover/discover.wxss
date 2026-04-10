@@ -1,0 +1,1028 @@
+/* ================================================
+  觅食图 · 发现页 v7.0 青绿色系
+  配色参考：LOGO #00D9C0 青绿色
+  ================================================ */
+
+page {
+  --primary: #00D9C0;
+  --primary-dark: #00B5A6;
+  --primary-light: #E8FAF8;
+  --primary-bg: #F0F9F8;
+  --accent: #FF8B7E;
+  --accent-soft: #FFF5F4;
+  --text-primary: #1A1A2E;
+  --text-secondary: #6B7280;
+  --text-hint: #9CA3AF;
+  --bg: #F7FDFC;
+  --surface: #FFFFFF;
+}
+
+.container {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ─── Header ─────────────────────────────────── */
+.header {
+  padding: 20rpx 24rpx 12rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: var(--surface);
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.app-name {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 1rpx;
+}
+
+.city-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.city-name {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--black);
+  letter-spacing: -1rpx;
+  line-height: 1.1;
+}
+
+.city-arrow {
+  font-size: 20rpx;
+  color: var(--text-hint);
+  margin-top: 4rpx;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+/* 位置行 */
+.location-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.location-icon {
+  font-size: 24rpx;
+}
+
+.location-text {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: -1rpx;
+  line-height: 1.1;
+}
+
+/* 天气徽章 - 放在定位旁边 */
+.weather-badge {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 4rpx 10rpx;
+  background: var(--primary-bg);
+  border-radius: 16rpx;
+  margin-left: 8rpx;
+}
+
+.weather-badge .weather-icon {
+  font-size: 20rpx;
+}
+
+.weather-badge .weather-temp {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 天气显示（右侧） - 保留兼容性 */
+.weather-display {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 8rpx 12rpx;
+  background: var(--primary-bg);
+  border-radius: 20rpx;
+}
+
+.weather-display .weather-icon {
+  font-size: 24rpx;
+}
+
+.weather-display .weather-temp {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-bg);
+  border-radius: 50%;
+  font-size: 28rpx;
+  transition: all 0.2s;
+}
+
+.header-btn:active {
+  transform: scale(0.95);
+  background: var(--primary-light);
+}
+
+/* ─── Quick Entry ─────────────────────────────── */
+/* 圆周旅迹风格：紧凑入口卡片 */
+.quick-entry {
+  padding: 20rpx 24rpx 16rpx;
+  display: flex;
+  flex-direction: row;
+  gap: 16rpx;
+}
+
+.entry-card {
+  flex: 1;
+  background: var(--surface);
+  border-radius: 14rpx;
+  padding: 20rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  transition: all 0.2s;
+}
+
+.entry-card:active {
+  transform: scale(0.97);
+}
+
+.entry-card.primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+.entry-card.primary .entry-title,
+.entry-card.primary .entry-desc {
+  color: var(--white);
+}
+
+.entry-icon {
+  width: 64rpx;
+  height: 64rpx;
+  background: var(--primary-bg);
+  border-radius: 14rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  flex-shrink: 0;
+}
+
+.entry-card.primary .entry-icon {
+  background: rgba(255,255,255,0.25);
+}
+
+.entry-text {
+  text-align: center;
+}
+
+.entry-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 4rpx;
+}
+
+.entry-desc {
+  font-size: 20rpx;
+  color: var(--text-secondary);
+}
+
+/* ─── 攻略推荐轮播 ─────────────────────────────── */
+.featured-section {
+  margin: 0 24rpx 20rpx;
+  background: var(--surface);
+  border-radius: 24rpx;
+  padding: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+}
+
+.featured-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.featured-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.featured-subtitle {
+  font-size: 22rpx;
+  color: var(--text-hint);
+  background: var(--primary-bg);
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+}
+
+.featured-swiper {
+  height: 280rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+}
+
+/* 攻略卡片样式 */
+.guide-card-large {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 20rpx;
+  overflow: hidden;
+}
+
+.guide-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.guide-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 100rpx 24rpx 24rpx;
+  background: linear-gradient(transparent 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.7) 100%);
+}
+
+.guide-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.guide-title-large {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  text-shadow: 0 2rpx 6rpx rgba(0,0,0,0.4);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.guide-author {
+  font-size: 22rpx;
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+}
+
+.guide-stats {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 4rpx;
+}
+
+.guide-shops {
+  font-size: 22rpx;
+  color: #FFB800;
+  font-weight: 600;
+}
+
+.guide-tag {
+  font-size: 20rpx;
+  color: #FFFFFF;
+  background: var(--primary);
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  font-weight: 500;
+}
+
+/* ─── 深圳各区标签 ─────────────────────────────── */
+.district-row {
+  display: flex;
+  gap: 12rpx;
+  padding: 16rpx 24rpx;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg);
+}
+
+.district-row::-webkit-scrollbar {
+  display: none;
+}
+
+.district-item {
+  padding: 10rpx 24rpx;
+  background: var(--surface);
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.04);
+}
+
+.district-item.active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.3);
+}
+
+/* ─── 各区攻略网格 ─────────────────────────────── */
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+}
+
+.guide-card {
+  background: var(--surface);
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+  transition: transform 0.2s;
+}
+
+.guide-card:active {
+  transform: scale(0.98);
+}
+
+.guide-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 200rpx;
+  overflow: hidden;
+}
+
+.guide-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.guide-img-overlay {
+  position: absolute;
+  top: 12rpx;
+  right: 12rpx;
+  background: rgba(0,0,0,0.6);
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+}
+
+.guide-shop-count {
+  font-size: 20rpx;
+  color: #FFFFFF;
+  font-weight: 500;
+}
+
+.guide-card-info {
+  padding: 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.guide-card-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.guide-card-author {
+  font-size: 22rpx;
+  color: var(--text-hint);
+}
+
+.guide-card-tags {
+  display: flex;
+  gap: 8rpx;
+  flex-wrap: wrap;
+}
+
+.guide-tag-item {
+  font-size: 20rpx;
+  color: var(--primary);
+  background: var(--primary-bg);
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+}
+
+/* ─── Section ─────────────────────────────────── */
+.section {
+  padding: 0 24rpx 24rpx;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+  padding-top: 24rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--black);
+}
+
+.section-more {
+  font-size: 24rpx;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ─── Recommend Grid ─────────────────────────── */
+/* 圆周旅迹风格：紧凑卡片网格 */
+.recommend-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
+  padding-bottom: 20rpx;
+}
+
+.shop-card {
+  background: var(--surface);
+  border-radius: 12rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
+  transition: all 0.2s;
+}
+
+.shop-card:active {
+  transform: scale(0.98);
+}
+
+.shop-img {
+  width: 100%;
+  height: 160rpx;
+  background: var(--primary-bg);
+}
+
+.shop-img.hidden {
+  opacity: 0;
+  position: absolute;
+}
+
+.shop-img-fallback {
+  width: 100%;
+  height: 160rpx;
+  background: linear-gradient(135deg, var(--primary-bg) 0%, #E0F2F1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.shop-img-fallback text {
+  font-size: 48rpx;
+  opacity: 0.5;
+}
+
+.shop-img-fallback.show {
+  display: flex;
+}
+
+.shop-img-fallback:not(.show) {
+  display: none;
+}
+
+.shop-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.shop-info {
+  padding: 16rpx;
+}
+
+.shop-name {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 6rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shop-meta {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 8rpx;
+}
+
+.rating {
+  font-size: 22rpx;
+  color: #FFB800;
+  font-weight: 600;
+}
+
+.price {
+  font-size: 22rpx;
+  color: var(--gray-2);
+}
+
+.shop-tag {
+  display: inline-block;
+  font-size: 20rpx;
+  padding: 4rpx 10rpx;
+  background: var(--primary-bg);
+  color: var(--primary-dark);
+  border-radius: 999rpx;
+  font-weight: 500;
+}
+
+/* ─── Guide List ─────────────────────────────── */
+.guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.guide-card {
+  background: var(--surface);
+  border-radius: 14rpx;
+  padding: 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  transition: all 0.2s;
+}
+
+.guide-card:active {
+  transform: scale(0.98);
+}
+
+.guide-icon {
+  width: 72rpx;
+  height: 72rpx;
+  background: var(--primary-bg);
+  border-radius: 14rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  flex-shrink: 0;
+}
+
+.guide-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.guide-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 4rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.guide-meta {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+}
+
+.guide-arrow {
+  font-size: 32rpx;
+  color: var(--text-hint);
+  font-weight: 300;
+}
+
+/* ─── Guide Empty ─────────────────────────────── */
+.guide-empty {
+  background: var(--surface);
+  border-radius: 14rpx;
+  padding: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+}
+
+.empty-icon {
+  font-size: 56rpx;
+  opacity: 0.6;
+}
+
+.empty-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.empty-desc {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+}
+
+/* ─── Modal ─────────────────────────────────── */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.modal-mask.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.import-modal,
+.result-modal {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-radius: 32rpx 32rpx 0 0;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.3s;
+}
+
+.modal-mask.show .import-modal,
+.modal-mask.show .result-modal {
+  transform: translateY(0);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx 32rpx 24rpx;
+  border-bottom: 1rpx solid var(--gray-5);
+}
+
+.modal-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: var(--black);
+}
+
+.modal-close {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  color: var(--gray-3);
+  background: var(--gray-6);
+  border-radius: 50%;
+}
+
+/* ─── Import Tabs ─────────────────────────────── */
+.import-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--gray-6);
+  border-radius: 999rpx;
+  padding: 6rpx;
+  margin: 24rpx 32rpx;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--gray-2);
+  border-radius: 999rpx;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  background: var(--white);
+  color: var(--black);
+  font-weight: 700;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.08);
+}
+
+/* ─── Tab Content ─────────────────────────────── */
+.tab-content {
+  flex: 1;
+  padding: 0 32rpx 32rpx;
+  overflow-y: auto;
+}
+
+.import-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  background: var(--gray-6);
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.tip-icon {
+  font-size: 32rpx;
+  flex-shrink: 0;
+}
+
+.tip-text {
+  font-size: 26rpx;
+  color: var(--gray-2);
+  line-height: 1.5;
+}
+
+.guide-input {
+  width: 100%;
+  min-height: 240rpx;
+  background: var(--gray-6);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  font-size: 28rpx;
+  color: var(--black);
+  box-sizing: border-box;
+  border: none;
+}
+
+.input-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20rpx;
+}
+
+.char-count {
+  font-size: 24rpx;
+  color: var(--gray-3);
+}
+
+.btn-parse {
+  padding: 16rpx 40rpx;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  font-size: 28rpx;
+  font-weight: 700;
+  border-radius: 999rpx;
+  border: none;
+  box-shadow: 0 4rpx 16rpx rgba(0,217,192,0.3);
+}
+
+.btn-parse[disabled] {
+  background: var(--gray-4);
+  box-shadow: none;
+}
+
+.btn-parse::after {
+  border: none;
+}
+
+/* ─── Result Modal ─────────────────────────────── */
+.result-modal {
+  max-height: 90vh;
+}
+
+.result-modal .modal-header {
+  padding: 28rpx 32rpx;
+}
+
+.empty-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 32rpx;
+  gap: 12rpx;
+}
+
+.empty-result .empty-icon {
+  font-size: 80rpx;
+  opacity: 0.5;
+}
+
+.empty-result .empty-hint {
+  font-size: 26rpx;
+  color: var(--gray-3);
+  margin-top: 8rpx;
+}
+
+.result-summary {
+  padding: 20rpx 32rpx;
+  background: var(--gray-6);
+  font-size: 28rpx;
+  color: var(--black);
+  font-weight: 600;
+}
+
+.result-hint {
+  color: var(--gray-2);
+  font-weight: 400;
+  margin-left: 8rpx;
+}
+
+.result-section {
+  padding: 20rpx 32rpx;
+}
+
+.result-section-title {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--gray-2);
+  margin-bottom: 16rpx;
+}
+
+.result-item {
+  background: var(--gray-6);
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 12rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.result-item.found {
+  padding: 16rpx;
+}
+
+.result-thumb {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 12rpx;
+  background: var(--gray-5);
+  flex-shrink: 0;
+}
+
+.result-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 6rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-meta {
+  font-size: 24rpx;
+  color: var(--gray-2);
+}
+
+.result-arrow {
+  font-size: 40rpx;
+  color: var(--gray-4);
+  font-weight: 300;
+}
+
+.result-item.new {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 10rpx;
+}
+
+.result-emoji {
+  font-size: 32rpx;
+}
+
+.result-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  font-size: 24rpx;
+  color: var(--gray-2);
+  margin-bottom: 14rpx;
+}
+
+.btn-add {
+  padding: 14rpx 32rpx;
+  background: var(--primary);
+  color: var(--white);
+  font-size: 26rpx;
+  font-weight: 700;
+  border-radius: 999rpx;
+  border: none;
+}
+
+.btn-add::after {
+  border: none;
+}
+
+.batch-add {
+  padding: 20rpx 32rpx 40rpx;
+}
+
+.btn-batch {
+  width: 100%;
+  padding: 24rpx;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  font-size: 30rpx;
+  font-weight: 700;
+  border-radius: 16rpx;
+  border: none;
+}
+
+.btn-batch::after {
+  border: none;
+}
+
+/* ─── Guide Select List ─────────────────────────── */
+.guide-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.guide-select-item {
+  background: var(--gray-6);
+  border-radius: 16rpx;
+  padding: 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.guide-select-icon {
+  font-size: 36rpx;
+}
+
+.guide-select-info {
+  flex: 1;
+}
+
+.guide-select-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--black);
+  margin-bottom: 6rpx;
+}
+
+.guide-select-count {
+  font-size: 24rpx;
+  color: var(--gray-3);
+}
+
+.empty-select {
+  text-align: center;
+  padding: 60rpx 0;
+  color: var(--gray-3);
+  font-size: 28rpx;
+}

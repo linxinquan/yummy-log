@@ -1,0 +1,9 @@
+// discover.wxs - 发现页工具函数
+function joinArray(arr, separator) {
+  if (!arr || !arr.length) return '';
+  return arr.join(separator || '、');
+}
+
+module.exports = {
+  joinArray: joinArray
+};

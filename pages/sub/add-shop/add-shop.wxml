@@ -1,0 +1,179 @@
+<!-- 觅食迹 - 添加店铺页 -->
+<view class="container">
+  <!-- 批量添加模式 -->
+  <block wx:if="{{isBatchMode}}">
+    <view class="batch-header">
+      <text class="batch-title">批量添加店铺</text>
+      <text class="batch-hint">请为每家店铺选择分类</text>
+    </view>
+    
+    <view class="batch-list">
+      <view wx:for="{{batchShops}}" wx:key="index" class="batch-item">
+        <view class="batch-item-header">
+          <text class="batch-emoji">🏪</text>
+          <text class="batch-name">{{item.name}}</text>
+        </view>
+        <view class="batch-detail" wx:if="{{item.address}}">
+          📍 {{item.address}}
+        </view>
+        <view class="batch-detail" wx:if="{{item.dishes.length > 0}}">
+          推荐菜：{{item.dishes.join('、')}}
+        </view>
+        
+        <view class="category-select">
+          <view 
+            wx:for="{{categories}}" 
+            wx:for-item="cat"
+            wx:key="index"
+            class="cat-pill {{item.selectedCategory === cat ? 'active' : ''}}"
+            bindtap="onSelectCategory"
+            data-index="{{index}}"
+            data-category="{{cat}}"
+          >
+            {{cat}}
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 单个添加模式 -->
+  <block wx:else>
+    <view class="form-section">
+      <view class="form-label">店铺名称 *</view>
+      <input 
+        class="form-input"
+        placeholder="请输入店铺名称"
+        value="{{shopForm.name}}"
+        bindinput="onNameInput"
+      />
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">分类</view>
+      <view class="category-select">
+        <view 
+          wx:for="{{categories}}" 
+          wx:key="index"
+          class="cat-pill {{shopForm.category === item ? 'active' : ''}}"
+          bindtap="onSelectSingleCategory"
+          data-category="{{item}}"
+        >
+          {{item}}
+        </view>
+      </view>
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">Emoji 图标</view>
+      <view class="emoji-select">
+        <text 
+          wx:for="{{emojiList}}" 
+          wx:key="index"
+          class="emoji-item {{shopForm.emoji === item ? 'active' : ''}}"
+          bindtap="onSelectEmoji"
+          data-emoji="{{item}}"
+        >{{item}}</text>
+      </view>
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">地址</view>
+      <input 
+        class="form-input"
+        placeholder="请输入店铺地址"
+        value="{{shopForm.address}}"
+        bindinput="onAddressInput"
+      />
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">人均价格</view>
+      <input 
+        class="form-input"
+        type="number"
+        placeholder="请输入人均价格"
+        value="{{shopForm.price}}"
+        bindinput="onPriceInput"
+      />
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">营业时间</view>
+      <input 
+        class="form-input"
+        placeholder="如：09:00-22:00"
+        value="{{shopForm.hours}}"
+        bindinput="onHoursInput"
+      />
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">推荐菜</view>
+      <input 
+        class="form-input"
+        placeholder="多个菜品用逗号分隔"
+        value="{{shopForm.dishesText}}"
+        bindinput="onDishesInput"
+      />
+    </view>
+
+    <view class="form-section">
+      <view class="form-label">坐标选点</view>
+      
+      <!-- 🆕 主推：用微信地图选点 -->
+      <view class="choose-location-btn" bindtap="onChooseLocation">
+        <text class="choose-loc-icon">🗺️</text>
+        <view class="choose-loc-text">
+          <text class="choose-loc-title">打开地图选点</text>
+          <text class="choose-loc-sub">{{shopForm.lat ? '已选：' + shopForm.lat + ', ' + shopForm.lng : '点击在地图上精准定位'}}</text>
+        </view>
+        <text class="choose-loc-arrow">›</text>
+      </view>
+      
+      <!-- 备用：手动输入坐标 -->
+      <view class="coord-hint">或手动输入坐标</view>
+      <view class="coord-row">
+        <input 
+          class="form-input coord-input"
+          type="digit"
+          placeholder="纬度"
+          value="{{shopForm.lat}}"
+          bindinput="onLatInput"
+        />
+        <input 
+          class="form-input coord-input"
+          type="digit"
+          placeholder="经度"
+          value="{{shopForm.lng}}"
+          bindinput="onLngInput"
+        />
+      </view>
+      <view class="quick-coord" bindtap="onUseCenterCoord">
+        <text>📍 使用蛇口中心坐标</text>
+      </view>
+    </view>
+
+    <!-- 地图预览（已选点时显示） -->
+    <view class="map-picker" wx:if="{{shopForm.lat && shopForm.lng}}">
+      <map
+        id="pickerMap"
+        class="map"
+        latitude="{{pickerCenter.lat}}"
+        longitude="{{pickerCenter.lng}}"
+        scale="16"
+        markers="{{pickerMarkers}}"
+        bindtap="onMapTap"
+        show-location
+      ></map>
+      <view class="map-center-icon">📍</view>
+    </view>
+  </block>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section">
+    <button class="btn-submit" bindtap="onSubmit">
+      {{isBatchMode ? '批量添加' : '添加到地图'}}
+    </button>
+  </view>
+</view>

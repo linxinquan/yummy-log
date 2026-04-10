@@ -1,0 +1,153 @@
+<!-- 觅食图 - 店铺详情页 -->
+<view class="container">
+  <!-- 顶部地图 -->
+  <view class="mini-map">
+    <map
+      id="shopMap"
+      class="map"
+      latitude="{{shop.lat || shop.latitude}}"
+      longitude="{{shop.lng || shop.longitude}}"
+      scale="16"
+      markers="{{markers}}"
+      show-location
+      enable-zoom
+    ></map>
+    <view class="map-overlay" bindtap="onPreviewMap">
+      <text class="map-hint">点击查看完整地图</text>
+    </view>
+  </view>
+
+  <!-- 店铺信息 -->
+  <view class="shop-info-card">
+    <view class="shop-header">
+      <!-- 百度全景街景图 -->
+      <image 
+        class="shop-cover" 
+        src="https://apis.map.qq.com/ws/staticmap/v2?key=YLOBZ-VDFWB-AMSUJ-JCOQQ-GJ633-CTBR5&center={{shop.lat || shop.latitude}},{{shop.lng || shop.longitude}}&zoom=16&size=400x300&markers={{shop.lat || shop.latitude}},{{shop.lng || shop.longitude}},red"
+        mode="aspectFill"
+        binderror="onImageError"
+      />
+      <view class="shop-title">
+        <text class="shop-name">{{shop.name}}</text>
+        <view class="shop-meta">
+          <text class="shop-rating">⭐ {{shop.rating}}</text>
+          <text class="shop-price">¥{{shop.price || '--'}}/人</text>
+          <text class="shop-category">{{shop.category}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="shop-tags" wx:if="{{shop.tags && shop.tags.length > 0}}">
+      <text wx:for="{{shop.tags}}" wx:key="index" class="tag">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 基础信息 -->
+  <view class="info-section">
+    <view class="info-row" bindtap="onCopyAddress">
+      <text class="info-icon">📍</text>
+      <text class="info-text">{{shop.address || '--'}}</text>
+      <text class="info-action">复制</text>
+    </view>
+    <view class="info-row" wx:if="{{shop.phone}}">
+      <text class="info-icon">📞</text>
+      <text class="info-text">{{shop.phone}}</text>
+      <text class="info-action" bindtap="onCall">拨打</text>
+    </view>
+    <view class="info-row" wx:if="{{shop.hours}}">
+      <text class="info-icon">🕐</text>
+      <text class="info-text">{{shop.hours}}</text>
+    </view>
+  </view>
+
+  <!-- 推荐菜 -->
+  <view class="info-section" wx:if="{{shop.dishes && shop.dishes.length > 0}}">
+    <view class="section-title">推荐菜</view>
+    <view class="dishes-list">
+      <view wx:for="{{shop.dishes}}" wx:key="index" class="dish-item">
+        {{item}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 我的觅食记录 -->
+  <view class="info-section">
+    <view class="section-header">
+      <text class="section-title">我的觅食记录</text>
+      <view wx:if="{{recordData}}" class="edit-record-btn" bindtap="onRemoveRecord">
+        <text>删除记录</text>
+      </view>
+    </view>
+    
+    <!-- 已记录状态 -->
+    <view wx:if="{{recordData}}" class="record-card">
+      <view class="record-body">
+        <!-- 评分 -->
+        <view class="record-rating">
+          <view class="stars-row">
+            <text 
+              wx:for="{{5}}" 
+              wx:key="index" 
+              class="star-item {{index < recordData.rating ? 'active' : ''}}"
+            >★</text>
+          </view>
+          <text class="rating-text">{{recordData.rating}}.0分</text>
+        </view>
+        
+        <!-- 评论 -->
+        <view class="record-content" wx:if="{{recordData.comment}}">
+          <text class="comment-text">{{recordData.comment}}</text>
+        </view>
+        
+        <!-- 定位信息 -->
+        <view class="record-location" wx:if="{{recordData.location}}">
+          <text class="location-icon-small">📍</text>
+          <text class="location-text-small">{{recordData.location}}</text>
+        </view>
+        
+        <!-- 时间戳 -->
+        <view class="record-meta">
+          <text class="meta-dot"></text>
+          <text class="meta-date">{{recordData.dateStr}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 未记录状态 -->
+    <view wx:else class="empty-record">
+      <view class="empty-record-icon">
+        <text class="icon-fork">🍴</text>
+      </view>
+      <view class="empty-record-text">
+        <text class="empty-title">记录你的美食之旅</text>
+        <text class="empty-desc">标记你已到访的店铺</text>
+      </view>
+      <view class="empty-record-btn" bindtap="onAddRecord">
+        <text>标记到访</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-actions">
+    <view class="action-main">
+      <!-- 想去按钮 -->
+      <view class="action-btn {{isLiked ? 'liked' : ''}}" bindtap="onToggleLike">
+        <text class="action-icon">{{isLiked ? '❤️' : '🤍'}}</text>
+        <text class="action-text">{{isLiked ? '已添加想去' : '想去'}}</text>
+      </view>
+      
+      <!-- 记录按钮 -->
+      <view class="action-btn {{recordData ? 'checked' : ''}}" bindtap="onToggleRecord">
+        <text class="action-icon">{{recordData ? '✅' : '🍴'}}</text>
+        <text class="action-text">{{recordData ? '已到访' : '到访'}}</text>
+      </view>
+      
+      <!-- 导航按钮 -->
+      <view class="action-btn primary" bindtap="onNavigate">
+        <text class="action-icon">🧭</text>
+        <text class="action-text">导航</text>
+      </view>
+    </view>
+  </view>
+</view>

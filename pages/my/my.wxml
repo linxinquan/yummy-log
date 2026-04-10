@@ -1,0 +1,282 @@
+<!-- 觅食图 · 我的页面 v8.1 - 我的觅食迹 -->
+<view class="container">
+  <!-- 顶部标题区 -->
+  <view class="header">
+    <view class="header-left">
+      <text class="page-title">我的觅食迹</text>
+    </view>
+    <view class="header-right">
+      <view class="header-btn" bindtap="onEditProfile">⚙️</view>
+    </view>
+  </view>
+
+  <!-- 用户信息卡片 -->
+  <view class="profile-section">
+    <!-- 已登录状态 -->
+    <view class="profile-card logged-in" wx:if="{{isLoggedIn}}">
+      <view class="profile-main">
+        <!-- 头像 -->
+        <view class="avatar-wrap">
+          <image class="avatar-img" src="{{userInfo.avatarUrl}}" mode="aspectFill" />
+          <view class="level-dot" wx:if="{{userInfo.level}}">
+            <text>{{userInfo.level}}</text>
+          </view>
+        </view>
+        
+        <!-- 用户信息 -->
+        <view class="user-info">
+          <view class="name-row">
+            <text class="profile-name">{{userInfo.nickName}}</text>
+            <view class="vip-tag" wx:if="{{userInfo.isVip}}">
+              <text>⭐ VIP</text>
+            </view>
+          </view>
+          <view class="meta-row">
+            <text class="visits-tag">{{userInfo.visits || 0}}次觅食</text>
+            <text class="user-id">ID: {{userInfo.uid || '无'}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 未登录状态 -->
+    <view class="profile-card not-login" wx:else>
+      <view class="profile-main">
+        <!-- 头像 -->
+        <button class="avatar-wrap" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+          <image class="avatar-img" src="{{avatarUrl}}" mode="aspectFill" />
+          <view class="camera-dot">
+            <text>📷</text>
+          </view>
+        </button>
+        
+        <!-- 用户信息 -->
+        <view class="user-info">
+          <view class="name-row">
+            <input 
+              class="nickname-input {{hasNickname ? 'active' : ''}}"
+              type="nickname" 
+              value="{{nickName}}"
+              placeholder="点击获取微信昵称"
+              placeholder-class="nickname-placeholder"
+              bindinput="onInputNickname"
+              bindblur="onNicknameBlur"
+            />
+          </view>
+          <view class="meta-row">
+            <view class="login-tip">
+              <text>设置头像和昵称即可登录</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 登录按钮 -->
+        <view class="login-action {{hasNickname && hasAvatar ? 'ready' : ''}}" bindtap="onQuickLogin">
+          <text>登录</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 用户菜单（已登录后显示） -->
+    <view class="user-menu {{isLoggedIn ? 'show' : ''}}">
+      <view class="menu-grid">
+        <view class="menu-item" bindtap="onMenuTap" data-type="favorites">
+          <text class="menu-icon">❤️</text>
+          <text class="menu-text">我的收藏</text>
+        </view>
+        <view class="menu-item" bindtap="onMenuTap" data-type="history">
+          <text class="menu-icon">📍</text>
+          <text class="menu-text">觅食足迹</text>
+        </view>
+        <view class="menu-item" bindtap="onMenuTap" data-type="guides">
+          <text class="menu-icon">📝</text>
+          <text class="menu-text">我的攻略</text>
+        </view>
+        <view class="menu-item" bindtap="onMenuTap" data-type="settings">
+          <text class="menu-icon">⚙️</text>
+          <text class="menu-text">设置</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+
+
+  <!-- 统计卡片 -->
+  <view class="stats-section">
+    <view class="stats-card">
+      <view class="stat-item stat-clickable" bindtap="onGoWantgo">
+        <text class="stat-value stat-liked">{{stats.likedCount}}</text>
+        <text class="stat-label">想去 ›</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value">{{stats.visitedCount}}</text>
+        <text class="stat-label">已到访</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value">{{stats.userAddedCount}}</text>
+        <text class="stat-label">添加</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Tab 切换 -->
+  <view class="tab-bar">
+    <view 
+      class="tab {{currentTab === 'liked' ? 'active' : ''}}"
+      bindtap="onSwitchTab"
+      data-tab="liked"
+    >
+      ❤️ 想去 ({{likedShops.length}})
+    </view>
+    <view 
+      class="tab {{currentTab === 'visited' ? 'active' : ''}}"
+      bindtap="onSwitchTab"
+      data-tab="visited"
+    >
+      ✅ 已到访 ({{visitedList.length}})
+    </view>
+    <view 
+      class="tab {{currentTab === 'userAdded' ? 'active' : ''}}"
+      bindtap="onSwitchTab"
+      data-tab="userAdded"
+    >
+      ➕ 我添加的
+    </view>
+  </view>
+
+  <!-- 想去清单入口（点击跳转独立页面） -->
+  <view wx:if="{{currentTab === 'liked'}}" class="wantgo-entry-wrap">
+
+    <!-- 空状态 -->
+    <view wx:if="{{likedShops.length === 0}}" class="empty-state">
+      <text class="empty-icon">❤️</text>
+      <text class="empty-text">还没有想去的店铺</text>
+      <text class="empty-hint">去首页收藏喜欢的店铺吧</text>
+    </view>
+
+    <!-- 有数据时：大入口卡片 -->
+    <view wx:else class="wantgo-card" bindtap="onGoWantgo">
+      <!-- 顶部渐变图案区 -->
+      <view class="wc-header">
+        <!-- 店铺logo小圆圈堆叠展示（最多4个） -->
+        <view class="wc-logo-stack">
+          <block wx:for="{{likedShops}}" wx:key="id">
+            <image
+              wx:if="{{index < 4}}"
+              class="wc-logo-item"
+              src="{{item.logo || '/images/app-logo.jpg'}}"
+              mode="aspectFill"
+              style="z-index:{{4-index}}; margin-left:{{index === 0 ? '0' : '-24rpx'}}"
+            />
+          </block>
+          <view wx:if="{{likedShops.length > 4}}" class="wc-logo-more">
+            <text>+{{likedShops.length - 4}}</text>
+          </view>
+        </view>
+        <view class="wc-count-wrap">
+          <text class="wc-count">{{likedShops.length}}</text>
+          <text class="wc-count-lbl">家想去</text>
+        </view>
+      </view>
+
+      <!-- 底部操作区 -->
+      <view class="wc-footer">
+        <view class="wc-footer-left">
+          <text class="wc-title">查看想去清单</text>
+          <text class="wc-sub">管理收藏 · 一键规划路线</text>
+        </view>
+        <view class="wc-arrow-btn">
+          <text class="wc-arrow">›</text>
+        </view>
+      </view>
+
+      <!-- 快捷操作行 -->
+      <view class="wc-actions">
+        <view class="wca-btn primary" catchtap="onGoRoute">
+          <text class="wca-icon">🗺️</text>
+          <text class="wca-text">规划路线</text>
+        </view>
+        <view class="wca-btn" catchtap="onGoWantgo">
+          <text class="wca-icon">❤️</text>
+          <text class="wca-text">管理清单</text>
+        </view>
+      </view>
+    </view>
+
+  </view>
+
+  <!-- 已到访列表 -->
+  <view wx:if="{{currentTab === 'visited'}}" class="shop-list">
+    <view wx:if="{{visitedList.length === 0}}" class="empty-state">
+      <text class="empty-icon">🍴</text>
+      <text class="empty-text">还没有觅食记录</text>
+      <text class="empty-hint">去店铺详情页标记到访吧</text>
+    </view>
+    
+    <view 
+      wx:for="{{visitedList}}" 
+      wx:key="shopId"
+      class="record-card"
+      bindtap="onShopTap"
+      data-shop="{{item.shop}}"
+    >
+      <view class="record-header">
+        <image 
+          class="record-img"
+          src="https://apis.map.qq.com/ws/staticmap/v2?key=YLOBZ-VDFWB-AMSUJ-JCOQQ-GJ633-CTBR5&center={{item.shop.lat}},{{item.shop.lng}}&zoom=16&size=120x120&markers={{item.shop.lat}},{{item.shop.lng}},red"
+          mode="aspectFill"
+        />
+        <view class="record-info">
+          <text class="record-name">{{item.shop.name}}</text>
+          <view class="record-stars">
+            <text wx:for="{{5}}" wx:for-item="s" wx:key="index" class="star {{index < item.data.rating ? 'active' : ''}}">⭐</text>
+          </view>
+        </view>
+        <text class="record-date">{{item.data.dateStr}}</text>
+      </view>
+      <text wx:if="{{item.data.comment}}" class="record-comment">{{item.data.comment}}</text>
+    </view>
+  </view>
+
+  <!-- 用户添加列表 -->
+  <view wx:if="{{currentTab === 'userAdded'}}" class="shop-list">
+    <view class="add-hint">
+      <text>你添加的店铺</text>
+      <view class="add-btn" bindtap="onAddShop">
+        <text>➕ 添加新店</text>
+      </view>
+    </view>
+    
+    <view wx:if="{{userAddedShops.length === 0}}" class="empty-state">
+      <text class="empty-icon">➕</text>
+      <text class="empty-text">还没有添加新店</text>
+      <text class="empty-hint">发现了好吃的可以分享给大家哦</text>
+    </view>
+    
+    <view 
+      wx:for="{{userAddedShops}}" 
+      wx:key="id"
+      class="shop-card"
+      bindtap="onShopTap"
+      data-shop="{{item}}"
+    >
+      <image 
+        class="shop-img"
+        src="https://apis.map.qq.com/ws/staticmap/v2?key=YLOBZ-VDFWB-AMSUJ-JCOQQ-GJ633-CTBR5&center={{item.lat}},{{item.lng}}&zoom=16&size=120x120&markers={{item.lat}},{{item.lng}},red"
+        mode="aspectFill"
+      />
+      <view class="shop-info">
+        <text class="shop-name">{{item.name}}</text>
+        <text class="shop-meta">{{item.category}} · {{item.address}}</text>
+      </view>
+      <view class="shop-action">
+        <view class="remove-btn" catchtap="onDeleteShop" data-shopid="{{item.id}}">
+          🗑️
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
