@@ -1,60 +1,27 @@
-<!-- 觅食图 · 首页 v7.0 小红书定位风格 -->
+<!-- 觅食图 · 首页 v8.1 -->
 <view class="container">
 
   <!-- ── Header ── -->
   <view class="header">
     <view class="header-left">
-      <!-- Logo：图片 -->
+      <!-- Logo + 标题 -->
       <view class="app-brand">
         <image class="logo-img" src="/images/app-logo.jpg" mode="aspectFit" />
         <text class="logo-text">觅食图</text>
       </view>
       <!-- 城市/区域选择器 -->
       <view class="location-selector" bindtap="onOpenLocationPicker">
-        <text class="location-main">{{locationMode === 'my' ? myLocationDesc : (currentDistrict || currentCity)}}</text>
+        <text class="location-main">{{locationMode === 'my' ? myLocationDesc : (currentDistrict || '全城')}}</text>
         <text class="location-arrow">▼</text>
       </view>
     </view>
     <view class="header-right">
+      <!-- 天气Widget -->
       <view class="weather">
         <text class="weather-icon">☀️</text>
         <text class="weather-temp">25°C</text>
       </view>
     </view>
-  </view>
-
-  <!-- ── 地理探索卡片 ── -->
-  <view class="explore-section">
-    <!-- 小地图预览 -->
-    <view class="mini-map-card" bindtap="onOpenRoute">
-      <map
-        id="miniMap"
-        class="mini-map"
-        latitude="{{mapCenter.lat}}"
-        longitude="{{mapCenter.lng}}"
-        scale="14"
-        show-location
-        markers="{{allMarkers}}"
-        enable-zoom="{{false}}"
-        enable-scroll="{{false}}"
-      ></map>
-      <view class="mini-map-overlay">
-        <text class="mini-map-text">{{filteredShops.length}}家店铺</text>
-      </view>
-    </view>
-
-    <!-- 距离筛选胶囊 -->
-    <scroll-view class="distance-scroll" scroll-x enable-flex>
-      <view class="distance-list">
-        <view
-          wx:for="{{distanceOptions}}"
-          wx:key="value"
-          class="distance-pill {{currentDistance === item.value ? 'active' : ''}}"
-          bindtap="onDistanceChange"
-          data-distance="{{item.value}}"
-        >{{item.label}}</view>
-      </view>
-    </scroll-view>
   </view>
 
   <!-- ── Map ── -->
@@ -71,12 +38,13 @@
       enable-rotate
       enable-overlooking
     ></map>
-    <!-- 地图图层切换（美食/景点/全部） -->
+    <!-- 地图图层切换 - 白色胶囊风格 -->
     <view class="map-layer-btns">
-      <view class="layer-btn {{mapLayer === 'food' ? 'active' : ''}}" bindtap="onMapLayerChange" data-layer="food">🍜 美食</view>
-      <view class="layer-btn {{mapLayer === 'spots' ? 'active' : ''}}" bindtap="onMapLayerChange" data-layer="spots">🏔️ 景点</view>
-      <view class="layer-btn {{mapLayer === 'all' ? 'active' : ''}}" bindtap="onMapLayerChange" data-layer="all">🗺️ 全部</view>
+      <view class="layer-btn {{mapLayer === 'food' ? 'active' : ''}}" bindtap="onMapLayerChange" data-layer="food">🍜</view>
+      <view class="layer-btn {{mapLayer === 'spots' ? 'active' : ''}}" bindtap="onMapLayerChange" data-layer="spots">🌲</view>
+      <view class="layer-btn {{mapLayer === 'all' ? 'active' : ''}}" bindtap="onMapLayerChange" data-layer="all">全部</view>
     </view>
+    <!-- 定位按钮 -->
     <view class="location-btn" bindtap="onMyLocation">
       <text class="location-icon">◎</text>
     </view>
@@ -100,7 +68,7 @@
       </view>
     </view>
 
-    <!-- 美食分类列表（紧凑版，放在搜索栏下方） -->
+    <!-- 美食分类列表（简洁胶囊风格） -->
     <view class="category-section-compact">
       <scroll-view class="category-scroll" scroll-x enable-flex>
         <view class="category-list-compact">
@@ -110,10 +78,7 @@
             class="category-chip-compact {{currentCategory === item.name ? 'active' : ''}}"
             bindtap="onDistrictChange"
             data-district="{{item.name}}"
-          >
-            <text class="category-icon-compact">{{item.icon}}</text>
-            <text class="category-name-compact">{{item.name}}</text>
-          </view>
+          >{{item.name}}</view>
         </view>
       </scroll-view>
     </view>

@@ -1,6 +1,8 @@
 /* ================================================
-  觅食图 · 首页  v7.0 小红书定位风格
-  配色参考：LOGO #00D9C0 青绿色
+  觅食图 · 首页  v8.1
+  - 透明白色emoji标记（28x28）
+  - 地图按钮白胶囊 + 主题色激活态
+  - 分类胶囊主题色激活态
   ================================================ */
 
 /* ─── 设计令牌 ─────────────────────────────── */
@@ -39,7 +41,7 @@ page {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16rpx 24rpx 12rpx;
+  padding: 12rpx 24rpx 10rpx;
   background: var(--bg);
   position: sticky;
   top: 0;
@@ -49,214 +51,83 @@ page {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 14rpx;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
 }
 
 .app-brand {
   display: flex;
   align-items: center;
-  gap: 10rpx;
+  gap: 8rpx;
 }
 
-/* 品牌Logo图片 */
 .logo-img {
-  width: 52rpx;
-  height: 52rpx;
+  width: 50rpx;
+  height: 50rpx;
   border-radius: 10rpx;
   box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.20);
 }
 
 .logo-text {
-  font-size: 22rpx;
+  font-size: 30rpx;
   font-weight: 700;
-  color: var(--primary);
-  letter-spacing: 1.5rpx;
+  color: var(--text-primary);
+  letter-spacing: 0.5rpx;
 }
 
-/* 位置选择器 - 小红书风格 */
+/* 位置选择器 */
 .location-selector {
   display: flex;
   align-items: center;
   gap: 6rpx;
-  padding: 8rpx 16rpx;
+  padding: 7rpx 16rpx;
   background: var(--primary-bg);
   border-radius: var(--radius-pill);
   border: 1rpx solid rgba(0,217,192,0.2);
 }
 
 .location-main {
-  font-size: 28rpx;
-  font-weight: 700;
+  font-size: 24rpx;
+  font-weight: 600;
   color: var(--text-primary);
+  max-width: 130rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .location-arrow {
-  font-size: 18rpx;
+  font-size: 16rpx;
   color: var(--primary);
 }
 
+/* 天气Widget */
 .weather {
   display: flex;
   align-items: center;
   gap: 6rpx;
   background: var(--primary-bg);
-  padding: 8rpx 18rpx;
+  padding: 7rpx 16rpx;
   border-radius: var(--radius-pill);
 }
 
 .weather-icon {
-  font-size: 26rpx;
+  font-size: 24rpx;
 }
 
 .weather-temp {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: var(--text-secondary);
   font-weight: 500;
 }
 
-/* ─── 地理探索卡片区域 ─────────────────────────── */
-.explore-section {
-  padding: 0 24rpx 16rpx;
-  display: flex;
-  gap: 16rpx;
-}
-
-/* 小地图预览卡片 */
-.mini-map-card {
-  width: 200rpx;
-  height: 120rpx;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  position: relative;
-  box-shadow: var(--shadow-md);
-  border: 2rpx solid var(--border);
-}
-
-.mini-map {
-  width: 100%;
-  height: 100%;
-}
-
-.mini-map-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
-  padding: 8rpx 12rpx;
-}
-
-.mini-map-text {
-  font-size: 20rpx;
-  color: #ffffff;
-  font-weight: 600;
-}
-
-/* 距离筛选胶囊 */
-.distance-scroll {
-  flex: 1;
-  white-space: nowrap;
-}
-
-.distance-list {
-  display: inline-flex;
-  gap: 10rpx;
-  padding: 4rpx 0;
-}
-
-.distance-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 10rpx 20rpx;
-  background: var(--bg);
-  border: 1.5rpx solid var(--border);
-  border-radius: var(--radius-pill);
-  font-size: 24rpx;
-  font-weight: 500;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.2s;
-}
-
-.distance-pill.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #ffffff;
-  box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.3);
-}
-
-/* ─── 美食分类列表（美团风格）────────────────────────────── */
-.category-section {
-  padding: 20rpx 0 16rpx;
-  border-bottom: 1rpx solid var(--border);
-}
-
-.category-header {
-  padding: 0 24rpx;
-  margin-bottom: 16rpx;
-}
-
-.category-title {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.category-scroll {
-  white-space: nowrap;
-}
-
-.category-list {
-  display: inline-flex;
-  gap: 12rpx;
-  padding: 0 24rpx;
-}
-
-.category-chip {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8rpx;
-  padding: 14rpx 20rpx;
-  background: #ffffff;
-  border: 1.5rpx solid #F0F0F0;
-  border-radius: 40rpx;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.25s;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
-}
-
-.category-chip.active {
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
-  border-color: transparent;
-  box-shadow: 0 4rpx 16rpx rgba(0,217,192,0.3);
-}
-
-.category-icon {
-  font-size: 10rpx;
-  line-height: 1;
-}
-
-.category-chip.active .category-icon {
-  transform: scale(1.1);
-}
-
-.category-name {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-}
-
-.category-chip.active .category-name {
-  color: #ffffff;
-}
-
-/* ─── 美食分类列表（紧凑版-搜索栏下方）─────────────────────── */
+/* ─── 美食分类列表（简洁胶囊风格）─────────────────────── */
 .category-section-compact {
-  padding: 0 0 14rpx;
+  padding: 0 0 10rpx;
   background: var(--bg-card);
 }
 
@@ -268,50 +139,32 @@ page {
 
 .category-chip-compact {
   display: inline-flex;
-  flex-direction: row;
   align-items: center;
-  gap: 4rpx;
-  padding: 8rpx 16rpx;
+  padding: 8rpx 18rpx;
   background: var(--bg);
-  border: 1rpx solid var(--border);
+  border: 1.5rpx solid var(--border);
   border-radius: 32rpx;
   white-space: nowrap;
   flex-shrink: 0;
+  font-size: 24rpx;
+  font-weight: 500;
+  color: var(--text-secondary);
   transition: all 0.2s;
 }
 
 .category-chip-compact.active {
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
-  border-color: transparent;
-  box-shadow: 0 2rpx 8rpx rgba(0,217,192,0.25);
-}
-
-.category-icon-compact {
-  font-size: 20rpx;
-  line-height: 1;
-}
-
-.category-chip-compact.active .category-icon-compact {
-  transform: scale(1.05);
-}
-
-.category-name-compact {
-  font-size: 22rpx;
-  font-weight: 500;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.category-chip-compact.active .category-name-compact {
-  color: #ffffff;
-  font-weight: 600;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #FFFFFF;
+  font-weight: 700;
+  box-shadow: 0 2rpx 10rpx rgba(0,217,192,0.25);
 }
 
 /* ─── Map Container ─────────────────────────── */
 .map-container {
   position: relative;
-  height: 32vh;
-  min-height: 260rpx;
+  height: 42vh;
+  min-height: 320rpx;
 }
 
 .map {
@@ -319,35 +172,36 @@ page {
   height: 100%;
 }
 
-/* ── 地图图层切换按钮 ── */
+/* ── 地图图层切换按钮 - 白色胶囊风格 ── */
 .map-layer-btns {
   position: absolute;
-  top: 20rpx;
+  top: 16rpx;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 0;
-  background: rgba(255,255,255,0.95);
+  background: rgba(255, 255, 255, 0.92);
   border-radius: 32rpx;
-  padding: 6rpx;
+  padding: 5rpx;
   box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.12);
   z-index: 10;
 }
 
 .layer-btn {
-  font-size: 22rpx;
-  padding: 10rpx 22rpx;
+  font-size: 24rpx;
+  padding: 10rpx 26rpx;
   border-radius: 26rpx;
-  color: #6B7280;
+  color: #9CA3AF;
   font-weight: 500;
   transition: all 0.2s;
   white-space: nowrap;
 }
 
 .layer-btn.active {
-  background: #00D9C0;
-  color: #ffffff;
+  background: var(--primary);
+  color: #FFFFFF;
   font-weight: 700;
+  box-shadow: 0 2rpx 8rpx rgba(0,217,192,0.3);
 }
 
 .location-btn {
@@ -356,7 +210,7 @@ page {
   bottom: 28rpx;
   width: 88rpx;
   height: 88rpx;
-  background: var(--bg-card);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -374,12 +228,11 @@ page {
 /* ─── Shop List Container ─────────────────── */
 .shop-list-container {
   background: var(--bg-card);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  margin-top: -16rpx;
+  border-radius: 32rpx 32rpx 0 0;
   position: relative;
   z-index: 5;
   min-height: 50vh;
-  border-top: 2rpx solid var(--border);
+  box-shadow: 0 -6rpx 32rpx rgba(0,0,0,0.06);
 }
 
 /* 顶部把手条 */
@@ -388,42 +241,44 @@ page {
   display: block;
   width: 72rpx;
   height: 5rpx;
-  background: var(--border);
+  background: rgba(0,0,0,0.12);
   border-radius: var(--radius-pill);
-  margin: 14rpx auto 0;
+  margin: 10rpx auto 0;
 }
 
 /* ─── Search Bar ───────────────────────────── */
 .search-bar {
-  padding: 16rpx 24rpx 14rpx;
+  padding: 10rpx 24rpx 8rpx;
 }
 
 .search-box {
   background: var(--primary-bg);
-  border-radius: var(--radius-sm);
-  padding: 0 20rpx;
+  border-radius: 20rpx;
+  padding: 0 18rpx;
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  height: 76rpx;
+  gap: 8rpx;
+  height: 64rpx;
   border: 1.5rpx solid rgba(0,217,192,0.15);
+  transition: all 0.2s;
 }
 
 .search-box:focus-within {
+  background: #FFFFFF;
   border-color: var(--primary);
   box-shadow: 0 0 0 3rpx rgba(0,217,192,0.1);
 }
 
 .search-icon {
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: var(--primary);
   flex-shrink: 0;
 }
 
 .search-input {
   flex: 1;
-  height: 76rpx;
-  font-size: 28rpx;
+  height: 64rpx;
+  font-size: 26rpx;
   color: var(--text-primary);
   background: transparent;
 }
@@ -433,7 +288,7 @@ page {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6rpx 24rpx 14rpx;
+  padding: 4rpx 24rpx 10rpx;
 }
 
 .list-count {
@@ -454,28 +309,29 @@ page {
   font-size: 24rpx;
   font-weight: 500;
   color: var(--text-secondary);
-  padding: 8rpx 24rpx;
+  padding: 8rpx 22rpx;
   border-radius: var(--radius-pill);
   transition: all 0.2s;
   white-space: nowrap;
 }
 
 .sort-btn.active {
-  background: var(--text-primary);
-  color: #ffffff;
+  background: var(--primary);
+  color: #FFFFFF;
+  font-weight: 700;
 }
 
 /* ─── Shop List ─────────────────────────────── */
 .shop-list {
-  height: calc(100vh - 32vh - 380rpx);
-  min-height: 400rpx;
+  height: calc(100vh - 42vh - 330rpx);
+  min-height: 380rpx;
 }
 
 /* ─── Shop Card ─────────────────────────────── */
 .shop-card {
   display: flex;
   align-items: flex-start;
-  padding: 20rpx 24rpx;
+  padding: 16rpx 24rpx;
   border-bottom: 1rpx solid var(--border);
   transition: background 0.12s;
 }
@@ -487,10 +343,10 @@ page {
 /* 缩略图 - 门面照片 */
 .shop-thumb-wrapper {
   position: relative;
-  width: 160rpx;
-  height: 160rpx;
+  width: 140rpx;
+  height: 140rpx;
   border-radius: var(--radius-md);
-  margin-right: 20rpx;
+  margin-right: 18rpx;
   flex-shrink: 0;
   overflow: hidden;
   background: var(--primary-bg);
@@ -595,22 +451,22 @@ page {
 }
 
 .shop-name {
-  font-size: 30rpx;
+  font-size: 28rpx;
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 6rpx;
+  margin-bottom: 4rpx;
 }
 
 .shop-meta {
   display: flex;
   align-items: center;
   gap: 10rpx;
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: var(--text-secondary);
-  margin-bottom: 10rpx;
+  margin-bottom: 8rpx;
 }
 
 .shop-rating {
@@ -929,7 +785,7 @@ page {
   font-weight: 700;
 }
 
-/* 隐藏Canvas：图标生成用 */
+/* 隐藏Canvas：图标生成用（已弃用，标记用静态PNG） */
 .hidden-canvas {
   position: fixed;
   left: -9999px;

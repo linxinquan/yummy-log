@@ -1,8 +1,8 @@
 <!-- 觅食图 V1 - 想去清单页（美食/景点/已到访，拖拽排序） -->
-<view class="container">
+<view class="container" style="padding-top: {{contentTop}}px;">
 
   <!-- ── 顶部导航栏 ── -->
-  <view class="nav-bar">
+  <view class="nav-bar" style="height: {{navBarHeight}}px; padding-top: {{statusBarHeight}}px;">
     <view class="nav-back" bindtap="onBack">
       <text class="nav-back-icon">‹</text>
     </view>
@@ -17,7 +17,7 @@
   </view>
 
   <!-- ── Tab切换 ── -->
-  <view class="tab-bar">
+  <view class="tab-bar" style="top: {{navBarHeight}}px;">
     <view
       class="tab-item {{tab === 'food' ? 'active' : ''}}"
       bindtap="onTabChange"

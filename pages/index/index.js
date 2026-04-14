@@ -1,4 +1,4 @@
-// 觅食迹 - 首页逻辑
+// 觅食图 - 首页逻辑 v8.0
 const app = getApp()
 const shopData = require('../../utils/shopData')
 const spotData = require('../../utils/spotData')

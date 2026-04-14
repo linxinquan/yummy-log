@@ -20,7 +20,7 @@ const spotData = [
     "address": "深圳市南山区南头街道中山公园路",
     "lat": 22.543,
     "lng": 113.9237,
-    "image": "/images/spots/中山公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E4%B8%AD%E5%B1%B1%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "06:00-22:00"
   },
@@ -39,7 +39,7 @@ const spotData = [
     "address": "深圳市南山区华侨城欢乐谷",
     "lat": 22.5378,
     "lng": 113.9726,
-    "image": "/images/spots/深圳欢乐谷.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B7%B1%E5%9C%B3%E6%AC%A2%E4%B9%90%E8%B0%B7.jpg",
     "free": false,
     "openHours": "09:30-22:00"
   },
@@ -59,7 +59,7 @@ const spotData = [
     "address": "深圳市南山区太子路海上世界",
     "lat": 22.4857,
     "lng": 113.9025,
-    "image": "/images/spots/海上世界.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B5%B7%E4%B8%8A%E4%B8%96%E7%95%8C.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -79,7 +79,7 @@ const spotData = [
     "address": "深圳市南山区塘朗山公园",
     "lat": 22.5545,
     "lng": 113.9402,
-    "image": "/images/spots/塘朗山公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%A1%98%E6%9C%97%E5%B1%B1%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "06:00-18:00"
   },
@@ -100,7 +100,7 @@ const spotData = [
     "address": "深圳市南山区深圳湾公园",
     "lat": 22.4875,
     "lng": 113.9462,
-    "image": "/images/spots/深圳湾公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B7%B1%E5%9C%B3%E6%B9%BE%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -120,7 +120,7 @@ const spotData = [
     "address": "深圳市南山区大沙河生态长廊",
     "lat": 22.5431,
     "lng": 113.935,
-    "image": "/images/spots/大沙河生态长廊.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%A4%A7%E6%B2%99%E6%B2%B3%E7%94%9F%E6%80%81%E9%95%BF%E5%BB%8A.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -140,7 +140,7 @@ const spotData = [
     "address": "深圳市南山区荷兰花卉小镇",
     "lat": 22.5432,
     "lng": 113.9712,
-    "image": "/images/spots/荷兰花卉小镇.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%8D%B7%E5%85%B0%E8%8A%B1%E5%8D%89%E5%B0%8F%E9%95%87.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -160,7 +160,7 @@ const spotData = [
     "address": "深圳市南山区南头古城",
     "lat": 22.5425,
     "lng": 113.922,
-    "image": "/images/spots/南头古城.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%8D%97%E5%A4%B4%E5%8F%A4%E5%9F%8E.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -180,7 +180,7 @@ const spotData = [
     "address": "深圳市南山区赤湾左炮台",
     "lat": 22.4768,
     "lng": 113.889,
-    "image": "/images/spots/赤湾左炮台.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%B5%A4%E6%B9%BE%E5%B7%A6%E7%82%AE%E5%8F%B0.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -200,7 +200,7 @@ const spotData = [
     "address": "深圳市南山区价值工厂",
     "lat": 22.4845,
     "lng": 113.9012,
-    "image": "/images/spots/价值工厂.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E4%BB%B7%E5%80%BC%E5%B7%A5%E5%8E%82.jpg",
     "free": true,
     "openHours": "09:00-21:00"
   },
@@ -220,7 +220,7 @@ const spotData = [
     "address": "深圳市南山区蛇口海洋世界",
     "lat": 22.485,
     "lng": 113.905,
-    "image": "/images/spots/蛇口海洋世界.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%9B%87%E5%8F%A3%E6%B5%B7%E6%B4%8B%E4%B8%96%E7%95%8C.jpg",
     "free": false,
     "openHours": "09:00-18:00"
   },
@@ -240,7 +240,7 @@ const spotData = [
     "address": "深圳市南山区华侨城湿地公园",
     "lat": 22.5338,
     "lng": 113.969,
-    "image": "/images/spots/华侨城湿地公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%8D%8E%E4%BE%A8%E5%9F%8E%E6%B9%BF%E5%9C%B0%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "09:00-17:00"
   },
@@ -260,7 +260,7 @@ const spotData = [
     "address": "深圳市南山区西丽生态公园",
     "lat": 22.5695,
     "lng": 113.9205,
-    "image": "/images/spots/西丽生态公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%A5%BF%E4%B8%BD%E7%94%9F%E6%80%81%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -280,7 +280,7 @@ const spotData = [
     "address": "深圳市南山区荔香公园",
     "lat": 22.5501,
     "lng": 113.947,
-    "image": "/images/spots/荔香公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%8D%94%E9%A6%99%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -300,7 +300,7 @@ const spotData = [
     "address": "深圳市大鹏新区杨梅坑",
     "lat": 22.548,
     "lng": 114.571,
-    "image": "/images/spots/杨梅坑.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%9D%A8%E6%A2%85%E5%9D%91.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -320,7 +320,7 @@ const spotData = [
     "address": "深圳市大鹏新区较场尾",
     "lat": 22.5892,
     "lng": 114.4895,
-    "image": "/images/spots/较场尾海滩.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%BE%83%E5%9C%BA%E5%B0%BE%E6%B5%B7%E6%BB%A9.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -340,7 +340,7 @@ const spotData = [
     "address": "深圳市大鹏新区大鹏所城",
     "lat": 22.589,
     "lng": 114.482,
-    "image": "/images/spots/大鹏所城.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%A4%A7%E9%B9%8F%E6%89%80%E5%9F%8E.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -360,7 +360,7 @@ const spotData = [
     "address": "深圳市大鹏新区东涌",
     "lat": 22.5545,
     "lng": 114.5495,
-    "image": "/images/spots/东涌海滩.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E4%B8%9C%E6%B6%8C%E6%B5%B7%E6%BB%A9.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -380,7 +380,7 @@ const spotData = [
     "address": "深圳市大鹏新区西涌",
     "lat": 22.524,
     "lng": 114.526,
-    "image": "/images/spots/西涌海滩.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%A5%BF%E6%B6%8C%E6%B5%B7%E6%BB%A9.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -400,7 +400,7 @@ const spotData = [
     "address": "深圳市大鹏新区桔钓沙",
     "lat": 22.57,
     "lng": 114.55,
-    "image": "/images/spots/桔钓沙.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%A1%94%E9%92%93%E6%B2%99.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -420,7 +420,7 @@ const spotData = [
     "address": "深圳市大鹏新区七娘山",
     "lat": 22.51,
     "lng": 114.495,
-    "image": "/images/spots/七娘山.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E4%B8%83%E5%A8%98%E5%B1%B1.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -440,7 +440,7 @@ const spotData = [
     "address": "深圳市大鹏新区官湖村",
     "lat": 22.607,
     "lng": 114.44,
-    "image": "/images/spots/官湖村.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%AE%98%E6%B9%96%E6%9D%91.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -460,7 +460,7 @@ const spotData = [
     "address": "深圳市盐田区背仔角",
     "lat": 22.615,
     "lng": 114.32,
-    "image": "/images/spots/背仔角.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%83%8C%E4%BB%94%E8%A7%92.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -480,7 +480,7 @@ const spotData = [
     "address": "深圳市盐田区海滨栈道",
     "lat": 22.65,
     "lng": 114.24,
-    "image": "/images/spots/盐田海滨栈道.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E7%9B%90%E7%94%B0%E6%B5%B7%E6%BB%A8%E6%A0%88%E9%81%93.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -500,7 +500,7 @@ const spotData = [
     "address": "深圳市盐田区东部华侨城",
     "lat": 22.638,
     "lng": 114.278,
-    "image": "/images/spots/东部华侨城.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E4%B8%9C%E9%83%A8%E5%8D%8E%E4%BE%A8%E5%9F%8E.jpg",
     "free": false,
     "openHours": "09:30-17:30"
   },
@@ -520,7 +520,7 @@ const spotData = [
     "address": "深圳市罗湖区梧桐山",
     "lat": 22.5845,
     "lng": 114.19,
-    "image": "/images/spots/梧桐山.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%A2%A7%E6%A1%90%E5%B1%B1.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -540,7 +540,7 @@ const spotData = [
     "address": "深圳市罗湖区仙湖植物园弘法寺",
     "lat": 22.579,
     "lng": 114.18,
-    "image": "/images/spots/弘法寺.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%BC%98%E6%B3%95%E5%AF%BA.jpg",
     "free": true,
     "openHours": "08:00-18:00"
   },
@@ -560,7 +560,7 @@ const spotData = [
     "address": "深圳市罗湖区仙湖植物园",
     "lat": 22.576,
     "lng": 114.175,
-    "image": "/images/spots/仙湖植物园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E4%BB%99%E6%B9%96%E6%A4%8D%E7%89%A9%E5%9B%AD.jpg",
     "free": false,
     "openHours": "08:00-18:00"
   },
@@ -580,7 +580,7 @@ const spotData = [
     "address": "深圳市福田区福中三路市民中心",
     "lat": 22.5431,
     "lng": 114.0549,
-    "image": "/images/spots/深圳市民中心.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B7%B1%E5%9C%B3%E5%B8%82%E6%B0%91%E4%B8%AD%E5%BF%83.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -600,7 +600,7 @@ const spotData = [
     "address": "深圳市福田区福中路市民中心A区",
     "lat": 22.5425,
     "lng": 114.057,
-    "image": "/images/spots/深圳博物馆.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B7%B1%E5%9C%B3%E5%8D%9A%E7%89%A9%E9%A6%86.jpg",
     "free": true,
     "openHours": "10:00-18:00"
   },
@@ -620,7 +620,7 @@ const spotData = [
     "address": "深圳市福田区福中一路深圳市图书馆",
     "lat": 22.5418,
     "lng": 114.058,
-    "image": "/images/spots/深圳图书馆.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B7%B1%E5%9C%B3%E5%9B%BE%E4%B9%A6%E9%A6%86.jpg",
     "free": true,
     "openHours": "09:00-21:00"
   },
@@ -640,7 +640,7 @@ const spotData = [
     "address": "深圳市福田区福中路当代艺术馆",
     "lat": 22.5415,
     "lng": 114.0555,
-    "image": "/images/spots/深圳当代艺术馆.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B7%B1%E5%9C%B3%E5%BD%93%E4%BB%A3%E8%89%BA%E6%9C%AF%E9%A6%86.jpg",
     "free": true,
     "openHours": "10:00-18:00"
   },
@@ -660,7 +660,7 @@ const spotData = [
     "address": "深圳市福田区皇岗路笔架山公园",
     "lat": 22.551,
     "lng": 114.062,
-    "image": "/images/spots/笔架山公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E7%AC%94%E6%9E%B6%E5%B1%B1%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -680,7 +680,7 @@ const spotData = [
     "address": "深圳市福田区农园路香蜜公园",
     "lat": 22.5385,
     "lng": 114.0435,
-    "image": "/images/spots/香蜜公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E9%A6%99%E8%9C%9C%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -700,7 +700,7 @@ const spotData = [
     "address": "深圳市福田区深南大道园博园",
     "lat": 22.532,
     "lng": 114.04,
-    "image": "/images/spots/深圳园博园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B7%B1%E5%9C%B3%E5%9B%AD%E5%8D%9A%E5%9B%AD.jpg",
     "free": true,
     "openHours": "06:00-22:00"
   },
@@ -720,7 +720,7 @@ const spotData = [
     "address": "深圳市罗湖区东门老街",
     "lat": 22.549,
     "lng": 114.131,
-    "image": "/images/spots/东门老街.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E4%B8%9C%E9%97%A8%E8%80%81%E8%A1%97.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -740,7 +740,7 @@ const spotData = [
     "address": "深圳市罗湖区深南东路5002号地王大厦",
     "lat": 22.5455,
     "lng": 114.1265,
-    "image": "/images/spots/地王大厦.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%9C%B0%E7%8E%8B%E5%A4%A7%E5%8E%A6.jpg",
     "free": false,
     "openHours": "09:00-22:00"
   },
@@ -760,7 +760,7 @@ const spotData = [
     "address": "深圳市罗湖区文锦北路洪湖公园",
     "lat": 22.558,
     "lng": 114.1145,
-    "image": "/images/spots/洪湖公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B4%AA%E6%B9%96%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -780,7 +780,7 @@ const spotData = [
     "address": "深圳市宝安区福海街道深圳国际会展中心",
     "lat": 22.6195,
     "lng": 113.821,
-    "image": "/images/spots/深圳国际会展中心.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B7%B1%E5%9C%B3%E5%9B%BD%E9%99%85%E4%BC%9A%E5%B1%95%E4%B8%AD%E5%BF%83.jpg",
     "free": false,
     "openHours": "按展会时间"
   },
@@ -800,7 +800,7 @@ const spotData = [
     "address": "深圳市宝安区福永街道凤凰山",
     "lat": 22.704,
     "lng": 113.8585,
-    "image": "/images/spots/凤凰山森林公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%87%A4%E5%87%B0%E5%B1%B1%E6%A3%AE%E6%9E%97%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -820,7 +820,7 @@ const spotData = [
     "address": "深圳市宝安区西乡街道西湾公园",
     "lat": 22.58,
     "lng": 113.843,
-    "image": "/images/spots/西湾红树林公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%A5%BF%E6%B9%BE%E7%BA%A2%E6%A0%91%E6%9E%97%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -840,7 +840,7 @@ const spotData = [
     "address": "深圳市宝安区福永街道立新湖",
     "lat": 22.701,
     "lng": 113.8305,
-    "image": "/images/spots/立新湖公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E7%AB%8B%E6%96%B0%E6%B9%96%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -860,7 +860,7 @@ const spotData = [
     "address": "深圳市龙华区观澜街道版画村",
     "lat": 22.732,
     "lng": 114.0525,
-    "image": "/images/spots/观澜版画村.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%A7%82%E6%BE%9C%E7%89%88%E7%94%BB%E6%9D%91.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -880,7 +880,7 @@ const spotData = [
     "address": "深圳市龙华区观澜高尔夫大道",
     "lat": 22.748,
     "lng": 114.064,
-    "image": "/images/spots/观澜湖度假区.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%A7%82%E6%BE%9C%E6%B9%96%E5%BA%A6%E5%81%87%E5%8C%BA.jpg",
     "free": false,
     "openHours": "全天"
   },
@@ -900,7 +900,7 @@ const spotData = [
     "address": "深圳市龙华区民治街道八号仓",
     "lat": 22.6795,
     "lng": 114.0295,
-    "image": "/images/spots/深圳八号仓.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B7%B1%E5%9C%B3%E5%85%AB%E5%8F%B7%E4%BB%93.jpg",
     "free": true,
     "openHours": "10:00-22:00"
   },
@@ -920,7 +920,7 @@ const spotData = [
     "address": "深圳市龙岗区大运中心",
     "lat": 22.7015,
     "lng": 114.238,
-    "image": "/images/spots/大运中心.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%A4%A7%E8%BF%90%E4%B8%AD%E5%BF%83.jpg",
     "free": false,
     "openHours": "按赛事时间"
   },
@@ -940,7 +940,7 @@ const spotData = [
     "address": "深圳市龙岗区甘坑客家小镇",
     "lat": 22.702,
     "lng": 114.214,
-    "image": "/images/spots/甘坑客家小镇.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E7%94%98%E5%9D%91%E5%AE%A2%E5%AE%B6%E5%B0%8F%E9%95%87.jpg",
     "free": false,
     "openHours": "09:00-22:00"
   },
@@ -960,7 +960,7 @@ const spotData = [
     "address": "深圳市龙岗区大芬油画村",
     "lat": 22.676,
     "lng": 114.2195,
-    "image": "/images/spots/大芬油画村.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%A4%A7%E8%8A%AC%E6%B2%B9%E7%94%BB%E6%9D%91.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -980,7 +980,7 @@ const spotData = [
     "address": "深圳市龙岗区鹤湖新居",
     "lat": 22.684,
     "lng": 114.231,
-    "image": "/images/spots/鹤湖新居.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E9%B9%A4%E6%B9%96%E6%96%B0%E5%B1%85.jpg",
     "free": true,
     "openHours": "09:00-17:30"
   },
@@ -1000,7 +1000,7 @@ const spotData = [
     "address": "深圳市坪山区坪山街道文化聚落",
     "lat": 22.6815,
     "lng": 114.35,
-    "image": "/images/spots/坪山文化聚落.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%9D%AA%E5%B1%B1%E6%96%87%E5%8C%96%E8%81%9A%E8%90%BD.jpg",
     "free": true,
     "openHours": "10:00-21:00"
   },
@@ -1020,7 +1020,7 @@ const spotData = [
     "address": "深圳市坪山区马峦山郊野公园",
     "lat": 22.708,
     "lng": 114.338,
-    "image": "/images/spots/马峦山郊野公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E9%A9%AC%E5%B3%A6%E5%B1%B1%E9%83%8A%E9%87%8E%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -1040,7 +1040,7 @@ const spotData = [
     "address": "深圳市坪山区石井街道金龟村",
     "lat": 22.6485,
     "lng": 114.372,
-    "image": "/images/spots/金龟村.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E9%87%91%E9%BE%9F%E6%9D%91.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -1060,7 +1060,7 @@ const spotData = [
     "address": "深圳市光明区虹桥公园",
     "lat": 22.7705,
     "lng": 113.9275,
-    "image": "/images/spots/虹桥公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%99%B9%E6%A1%A5%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -1080,7 +1080,7 @@ const spotData = [
     "address": "深圳市光明区欢乐田园",
     "lat": 22.763,
     "lng": 113.903,
-    "image": "/images/spots/欢乐田园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%AC%A2%E4%B9%90%E7%94%B0%E5%9B%AD.jpg",
     "free": false,
     "openHours": "09:00-18:00"
   },
@@ -1100,7 +1100,7 @@ const spotData = [
     "address": "深圳市光明区迳口村",
     "lat": 22.774,
     "lng": 113.941,
-    "image": "/images/spots/迳口村.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%BF%B3%E5%8F%A3%E6%9D%91.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -1120,7 +1120,7 @@ const spotData = [
     "address": "深圳市盐田区沙头角中英街",
     "lat": 22.655,
     "lng": 114.2375,
-    "image": "/images/spots/中英街.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E4%B8%AD%E8%8B%B1%E8%A1%97.jpg",
     "free": false,
     "openHours": "09:00-18:00"
   },
@@ -1140,7 +1140,7 @@ const spotData = [
     "address": "深圳市盐田区大梅沙海滨公园",
     "lat": 22.637,
     "lng": 114.296,
-    "image": "/images/spots/大小梅沙.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%A4%A7%E5%B0%8F%E6%A2%85%E6%B2%99.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -1160,7 +1160,7 @@ const spotData = [
     "address": "深圳市盐田区恩上水库",
     "lat": 22.626,
     "lng": 114.209,
-    "image": "/images/spots/恩上湿地公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%81%A9%E4%B8%8A%E6%B9%BF%E5%9C%B0%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -1180,7 +1180,7 @@ const spotData = [
     "address": "深圳市南山区深南大道9037号",
     "lat": 22.5341,
     "lng": 113.9718,
-    "image": "/images/spots/深圳世界之窗.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%B7%B1%E5%9C%B3%E4%B8%96%E7%95%8C%E4%B9%8B%E7%AA%97.jpg",
     "free": false,
     "openHours": "09:30-22:30"
   },
@@ -1200,7 +1200,7 @@ const spotData = [
     "address": "深圳市南山区白石路33号",
     "lat": 22.5355,
     "lng": 113.9745,
-    "image": "/images/spots/华侨城欢乐海岸.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%8D%8E%E4%BE%A8%E5%9F%8E%E6%AC%A2%E4%B9%90%E6%B5%B7%E5%B2%B8.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -1220,7 +1220,7 @@ const spotData = [
     "address": "深圳市宝安区宝安中心区滨海文化公园",
     "lat": 22.5695,
     "lng": 113.8405,
-    "image": "/images/spots/欢乐港湾.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E6%AC%A2%E4%B9%90%E6%B8%AF%E6%B9%BE.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -1240,7 +1240,7 @@ const spotData = [
     "address": "深圳市南山区南新路1819号",
     "lat": 22.5285,
     "lng": 113.9245,
-    "image": "/images/spots/南山博物馆.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%8D%97%E5%B1%B1%E5%8D%9A%E7%89%A9%E9%A6%86.jpg",
     "free": true,
     "openHours": "09:00-17:00"
   },
@@ -1260,7 +1260,7 @@ const spotData = [
     "address": "深圳市南山区前海深港现代服务业合作区",
     "lat": 22.5188,
     "lng": 113.8945,
-    "image": "/images/spots/前海石公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E5%89%8D%E6%B5%B7%E7%9F%B3%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -1280,7 +1280,7 @@ const spotData = [
     "address": "深圳市福田区莲花街道莲花山公园",
     "lat": 22.5528,
     "lng": 114.0545,
-    "image": "/images/spots/莲花山公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E8%8E%B2%E8%8A%B1%E5%B1%B1%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "06:00-23:00"
   },
@@ -1300,7 +1300,7 @@ const spotData = [
     "address": "深圳市宝安区石岩街道阳台山森林公园",
     "lat": 22.6585,
     "lng": 113.9015,
-    "image": "/images/spots/阳台山森林公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E9%98%B3%E5%8F%B0%E5%B1%B1%E6%A3%AE%E6%9E%97%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   },
@@ -1320,7 +1320,7 @@ const spotData = [
     "address": "深圳市宝安区石岩街道石岩湿地公园",
     "lat": 22.659,
     "lng": 113.9145,
-    "image": "/images/spots/石岩湿地公园.jpg",
+    "image": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/spots/%E7%9F%B3%E5%B2%A9%E6%B9%BF%E5%9C%B0%E5%85%AC%E5%9B%AD.jpg",
     "free": true,
     "openHours": "全天"
   }

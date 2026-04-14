@@ -20,7 +20,7 @@ module.exports = {
       hours: '09:00-22:00',
       dishes: ['杨枝甘露', '双皮奶', '龟苓膏'],
       phone: '0755-26832856',
-      logo: '/images/百草堂糖水.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%99%BE%E8%8D%89%E5%A0%82%E7%B3%96%E6%B0%B4.jpg',
       checkInCount: 328,
       wantCount: 156
     },
@@ -38,7 +38,7 @@ module.exports = {
       hours: '10:00-21:00',
       dishes: ['杂碎面', '咖喱鱼蛋', '西多士'],
       phone: '0755-26821547',
-      logo: '/images/宝狮杂碎小食馆.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%AE%9D%E7%8B%AE%E6%9D%82%E7%A2%8E%E5%B0%8F%E9%A3%9F%E9%A6%86.jpg',
       checkInCount: 214,
       wantCount: 98
     },
@@ -56,7 +56,7 @@ module.exports = {
       hours: '07:00-14:00, 17:00-20:00',
       dishes: ['虾饺', '烧麦', '肠粉'],
       phone: '0755-26830985',
-      logo: '/images/嘉华小吃.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%98%89%E5%8D%8E%E5%B0%8F%E5%90%83.jpg',
       checkInCount: 276,
       wantCount: 132
     },
@@ -74,7 +74,7 @@ module.exports = {
       hours: '06:30-14:00',
       dishes: ['牛肉粿条', '粿条汤', '手打牛肉丸'],
       phone: '0755-26693621',
-      logo: '/images/揭阳老五粿条汤.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%8F%AD%E9%98%B3%E8%80%81%E4%BA%94%E7%B2%BF%E6%9D%A1%E6%B1%A4.jpg',
       checkInCount: 189,
       wantCount: 87
     },
@@ -92,7 +92,7 @@ module.exports = {
       hours: '11:00-14:00, 17:00-21:00',
       dishes: ['卤牛蹄', '牛杂', '凉拌牛腱'],
       phone: '0755-26812895',
-      logo: '/images/老兵牛蹄店.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%80%81%E5%85%B5%E7%89%9B%E8%B9%84%E5%BA%97.jpg',
       checkInCount: 512,
       wantCount: 248
     },
@@ -110,7 +110,7 @@ module.exports = {
       hours: '10:30-21:30',
       dishes: ['烧鹅', '叉烧', '白切鸡'],
       phone: '0755-26823789',
-      logo: '/images/蛇口德记烧腊饭店.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%9B%87%E5%8F%A3%E5%BE%B7%E8%AE%B0%E7%83%A7%E8%85%8A%E9%A5%AD%E5%BA%97.jpg',
       checkInCount: 367,
       wantCount: 178
     },
@@ -128,7 +128,7 @@ module.exports = {
       hours: '11:00-22:00',
       dishes: ['卤水鹅', '鹅肠', '鹅肝'],
       phone: '0755-26842895',
-      logo: '/images/益坊鹅店.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%9B%8A%E5%9D%8A%E9%B9%85%E5%BA%97.jpg',
       checkInCount: 298,
       wantCount: 143
     },
@@ -146,7 +146,7 @@ module.exports = {
       hours: '17:00-02:00',
       dishes: ['椰子鸡煲', '榴莲鸡煲', '田螺鸡煲'],
       phone: '0755-26857321',
-      logo: '/images/林鲜记鸡煲.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%9E%97%E9%B2%9C%E8%AE%B0%E9%B8%A1%E7%85%B2.jpg',
       checkInCount: 445,
       wantCount: 212
     },
@@ -164,7 +164,7 @@ module.exports = {
       hours: '17:00-23:00',
       dishes: ['咸鱼蒸肉饼', '鱼仔煲', '椒盐鱿鱼'],
       phone: '0755-26838476',
-      logo: '/images/康乐鱼仔档.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%BA%B7%E4%B9%90%E9%B1%BC%E4%BB%94%E6%A1%A3.jpg',
       checkInCount: 176,
       wantCount: 89
     },
@@ -182,7 +182,7 @@ module.exports = {
       hours: '11:00-22:00',
       dishes: ['牛杂煲', '萝卜牛杂', '咖喱牛杂'],
       phone: '0755-26821984',
-      logo: '/images/佳俊八宝牛杂.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E4%BD%B3%E4%BF%8A%E5%85%AB%E5%AE%9D%E7%89%9B%E6%9D%82.jpg',
       checkInCount: 234,
       wantCount: 118
     },
@@ -200,7 +200,7 @@ module.exports = {
       hours: '11:00-14:00, 17:00-21:00',
       dishes: ['红烧乳鸽', '盐焗鸽', '鸽汤'],
       phone: '0755-26876234',
-      logo: '/images/中山壹鸽.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E4%B8%AD%E5%B1%B1%E5%A3%B9%E9%B8%BD.jpg',
       checkInCount: 321,
       wantCount: 167
     },
@@ -218,7 +218,7 @@ module.exports = {
       hours: '11:00-14:00, 17:00-21:00',
       dishes: ['腊味煲仔饭', '黄鳝煲仔饭', '滑鸡煲仔饭'],
       phone: '0755-26845238',
-      logo: '/images/老顾客煲仔饭.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%80%81%E9%A1%BE%E5%AE%A2%E7%85%B2%E4%BB%94%E9%A5%AD.jpg',
       checkInCount: 489,
       wantCount: 236
     },
@@ -236,7 +236,7 @@ module.exports = {
       hours: '15:00-23:00',
       dishes: ['香辣臭豆腐', '原味臭豆腐', '臭豆腐煲'],
       phone: '0755-26819823',
-      logo: '/images/小致臭豆腐.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%B0%8F%E8%87%B4%E8%87%AD%E8%B1%86%E8%85%90.jpg',
       checkInCount: 143,
       wantCount: 62
     },
@@ -254,7 +254,7 @@ module.exports = {
       hours: '12:00-22:00',
       dishes: ['芒果班戟', '杨枝甘露', '榴莲忘返'],
       phone: '0755-26856321',
-      logo: '/images/姐妹手作（蛇口）.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%A7%90%E5%A6%B9%E6%89%8B%E4%BD%9C%EF%BC%88%E8%9B%87%E5%8F%A3%EF%BC%89.jpg',
       checkInCount: 567,
       wantCount: 289
     },
@@ -272,7 +272,7 @@ module.exports = {
       hours: '07:00-22:00',
       dishes: ['牛腩捞面', '净云吞', '猪脚姜醋蛋'],
       phone: '',
-      logo: '/images/好好味面馆（桃园路）.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%A5%BD%E5%A5%BD%E5%91%B3%E9%9D%A2%E9%A6%86%EF%BC%88%E6%A1%83%E5%9B%AD%E8%B7%AF%EF%BC%89.jpg',
       checkInCount: 356,
       wantCount: 198
     },
@@ -290,7 +290,7 @@ module.exports = {
       hours: '11:00-14:00, 17:00-21:30',
       dishes: ['吊烧鸡', '台山黄鳝饭', '自磨黑豆腐'],
       phone: '',
-      logo: '/images/翠湖广东乡下菜.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%BF%A0%E6%B9%96%E5%B9%BF%E4%B8%9C%E4%B9%A1%E4%B8%8B%E8%8F%9C.jpg',
       checkInCount: 267,
       wantCount: 134
     },
@@ -308,7 +308,7 @@ module.exports = {
       hours: '07:30-20:30',
       dishes: ['金牌烧鹅', '海鲜来料加工', '蜜汁叉烧'],
       phone: '',
-      logo: '/images/老字号德记烧腊.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%80%81%E5%AD%97%E5%8F%B7%E5%BE%B7%E8%AE%B0%E7%83%A7%E8%85%8A.jpg',
       checkInCount: 198,
       wantCount: 96
     },
@@ -326,7 +326,7 @@ module.exports = {
       hours: '11:00-14:00, 17:00-次日01:30',
       dishes: ['豉油皇大虾', '椒盐九肚鱼', '豆豉鸡'],
       phone: '',
-      logo: '/images/小煵记.深圳本地菜.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%B0%8F%E7%85%B5%E8%AE%B0.%E6%B7%B1%E5%9C%B3%E6%9C%AC%E5%9C%B0%E8%8F%9C.jpg',
       checkInCount: 312,
       wantCount: 156
     },
@@ -344,7 +344,7 @@ module.exports = {
       hours: '11:00-14:00, 17:00-次日03:00',
       dishes: ['椒盐濑尿虾', '盐焗鹅掌翼', '紫苏拍蒜炒波龙'],
       phone: '',
-      logo: '/images/湛记佬海鲜.老字号·深圳19年老字号餐厅.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%B9%9B%E8%AE%B0%E4%BD%AC%E6%B5%B7%E9%B2%9C.%E8%80%81%E5%AD%97%E5%8F%B7%C2%B7%E6%B7%B1%E5%9C%B319%E5%B9%B4%E8%80%81%E5%AD%97%E5%8F%B7%E9%A4%90%E5%8E%85.jpg',
       checkInCount: 423,
       wantCount: 215
     },
@@ -362,7 +362,7 @@ module.exports = {
       hours: '10:00-次日01:00',
       dishes: ['黑松露鲍鱼焖鸡', '蒜蓉粉丝九节虾', '黑胡椒炒蟹'],
       phone: '',
-      logo: '/images/海燕餐厅（海上世界店）.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%B5%B7%E7%87%95%E9%A4%90%E5%8E%85%EF%BC%88%E6%B5%B7%E4%B8%8A%E4%B8%96%E7%95%8C%E5%BA%97%EF%BC%89.jpg',
       checkInCount: 387,
       wantCount: 203
     },
@@ -380,7 +380,7 @@ module.exports = {
       hours: '10:30-次日02:30',
       dishes: ['椒盐九肚鱼', '蚝仔烙', '椒盐濑尿虾'],
       phone: '',
-      logo: '/images/蛇口老街鱼仔档.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%9B%87%E5%8F%A3%E8%80%81%E8%A1%97%E9%B1%BC%E4%BB%94%E6%A1%A3.jpg',
       checkInCount: 456,
       wantCount: 234
     },
@@ -398,7 +398,7 @@ module.exports = {
       hours: '08:00-14:00, 17:00-22:00',
       dishes: ['华洋虾饺皇', '豉汁凤爪', '风味牛肚'],
       phone: '',
-      logo: '/images/华洋酒楼.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%8D%8E%E6%B4%8B%E9%85%92%E6%A5%BC.jpg',
       checkInCount: 289,
       wantCount: 145
     },
@@ -416,7 +416,7 @@ module.exports = {
       hours: '10:00-22:00',
       dishes: ['招牌湛江白切鸡', '手工乡下捞粉', '青橄榄猪肺'],
       phone: '',
-      logo: '/images/新高记湛江鸡饭店（南头古城店）.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%96%B0%E9%AB%98%E8%AE%B0%E6%B9%9B%E6%B1%9F%E9%B8%A1%E9%A5%AD%E5%BA%97%EF%BC%88%E5%8D%97%E5%A4%B4%E5%8F%A4%E5%9F%8E%E5%BA%97%EF%BC%89.jpg',
       checkInCount: 245,
       wantCount: 128
     },
@@ -434,7 +434,7 @@ module.exports = {
       hours: '11:00-14:00 17:00-23:00',
       dishes: ['茂名捞粉', '白切粉肠', '五柳炸蛋', '盐焗海螺', '蚝绿嗨', '捞汁鱼皮', '姜酒焗牛肉', '椒盐骨鳝', '话梅大肠', '菜汁酿豆腐', '啫啫沙姜果园鸡', '燕麦反沙芋头'],
       phone: '',
-      logo: '/images/头牌小厨.jpg',
+      logo: 'https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%A4%B4%E7%89%8C%E5%B0%8F%E5%8E%A8.jpg',
       checkInCount: 523,
       wantCount: 267
     }

@@ -18,6 +18,11 @@ Page({
     // 数据
     items: [],
     empty: true,
+    // 导航栏高度（动态计算）
+    statusBarHeight: 44,
+    navBarHeight: 88,
+    tabBarTop: 88,
+    contentTop: 132,
     // 拖拽状态
     dragging: false,
     dragIndex: -1,
@@ -27,7 +32,12 @@ Page({
   onLoad(options) {
     // 支持从外部传入 tab 参数
     const tab = options.tab || 'food'
-    this.setData({ tab })
+    // 动态获取状态栏高度，解决刘海屏遮挡问题
+    const { statusBarHeight } = wx.getSystemInfoSync()
+    const navBarHeight = statusBarHeight + 44 // 状态栏 + 导航栏内容区
+    const tabBarTop = navBarHeight            // Tab栏紧跟导航栏
+    const contentTop = navBarHeight + 44      // 内容区在Tab栏下方
+    this.setData({ tab, navBarHeight, statusBarHeight, tabBarTop, contentTop })
   },
 
   // ─── 返回 ─────────────────────────────
