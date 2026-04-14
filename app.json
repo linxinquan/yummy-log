@@ -11,7 +11,7 @@
     "pages/add-shop/add-shop",
     "pages/webview/webview"
   ],
-  "lazyCodeLoad": true,
+  "lazyCodeLoading": "requiredComponents",
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#ffffff",
