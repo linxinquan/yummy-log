@@ -1,0 +1,448 @@
+<!-- pages/checkin/checkin.wxml - 采集 v3 · 情境化交互 -->
+<!-- WXS 工具模块：安全获取字符串/数组长度 -->
+<wxs module="utils">
+module.exports = {
+  len: function(v) {
+    if (v == null) return 0;
+    if (typeof v === 'string') return v.length;
+    if (typeof v === 'number') return String(v).length;
+    if (Array.isArray(v)) return v.length;
+    return 0;
+  }
+};
+</wxs>
+
+<!-- 隐藏 Canvas 用于生成邮票卡 -->
+<canvas canvas-id="stampCanvas" class="hidden-canvas" type="2d" />
+
+<view class="page {{type === 'spot' ? 'type-spot' : 'type-food'}}">
+
+  <!-- ══ 顶部导航 ══ -->
+  <view class="nav-bar">
+    <view class="nav-back" bindtap="onBack">‹</view>
+    <text class="nav-title">{{type === 'spot' ? '景点采集' : '美食采集'}}</text>
+    <view class="nav-right" bindtap="onGoCollection">
+      <view class="nav-album-btn">
+        <text class="nav-album-icon">🎫</text>
+        <text class="nav-album-text">采集本</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ══ 步骤指示器（增强版） ══ -->
+  <view class="steps-bar">
+    <view class="steps-inner">
+      <view class="step-item {{step >= 1 ? 'active' : ''}} {{step === 1 ? 'current' : ''}}">
+        <view class="step-dot">
+          <text class="step-num">{{step > 1 ? '✓' : '1'}}</text>
+        </view>
+        <text class="step-label">拍照</text>
+      </view>
+      <view class="step-line {{step >= 2 ? 'active' : ''}}"></view>
+      <view class="step-item {{step >= 2 ? 'active' : ''}} {{step === 2 ? 'current' : ''}}">
+        <view class="step-dot">
+          <text class="step-num">{{step > 2 ? '✓' : '2'}}</text>
+        </view>
+        <text class="step-label">识别</text>
+      </view>
+      <view class="step-line {{step >= 3 ? 'active' : ''}}"></view>
+      <view class="step-item {{step >= 3 ? 'active' : ''}} {{step === 3 ? 'current' : ''}}">
+        <view class="step-dot">
+          <text class="step-num">{{step > 3 ? '✓' : '3'}}</text>
+        </view>
+        <text class="step-label">采集</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- STEP 1：拍照区（邮票风格预览） -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <view class="section" wx:if="{{step === 1}}">
+
+    <!-- 情境引导语 -->
+    <view class="ctx-tip">
+      <text class="ctx-icon">{{type === 'spot' ? '🏛' : '🍽'}}</text>
+      <view class="ctx-body">
+        <text class="ctx-title">{{type === 'spot' ? '记录城市地标' : '探店的瞬间'}}</text>
+        <text class="ctx-sub">{{type === 'spot' ? '一张照片，点亮你的足迹地图' : '一张照片，记录舌尖上的美味'}}</text>
+      </view>
+    </view>
+
+    <!-- 邮票风格照片卡 -->
+    <view class="stamp-photo-wrap" bindtap="onChoosePhoto">
+      <!-- 有照片：邮票预览 -->
+      <view wx:if="{{photoPath}}" class="stamp-preview">
+        <!-- 邮票锯齿顶 -->
+        <view class="sp-perf sp-perf-top"></view>
+        <!-- 顶部品牌条 -->
+        <view class="sp-brand-bar">
+          <text class="sp-brand">METOUR · 觅食图</text>
+          <view class="sp-type-tag">{{type === 'spot' ? '景点' : '美食'}}</view>
+        </view>
+        <!-- 照片主体 -->
+        <view class="sp-photo-area">
+          <image class="sp-photo" src="{{photoPath}}" mode="aspectFill" />
+          <!-- 重拍按钮 -->
+          <view class="sp-retake">
+            <text class="sp-retake-icon">⟳</text>
+            <text class="sp-retake-text">重新拍摄</text>
+          </view>
+        </view>
+        <!-- 底部信息条 -->
+        <view class="sp-info-bar">
+          <text class="sp-date">{{dateInfo.yyyy}}.{{dateInfo.mm}}.{{dateInfo.dd}}</text>
+          <view class="sp-city-seal"><text>深圳</text></view>
+        </view>
+        <!-- 邮票锯齿底 -->
+        <view class="sp-perf sp-perf-bottom"></view>
+      </view>
+
+      <!-- 无照片：引导上传 -->
+      <view wx:else class="stamp-empty">
+        <view class="se-dashed">
+          <view class="se-perf se-perf-top"></view>
+          <view class="se-inner">
+            <view class="se-camera-wrap">
+              <view class="se-camera-icon">
+                <text class="se-icon-sym">📷</text>
+              </view>
+              <view class="se-ripple se-ripple-1"></view>
+              <view class="se-ripple se-ripple-2"></view>
+            </view>
+            <text class="se-hint">点击拍照 / 从相册选择</text>
+            <text class="se-sub">{{type === 'spot' ? '支持直接拍摄或从相册选取' : '支持直接拍摄或从相册选取'}}</text>
+          </view>
+          <view class="se-perf se-perf-bottom"></view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部下一步 -->
+    <view class="bottom-action">
+      <view class="btn-primary {{photoPath ? '' : 'disabled'}}" bindtap="onNextStep">
+        <view class="bpa-left">
+          <text class="bpa-icon">📍</text>
+          <text class="bpa-text">下一步：AI 识别位置</text>
+        </view>
+        <text class="bpa-arrow">→</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- STEP 2：AI 识别 + 信息编辑 -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <view class="section" wx:if="{{step === 2}}">
+
+    <!-- 照片缩略（邮票小卡） -->
+    <view class="thumb-stamp">
+      <view class="ts-perf-top"></view>
+      <image class="ts-photo" src="{{photoPath}}" mode="aspectFill" />
+      <view class="ts-brand">METOUR</view>
+      <view class="ts-perf-bottom"></view>
+    </view>
+
+    <!-- AI 识别卡（动态状态） -->
+    <view class="ai-identify-card {{locationLoading ? 'scanning' : (spotName ? 'done' : 'idle')}}">
+      <!-- 扫描动画条 -->
+      <view class="aic-scan-line" wx:if="{{locationLoading}}"></view>
+
+      <view class="aic-header">
+        <view class="aic-icon-wrap">
+          <text class="aic-icon">{{locationLoading ? '🔍' : (spotName ? '✦' : '📍')}}</text>
+        </view>
+        <view class="aic-status-body">
+          <text class="aic-status">{{locationLoading ? '正在识别中...' : (spotName ? '识别完成' : '点击识别位置')}}</text>
+          <view class="aic-dots" wx:if="{{locationLoading}}">
+            <view class="adot"></view>
+            <view class="adot"></view>
+            <view class="adot"></view>
+          </view>
+        </view>
+        <!-- 重新定位按钮 -->
+        <view class="aic-refresh" bindtap="onGetLocation" wx:if="{{!locationLoading}}">
+          <text class="aic-refresh-icon {{locationLoading ? 'spinning' : ''}}">⟳</text>
+        </view>
+      </view>
+
+      <!-- 识别结果区域 -->
+      <view class="aic-result" wx:if="{{spotName}}">
+        <!-- 地点名称 - 可编辑 -->
+        <view class="aic-field">
+          <text class="aic-field-label">📍 地点</text>
+          <input class="aic-input aic-name" value="{{spotName}}" bindinput="onNameInput" placeholder="输入地点名称" />
+        </view>
+        <!-- 详细地址 -->
+        <view class="aic-field" wx:if="{{address}}">
+          <text class="aic-field-label">🗺 地址</text>
+          <input class="aic-input aic-addr" value="{{address}}" bindinput="onAddrInput" placeholder="详细地址" />
+        </view>
+      </view>
+    </view>
+
+    <!-- AI 智能生成标题 -->
+    <view class="ai-title-card" wx:if="{{step >= 2}}">
+      <view class="aitc-label">
+        <text class="aitc-label-icon">✦</text>
+        <text class="aitc-label-text">AI 生成标题</text>
+      </view>
+      <view wx:if="{{generatingTitle}}" class="aitc-generating">
+        <text class="aitc-title generating-text">{{generatingTitle}}<text class="cursor-blink">|</text></text>
+        <text class="aitc-waiting">正在生成描述...</text>
+      </view>
+      <text wx:elif="{{title}}" class="aitc-title">{{title}}</text>
+      <text wx:else class="aitc-placeholder">点击「生成内容」获取 AI 标题</text>
+    </view>
+
+    <!-- AI 自动生成描述卡 -->
+    <view class="ai-desc-card {{descEditing ? 'editing' : ''}}">
+      <view class="adc-header">
+        <view class="adc-title-row">
+          <text class="adc-spark">✨</text>
+          <text class="adc-title">{{generatingDesc ? 'AI 正在生成...' : 'AI 生成描述'}}</text>
+          <view class="adc-badge">智能</view>
+        </view>
+        <view class="adc-edit-btn" bindtap="onToggleDescEdit">
+          <text>{{descEditing ? '完成' : '编辑'}}</text>
+        </view>
+      </view>
+      <view wx:if="{{!descEditing && description}}">
+        <text class="adc-text">{{description}}</text>
+      </view>
+      <textarea
+        wx:if="{{descEditing || !description}}"
+        class="adc-textarea"
+        value="{{description}}"
+        bindinput="onDescInput"
+        placeholder="AI 将根据地点自动生成一段描述，也可以自己写..."
+        auto-height
+        maxlength="120"
+      />
+      <view class="adc-footer">
+        <text class="adc-hint">可点击编辑，或继续使用AI描述</text>
+        <text class="adc-len">{{utils.len(description)}}/120</text>
+      </view>
+    </view>
+
+    <!-- 类型标签 -->
+    <view class="type-badge-row">
+      <view class="type-badge {{type === 'spot' ? 'spot' : 'food'}}">
+        <text class="tb-dot"></text>
+        <text class="tb-text">{{type === 'spot' ? '🏛 景点打卡' : '🍽 美食打卡'}}</text>
+      </view>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="bottom-action row">
+      <view class="btn-secondary" bindtap="onPrevStep">← 返回</view>
+      <view class="btn-primary {{generating ? 'loading' : ''}}" bindtap="onGenerate">
+        <text class="bpa-text">{{generating ? '生成中...' : '生成邮票卡 →'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- STEP 3：邮票卡确认（一键采集） -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <view class="section" wx:if="{{step === 3}}">
+
+    <!-- 标题 -->
+    <view class="confirm-header">
+      <text class="ch-icon">🎫</text>
+      <view class="ch-body">
+        <text class="ch-title">采集预览</text>
+        <text class="ch-sub">确认后记入你的旅行足迹</text>
+      </view>
+    </view>
+
+    <!-- 邮票卡预览 -->
+    <view class="stamp-card-wrap">
+      <view class="stamp-card">
+        <!-- 锯齿顶 -->
+        <view class="sc-perf-top"></view>
+        <!-- 顶部品牌条 - 主题色 -->
+        <view class="sc-header">
+          <view class="sc-header-left">
+            <view class="sc-type-icon {{type}}">
+              <text>{{type === 'spot' ? '🏛' : '🍽'}}</text>
+            </view>
+            <text class="sc-brand">METOUR · 觅食图</text>
+          </view>
+          <view class="sc-date-block">
+            <text class="sc-date-mm">{{dateInfo.mm}}</text>
+            <text class="sc-date-sep">/</text>
+            <text class="sc-date-dd">{{dateInfo.dd}}</text>
+          </view>
+        </view>
+        <!-- 照片区 -->
+        <view class="sc-photo-wrap">
+          <image class="sc-photo" src="{{photoPath}}" mode="aspectFill" />
+          <view class="sc-photo-tag {{type}}">
+            <text>{{type === 'spot' ? '景点' : '美食'}}</text>
+          </view>
+        </view>
+        <!-- 信息区 -->
+        <view class="sc-info">
+          <view class="sc-info-left">
+            <!-- AI 标题（如果有） -->
+            <text class="sc-ai-title" wx:if="{{title}}">{{title}}</text>
+            <text class="sc-location">{{spotName}}</text>
+            <text class="sc-addr" wx:if="{{address}}">{{address}}</text>
+            <text class="sc-desc">{{description}}</text>
+          </view>
+          <view class="sc-info-right">
+            <text class="sc-year">{{dateInfo.yyyy}}</text>
+            <view class="sc-seal {{type}}">
+              <text class="sc-city">深圳</text>
+            </view>
+          </view>
+        </view>
+        <!-- 底部信息条 -->
+        <view class="sc-footer">
+          <text class="sc-footer-text">{{spotName}} · {{dateInfo.yyyy}}.{{dateInfo.mm}}.{{dateInfo.dd}}</text>
+        </view>
+        <!-- 锯齿底 -->
+        <view class="sc-perf-bottom"></view>
+      </view>
+    </view>
+
+    <!-- 一键采集 CTA -->
+    <view class="confirm-action">
+      <view class="btn-secondary compact" bindtap="onPrevStep">← 重新定位</view>
+      <view class="btn-collect {{saving ? 'loading' : ''}}" bindtap="onSaveCheckin">
+        <view wx:if="{{!saving}}" class="bc-inner">
+          <text class="bc-icon">✦</text>
+          <text class="bc-text">确认采集</text>
+          <text class="bc-sub">保存到足迹本</text>
+        </view>
+        <text wx:else class="bc-loading">保存中...</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- STEP 4：采集成功 + 足迹地图 -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <view class="section success-section" wx:if="{{step === 4}}">
+
+    <!-- 成功状态 -->
+    <view class="success-hero">
+      <view class="sh-icon-wrap">
+        <view class="sh-ring sh-ring-1"></view>
+        <view class="sh-ring sh-ring-2"></view>
+        <text class="sh-icon">✦</text>
+      </view>
+      <text class="sh-title">采集成功！</text>
+      <text class="sh-sub">已加入你的旅行足迹本</text>
+    </view>
+
+    <!-- 成功邮票卡 -->
+    <view class="stamp-card-wrap success-card">
+      <view class="stamp-card">
+        <view class="sc-perf-top"></view>
+        <view class="sc-header">
+          <view class="sc-header-left">
+            <view class="sc-type-icon {{type}}">
+              <text>{{type === 'spot' ? '🏛' : '🍽'}}</text>
+            </view>
+            <text class="sc-brand">METOUR · 觅食图</text>
+          </view>
+          <view class="sc-date-block">
+            <text class="sc-date-mm">{{dateInfo.mm}}</text>
+            <text class="sc-date-sep">/</text>
+            <text class="sc-date-dd">{{dateInfo.dd}}</text>
+          </view>
+        </view>
+        <view class="sc-photo-wrap">
+          <image class="sc-photo" src="{{photoPath}}" mode="aspectFill" />
+          <view class="sc-photo-tag {{type}}">
+            <text>{{type === 'spot' ? '景点' : '美食'}}</text>
+          </view>
+        </view>
+        <view class="sc-info">
+          <view class="sc-info-left">
+            <text class="sc-location">{{spotName}}</text>
+            <text class="sc-addr" wx:if="{{address}}">{{address}}</text>
+            <text class="sc-desc">{{description}}</text>
+          </view>
+          <view class="sc-info-right">
+            <text class="sc-year">{{dateInfo.yyyy}}</text>
+            <view class="sc-seal {{type}}">
+              <text class="sc-city">深圳</text>
+            </view>
+          </view>
+        </view>
+        <view class="sc-footer">
+          <text class="sc-footer-text">{{spotName}} · {{dateInfo.yyyy}}.{{dateInfo.mm}}.{{dateInfo.dd}}</text>
+        </view>
+        <view class="sc-perf-bottom"></view>
+      </view>
+    </view>
+
+    <!-- 足迹地图 - 图交互 -->
+    <view class="map-section">
+      <view class="ms-header">
+        <text class="ms-title">足迹分布</text>
+        <!-- 地图/列表双视图切换 -->
+        <view class="ms-view-toggle">
+          <view class="mvt-btn {{mapView === 'map' ? 'active' : ''}}" bindtap="onSwitchView" data-view="map">地图</view>
+          <view class="mvt-btn {{mapView === 'list' ? 'active' : ''}}" bindtap="onSwitchView" data-view="list">列表</view>
+        </view>
+      </view>
+
+      <!-- 地图视图：展示采集点分布 -->
+      <view class="ms-map-wrap" wx:if="{{mapView === 'map'}}">
+        <map
+          class="ms-map"
+          latitude="{{mapCenter.latitude}}"
+          longitude="{{mapCenter.longitude}}"
+          scale="{{mapScale}}"
+          markers="{{allMarkers}}"
+          show-location
+          enable-zoom="true"
+          enable-scroll="true"
+        ></map>
+        <!-- 数据可视化脉冲 - 最新采集点 -->
+        <view class="ms-pulse-wrap">
+          <view class="msp-ring msp-ring-1"></view>
+          <view class="msp-ring msp-ring-2"></view>
+          <view class="msp-ring msp-ring-3"></view>
+        </view>
+        <!-- 统计浮层 -->
+        <view class="ms-stats-overlay">
+          <view class="mso-item">
+            <text class="mso-num">{{allMarkers.length}}</text>
+            <text class="mso-label">个采集点</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 列表视图：最近采集记录 -->
+      <view class="ms-list-wrap" wx:if="{{mapView === 'list'}}">
+        <view wx:if="{{recentCheckins.length === 0}}" class="ms-empty">
+          <text class="mse-text">暂无采集记录</text>
+        </view>
+        <view class="ms-list-item" wx:for="{{recentCheckins}}" wx:key="id">
+          <view class="mli-dot {{item.type === 'spot' ? 'spot' : 'food'}}"></view>
+          <view class="mli-info">
+            <text class="mli-name">{{item.spotName || '未知地点'}}</text>
+            <text class="mli-meta">{{item.type === 'spot' ? '景点' : '美食'}} · {{item.dateStr || ''}}</text>
+          </view>
+          <view class="mli-type-icon {{item.type}}">
+            <text>{{item.type === 'spot' ? '🏛' : '🍽'}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部操作 -->
+    <view class="success-actions">
+      <view class="btn-secondary" bindtap="onReset">继续采集</view>
+      <view class="btn-primary" bindtap="onGoCollection">
+        <text class="bpa-text">查看采集本 →</text>
+      </view>
+    </view>
+  </view>
+
+</view>

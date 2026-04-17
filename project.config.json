@@ -1,5 +1,6 @@
 {
   "miniprogramRoot": "./",
+  "cloudfunctionRoot": "cloud/",
   "projectname": "觅食迹",
   "description": "深圳蛇口美食探店地图小程序",
   "appid": "wxd63e0f59de062cd9",
@@ -54,5 +55,6 @@
     "ignore": [],
     "include": []
   },
-  "editorSetting": {}
+  "editorSetting": {},
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
 }

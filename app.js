@@ -27,6 +27,17 @@ App({
   },
 
   onLaunch() {
+    // ── CloudBase 初始化（混元 AI）──────────────
+    // 环境 ID: cloud1-9grc0ja0405b042a（从 CloudBase 控制台获取）
+    if (wx.cloud) {
+      wx.cloud.init({
+        env: 'cloud1-9grc0ja0405b042a',
+        traceUser: true
+      })
+      console.log('[CloudBase] 初始化完成')
+    }
+    // ───────────────────────────────────────────
+
     // 启动时获取用户位置
     this.getUserLocation()
   },

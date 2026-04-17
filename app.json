@@ -9,7 +9,9 @@
     "pages/route/route",
     "pages/wantgo/wantgo",
     "pages/add-shop/add-shop",
-    "pages/webview/webview"
+    "pages/webview/webview",
+    "pages/checkin/checkin",
+    "pages/collection/collection"
   ],
   "lazyCodeLoading": "requiredComponents",
   "window": {

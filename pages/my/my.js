@@ -2,6 +2,12 @@
 const app = getApp()
 const shopData = require('../../utils/shopData')
 const util = require('../../utils/util')
+let checkinUtil = null
+try {
+  checkinUtil = require('../../utils/checkinUtil')
+} catch (e) {
+  console.warn('checkinUtil 加载失败:', e)
+}
 
 Page({
   data: {
@@ -41,7 +47,23 @@ Page({
 
     // 天气信息
     weatherIcon: '☀️',
-    weatherTemp: '25°C'
+    weatherTemp: '25°C',
+
+    // 打卡采集统计
+    checkinStats: { totalCount: 0, cityCount: 0, spotCount: 0, foodCount: 0 },
+
+    // 采集展示
+    latestStamp: null,
+    recentStamps: [],
+
+    // 深圳地图打卡点（统一 + 分类）
+    mapCenter: { latitude: 22.543099, longitude: 114.057868 },
+    mapMarkers: [],
+    spotMarkers: [],
+    foodMarkers: [],
+
+    // 双地图滚动指示
+    journeyIndex: 0
   },
 
   onLoad() {
@@ -56,6 +78,132 @@ Page({
   onShow() {
     this.loadUserInfo()
     this.loadData()
+    this.loadCheckinStats()
+  },
+
+  loadCheckinStats() {
+    if (!checkinUtil) return
+    try {
+      const stats = checkinUtil.getCheckinStats()
+      const allCheckins = checkinUtil.getCheckins()
+
+      // 最新邮票（第一条）
+      let latestStamp = null
+      if (allCheckins.length > 0) {
+        const first = allCheckins[0]
+        const d = new Date(first.date)
+        latestStamp = {
+          ...first,
+          dateStr: `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`
+        }
+      }
+
+      // 近期邮票（最多6条）
+      const recentStamps = allCheckins.slice(0, 6).map(c => {
+        const d = new Date(c.date)
+        return {
+          ...c,
+          shortDate: `${d.getMonth()+1}/${d.getDate()}`,
+          dateStr: `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`
+        }
+      })
+
+      // 地图打卡点：只用有坐标的采集记录，分景点/美食两组
+      const mapMarkers = []
+      const spotMarkers = []
+      const foodMarkers = []
+      allCheckins.forEach((c) => {
+        if (c.latitude && c.longitude) {
+          const marker = {
+            id: c.id,
+            latitude: c.latitude,
+            longitude: c.longitude,
+            width: 36,
+            height: 36,
+            callout: {
+              content: c.spotName || (c.type === 'spot' ? '🏞️' : '🍜'),
+              color: '#ffffff',
+              fontSize: 11,
+              borderRadius: 6,
+              padding: 4,
+              display: 'BYCLICK',
+              bgColor: c.type === 'spot' ? '#00D9C0' : '#FF8B7E',
+              textAlign: 'center'
+            }
+          }
+          mapMarkers.push(marker)
+          if (c.type === 'spot') {
+            spotMarkers.push(marker)
+          } else {
+            foodMarkers.push(marker)
+          }
+        }
+      })
+
+      // 地图中心：取所有打卡点的边界中心，无数据时默认深圳
+      let mapCenter = { latitude: 22.543099, longitude: 114.057868 }
+      if (mapMarkers.length > 0) {
+        const lats = mapMarkers.map(m => m.latitude)
+        const lngs = mapMarkers.map(m => m.longitude)
+        mapCenter = {
+          latitude: (Math.min(...lats) + Math.max(...lats)) / 2,
+          longitude: (Math.min(...lngs) + Math.max(...lngs)) / 2
+        }
+      }
+
+      // 景点/美食各自的地图中心
+      const getCenter = (markers) => {
+        if (markers.length === 0) return { latitude: 22.543099, longitude: 114.057868 }
+        const lats = markers.map(m => m.latitude)
+        const lngs = markers.map(m => m.longitude)
+        return {
+          latitude: (Math.min(...lats) + Math.max(...lats)) / 2,
+          longitude: (Math.min(...lngs) + Math.max(...lngs)) / 2
+        }
+      }
+
+      this.setData({
+        checkinStats: {
+          totalCount: stats.totalCount || 0,
+          cityCount: stats.cityCount || 0,
+          spotCount: stats.spotCount || 0,
+          foodCount: stats.foodCount || 0
+        },
+        latestStamp,
+        recentStamps,
+        mapMarkers,
+        spotMarkers,
+        foodMarkers,
+        mapCenter,
+        spotMapCenter: getCenter(spotMarkers),
+        foodMapCenter: getCenter(foodMarkers)
+      })
+    } catch (e) {
+      console.warn('getCheckinStats 失败:', e)
+    }
+  },
+
+  // 预览邮票大图
+  onPreviewStamp(e) {
+    const id = e.currentTarget.dataset.id
+    const item = this.data.recentStamps.find(c => c.id === id)
+    if (item && item.photoPath) {
+      wx.previewImage({ urls: [item.photoPath], current: item.photoPath })
+    }
+  },
+
+  // 统一采集入口
+  onGoCheckin() {
+    wx.showActionSheet({
+      itemList: ['🍜 美食采集', '🏞️ 景点采集'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
+        } else {
+          wx.navigateTo({ url: '/pages/checkin/checkin?type=spot' })
+        }
+      }
+    })
   },
 
   // 加载行政区划信息
@@ -398,5 +546,68 @@ Page({
   // 前往路线规划页
   onGoRoute() {
     wx.navigateTo({ url: '/pages/route/route' })
+  },
+
+  // 前往打卡采集列表
+  onGoCollection() {
+    wx.navigateTo({ url: '/pages/collection/collection' })
+  },
+
+  // 美食打卡
+  onGoCheckinFood() {
+    wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
+  },
+
+  // 景点打卡
+  onGoCheckinSpot() {
+    wx.navigateTo({ url: '/pages/checkin/checkin?type=spot' })
+  },
+
+  // 点击地图卡片
+  onMapTap() {
+    // 有打卡点时提示，无打卡点时引导采集
+    if (this.data.mapMarkers.length === 0) {
+      wx.showModal({
+        title: '还没有点亮',
+        content: '先去采集美食或景点吧～',
+        confirmText: '去采集',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
+          }
+        }
+      })
+    }
+  },
+
+  // 标题栏未登录点击
+  onShowLogin() {
+    // 滚动到统计条以下位置，那里还有未登录表单
+    wx.pageScrollTo({ scrollTop: 200, duration: 300 })
+  },
+
+  // 景点地图点击
+  onSpotMapTap() {
+    if (this.data.spotMarkers.length === 0) {
+      wx.navigateTo({ url: '/pages/checkin/checkin?type=spot' })
+    }
+  },
+
+  // 美食地图点击
+  onFoodMapTap() {
+    if (this.data.foodMarkers.length === 0) {
+      wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
+    }
+  },
+
+  // 双地图横向滚动处理
+  onJourneyScroll(e) {
+    const scrollLeft = e.detail.scrollLeft
+    const cardWidth = wx.getSystemInfoSync().windowWidth - 80 // 减去边距
+    const index = Math.round(scrollLeft / cardWidth)
+    if (index !== this.data.journeyIndex) {
+      this.setData({ journeyIndex: index })
+    }
   }
 })

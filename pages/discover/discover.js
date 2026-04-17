@@ -2,6 +2,7 @@
 const app = getApp()
 const shopData = require('../../utils/shopData')
 const util = require('../../utils/util')
+const checkinUtil = require('../../utils/checkinUtil')
 
 Page({
   data: {
@@ -24,7 +25,13 @@ Page({
     // 各区美食攻略
     districtGuides: {},
     currentGuides: [],
-    
+
+    // ── AI 个性化推荐 ──────────────────────────
+    // 用户打卡画像
+    checkinProfile: null,       // { foodCount, spotCount, districts: [], lastType }
+    aiRecommendation: null,     // 当前推荐
+    recommendLoading: false,
+
     // 我的攻略
     myGuides: [],
     
@@ -55,10 +62,14 @@ Page({
     this.loadDistrictInfo()
     // 获取天气
     this.loadWeather()
+    // 加载 AI 个性化推荐
+    this.loadAIRecommendation()
   },
 
   onShow() {
     this.loadMyGuides()
+    // 每次进入页面刷新推荐
+    this.loadAIRecommendation()
   },
 
   // 加载行政区划信息
@@ -664,6 +675,121 @@ Page({
         }
       }
     })
+  },
+
+  // ── AI 个性化推荐 ──────────────────────────────────
+
+  // 加载 AI 推荐（每次进入页面刷新）
+  loadAIRecommendation() {
+    if (!checkinUtil) return
+    const profile = checkinUtil.getCheckinStats() || {}
+    const checkins = checkinUtil.getCheckins() || []
+
+    // 构建用户画像
+    const foodCount = checkins.filter(c => c.type === 'food').length
+    const spotCount = checkins.filter(c => c.type === 'spot').length
+    const districts = [...new Set(checkins.map(c => c.district || '').filter(Boolean))]
+    const lastType = checkins.length > 0 ? checkins[checkins.length - 1].type : null
+
+    const userProfile = { foodCount, spotCount, districts, lastType, total: checkins.length }
+    this.setData({ checkinProfile: userProfile })
+
+    // 基于时间 + 画像生成推荐
+    const rec = this._buildRecommendation(profile, userProfile)
+    this.setData({ aiRecommendation: rec })
+  },
+
+  // 构建推荐内容（规则引擎 + AI 生成描述）
+  _buildRecommendation(profile, userProfile) {
+    const hour = new Date().getHours()
+    const city = (getApp().globalData.districtInfo?.city || '深圳').replace('市', '')
+
+    // 时段关键词
+    let timeLabel, timeIcon, recType, recTitle
+    if (hour < 9) {
+      timeLabel = '早餐'; timeIcon = '🌅'; recType = 'food'
+      recTitle = '今日早餐灵感'
+    } else if (hour < 14) {
+      timeLabel = '午餐'; timeIcon = '☀️'; recType = 'food'
+      recTitle = '附近午餐推荐'
+    } else if (hour < 18) {
+      timeLabel = '下午茶'; timeIcon = '🍵'; recType = 'food'
+      recTitle = '下午茶时光'
+    } else if (hour < 22) {
+      timeLabel = '晚餐'; timeIcon = '🌙'; recType = 'food'
+      recTitle = '晚餐觅食'
+    } else {
+      timeLabel = '夜宵'; timeIcon = '🌃'; recType = 'food'
+      recTitle = '深夜食堂'
+    }
+
+    // 新用户引导
+    if (userProfile.total < 3) {
+      return {
+        type: recType,
+        timeLabel,
+        timeIcon,
+        recTitle: '开始你的觅食之旅',
+        recDesc: `还没有太多记录？从${city}南山区开始探索吧，这里有丰富的美食和景点等你发现～`,
+        actionText: '去探索',
+        actionPath: '/pages/spots/spots',
+        ctaIcon: '✦',
+        isNewUser: true
+      }
+    }
+
+    // 美食爱好者
+    if (userProfile.foodCount > userProfile.spotCount) {
+      const spotRatio = Math.round(userProfile.spotCount / (userProfile.foodCount + 1) * 100)
+      return {
+        type: 'spot',
+        timeLabel,
+        timeIcon,
+        recTitle: '换个口味？去景点走走吧',
+        recDesc: `记录了${userProfile.foodCount}次美食，但景点只有${userProfile.spotCount}个。${city}的自然风光也值得一去哦～`,
+        actionText: '发现景点',
+        actionPath: '/pages/spots/spots',
+        ctaIcon: '✦',
+        isNewUser: false
+      }
+    }
+
+    // 景点爱好者
+    if (userProfile.spotCount > userProfile.foodCount) {
+      return {
+        type: 'food',
+        timeLabel,
+        timeIcon,
+        recTitle: '肚子饿了？附近觅食',
+        recDesc: `已经打卡了${userProfile.spotCount}个景点！美食也在等你，南山区的老字号值得一试～`,
+        actionText: '去觅食',
+        actionPath: '/pages/index/index',
+        ctaIcon: '✦',
+        isNewUser: false
+      }
+    }
+
+    // 均衡型
+    return {
+      type: recType,
+      timeLabel,
+      timeIcon,
+      recTitle: `${timeLabel} ${timeIcon} 不错的选择`,
+      recDesc: `足迹 ${userProfile.total} 条 · 美食 ${userProfile.foodCount} · 景点 ${userProfile.spotCount} · ${city}等你继续探索`,
+      actionText: '继续探索',
+      actionPath: recType === 'food' ? '/pages/index/index' : '/pages/spots/spots',
+      ctaIcon: '✦',
+      isNewUser: false
+    }
+  },
+
+  // 点击 AI 推荐卡片
+  onAIRecommendTap() {
+    const rec = this.data.aiRecommendation
+    if (!rec) return
+    if (rec.actionPath) {
+      wx.switchTab({ url: rec.actionPath })
+    }
   },
 
   // 阻止冒泡
