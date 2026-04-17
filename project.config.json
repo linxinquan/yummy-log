@@ -49,6 +49,7 @@
   },
   "compileType": "miniprogram",
   "libVersion": "3.15.1",
+  "envId": "cloud1-9grc0ja0405b042a",
   "condition": {},
   "simulatorPluginLibVersion": {},
   "packOptions": {
@@ -56,5 +57,6 @@
     "include": []
   },
   "editorSetting": {},
-  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
+  "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
+  "envId": "cloud1-9grc0ja0405b042a"
 }

@@ -21,37 +21,61 @@ function reverseGeocode(latitude, longitude) {
         'Referer': 'https://meitour.app'   // 腾讯地图 WebService API 要求
       },
       success: (res) => {
-        console.log('[checkinUtil] 逆地理响应 statusCode:', res.statusCode, 'data:', JSON.stringify(res.data).substring(0, 500))
+        console.log('[checkinUtil] 逆地理响应 statusCode:', res.statusCode)
         if (res.statusCode === 200) {
           const data = res.data
           if (data.status === 0) {
             const result = data.result || {}
             const pois = result.pois || []
 
-            // 取景点名优先级：
-            // 1. pois[0].name（最近的POI名称）
-            // 2. formatted_addresses.recommend（腾讯推荐地址）
-            // 3. formatted_addresses.rough（粗略地址）
-            // 4. address_component.pois[0].name
+            // ── 智能选 POI：优先有辨识度的名称 ──
+            const genericPatterns = [
+              /^(深圳市|广州市|东莞市|佛山市|珠海市)/,           // 城市前缀
+              /^(大楼|大廈|大厦|广场|商场|购物中心|写字楼|商业中心|科技园|工业园|孵化园)$/,
+              /公司$/, /中心$/, /基地$/, /园区$/,
+              /路\d+号$/, /街道\d+号$/,
+              /_\d+$/, /\d+层$/
+            ]
+            const isGeneric = (name) => {
+              if (!name) return true
+              const n = name.trim()
+              if (n.length < 3) return true
+              return genericPatterns.some(p => p.test(n))
+            }
+
+            // 从 pois 数组里找一个具体、有辨识度的名称
             let spotName = ''
-            if (pois.length > 0 && pois[0].name) {
-              spotName = pois[0].name
-            } else if (result.formatted_addresses && result.formatted_addresses.recommend) {
-              spotName = result.formatted_addresses.recommend
-            } else if (result.formatted_addresses && result.formatted_addresses.rough) {
-              spotName = result.formatted_addresses.rough
-            } else if (
-              result.address_component &&
-              result.address_component.pois &&
-              result.address_component.pois[0] &&
-              result.address_component.pois[0].name
-            ) {
-              spotName = result.address_component.pois[0].name
+            if (pois.length > 0) {
+              // 优先找带小吃/美食/街/巷/城/广场后缀的 POI（商圈/美食区）
+              const premiumPOI = pois.find(p =>
+                p.category && /美食|小吃|街|巷|城|广场|市场|农庄|农贸市场/.test(p.category)
+              )
+              if (premiumPOI && !isGeneric(premiumPOI.title || premiumPOI.name)) {
+                spotName = premiumPOI.title || premiumPOI.name
+              } else {
+                // 按顺序找第一个非通用名
+                for (const p of pois) {
+                  const name = p.title || p.name
+                  if (!isGeneric(name)) {
+                    spotName = name
+                    break
+                  }
+                }
+              }
+            }
+
+            // 备选：formatted_addresses（腾讯推荐精地址，精度高于 rough）
+            if (!spotName || isGeneric(spotName)) {
+              spotName = ''
+              if (result.formatted_addresses) {
+                const rec = result.formatted_addresses.recommend
+                if (rec && !isGeneric(rec)) spotName = rec
+              }
             }
 
             const city = result.ad_info ? result.ad_info.city : extractCity(result.address || '')
 
-            console.log('>>> 解析结果 - 景点名:', spotName, '地址:', result.address)
+            console.log('[checkinUtil] 解析结果 - spotName:', spotName, '| address:', result.address)
 
             resolve({
               spotName: spotName,
@@ -69,7 +93,6 @@ function reverseGeocode(latitude, longitude) {
       },
       fail: (err) => {
         console.error('>>> 逆地理请求失败:', err)
-        // 网络错误或域名白名单问题
         reject(new Error('网络请求失败，请检查手机网络设置'))
       }
     })
@@ -89,7 +112,7 @@ function extractCity(address) {
  * 获取打卡采集列表
  */
 function getCheckins() {
-  return wx.getStorageSync('userCheckins') || []
+  return wx.getStorageSync('checkin_records') || []
 }
 
 /**
@@ -110,7 +133,7 @@ function saveCheckin(data) {
     city: extractCity(data.address)
   }
   checkins.unshift(checkin)
-  wx.setStorageSync('userCheckins', checkins)
+  wx.setStorageSync('checkin_records', checkins)
   return checkin
 }
 
@@ -120,7 +143,7 @@ function saveCheckin(data) {
 function deleteCheckin(id) {
   const checkins = getCheckins()
   const filtered = checkins.filter(c => c.id !== id)
-  wx.setStorageSync('userCheckins', filtered)
+  wx.setStorageSync('checkin_records', filtered)
   return filtered
 }
 
@@ -146,52 +169,30 @@ function getCheckinStats() {
 }
 
 /**
- * 生成AI描述（本地模板版本，区分美食/景点）
+ * 生成AI描述（本地兜底版本，诗意风格，区分美食/景点）
  * @param {string} locationName - 地点名称
  * @param {string} address - 详细地址
  * @param {string} type - 'food' | 'spot'
  */
 function generateDescription(locationName, address, type) {
-  const time = new Date()
-  const hour = time.getHours()
-  const city = extractCity(address)
+  const hour = new Date().getHours()
+  const name = locationName || '某处'
 
   if (type === 'spot') {
-    // 景点打卡描述
-    const spotGreetings = {
-      morning: ['清晨的第一缕阳光照在', '早起打卡'],
-      noon: ['午间漫游到', '正午时分的'],
-      afternoon: ['午后来到', '下午漫步'],
-      evening: ['傍晚时分抵达', '夕阳下的'],
-      night: ['夜幕降临，华灯初上', '夜晚打卡']
-    }
-    let period
-    if (hour < 9) period = 'morning'
-    else if (hour < 14) period = 'noon'
-    else if (hour < 18) period = 'afternoon'
-    else if (hour < 22) period = 'evening'
-    else period = 'night'
-    const templates = spotGreetings[period]
-    const template = templates[Math.floor(Math.random() * templates.length)]
-    return template + (locationName || city + '某景点')
+    const templates = [
+      `${hour < 12 ? '清晨的光影' : hour < 18 ? '午后的斜阳' : '暮色渐起'}落在${name}，城市的喧哗在这里忽然安静下来。`,
+      `${name}有一种让人慢下来的力量，像一帧被按下暂停键的画面。`,
+      `${hour < 12 ? '早晨' : hour < 18 ? '下午' : '入夜'}走进${name}，发现了这座城市另一面的故事。`
+    ]
+    return templates[Math.floor(Math.random() * templates.length)]
   } else {
-    // 美食打卡描述
-    const foodGreetings = {
-      morning: ['清晨的阳光洒在', '早餐时间打卡', '清晨探访'],
-      noon: ['午间来到了', '午餐时间打卡', '中午探访'],
-      afternoon: ['下午茶时光在', '午后探访'],
-      evening: ['傍晚来到了', '晚餐打卡'],
-      night: ['夜宵时间，探访', '夜晚打卡']
-    }
-    let period
-    if (hour < 9) period = 'morning'
-    else if (hour < 14) period = 'noon'
-    else if (hour < 18) period = 'afternoon'
-    else if (hour < 22) period = 'evening'
-    else period = 'night'
-    const templates = foodGreetings[period]
-    const template = templates[Math.floor(Math.random() * templates.length)]
-    return template + (locationName || city + '某地')
+    // 美食：聚焦鲜、香、暖，诗意感
+    const templates = [
+      `${hour < 12 ? '清晨路过' : hour < 14 ? '午间探访' : hour < 18 ? '午后闲逛' : '傍晚觅食'}${name}，香气从路口就能捕捉到。`,
+      `${name}的出品有惊喜，汤头清澈、鲜味却浓，胃里落定，心里也暖了起来。`,
+      `${hour < 12 ? '早餐' : hour < 14 ? '午餐' : hour < 18 ? '下午茶' : '晚餐'}时光，${name}的一口，是认真生活的证据。`
+    ]
+    return templates[Math.floor(Math.random() * templates.length)]
   }
 }
 

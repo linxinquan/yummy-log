@@ -12,19 +12,27 @@ Page({
     type: 'food',      // 'food' 美食 | 'spot' 景点
     step: 1,           // 1:拍照 2:定位 3:预览 4:成功
     photoPath: '',
-    spotName: '',      // 景点名称
-    address: '',       // 详细地址
+    spotName: '',       // 地点名称（逆地理编码POI名）
+    address: '',        // 详细地址
+    nearbyFood: '',     // 附近美食标签（图片右下角叠加层）
     latitude: null,
     longitude: null,
-    description: '',
-    title: '',         // AI 生成的标题
+    description: '',    // AI 生成描述
+    title: '',          // AI 生成的标题
     dateInfo: { mm: '', dd: '', yyyy: '' },
     locationLoading: false,
-    generating: false,   // AI 生成中
-    generatingTitle: '', // 标题打字效果
-    generatingDesc: '',  // 描述打字效果
+    generating: false,     // 整体生成中（按钮状态）
+    generatingTitle: '',   // 标题打字效果
+    generatingDesc: '',    // 描述打字效果
     saving: false,
-    aiFailed: false      // AI 生成失败，使用兜底
+    aiFailed: false,       // AI 生成失败，使用兜底
+    editingName: false,    // 地点名内联编辑
+    editingAddr: false,    // 地址内联编辑
+    mapView: 'map',        // 地图/列表视图
+    mapCenter: { latitude: 22.543, longitude: 114.057 },
+    mapScale: 13,
+    allMarkers: [],
+    recentCheckins: []
   },
 
   onLoad(query) {
@@ -71,7 +79,14 @@ Page({
 
   onPrevStep() {
     const cur = this.data.step
-    if (cur > 1) this.setData({ step: cur - 1 })
+    if (cur > 1) {
+      this.setData({
+        step: cur - 1,
+        generating: false,
+        generatingTitle: '',
+        generatingDesc: ''
+      })
+    }
   },
 
   // ── STEP 2：定位 ──────────────────────────────
@@ -165,6 +180,8 @@ Page({
     this.setData({ generating: true, generatingTitle: '', generatingDesc: '', aiFailed: false })
     this._updateDate()
 
+    // 进入第二步后自动加载地图数据
+    this._loadMapData()
     // 调用混元 AI 云函数生成内容
     this._generateAIContent()
       .then(result => {
@@ -341,6 +358,56 @@ Page({
     }
   },
 
+  // ── 内联编辑：地点名称 ──────────────────────────
+  onToggleNameEdit() {
+    this.setData({ editingName: !this.data.editingName })
+  },
+
+  // ── 内联编辑：详细地址 ──────────────────────────
+  onToggleAddrEdit() {
+    this.setData({ editingAddr: !this.data.editingAddr })
+  },
+
+  // ── 输入处理 ──────────────────────────────────
+  onNameInput(e) {
+    this.setData({ spotName: e.detail.value })
+  },
+
+  onAddrInput(e) {
+    this.setData({ address: e.detail.value })
+  },
+
+  // ── 地图视图切换 ──────────────────────────────
+  onSwitchView(e) {
+    const view = e.currentTarget.dataset.view
+    this.setData({ mapView: view })
+    if (view === 'map') this._loadMapData()
+  },
+
+  _loadMapData() {
+    try {
+      const records = wx.getStorageSync('checkin_records') || []
+      if (!records.length) return
+      const latest = records[records.length - 1]
+      const lat = latest.latitude || 22.543
+      const lng = latest.longitude || 114.057
+      this.setData({
+        mapCenter: { latitude: lat, longitude: lng },
+        mapScale: 13,
+        allMarkers: records.filter(r => r.latitude && r.longitude).map(r => ({
+          id: r.id,
+          latitude: r.latitude,
+          longitude: r.longitude,
+          width: 32, height: 32,
+          iconPath: r.type === 'spot'
+            ? '/images/marker-spot.png'
+            : '/images/marker-food.png'
+        })),
+        recentCheckins: records.slice(0, 10)
+      })
+    } catch (e) {}
+  },
+
   // ── 重置 ──────────────────────────────────────
   onReset() {
     this.setData({
@@ -354,7 +421,10 @@ Page({
       title: '',
       generatingTitle: '',
       generatingDesc: '',
-      aiFailed: false
+      aiFailed: false,
+      editingName: false,
+      editingAddr: false,
+      nearbyFood: ''
     })
   },
 
