@@ -41,6 +41,29 @@
     </view>
   </view>
 
+  <!-- AI 个性化推荐卡片 -->
+  <view class="ai-recommend-card" wx:if="{{aiRecommendation}}" bindtap="onAIRecommendTap">
+    <view class="arc-header">
+      <view class="arc-label">
+        <text class="arc-spark">✦</text>
+        <text class="arc-label-text">今日推荐</text>
+      </view>
+      <view class="arc-time-badge">
+        <text>{{aiRecommendation.timeIcon}} {{aiRecommendation.timeLabel}}</text>
+      </view>
+    </view>
+    <view class="arc-body">
+      <text class="arc-title">{{aiRecommendation.recTitle}}</text>
+      <text class="arc-desc">{{aiRecommendation.recDesc}}</text>
+    </view>
+    <view class="arc-footer">
+      <view class="arc-cta">
+        <text class="arc-cta-icon">{{aiRecommendation.ctaIcon}}</text>
+        <text class="arc-cta-text">{{aiRecommendation.actionText}}</text>
+      </view>
+    </view>
+  </view>
+
   <!-- 攻略推荐轮播 -->
   <view class="featured-section" wx:if="{{guideRecommendations.length > 0}}">
     <view class="featured-header">

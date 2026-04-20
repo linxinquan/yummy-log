@@ -216,6 +216,104 @@ page {
   color: var(--text-secondary);
 }
 
+/* ─── AI 个性化推荐卡片 ────────────────────────── */
+.ai-recommend-card {
+  margin: 0 24rpx 20rpx;
+  background: linear-gradient(135deg, #E8FAFF, #CCE8FF);
+  border-radius: 24rpx;
+  padding: 22rpx 24rpx;
+  border: 1rpx solid rgba(0,197,255,0.2);
+  box-shadow: 0 4rpx 20rpx rgba(0,197,255,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-recommend-card::before {
+  content: '';
+  position: absolute;
+  top: -40rpx;
+  right: -40rpx;
+  width: 160rpx;
+  height: 160rpx;
+  background: radial-gradient(circle, rgba(0,197,255,0.12), transparent 70%);
+  border-radius: 50%;
+}
+
+.arc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14rpx;
+}
+
+.arc-label {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.arc-spark {
+  font-size: 20rpx;
+  color: #00C5FF;
+  font-weight: 700;
+}
+
+.arc-label-text {
+  font-size: 22rpx;
+  color: #009FD4;
+  font-weight: 600;
+}
+
+.arc-time-badge {
+  font-size: 20rpx;
+  color: #009FD4;
+  background: rgba(0,197,255,0.1);
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+  font-weight: 600;
+}
+
+.arc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  margin-bottom: 14rpx;
+}
+
+.arc-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #1A1A2E;
+  line-height: 1.3;
+}
+
+.arc-desc {
+  font-size: 24rpx;
+  color: #555;
+  line-height: 1.5;
+}
+
+.arc-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.arc-cta {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: linear-gradient(135deg, #00C5FF, #009FD4);
+  color: #FFFFFF;
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  box-shadow: 0 4rpx 16rpx rgba(0,197,255,0.3);
+}
+
+.arc-cta-icon { font-size: 20rpx; }
+.arc-cta-text { font-size: 24rpx; }
+
 /* ─── 攻略推荐轮播 ─────────────────────────────── */
 .featured-section {
   margin: 0 24rpx 20rpx;
