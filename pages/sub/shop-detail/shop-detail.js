@@ -23,7 +23,7 @@ Page({
   // 初始化地图
   initMap(shop) {
     const markers = [{
-      id: shop.id,
+      id: Number(shop.id),
       latitude: shop.lat || shop.latitude,
       longitude: shop.lng || shop.longitude,
       width: 36,

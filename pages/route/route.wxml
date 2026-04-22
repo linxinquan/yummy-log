@@ -158,48 +158,48 @@
       </scroll-view>
     </view>
 
-    <!-- 出行方式 + ⚡优化 -->
-    <view class="mode-row">
-      <view
-        wx:for="{{['drive','transit','walk']}}"
-        wx:key="*this"
-        class="mode-chip {{travelMode === item ? 'active' : ''}}"
-        bindtap="onSelectMode"
-        data-mode="{{item}}"
-      >
-        <text>{{item === 'drive' ? '🚗 驾车' : item === 'transit' ? '🚇 地铁' : '🚶 步行'}}</text>
+    <!-- ★ 出行方式 + 路径模式 -->
+    <view class="travel-header">
+      <!-- 出行方式 -->
+      <view class="mode-row">
+        <view
+          wx:for="{{['drive','transit','walk']}}"
+          wx:key="*this"
+          class="mode-chip {{travelMode === item ? 'active' : ''}}"
+          bindtap="onSelectMode"
+          data-mode="{{item}}"
+        >
+          <text>{{item === 'drive' ? '🚗 驾车' : item === 'transit' ? '🚇 地铁' : '🚶 步行'}}</text>
+        </view>
       </view>
-      <view class="mode-chip optimize" bindtap="onOptimizeRoute">
-        <text>⚡ 最优</text>
+
+      <!-- 路径模式切换 -->
+      <view class="route-mode-bar" wx:if="{{allLikedShops.length > 0}}">
+        <view class="route-mode-item {{selectMode === 'all' ? 'active' : ''}}" bindtap="onSwitchSelectMode" data-mode="all">
+          <text class="rm-icon">🎯</text>
+          <text class="rm-title">最优路径</text>
+        </view>
+        <view class="route-mode-item {{selectMode === 'custom' ? 'active' : ''}}" bindtap="onSwitchSelectMode" data-mode="custom">
+          <text class="rm-icon">✏️</text>
+          <text class="rm-title">自定义</text>
+        </view>
       </view>
     </view>
 
-    <!-- ★ 双模式切换：最优路径 / 自定义 -->
-    <view class="mode-switch-bar" wx:if="{{allLikedShops.length > 0}}">
-      <view
-        class="mode-switch-item {{selectMode === 'all' ? 'active' : ''}}"
-        bindtap="onSwitchSelectMode"
-        data-mode="all"
-      >
-        <text class="ms-icon">⚡</text>
-        <view class="ms-text-wrap">
-          <text class="ms-title">最优路径</text>
-          <text class="ms-sub">自动贪心排序</text>
-        </view>
-        <view class="ms-check" wx:if="{{selectMode === 'all'}}">✓</view>
+    <!-- 最优路径模式：优化算法选择 -->
+    <view class="algo-panel" wx:if="{{selectMode === 'all' && allLikedShops.length > 0}}">
+      <view class="algo-hint">
+        <text class="algo-icon">⚡</text>
+        <text class="algo-text">推荐算法：</text>
+        <text class="algo-desc">{{routeShops.length <= 15 ? '全局最优(DP)' : '贪心排序 快速高效'}}</text>
       </view>
-      <view class="mode-switch-sep"></view>
-      <view
-        class="mode-switch-item {{selectMode === 'custom' ? 'active' : ''}}"
-        bindtap="onSwitchSelectMode"
-        data-mode="custom"
-      >
-        <text class="ms-icon">✏️</text>
-        <view class="ms-text-wrap">
-          <text class="ms-title">自定义选择</text>
-          <text class="ms-sub">勾选 · 手动排序</text>
+      <view class="algo-chips">
+        <view class="algo-chip {{optimizeMode === 'greedy' ? 'active' : ''}}" bindtap="onOptimizeRoute">
+          <text>贪心排序</text>
         </view>
-        <view class="ms-check" wx:if="{{selectMode === 'custom'}}">✓</view>
+        <view class="algo-chip {{optimizeMode === 'dp' ? 'active' : ''}} {{routeShops.length > 15 ? 'disabled' : ''}}" bindtap="onOptimizeRouteDP">
+          <text>🎯 全局最优</text>
+        </view>
       </view>
     </view>
 

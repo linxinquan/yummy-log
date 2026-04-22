@@ -14,7 +14,7 @@ App({
       lng: 113.9046
     },
     // 地图 Key
-    qqMapKey: 'YLBBZ-VLNWJ-HFSFO-5QBUJ-SJ633-CTBFF',
+    qqMapKey: 'SWGBZ-7P2CB-LK2UO-JZYYV-6BZYQ-KEBUG',
     // 百度地图 Key（用于全景图）
     baiduMapKey: 'KuGlOjdoC0kmGUbU1Tw2OQyK6LKQ6gGa',
     // 用户行政区划信息

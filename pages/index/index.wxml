@@ -221,11 +221,4 @@
     </view>
   </view>
 
-  <!-- 隐藏Canvas：用于生成标记图标（降级方案） -->
-  <canvas
-    id="iconGenCanvas"
-    class="hidden-canvas"
-    style="width:{{iconCanvasSize}}px;height:{{iconCanvasSize}}px;"
-  ></canvas>
-
 </view>

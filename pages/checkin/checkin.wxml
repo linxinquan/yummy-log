@@ -30,7 +30,7 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
     </view>
 
     <!-- 拍照卡片 -->
-    <view class="photo-card" bindtap="onChoosePhoto">
+    <view class="photo-card" catchtap="onChoosePhoto">
       <view wx:if="{{photoPath}}" class="pc-preview">
         <image class="pc-photo" src="{{photoPath}}" mode="aspectFill" />
         <view class="pc-retake-btn" catchtap="onChoosePhoto">

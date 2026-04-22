@@ -510,19 +510,28 @@ function isLiked(id, type = 'food') {
 // ============================================================
 
 /**
- * 贪心最近邻路线规划算法（统一版）
+ * 提取地点的坐标
+ */
+function toLatLng(item) {
+  return {
+    lat: item.lat || item.latitude,
+    lng: item.lng || item.longitude
+  }
+}
+
+/**
+ * 贪心最近邻 + 2-opt 优化路线规划算法
  * @param {Array} items - 地点数组
  * @param {Object} startPoint - 起点 {lat, lng}
  * @param {boolean} preserveOrder - true按原顺序，false贪心优化
  */
 function planRoute(items, startPoint, preserveOrder = false) {
   if (!items || items.length === 0) return []
-  if (items.length === 1) return items
-
-  const toLatLng = (item) => ({
-    lat: item.lat || item.latitude,
-    lng: item.lng || item.longitude
-  })
+  if (items.length === 1) {
+    const ll = toLatLng(items[0])
+    items[0].distanceFromPrev = Math.round(getDistance(startPoint.lat, startPoint.lng, ll.lat, ll.lng))
+    return items
+  }
 
   if (preserveOrder) {
     let prev = startPoint
@@ -535,6 +544,7 @@ function planRoute(items, startPoint, preserveOrder = false) {
     })
   }
 
+  // ── 1. 贪心最近邻生成初始路线 ──
   const route = []
   const remaining = [...items]
   let current = startPoint
@@ -556,7 +566,225 @@ function planRoute(items, startPoint, preserveOrder = false) {
     route.push(nearest)
     current = ll
   }
-  return route
+
+  // ── 2. 2-opt 优化：交换反转减少总距离 ──
+  const optimized = twoOptOptimize(route, startPoint, toLatLng)
+  return optimized
+}
+
+/**
+ * 2-opt 优化算法
+ * 通过反转子路径来减少总行程距离
+ */
+function twoOptOptimize(route, startPoint, toLatLng) {
+  if (route.length < 3) return route
+
+  // 计算总距离（起点→各点→终点）
+  function calcTotalDist(r, start) {
+    let total = 0
+    let prev = start
+    for (const item of r) {
+      const ll = toLatLng(item)
+      total += getDistance(prev.lat, prev.lng, ll.lat, ll.lng)
+      prev = ll
+    }
+    return total
+  }
+
+  // ── 双向优化：同时计算正反两个方向 ──
+  // 方向1：从起点顺时针贪心
+  let bestRoute1 = [...route]
+  bestRoute1 = applyTwoOpt(bestRoute1, startPoint, calcTotalDist)
+
+  // 方向2：从起点逆时针贪心（反转整个路线）
+  let bestRoute2 = [...route].reverse()
+  bestRoute2 = applyTwoOpt(bestRoute2, startPoint, calcTotalDist)
+
+  // 选择总距离更短的方向
+  const dist1 = calcTotalDist(bestRoute1, startPoint)
+  const dist2 = calcTotalDist(bestRoute2, startPoint)
+
+  const bestRoute = dist1 <= dist2 ? bestRoute1 : bestRoute2
+
+  // 重新计算每段的 distanceFromPrev
+  let prev = startPoint
+  for (const item of bestRoute) {
+    const ll = toLatLng(item)
+    item.distanceFromPrev = Math.round(getDistance(prev.lat, prev.lng, ll.lat, ll.lng))
+    prev = ll
+  }
+
+  return bestRoute
+}
+
+/**
+ * 应用 2-opt 优化
+ */
+function applyTwoOpt(route, startPoint, calcTotalDist) {
+  let improved = true
+  let bestRoute = [...route]
+  let bestDist = calcTotalDist(bestRoute, startPoint)
+  const maxIterations = 100
+  let iterations = 0
+
+  while (improved && iterations < maxIterations) {
+    improved = false
+    iterations++
+
+    for (let i = 0; i < bestRoute.length - 1; i++) {
+      for (let j = i + 2; j < bestRoute.length; j++) {
+        // 反转 i+1 到 j 之间的路段
+        const newRoute = [...bestRoute]
+        const reversed = newRoute.slice(i + 1, j + 1).reverse()
+        for (let k = 0; k < reversed.length; k++) {
+          newRoute[i + 1 + k] = reversed[k]
+        }
+
+        const newDist = calcTotalDist(newRoute, startPoint)
+        if (newDist < bestDist) {
+          bestRoute = newRoute
+          bestDist = newDist
+          improved = true
+        }
+      }
+    }
+  }
+
+  return bestRoute
+}
+
+/**
+ * 动态规划（DP）全局最优路线规划
+ * 适用于地点数 ≤ 15 的情况
+ * 公式：dp[mask][i] = min(dp[mask][i], dp[mask ^ (1<<i)][j] + dist[j][i])
+ * @param {Array} items - 地点数组
+ * @param {Object} startPoint - 起点 {lat, lng}
+ * @returns {Array} 最优排序后的地点数组
+ */
+function planRouteDP(items, startPoint) {
+  if (!items || items.length === 0) return []
+  if (items.length === 1) {
+    const ll = toLatLng(items[0])
+    items[0].distanceFromPrev = Math.round(getDistance(startPoint.lat, startPoint.lng, ll.lat, ll.lng))
+    return items
+  }
+  if (items.length > 15) {
+    console.warn('DP算法不适用于超过15个地点，自动切换到贪心算法')
+    return planRoute(items, startPoint, false)
+  }
+
+  const n = items.length
+
+  // 预处理：获取所有点的坐标
+  const coords = items.map(item => toLatLng(item))
+
+  // 预计算距离矩阵（n+1 x n+1，索引0为起点）
+  const dist = []
+  for (let i = 0; i <= n; i++) {
+    dist[i] = []
+    for (let j = 0; j <= n; j++) {
+      if (i === 0 && j === 0) {
+        dist[i][j] = 0
+      } else if (i === 0) {
+        dist[i][j] = getDistance(startPoint.lat, startPoint.lng, coords[j - 1].lat, coords[j - 1].lng)
+      } else if (j === 0) {
+        dist[i][j] = getDistance(coords[i - 1].lat, coords[i - 1].lng, startPoint.lat, startPoint.lng)
+      } else {
+        dist[i][j] = getDistance(coords[i - 1].lat, coords[i - 1].lng, coords[j - 1].lat, coords[j - 1].lng)
+      }
+    }
+  }
+
+  // dp[mask][i] = 从起点出发，经过mask表示的集合中的点，最后到达点i的最小距离
+  // mask的第j位表示第j个点是否已访问（j从0开始对应点0）
+  const dp = []
+  const fullMask = (1 << n) - 1
+
+  // 初始化：所有点到起点的距离
+  for (let i = 0; i <= fullMask; i++) {
+    dp[i] = []
+    for (let j = 0; j < n; j++) {
+      dp[i][j] = Infinity
+    }
+  }
+
+  // base case: 只访问一个点i时，从起点到点i的距离
+  for (let i = 0; i < n; i++) {
+    dp[1 << i][i] = dist[0][i + 1]
+  }
+
+  // DP递推
+  for (let mask = 1; mask <= fullMask; mask++) {
+    for (let i = 0; i < n; i++) {
+      if (!(mask & (1 << i))) continue
+
+      const prevMask = mask ^ (1 << i)
+      if (prevMask === 0) continue
+
+      for (let j = 0; j < n; j++) {
+        if (j === i) continue
+        if (!(prevMask & (1 << j))) continue
+
+        const candidate = dp[prevMask][j] + dist[j + 1][i + 1]
+        if (candidate < dp[mask][i]) {
+          dp[mask][i] = candidate
+        }
+      }
+    }
+  }
+
+  // 找到最终最优解：从所有点回到起点的最小距离对应的最后一个点
+  let lastPoint = 0
+  let minDist = Infinity
+  for (let i = 0; i < n; i++) {
+    const totalDist = dp[fullMask][i] + dist[i + 1][0]
+    if (totalDist < minDist) {
+      minDist = totalDist
+      lastPoint = i
+    }
+  }
+
+  // 回溯：重建最优路径
+  const optimalOrder = []
+  let currentMask = fullMask
+  let current = lastPoint
+
+  while (currentMask > 0) {
+    optimalOrder.unshift(current)
+    const prevMask = currentMask ^ (1 << current)
+
+    if (prevMask === 0) break
+
+    // 找到上一个点
+    let prev = 0
+    let minPrevDist = Infinity
+    for (let j = 0; j < n; j++) {
+      if (j === current) continue
+      if (prevMask & (1 << j)) {
+        const d = dp[prevMask][j] + dist[j + 1][current + 1]
+        if (d < minPrevDist) {
+          minPrevDist = d
+          prev = j
+        }
+      }
+    }
+
+    current = prev
+    currentMask = prevMask
+  }
+
+  // 根据最优顺序重新排列items
+  const result = optimalOrder.map(idx => ({ ...items[idx] }))
+
+  // 计算每段的distanceFromPrev
+  let prevPt = startPoint
+  for (const item of result) {
+    const ll = toLatLng(item)
+    item.distanceFromPrev = Math.round(getDistance(prevPt.lat, prevPt.lng, ll.lat, ll.lng))
+    prevPt = ll
+  }
+
+  return result
 }
 
 // ============================================================
@@ -569,6 +797,68 @@ function getNearbySpots(lat, lng, limit = 20) {
     .map(s => ({ ...s, distance: getDistance(lat, lng, s.lat, s.lng) }))
     .sort((a, b) => a.distance - b.distance)
     .slice(0, limit)
+}
+
+// ============================================================
+// 天气相关
+// ============================================================
+
+// Open-Meteo WMO 天气代码 → emoji 映射
+const WEATHER_ICON_MAP = {
+  0: '☀️',   // 晴
+  1: '🌤️',  // 基本晴
+  2: '⛅', 3: '☁️',  // 多云
+  45: '🌫️', 48: '🌫️',  // 雾
+  51: '🌧️', 53: '🌧️', 55: '🌧️',  // 小/中/大毛毛雨
+  56: '🌨️', 57: '🌨️',  // 冻毛毛雨
+  61: '🌧️', 63: '🌧️', 65: '🌧️',  // 小/中/大雨
+  66: '🌨️', 67: '🌨️',  // 冻雨
+  71: '🌨️', 73: '🌨️', 75: '❄️',  // 小/中/大雪
+  77: '🌨️',  // 雪粒
+  80: '🌦️', 81: '🌧️', 82: '⛈️',  // 小/中/大阵雨
+  85: '🌨️', 86: '❄️',  // 小/大雪阵
+  95: '⛈️', 96: '⛈️', 99: '⛈️'  // 雷暴
+}
+
+/**
+ * 根据 Open-Meteo WMO 天气代码获取图标
+ * @param {number} weatherCode - WMO 天气代码
+ * @returns {string} emoji 图标
+ */
+function getWeatherIcon(weatherCode) {
+  return WEATHER_ICON_MAP[weatherCode] || '🌡️'
+}
+
+/**
+ * 加载天气信息（统一入口）
+ * @param {Function} callback - 回调函数，接收 (icon, temp)
+ * @param {Object} location - 位置信息 {lat, lng}，默认使用 app.globalData.location
+ */
+function loadWeather(callback, location) {
+  const app = getApp()
+  const loc = location || app.globalData.location
+  if (!loc) return
+
+  wx.request({
+    url: 'https://api.open-meteo.com/v1/forecast',
+    data: {
+      latitude: loc.lat,
+      longitude: loc.lng,
+      current_weather: true,
+      temperature_unit: 'celsius'
+    },
+    success: (res) => {
+      if (res.data && res.data.current_weather) {
+        const weather = res.data.current_weather
+        const icon = getWeatherIcon(weather.weathercode)
+        const temp = Math.round(weather.temperature) + '°C'
+        if (callback) callback(icon, temp)
+      }
+    },
+    fail: () => {
+      // 静默失败
+    }
+  })
 }
 
 // ============================================================
@@ -589,6 +879,7 @@ function getSpotCategoryColor(category) {
 module.exports = {
   getDistance,
   planRoute,
+  planRouteDP,
   formatDistance,
   estimateTime,
   parseBlockBasedGuide,
@@ -613,5 +904,8 @@ module.exports = {
   getSpotData,
   getNearbySpots,
   getSpotCategoryColor,
-  SPOT_CATEGORY_COLORS
+  SPOT_CATEGORY_COLORS,
+  // 天气
+  getWeatherIcon,
+  loadWeather
 }

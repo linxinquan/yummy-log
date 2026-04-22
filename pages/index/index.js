@@ -38,8 +38,8 @@ Page({
     // 想去数量
     likedCount: 0,
 
-    // 图标Canvas尺寸（用于生成标记图标）
-    iconCanvasSize: 40,
+    // 距离缓存（避免重复计算）
+    distanceCache: {},
 
     // 地理位置选择（小红书风格）
     currentDistrict: '', // 当前选中的区域
@@ -94,20 +94,22 @@ Page({
   },
 
   onLoad() {
-    this.loadShops()
-    this.loadUserData()
+    // 初始化：只调用一次，后续由回调触发
+    this._isLoaded = false
+    
     // 预加载/生成标记图标（40x40彩色圆点）
     markerIcons.ensureIcons(() => {
       this.updateMarkers()
     })
     // 构建景点地图标记
     this._buildSpotMarkers()
-    // 等待定位就绪，自动将地图中心移到用户位置
+    
+    // 等待定位就绪，再加载店铺数据（避免重复计算）
     app.whenLocationReady((loc) => {
       this.setData({ mapCenter: { lat: loc.lat, lng: loc.lng } })
-      // 更新位置后重新计算店铺距离
-      this.applyFilters()
+      this._loadAndFilter()
     })
+    
     // 等待区划信息就绪，显示当前城市和位置描述
     app.whenDistrictReady((info, locationDesc) => {
       this.setData({ 
@@ -116,11 +118,41 @@ Page({
       })
     })
   },
+  
+  // 统一加载和筛选（只在定位就绪后调用一次）
+  _loadAndFilter() {
+    if (this._isLoaded) return
+    this._isLoaded = true
+    
+    this.loadShops()
+    this.loadUserData()
+  },
 
   onShow() {
-    // 每次显示页面时刷新用户数据
-    this.loadUserData()
-    this.updateShopStatus()
+    // 仅在首次加载后刷新点赞状态，避免重复计算
+    if (this._isLoaded) {
+      // 只更新点赞状态，不需要重新筛选
+      const userData = util.getUserShops()
+      const likedShops = userData.likedShops || []
+      const visitedShops = userData.checkedInShops || {}
+      
+      // 快速更新点赞状态（不重新计算距离）
+      const updatedShops = this.data.filteredShops.map(shop => {
+        const isLiked = likedShops.includes(shop.id)
+        const baseWant = shop.wantCount || 0
+        return {
+          ...shop,
+          isLiked,
+          displayWantCount: isLiked ? baseWant + 1 : baseWant
+        }
+      })
+      
+      this.setData({
+        likedShops,
+        likedCount: likedShops.length,
+        filteredShops: updatedShops
+      })
+    }
   },
 
   // 点击"定位"按钮 - 重新获取当前位置并移动地图
@@ -209,11 +241,11 @@ Page({
     this.applyFilters()
   },
 
-  // 应用筛选和排序
+  // 应用筛选和排序（优化：减少重复计算）
   applyFilters() {
     let { allShops, currentCategory, searchKeyword, sortType, currentDistance, mapCenter } = this.data
     
-    // 分类筛选（当前美食类型）
+    // 分类筛选
     let filtered = currentCategory === '全部' 
       ? allShops 
       : allShops.filter(s => s.category === currentCategory)
@@ -228,35 +260,30 @@ Page({
       )
     }
     
-    // 基于当前位置计算距离
+    // 基于当前位置计算距离（使用缓存）
     const centerLat = mapCenter?.lat || 22.4846
     const centerLng = mapCenter?.lng || 113.9046
     
-    // 为每家店铺计算距离
+    // 第一遍：计算所有店铺距离
     filtered = filtered.map(shop => {
-      const dist = this.calculateDistance(centerLat, centerLng, shop.lat || shop.latitude, shop.lng || shop.longitude)
+      const lat = shop.lat || shop.latitude
+      const lng = shop.lng || shop.longitude
+      const dist = this.getCachedDistance(centerLat, centerLng, lat, lng)
       return {
         ...shop,
+        _rawDist: dist,
         distance: this.formatDistance(dist)
       }
     })
     
     // 距离筛选
     if (currentDistance > 0) {
-      filtered = filtered.filter(shop => {
-        const dist = this.calculateDistance(centerLat, centerLng, shop.lat || shop.latitude, shop.lng || shop.longitude)
-        return dist <= currentDistance
-      })
+      filtered = filtered.filter(shop => shop._rawDist <= currentDistance)
     }
     
-    // 排序
+    // 排序（使用已计算的 _rawDist）
     if (sortType === 'distance') {
-      // 按真实距离升序（需重新计算原始km数）
-      filtered.sort((a, b) => {
-        const da = this.calculateDistance(centerLat, centerLng, a.lat || a.latitude, a.lng || a.longitude)
-        const db = this.calculateDistance(centerLat, centerLng, b.lat || b.latitude, b.lng || b.longitude)
-        return da - db
-      })
+      filtered.sort((a, b) => a._rawDist - b._rawDist)
     } else if (sortType === 'rating') {
       filtered.sort((a, b) => b.rating - a.rating)
     }
@@ -266,7 +293,7 @@ Page({
       hasMore: filtered.length > this.data.pageSize
     })
     
-    // 地图标记也同步更新：只显示筛选后的店铺
+    // 地图标记同步更新
     this.updateMarkers()
   },
 
@@ -290,7 +317,7 @@ Page({
       ].filter(l => l.trim())
 
       return {
-        id: shop.id,
+        id: Number(shop.id),
         latitude: shop.lat || shop.latitude,
         longitude: shop.lng || shop.longitude,
         // 自定义图标（40x40彩色小圆点，无iconPath时用默认红点）
@@ -485,10 +512,31 @@ Page({
     this.applyFilters()
   },
 
-  // ─── 店铺距离计算 ───
-  calculateDistance(lat1, lng1, lat2, lng2) {
-    // Haversine公式计算两点间距离（米）
-    const R = 6371000 // 地球半径（米）
+  // ─── 店铺距离计算（带缓存） ───
+  _getDistanceCacheKey(lat1, lng1, lat2, lng2) {
+    return `${lat1.toFixed(5)},${lng1.toFixed(5)}-${lat2.toFixed(5)},${lng2.toFixed(5)}`
+  },
+  
+  // 获取缓存的距离，或计算并缓存
+  getCachedDistance(lat1, lng1, lat2, lng2) {
+    const key = this._getDistanceCacheKey(lat1, lng1, lat2, lng2)
+    if (this.data.distanceCache[key] !== undefined) {
+      return this.data.distanceCache[key]
+    }
+    const dist = this._calcDistance(lat1, lng1, lat2, lng2)
+    // 更新缓存
+    this.setData({
+      distanceCache: {
+        ...this.data.distanceCache,
+        [key]: dist
+      }
+    })
+    return dist
+  },
+  
+  // Haversine公式计算两点间距离（米）
+  _calcDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371000
     const dLat = (lat2 - lat1) * Math.PI / 180
     const dLng = (lng2 - lng1) * Math.PI / 180
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -496,6 +544,15 @@ Page({
               Math.sin(dLng / 2) * Math.sin(dLng / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     return R * c
+  },
+  
+  // 格式化距离
+  formatDistance(meters) {
+    if (meters < 1000) {
+      return Math.round(meters) + 'm'
+    } else {
+      return (meters / 1000).toFixed(1) + 'km'
+    }
   },
 
   // 格式化距离

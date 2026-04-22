@@ -70,6 +70,7 @@ Page({
     })
   },
 
+  // ── STEP 2：预览 ──────────────────────────────
   onNextStep() {
     if (!this.data.photoPath) return
     this.setData({ step: 2 })
@@ -117,7 +118,7 @@ Page({
           return
         }
         console.log('[Checkin] 开始调用 reverseGeocode')
-        checkinUtil.reverseGeocode(latitude, longitude)
+        checkinUtil.reverseGeocode(latitude, longitude, this.data.type)
           .then((geo) => {
             clearTimer()
             const spotName = geo.spotName || geo.district || geo.city || '当前位置'

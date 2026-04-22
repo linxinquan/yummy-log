@@ -6,8 +6,11 @@ const QQMAP_KEY = 'SWGBZ-7P2CB-LK2UO-JZYYV-6BZYQ-KEBUG'
 /**
  * 逆地理编码：坐标 → 景点名 + 详细地址
  * 腾讯地图 WebService API v1
+ * @param {number} latitude - 纬度
+ * @param {number} longitude - 经度
+ * @param {string} checkinType - 打卡类型：'spot' 景点 | 'food' 美食，默认自动筛选
  */
-function reverseGeocode(latitude, longitude) {
+function reverseGeocode(latitude, longitude, checkinType) {
   return new Promise((resolve, reject) => {
     wx.request({
       url: 'https://apis.map.qq.com/ws/geocoder/v1/',
@@ -43,21 +46,57 @@ function reverseGeocode(latitude, longitude) {
               return genericPatterns.some(p => p.test(n))
             }
 
-            // 从 pois 数组里找一个具体、有辨识度的名称
+            // ── 按打卡类型定义 POI 优先级 ──
             let spotName = ''
+
             if (pois.length > 0) {
-              // 优先找带小吃/美食/街/巷/城/广场后缀的 POI（商圈/美食区）
-              const premiumPOI = pois.find(p =>
-                p.category && /美食|小吃|街|巷|城|广场|市场|农庄|农贸市场/.test(p.category)
-              )
-              if (premiumPOI && !isGeneric(premiumPOI.title || premiumPOI.name)) {
-                spotName = premiumPOI.title || premiumPOI.name
+              // 定义各类型对应的关键词（扩大匹配范围）
+              const spotKeywords = [
+                '风景名胜', '博物馆', '展览馆', '公园', '景点', '广场', '寺庙', '教堂', 
+                '纪念馆', '文物', '古迹', '塔', '阁', '楼', '山', '湖', '海', '沙滩', 
+                '度假区', '风景区', '休闲', '广场', '文化', '遗址', '雕塑', '图书馆',
+                '科技馆', '海洋馆', '动物园', '植物园', '游乐场', '健身', '跑道', '绿道'
+              ]
+              const foodKeywords = [
+                '美食', '小吃', '餐厅', '咖啡', '茶楼', '农庄', '农家乐', '火锅', 
+                '烧烤', '面馆', '粥', '粉', '饭店', '酒楼', '食府', '食街', '市场', 
+                '农贸市场', '快餐', '烘焙', '奶茶', '饮品', '水果', '甜品', '卤味',
+                '烧烤', '日料', '韩料', '西餐', '酒吧', '清吧', '餐吧'
+              ]
+
+              // 根据类型筛选 POI
+              let targetKeywords = []
+              if (checkinType === 'spot') {
+                targetKeywords = spotKeywords
+              } else if (checkinType === 'food') {
+                targetKeywords = foodKeywords
               } else {
-                // 按顺序找第一个非通用名
+                // 自动模式：优先美食，再景点
+                targetKeywords = [...foodKeywords, ...spotKeywords]
+              }
+              console.log(pois)
+              // 遍历关键词找匹配 POI（同时检查category和title）
+              for (const keyword of targetKeywords) {
+                const matchPOI = pois.find(p => {
+                  const cat = p.category || ''
+                  const title = p.title || p.name || ''
+                  const matched = (cat.includes(keyword) || title.includes(keyword)) && !isGeneric(title)
+                  return matched
+                })
+                if (matchPOI) {
+                  spotName = matchPOI.title || matchPOI.name
+                  console.log(`[checkinUtil] 类型[${checkinType}] 命中[${keyword}]：`, spotName, '|', matchPOI.category)
+                  break
+                }
+              }
+
+              // 如果没找到匹配，按原有逻辑找非通用名
+              if (!spotName) {
                 for (const p of pois) {
                   const name = p.title || p.name
                   if (!isGeneric(name)) {
                     spotName = name
+                    console.log('[checkinUtil] 类型筛选未命中，使用第一个非通用名：', spotName)
                     break
                   }
                 }
@@ -75,7 +114,7 @@ function reverseGeocode(latitude, longitude) {
 
             const city = result.ad_info ? result.ad_info.city : extractCity(result.address || '')
 
-            console.log('[checkinUtil] 解析结果 - spotName:', spotName, '| address:', result.address)
+            console.log('[checkinUtil] 解析结果 - spotName:', spotName, '| address:', result.address, '| type:', checkinType)
 
             resolve({
               spotName: spotName,

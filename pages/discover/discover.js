@@ -67,9 +67,8 @@ Page({
   },
 
   onShow() {
+    // 仅在需要时刷新攻略列表（避免每次切换都重新加载）
     this.loadMyGuides()
-    // 每次进入页面刷新推荐
-    this.loadAIRecommendation()
   },
 
   // 加载行政区划信息
@@ -84,42 +83,11 @@ Page({
     })
   },
 
+
   // 加载天气信息
   loadWeather() {
-    const location = app.globalData.location
-    if (!location) return
-    
-    // 使用和风天气API（免费版）
-    wx.request({
-      url: 'https://devapi.qweather.com/v7/weather/now',
-      data: {
-        location: `${Math.round(location.lng * 100) / 100},${Math.round(location.lat * 100) / 100}`,
-        key: '6e62e8e03d5e4e7ebc4e95e9e7e0a5e5'  // 和风天气API Key
-      },
-      success: (res) => {
-        if (res.data && res.data.code === '200') {
-          const now = res.data.now
-          const iconMap = {
-            '100': '☀️', '101': '☁️', '102': '⛅', '103': '🌤️',
-            '104': '☁️', '200': '🌬️', '201': '🌬️', '202': '🌬️',
-            '300': '🌦️', '301': '🌧️', '302': '⛈️', '303': '🌨️',
-            '304': '❄️', '305': '🌧️', '306': '🌧️', '307': '🌨️',
-            '308': '🌨️', '309': '🌧️', '310': '🌧️', '311': '🌧️',
-            '312': '⛈️', '313': '⛈️', '314': '🌧️', '315': '🌧️',
-            '316': '🌨️', '317': '🌨️', '318': '🌨️', '400': '🌙',
-            '401': '☁️', '402': '🌨️', '403': '❄️', '404': '❄️',
-            '405': '🌨️', '406': '🌨️', '407': '❄️', '408': '❄️',
-            '409': '🌨️', '410': '❄️', '456': '🌧️', '457': '🌨️'
-          }
-          this.setData({
-            weatherIcon: iconMap[now.icon] || '🌡️',
-            weatherTemp: now.temp + '°C'
-          })
-        }
-      },
-      fail: () => {
-        // 静默失败，保持默认天气
-      }
+    util.loadWeather((icon, temp) => {
+      this.setData({ weatherIcon: icon, weatherTemp: temp })
     })
   },
 
@@ -532,37 +500,102 @@ Page({
       wx.showToast({ title: '请先输入攻略内容', icon: 'none' })
       return
     }
-    
+
+    // 检测是否是小红书 URL
+    const xhsPattern = /(?:xigua|xhslink|xiaohongshu|xhs)\.(?:com|app|cn)\/[\w\-\./?=&#]+/gi
+    const isXiaohongshuUrl = xhsPattern.test(text)
+
+    if (isXiaohongshuUrl) {
+      this.parseXiaohongshuUrl(text)
+    } else {
+      this.parseTextGuide(text)
+    }
+  },
+
+  // 解析小红书 URL
+  parseXiaohongshuUrl(url) {
+    util.showLoading('解析小红书笔记...')
+
+    wx.cloud.callFunction({
+      name: 'parseXiaohongshu',
+      data: { url },
+      success: (res) => {
+        util.hideLoading()
+
+        if (res.result.success) {
+          const shops = res.result.shops || []
+          
+          if (shops.length === 0) {
+            wx.showToast({ title: '未识别到有效地点', icon: 'none' })
+            return
+          }
+
+          // 模拟原有的店铺格式
+          const foundShops = shops.map(s => ({
+            name: s.name,
+            address: s.address || '',
+            source: 'xiaohongshu',
+            url: url
+          }))
+
+          this.setData({
+            showImportModal: false,
+            showResultModal: true,
+            foundShops: foundShops,
+            notFoundShops: []
+          })
+
+          wx.showToast({ title: `识别到 ${foundShops.length} 个地点`, icon: 'success' })
+
+          // 保存攻略
+          this.saveGuide(url, { foundShops, notFoundShops: [] })
+        } else {
+          wx.showToast({
+            title: res.result.error || '解析失败',
+            icon: 'none',
+            duration: 2500
+          })
+        }
+      },
+      fail: (err) => {
+        util.hideLoading()
+        console.error('[discover] 调用 parseXiaohongshu 失败:', err)
+        wx.showToast({ title: '解析失败，请重试', icon: 'none' })
+      }
+    })
+  },
+
+  // 解析文本攻略（原逻辑）
+  parseTextGuide(text) {
     util.showLoading('智能识别中...')
-    
-    // 延迟模拟解析
+
     setTimeout(() => {
       const result = util.parseBlockBasedGuide(text)
-      
+
       this.setData({
         showImportModal: false,
         showResultModal: true,
         foundShops: result.foundShops,
         notFoundShops: result.notFoundShops
       })
-      
+
       util.hideLoading()
-      
+
       // 显示识别结果提示
       const total = result.foundShops.length + result.notFoundShops.length
       if (total === 0) {
-        wx.showToast({ 
-          title: '未识别到店铺，请检查格式', 
+        wx.showToast({
+          title: '未识别到店铺，请检查格式',
           icon: 'none',
-          duration: 2500 
+          duration: 2500
         })
       } else {
-        wx.showToast({ 
-          title: `识别到 ${total} 家店铺`, 
-          icon: 'success' 
+        wx.showToast({
+          title: `识别到 ${total} 家店铺`,
+          icon: 'success'
         })
       }
-      
+
       // 保存攻略
       if (total > 0) {
         this.saveGuide(text, result)

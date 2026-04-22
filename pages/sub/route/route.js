@@ -173,7 +173,7 @@ Page({
     }
 
     const markers = routeShops.map((shop, index) => ({
-      id: shop.id,
+      id: Number(shop.id),
       latitude: shop.lat,
       longitude: shop.lng,
       width: 36,
@@ -489,7 +489,7 @@ Page({
         iconPath: '/images/location-dot.png'
       },
       {
-        id: currentShop.id,
+        id: Number(currentShop.id),
         latitude: currentShop.lat,
         longitude: currentShop.lng,
         width: 44,

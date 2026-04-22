@@ -115,7 +115,7 @@ Page({
       allCheckins.forEach((c) => {
         if (c.latitude && c.longitude) {
           const marker = {
-            id: c.id,
+            id: Number(index),
             latitude: c.latitude,
             longitude: c.longitude,
             width: 36,
@@ -218,42 +218,11 @@ Page({
     })
   },
 
+
   // 加载天气信息
   loadWeather() {
-    const location = app.globalData.location
-    if (!location) return
-    
-    // 使用和风天气API（免费版）
-    wx.request({
-      url: 'https://devapi.qweather.com/v7/weather/now',
-      data: {
-        location: `${Math.round(location.lng * 100) / 100},${Math.round(location.lat * 100) / 100}`,
-        key: '6e62e8e03d5e4e7ebc4e95e9e7e0a5e5'  // 和风天气API Key
-      },
-      success: (res) => {
-        if (res.data && res.data.code === '200') {
-          const now = res.data.now
-          const iconMap = {
-            '100': '☀️', '101': '☁️', '102': '⛅', '103': '🌤️',
-            '104': '☁️', '200': '🌬️', '201': '🌬️', '202': '🌬️',
-            '300': '🌦️', '301': '🌧️', '302': '⛈️', '303': '🌨️',
-            '304': '❄️', '305': '🌧️', '306': '🌧️', '307': '🌨️',
-            '308': '🌨️', '309': '🌧️', '310': '🌧️', '311': '🌧️',
-            '312': '⛈️', '313': '⛈️', '314': '🌧️', '315': '🌧️',
-            '316': '🌨️', '317': '🌨️', '318': '🌨️', '400': '🌙',
-            '401': '☁️', '402': '🌨️', '403': '❄️', '404': '❄️',
-            '405': '🌨️', '406': '🌨️', '407': '❄️', '408': '❄️',
-            '409': '🌨️', '410': '❄️', '456': '🌧️', '457': '🌨️'
-          }
-          this.setData({
-            weatherIcon: iconMap[now.icon] || '🌡️',
-            weatherTemp: now.temp + '°C'
-          })
-        }
-      },
-      fail: () => {
-        // 静默失败，保持默认天气
-      }
+    util.loadWeather((icon, temp) => {
+      this.setData({ weatherIcon: icon, weatherTemp: temp })
     })
   },
 
