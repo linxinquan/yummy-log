@@ -46,6 +46,24 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
       </view>
     </view>
 
+    <!-- AI 图片识别结果 -->
+    <view class="recognize-block" wx:if="{{photoPath}}">
+      <!-- 识别中 -->
+      <view class="rb-loading" wx:if="{{recognizing}}">
+        <text class="rb-spin">✦</text>
+        <text class="rb-text">AI 正在识别图片...</text>
+      </view>
+      <!-- 识别成功 -->
+      <view class="rb-result" wx:elif="{{recognizeResult}}">
+        <view class="rb-icon {{type}}">{{type === 'spot' ? '🏛' : '🍜'}}</view>
+        <view class="rb-content">
+          <text class="rb-name">{{recognizeResult}}</text>
+          <text class="rb-desc" wx:if="{{recognizeDesc}}">{{recognizeDesc}}</text>
+        </view>
+        <view class="rb-badge {{type}}">已识别</view>
+      </view>
+    </view>
+
     <!-- 下一步 -->
     <view class="btn-primary {{photoPath ? 'ready' : ''}}" bindtap="onNextStep">
       <text class="btn-primary-text">{{photoPath ? '下一步 · AI 识别位置' : '请先拍照'}}</text>
@@ -119,10 +137,23 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
             </view>
           </view>
         </view>
-        <!-- 刷新按钮 -->
+        <!-- 刷新 + 手动选择按钮 -->
         <view class="lb-refresh {{type}}" bindtap="onGetLocation">
           <text>⟳</text>
         </view>
+      </view>
+
+      <!-- 手动选择位置（兜底入口） -->
+      <view class="manual-locate" bindtap="onManualLocation">
+        <text class="ml-icon">📌</text>
+        <text class="ml-text">定位不准？手动选择位置</text>
+      </view>
+
+      <!-- AI 识别结果提示（美食模式，Step2 顶部） -->
+      <view class="recognize-hint" wx:if="{{recognizeResult && type === 'food'}}">
+        <text class="rh-icon">🍜</text>
+        <text class="rh-name">{{recognizeResult}}</text>
+        <text class="rh-desc" wx:if="{{recognizeDesc}}"> · {{recognizeDesc}}</text>
       </view>
 
       <!-- AI 内容区 -->

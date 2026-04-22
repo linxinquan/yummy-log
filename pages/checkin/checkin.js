@@ -21,6 +21,9 @@ Page({
     title: '',          // AI 生成的标题
     dateInfo: { mm: '', dd: '', yyyy: '' },
     locationLoading: false,
+    recognizing: false,    // 图片识别中
+    recognizeResult: '',   // 识别到的物体/地标名称
+    recognizeDesc: '',     // 识别生成的一句描述
     generating: false,     // 整体生成中（按钮状态）
     generatingTitle: '',   // 标题打字效果
     generatingDesc: '',    // 描述打字效果
@@ -61,7 +64,9 @@ Page({
       sourceType: ['album', 'camera'],
       success: (res) => {
         const path = res.tempFilePaths[0]
-        this.setData({ photoPath: path })
+        this.setData({ photoPath: path, recognizeResult: '', recognizeDesc: '' })
+        // 选完照片后立即触发识别，不等用户手动操作
+        this._recognizePhoto(path)
       },
       fail: (err) => {
         console.warn('chooseImage fail:', err)
@@ -70,7 +75,57 @@ Page({
     })
   },
 
-  // ── STEP 2：预览 ──────────────────────────────
+  // ── 图片识别（hunyuan-vision 多模态）──────────────
+  // 流程：本地临时图片 → 上传云存储（真机 fileID 有效）→ 云函数 recognizeFood → 获取临时URL → 识别
+  _recognizePhoto(photoPath) {
+    if (!photoPath) return
+    this.setData({ recognizing: true, recognizeResult: '', recognizeDesc: '' })
+
+    const type = this.data.type
+    const cloudPath = `recognize_tmp/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`
+
+    wx.cloud.uploadFile({
+      cloudPath,
+      filePath: photoPath,
+      success: (uploadRes) => {
+        const fileID = uploadRes.fileID
+        console.log('[Checkin] 图片上传成功 fileID:', fileID)
+
+        // 真机上 fileID 是真实云存储ID，同时传 cloudPath 让云函数拼公开 COS URL
+        wx.cloud.callFunction({
+          name: 'recognizeFood',
+          data: { fileID, cloudPath, type },
+          success: (res) => {
+            const result = res.result || {}
+            console.log('[Checkin] 图片识别结果:', result)
+            const name = (result.name || '').trim()
+            const desc = (result.desc || '').trim()
+
+            if (name) {
+              this.setData({ recognizing: false, recognizeResult: name, recognizeDesc: desc })
+              if (type === 'food' && !this.data.spotName) {
+                this.setData({ spotName: name })
+              }
+            } else {
+              this.setData({ recognizing: false })
+              wx.showToast({ title: '未能识别图片内容，请手动输入', icon: 'none', duration: 2000 })
+            }
+          },
+          fail: (err) => {
+            console.error('[Checkin] recognizeFood 调用失败:', err)
+            this.setData({ recognizing: false })
+            wx.showToast({ title: 'AI 识别失败，请检查网络', icon: 'none' })
+          }
+        })
+      },
+      fail: (err) => {
+        console.error('[Checkin] 图片上传失败:', err)
+        this.setData({ recognizing: false })
+        wx.showToast({ title: '图片上传失败', icon: 'none' })
+      }
+    })
+  },
+
   onNextStep() {
     if (!this.data.photoPath) return
     this.setData({ step: 2 })
@@ -95,17 +150,62 @@ Page({
     if (this.data.locationLoading) return
     this.setData({ locationLoading: true, spotName: '', address: '' })
 
-    console.log('[Checkin] onGetLocation 开始，checkinUtil:', !!checkinUtil)
-
-    // 手动超时兜底：10秒后无论成功失败都进入下一步
+    // 手动超时兜底：12秒后无论成功失败都进入下一步
     const timeoutTimer = setTimeout(() => {
       console.log('[Checkin] getLocation 超时，启用兜底方案')
       this.setData({ locationLoading: false })
-      wx.showToast({ title: '定位超时，使用当前位置', icon: 'none' })
-    }, 10000)
-
+      wx.showToast({ title: '定位超时，可手动选择位置', icon: 'none' })
+    }, 12000)
     const clearTimer = () => clearTimeout(timeoutTimer)
 
+    // ── 第一层：检查权限状态 ──
+    wx.getSetting({
+      success: (settingRes) => {
+        const authSetting = settingRes.authSetting || {}
+        console.log('[Checkin] 权限状态:', authSetting)
+
+        // 曾经被拒绝过 → 直接引导用户去设置
+        if (authSetting['scope.userLocation'] === false) {
+          clearTimer()
+          this.setData({ locationLoading: false })
+          wx.showModal({
+            title: '位置权限被关闭',
+            content: '请在「右上角 → 设置」中开启位置权限，才能正常使用打卡定位。',
+            confirmText: '去设置',
+            success: (modalRes) => {
+              if (modalRes.confirm) {
+                wx.openSetting({
+                  success: (openRes) => {
+                    // 用户从设置页返回后，重新尝试定位
+                    if (openRes.authSetting['scope.userLocation']) {
+                      this._doAutoLocation(clearTimer)
+                    } else {
+                      // 仍然拒绝 → 引导手动选位置
+                      this._fallbackToChooseLocation()
+                    }
+                  }
+                })
+              } else {
+                // 取消 → 手动选位置
+                this._fallbackToChooseLocation()
+              }
+            }
+          })
+          return
+        }
+
+        // 尚未决定或已授权 → 尝试自动定位
+        this._doAutoLocation(clearTimer)
+      },
+      fail: () => {
+        // getSetting 本身失败，直接尝试自动定位
+        this._doAutoLocation(clearTimer)
+      }
+    })
+  },
+
+  // ── 自动定位（调用 wx.getLocation + 逆地理）──
+  _doAutoLocation(clearTimer) {
     wx.getLocation({
       type: 'gcj02',
       success: (res) => {
@@ -132,8 +232,7 @@ Page({
           })
           .catch(() => {
             clearTimer()
-            // 逆地理失败时，根据类型给合理的兜底店名/景点名
-            const fallbackName = this.data.type === 'spot' ? '当前位置' : '当前位置'
+            const fallbackName = '当前位置'
             const desc = checkinUtil
               ? checkinUtil.generateDescription(fallbackName, '', this.data.type)
               : ''
@@ -148,27 +247,81 @@ Page({
         clearTimer()
         console.log('[Checkin] getLocation 失败:', err)
         this.setData({ locationLoading: false })
-        // 模拟器/超时：直接用默认名称，不弹窗
-        const isTimeout = err && (err.errMsg || '').includes('timeout')
-        if (isTimeout) {
-          wx.showToast({ title: '定位超时，使用当前位置', icon: 'none', duration: 1500 })
+        const errMsg = err && (err.errMsg || '')
+        // auth deny 或明确拒绝 → 引导去设置
+        if (errMsg.includes('auth deny') || errMsg.includes('auth refuse')) {
+          wx.showModal({
+            title: '需要位置权限',
+            content: '请允许位置权限，以便记录打卡地点。',
+            confirmText: '去设置',
+            success: (modalRes) => {
+              if (modalRes.confirm) {
+                wx.openSetting({
+                  success: (openRes) => {
+                    if (openRes.authSetting['scope.userLocation']) {
+                      this._doAutoLocation(() => {})
+                    } else {
+                      this._fallbackToChooseLocation()
+                    }
+                  }
+                })
+              } else {
+                this._fallbackToChooseLocation()
+              }
+            }
+          })
         } else {
-          wx.showToast({ title: '无法获取位置，使用默认名称', icon: 'none', duration: 1500 })
+          // 其他错误（超时、系统错误等）→ 自动引导手动选位置
+          this._fallbackToChooseLocation()
         }
-        // 自动设置兜底名称，让用户可以继续
-        setTimeout(() => {
-          if (!this.data.spotName) {
-            this.setData({
-              spotName: '当前位置',
-              address: '',
-              description: checkinUtil
-                ? checkinUtil.generateDescription('当前位置', '', this.data.type)
-                : ''
-            })
-          }
-        }, 500)
       }
     })
+  },
+
+  // ── 手动选位置兜底（chooseLocation）──
+  _fallbackToChooseLocation() {
+    wx.showToast({ title: '请手动选择位置', icon: 'none', duration: 1500 })
+    setTimeout(() => {
+      wx.chooseLocation({
+        success: (res) => {
+          console.log('[Checkin] chooseLocation 成功:', res)
+          const { name, address, latitude, longitude } = res
+          if (!name || !latitude) {
+            wx.showToast({ title: '未选择位置', icon: 'none' })
+            return
+          }
+          const spotName = (name && name !== '我的位置') ? name : address || '已选位置'
+          const description = checkinUtil
+            ? checkinUtil.generateDescription(spotName, address, this.data.type)
+            : ''
+          this.setData({
+            latitude,
+            longitude,
+            spotName,
+            address: address || '',
+            description,
+            locationLoading: false
+          })
+        },
+        fail: (err) => {
+          console.log('[Checkin] chooseLocation 取消/失败:', err)
+          // 用户取消选择 → 允许继续，用模糊名称
+          this.setData({
+            spotName: '当前位置',
+            address: '',
+            description: checkinUtil
+              ? checkinUtil.generateDescription('当前位置', '', this.data.type)
+              : '',
+            locationLoading: false
+          })
+        }
+      })
+    }, 600)
+  },
+
+  // ── 手动定位入口（UI按钮触发）──
+  onManualLocation() {
+    this._fallbackToChooseLocation()
   },
 
   // ── STEP 2→3：进入预览（调用混元 AI）──────────────
@@ -206,11 +359,14 @@ Page({
   // 调用混元 AI 生成打卡内容
   _generateAIContent() {
     return new Promise((resolve) => {
-      // 获取城市信息（从 app.globalData）
       const app = getApp()
       const districtInfo = app.globalData.districtInfo || {}
       const city = districtInfo.city || '深圳市'
       const region = app.globalData.locationDesc || ''
+
+      // 将图片识别结果一并传入，让文案更精准
+      const recognizeResult = this.data.recognizeResult || ''
+      const recognizeDesc = this.data.recognizeDesc || ''
 
       wx.cloud.callFunction({
         name: 'generateAICheckin',
@@ -219,7 +375,9 @@ Page({
           address: this.data.address,
           type: this.data.type,
           city: city.replace('市', ''),
-          region: region
+          region: region,
+          recognizeResult,   // 图片识别到的物体名称
+          recognizeDesc      // 图片识别生成的描述
         },
         success: (res) => {
           console.log('[Checkin] AI 生成结果:', res.result)
@@ -231,7 +389,6 @@ Page({
         },
         fail: (err) => {
           console.error('[Checkin] AI 云函数调用失败:', err)
-          // 网络错误时尝试直接调用混元（无需云函数）
           this._callHunyuanDirect().then(resolve).catch(() => resolve({ success: false }))
         }
       })
@@ -249,9 +406,13 @@ Page({
         const model = wx.cloud.extend.AI.createModel('hunyuan-exp')
         const spotName = this.data.spotName || '当前位置'
         const type = this.data.type === 'spot' ? '景点' : '美食'
-        const prompt = `请为"${spotName}"这个${type}生成一段打卡文案，要求：
-1. 标题15字以内，有记忆点
-2. 正文60字以内，有画面感，像朋友发朋友圈一样自然
+        // 识别结果融入 prompt
+        const recognizePart = this.data.recognizeResult
+          ? `，图片中识别到的是"${this.data.recognizeResult}"`
+          : ''
+        const prompt = `请为"${spotName}"这个${type}生成打卡文案${recognizePart}，要求：
+1. 标题10-14字，有记忆点，带 emoji
+2. 正文25-35字，诗意温暖，避免口语化
 3. 格式：{"title":"标题","description":"正文"}
 只返回JSON，不要其他内容。`
 
@@ -260,7 +421,7 @@ Page({
           messages: [{ role: 'user', content: prompt }]
         }).then(res => {
           const raw = res?.choices?.[0]?.message?.content || ''
-          let clean = raw.trim().replace(/^```json\n?/, '').replace(/```$/, '').trim()
+          const clean = raw.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '').trim()
           const parsed = JSON.parse(clean)
           resolve({
             success: true,
@@ -425,7 +586,10 @@ Page({
       aiFailed: false,
       editingName: false,
       editingAddr: false,
-      nearbyFood: ''
+      nearbyFood: '',
+      recognizing: false,
+      recognizeResult: '',
+      recognizeDesc: ''
     })
   },
 

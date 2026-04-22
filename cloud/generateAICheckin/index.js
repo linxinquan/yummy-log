@@ -1,7 +1,7 @@
 /**
  * generateAICheckin - 混元 AI 生成打卡内容
  *
- * 输入：{ spotName, address, type ('food'|'spot'), city, region }
+ * 输入：{ spotName, address, type ('food'|'spot'), city, region, recognizeResult, recognizeDesc }
  * 输出：{ title, description }
  *
  * 微信云开发标准写法，使用 wx-server-sdk + cloud.cloud.ai
@@ -10,8 +10,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 // ── 构建 Prompt ───────────────────────────────
-function buildPrompt(spotName, address, type, city, region, timeSlot) {
-  const cityRegion = region || city
+function buildPrompt(spotName, address, type, city, region, timeSlot, recognizeResult, recognizeDesc) {
   const typeLabel = type === 'spot' ? '景点' : '美食'
 
   const systemPrompt = `你是「资深美食/生活记录者」，笔触精致而有温度。
@@ -30,11 +29,16 @@ function buildPrompt(spotName, address, type, city, region, timeSlot) {
 ❌ 过长描述（正文超过35字即失败）
 ❌ "来到这里""打卡成功""今天来"等流水账开头`
 
+  // 如果有图片识别结果，融入 userPrompt 提升文案精准度
+  const recognizePart = recognizeResult
+    ? `\nAI图片识别：${recognizeResult}${recognizeDesc ? `（${recognizeDesc}）` : ''}`
+    : ''
+
   const userPrompt = `地点：${spotName || '未知地点'}
 地址：${address || '未知'}
 城市：${city}
 类型：${typeLabel}
-时段：${timeSlot || '日常'}
+时段：${timeSlot || '日常'}${recognizePart}
 
 请严格按以下 JSON 格式返回（只返回 JSON，无其他内容）：
 {
@@ -68,10 +72,15 @@ function getTimeSlot(hour) {
 
 // ── 主入口 ───────────────────────────────────
 exports.main = async (event, context) => {
-  const { spotName = '', address = '', type = 'food', city = '深圳', region = '' } = event
+  const {
+    spotName = '', address = '', type = 'food', city = '深圳', region = '',
+    recognizeResult = '', recognizeDesc = ''   // 图片识别结果
+  } = event
   const hour = new Date().getHours()
   const timeSlot = getTimeSlot(hour)
-  const { systemPrompt, userPrompt } = buildPrompt(spotName, address, type, city, region, timeSlot)
+  const { systemPrompt, userPrompt } = buildPrompt(
+    spotName, address, type, city, region, timeSlot, recognizeResult, recognizeDesc
+  )
 
   try {
     const res = await cloud.cloud.ai.model.generateText({
@@ -92,14 +101,14 @@ exports.main = async (event, context) => {
       title: parsed.title || `${spotName || city}打卡`,
       description: parsed.description || '',
       model: 'hunyuan-2.0-instruct-20251111',
-      timeSlot
+      timeSlot,
+      recognizeResult  // 透传识别结果，前端可复用
     }
   } catch (err) {
     console.error('[generateAICheckin] 调用失败:', err)
 
-    // 诗意兜底：资深美食记录者风格
     const isFood = type !== 'spot'
-    const name = spotName || city
+    const name = recognizeResult || spotName || city  // 优先用识别结果
 
     const fallbackTitles = isFood
       ? [
@@ -116,10 +125,9 @@ exports.main = async (event, context) => {
           `🏙 光影札记｜${name}`
         ]
 
-    // 25-35字，诗意，结尾感叹感，避免口语
     const fallbackDescs = isFood
       ? [
-          `${timeSlot}路过${name}，肠粉蒸气升腾，一口鲜滑，是打工人的治愈时刻。`,
+          `${timeSlot}路过${name}，蒸气升腾，一口鲜滑，是打工人的治愈时刻。`,
           `${name}的汤头清澈，鲜味却浓，胃里落定，心里也暖了起来。`,
           `${timeSlot}，一碗热汤下肚，城市的忙碌忽然变得可以忍受。`,
           `${name}的出品有惊喜，香气从路口就能捕捉到。`,
@@ -142,3 +150,4 @@ exports.main = async (event, context) => {
     }
   }
 }
+
