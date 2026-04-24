@@ -7,6 +7,14 @@ try {
   console.error('[Checkin] checkinUtil 加载失败:', e)
 }
 
+let recognizeFood = null
+try {
+  recognizeFood = require('../../utils/recognizeFood')
+  console.log('[Checkin] recognizeFood 加载成功')
+} catch (e) {
+  console.error('[Checkin] recognizeFood 加载失败:', e)
+}
+
 Page({
   data: {
     type: 'food',      // 'food' 美食 | 'spot' 景点
@@ -75,55 +83,30 @@ Page({
     })
   },
 
-  // ── 图片识别（hunyuan-vision 多模态）──────────────
-  // 流程：本地临时图片 → 上传云存储（真机 fileID 有效）→ 云函数 recognizeFood → 获取临时URL → 识别
-  _recognizePhoto(photoPath) {
+  // ── 图片识别 ─────────────────────────────────────
+  async _recognizePhoto(photoPath) {
     if (!photoPath) return
     this.setData({ recognizing: true, recognizeResult: '', recognizeDesc: '' })
 
     const type = this.data.type
-    const cloudPath = `recognize_tmp/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`
 
-    wx.cloud.uploadFile({
-      cloudPath,
-      filePath: photoPath,
-      success: (uploadRes) => {
-        const fileID = uploadRes.fileID
-        console.log('[Checkin] 图片上传成功 fileID:', fileID)
+    try {
+      const result = await recognizeFood.recognizePhoto(photoPath, type)
 
-        // 真机上 fileID 是真实云存储ID，同时传 cloudPath 让云函数拼公开 COS URL
-        wx.cloud.callFunction({
-          name: 'recognizeFood',
-          data: { fileID, cloudPath, type },
-          success: (res) => {
-            const result = res.result || {}
-            console.log('[Checkin] 图片识别结果:', result)
-            const name = (result.name || '').trim()
-            const desc = (result.desc || '').trim()
-
-            if (name) {
-              this.setData({ recognizing: false, recognizeResult: name, recognizeDesc: desc })
-              if (type === 'food' && !this.data.spotName) {
-                this.setData({ spotName: name })
-              }
-            } else {
-              this.setData({ recognizing: false })
-              wx.showToast({ title: '未能识别图片内容，请手动输入', icon: 'none', duration: 2000 })
-            }
-          },
-          fail: (err) => {
-            console.error('[Checkin] recognizeFood 调用失败:', err)
-            this.setData({ recognizing: false })
-            wx.showToast({ title: 'AI 识别失败，请检查网络', icon: 'none' })
-          }
-        })
-      },
-      fail: (err) => {
-        console.error('[Checkin] 图片上传失败:', err)
+      if (result.name) {
+        this.setData({ recognizing: false, recognizeResult: result.name, recognizeDesc: result.desc })
+        if (type === 'food' && !this.data.spotName) {
+          this.setData({ spotName: result.name })
+        }
+      } else {
         this.setData({ recognizing: false })
-        wx.showToast({ title: '图片上传失败', icon: 'none' })
+        wx.showToast({ title: '未能识别图片内容，请手动输入', icon: 'none', duration: 2000 })
       }
-    })
+    } catch (err) {
+      console.error('[Checkin] AI 识别失败:', err)
+      this.setData({ recognizing: false })
+      wx.showToast({ title: 'AI 识别失败: ' + (err.message || err), icon: 'none', duration: 3000 })
+    }
   },
 
   onNextStep() {
@@ -367,7 +350,7 @@ Page({
       // 将图片识别结果一并传入，让文案更精准
       const recognizeResult = this.data.recognizeResult || ''
       const recognizeDesc = this.data.recognizeDesc || ''
-
+      console.log('recognizeResult', recognizeResult)
       wx.cloud.callFunction({
         name: 'generateAICheckin',
         data: {

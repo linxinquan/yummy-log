@@ -1,0 +1,8 @@
+# 微信云开发
+cloudbaserc.json
+
+# 云函数依赖（node_modules）
+cloud/*/node_modules/
+
+.codebuddy
+skills-lock.json

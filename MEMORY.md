@@ -250,4 +250,69 @@ _parsePolyline(polyline) {
    - 缓存结构：`{ drive: {...}, walk: {...}, transit: {...} }`
 
 ---
-*最后更新：2026-04-22（路线地图优化 ✅）*
+
+## AI 图片识别（2026-04-24 ✅）
+
+### 概述
+在打卡页面新增拍照识别功能，可识别美食/景点名称并自动填充标题和描述。
+
+### 技术架构
+- **调用方式**：纯前端，无需云函数，通过 `wx.cloud.extend.AI.createModel().streamText()` 调用
+- **模型**：在 CloudBase 控制台 → AI Agent → 自定义模型配置
+- **模型标识符**：`modelscope-custom`（控制台配置的名称）
+- **实际模型**：`Qwen/Qwen3.5-27B`（控制台里指向的模型）
+- **图片传输**：上传到云存储 → 获取临时访问链接 → 传给 AI（不使用 Base64）
+
+### 识别流程（`utils/recognizeFood.js`）
+1. 压缩图片（`quality: 20` + `width: 800`，目标 < 200KB）
+2. 上传到云存储 `recognize_tmp/`
+3. 获取临时访问链接
+4. 调用 `wx.cloud.extend.AI.createModel('custom-custom').streamText()`
+5. 流式收集响应 → 解析 JSON → 返回 `{ name, desc }`
+
+### 关键代码（`pages/checkin/checkin.js`）
+图片压缩必须同时设置 `quality` 和 `width`：
+```javascript
+wx.compressImage({
+  src: photoPath,
+  quality: 20,
+  width: 800,
+  compressedWidth: 800,
+  compressedHeight: 800,
+  success: (res) => resolve(res.tempFilePath),
+  fail: (err) => { resolve(photoPath) }
+})
+```
+
+### 测试入口（WXML 临时保留）
+- `测AI` → `onTestAI()` 原始 hunyuan-exp 测试
+- `测文本` → `onTestAIText()` 纯文本连通性测试
+- `测MS` → `onTestModelScope()` ModelScope 图片测试
+
+### 已修改文件
+| 文件 | 改动 |
+|------|------|
+| `pages/checkin/checkin.js` | `_recognizePhoto()` 正式识别函数 + 测试函数 |
+| `pages/checkin/checkin.wxml` | 三个测试按钮入口 |
+| `pages/checkin/checkin.wxss` | 测试按钮样式（红/蓝/橙） |
+| `utils/recognizeFood.js` | 核心识别逻辑，纯前端 `wx.cloud.extend.AI` 方案 |
+| `cloud/recognizeAIFood/` | 废弃，云函数调用 `custom-custom` 模型报 404，不适用 |
+
+### 踩坑记录
+1. **hunyuan-exp 不支持图片输入**：返回 400，切换到 ModelScope 解决
+2. **Base64 传图失败**：原图 2.5MB → Base64 后 3.5MB，超请求体限制，放弃
+3. **仅调 quality 压缩不够**：需同时限制 `width: 800` 尺寸才能降到 200KB 以下
+4. **云函数调用模型报 404**：`cloud/recognizeAIFood` 用 `@cloudbase/node-sdk` 的 `ai.createModel('custom-custom')` → 404
+   - 原因：`custom-custom` 模型标识符必须在 CloudBase 控制台正确配置/激活
+   - 云函数中应该用 `@cloudbase/node-sdk` 的 `app.ai().createModel('xxx')`，但模型名称必须和控制台一致
+5. **真机调试偶发找不到模型**：昨天用前端调用报"模型未找到"，今天好了 → 可能是控制台模型配置/部署有延迟，配置完成后需等待生效
+
+### AI 模型选择对照
+| 场景 | 模型 | 调用方式 | 说明 |
+|------|------|---------|------|
+| 打卡文案生成 | `hunyuan-2.0-instruct-20251111` | 云函数 `cloud.cloud.ai.model.generateText()` | 仅文本，配置在控制台 |
+| 图片内容识别 | `Qwen/Qwen3.5-27B` | 前端 `wx.cloud.extend.AI.createModel('modelscope-custom').streamText()` | 需要控制台配置 `modelscope-custom` 指向该模型 |
+
+---
+*最后更新：2026-04-24（AI 图片识别 ✅，纯前端方案稳定）*
+

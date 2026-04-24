@@ -247,7 +247,7 @@ page {
   background: #E8FAF8;
   border: 2rpx solid rgba(0, 213, 192, 0.2);
   border-radius: 24rpx;
-  padding: 28rpx 32rpx;
+  padding: 28rpx 0rpx;
   display: flex;
   align-items: center;
   justify-content: center;
