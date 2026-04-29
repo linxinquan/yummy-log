@@ -23,6 +23,8 @@ function buildPrompt(spotName, address, type, city, region, timeSlot, recognizeR
 - 美食类：香气、鲜味、舌尖触感、生活气息优先，避免"打卡""推荐"等词
 - 景点类：光影、时空感、城市肌理优先，避免"值得一去""很美"等空泛词
 
+重要：如果提供了"AI图片识别"信息，你必须在文案中体现识别到的具体内容（如食物名称、景点特征等），让文案与实际图片内容紧密关联。
+
 禁止出现：
 ❌ 口语化表达（如"真的太好吃了""超级推荐"）
 ❌ 无关信息（行政区划、距离描述）
@@ -31,7 +33,7 @@ function buildPrompt(spotName, address, type, city, region, timeSlot, recognizeR
 
   // 如果有图片识别结果，融入 userPrompt 提升文案精准度
   const recognizePart = recognizeResult
-    ? `\nAI图片识别：${recognizeResult}${recognizeDesc ? `（${recognizeDesc}）` : ''}`
+    ? `\n【重要：图片识别结果】\n识别到的内容：${recognizeResult}${recognizeDesc ? `\n识别描述：${recognizeDesc}` : ''}\n请基于以上识别结果生成文案，标题或正文中必须体现识别到的具体事物。`
     : ''
 
   const userPrompt = `地点：${spotName || '未知地点'}
@@ -83,6 +85,9 @@ exports.main = async (event, context) => {
   )
 
   try {
+    console.log('[generateAICheckin] 开始调用 AI，参数:', { spotName, address, type, city, recognizeResult, recognizeDesc })
+    console.log('[generateAICheckin] UserPrompt:', userPrompt)
+
     const res = await cloud.cloud.ai.model.generateText({
       model: 'hunyuan-2.0-instruct-20251111',
       messages: [
@@ -93,8 +98,19 @@ exports.main = async (event, context) => {
       max_tokens: 300
     })
 
+    console.log('[generateAICheckin] AI 返回原始结果:', JSON.stringify(res))
+
     const raw = res?.choices?.[0]?.message?.content || ''
-    const parsed = parseAIResponse(raw)
+    console.log('[generateAICheckin] AI 返回内容:', raw)
+
+    let parsed
+    try {
+      parsed = parseAIResponse(raw)
+      console.log('[generateAICheckin] JSON 解析成功:', parsed)
+    } catch (parseErr) {
+      console.error('[generateAICheckin] JSON 解析失败:', parseErr, '原始内容:', raw)
+      throw parseErr
+    }
 
     return {
       success: true,

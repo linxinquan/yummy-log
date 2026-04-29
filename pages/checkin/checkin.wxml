@@ -53,20 +53,21 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
         <text class="rb-spin">✦</text>
         <text class="rb-text">AI 正在识别图片...</text>
       </view>
-      <!-- 识别成功 -->
-      <view class="rb-result" wx:elif="{{recognizeResult}}">
+      <!-- 识别成功（带打字机效果） -->
+      <view class="rb-result" wx:elif="{{recognizeResult || recognizing}}">
         <view class="rb-icon {{type}}">{{type === 'spot' ? '🏛' : '🍜'}}</view>
         <view class="rb-content">
-          <text class="rb-name">{{recognizeResult}}</text>
-          <text class="rb-desc" wx:if="{{recognizeDesc}}">{{recognizeDesc}}</text>
+          <text class="rb-name">{{recognizeResult}}<text class="cursor" wx:if="{{recognizing}}">|</text></text>
+          <text class="rb-desc" wx:if="{{recognizeDesc}}">{{recognizeDesc}}<text class="cursor" wx:if="{{recognizing && !recognizeResult}}">|</text></text>
         </view>
-        <view class="rb-badge {{type}}">已识别</view>
+        <view class="rb-badge {{type}}" wx:if="{{!recognizing && recognizeResult}}">已识别</view>
+        <view class="rb-badge loading {{type}}" wx:else>识别中</view>
       </view>
     </view>
 
     <!-- 下一步 -->
     <view class="btn-primary {{photoPath ? 'ready' : ''}}" bindtap="onNextStep">
-      <text class="btn-primary-text">{{photoPath ? '下一步 · AI 识别位置' : '请先拍照'}}</text>
+      <text class="btn-primary-text">{{photoPath ? '下一步 · 识别位置' : '请先拍照'}}</text>
       <text class="btn-primary-arrow" wx:if="{{photoPath}}">→</text>
     </view>
   </view>
@@ -149,9 +150,8 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
         <text class="ml-text">定位不准？手动选择位置</text>
       </view>
 
-      <!-- AI 识别结果提示（美食模式，Step2 顶部） -->
-      <view class="recognize-hint" wx:if="{{recognizeResult && type === 'food'}}">
-        <text class="rh-icon">🍜</text>
+      <!-- AI 识别结果提示 -->
+      <view class="recognize-hint">
         <text class="rh-name">{{recognizeResult}}</text>
         <text class="rh-desc" wx:if="{{recognizeDesc}}"> · {{recognizeDesc}}</text>
       </view>
@@ -161,7 +161,7 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
         <view class="aib-divider"></view>
 
         <!-- 未生成 -->
-        <view class="aib-empty {{generatingTitle || generatingDesc ? 'hidden' : ''}}" bindtap="onGenerate">
+        <view class="aib-empty {{title ? 'hidden' : ''}}" bindtap="onGenerate">
           <view class="aibe-icon {{type}}">✦</view>
           <view class="aibe-texts">
             <text class="aibe-title">生成打卡内容</text>
@@ -201,8 +201,11 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
     <!-- 底部按钮 -->
     <view class="btn-row">
       <view class="btn-ghost" bindtap="onPrevStep">← 返回</view>
-      <view class="btn-primary {{generatingTitle || generatingDesc ? 'generating' : ''}}" bindtap="onGenerate">
-        <text class="btn-primary-text">{{generatingTitle || generatingDesc ? '生成中...' : '生成打卡内容'}}</text>
+      <view 
+        class="btn-primary {{generatingTitle || generatingDesc ? 'generating' : ''}} {{title && !generatingTitle && !generatingDesc ? '' : 'btn-disabled'}}"
+        bindtap="{{title && !generatingTitle && !generatingDesc ? 'onNextStep' : ''}}"
+      >
+        <text class="btn-primary-text">{{generatingTitle || generatingDesc ? '生成中...' : (title ? '下一步' : '生成打卡内容')}}</text>
       </view>
     </view>
 
@@ -363,7 +366,7 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
     <!-- 操作按钮 -->
     <view class="btn-row success-actions">
       <view class="btn-ghost" bindtap="onReset">继续采集</view>
-      <view class="btn-primary" bindtap="onGoCollection">
+      <view class="btn-primary ready" bindtap="onGoCollection">
         <text class="btn-primary-text">查看采集本 →</text>
       </view>
     </view>

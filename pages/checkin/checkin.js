@@ -7,13 +7,16 @@ try {
   console.error('[Checkin] checkinUtil 加载失败:', e)
 }
 
-let recognizeFood = null
+let recognizePhoto = null
 try {
-  recognizeFood = require('../../utils/recognizeFood')
-  console.log('[Checkin] recognizeFood 加载成功')
+  recognizePhoto = require('../../utils/recognizePhoto')
+  console.log('[Checkin] recognizePhoto 加载成功')
 } catch (e) {
-  console.error('[Checkin] recognizeFood 加载失败:', e)
+  console.error('[Checkin] recognizePhoto 加载失败:', e)
 }
+
+// 导入打字机效果工具
+const { typewriterForCheckin } = require('../../utils/typewriter')
 
 Page({
   data: {
@@ -43,7 +46,8 @@ Page({
     mapCenter: { latitude: 22.543, longitude: 114.057 },
     mapScale: 13,
     allMarkers: [],
-    recentCheckins: []
+    recentCheckins: [],
+    forceBase64: true     // 测试用：强制使用 base64（跳过云存储）
   },
 
   onLoad(query) {
@@ -73,6 +77,11 @@ Page({
       success: (res) => {
         const path = res.tempFilePaths[0]
         this.setData({ photoPath: path, recognizeResult: '', recognizeDesc: '' })
+        // 递增请求版本号，使旧请求自动失效
+        if (recognizePhoto && recognizePhoto._requestId !== undefined) {
+          recognizePhoto._requestId++
+          console.log('[Checkin] 新请求，递增版本号')
+        }
         // 选完照片后立即触发识别，不等用户手动操作
         this._recognizePhoto(path)
       },
@@ -91,7 +100,35 @@ Page({
     const type = this.data.type
 
     try {
-      const result = await recognizeFood.recognizePhoto(photoPath, type)
+      // 使用流式识别，实现打字机效果
+      const result = await recognizePhoto.recognizePhoto(
+        photoPath, 
+        type, 
+        (token, fullContent) => {
+          // 实时更新 UI，展示打字机效果
+          console.log('[Checkin] 收到 token:', token)
+          console.log('[Checkin] 当前完整内容:', fullContent)
+
+          // 尝试实时解析 JSON（可能不完整）
+          try {
+            const clean = fullContent.trim()
+              .replace(/^```json\n?/, '').replace(/^```\n?/, '').replace(/\n?```$/, '').trim()
+            const parsed = JSON.parse(clean)
+            // 实时更新识别结果
+            if (parsed.name) {
+              console.log('[Checkin] 图片识别实时更新...')
+              this.setData({
+                recognizeResult: parsed.name,
+                recognizeDesc: parsed.desc || ''
+              })
+            }
+          } catch (parseErr) {
+            // JSON 还未完整，继续等待
+            console.log('[Checkin] JSON 解析中...')
+          }
+        }, 
+        this.data.forceBase64  // 传入 forceBase64 参数
+      )
 
       if (result.name) {
         this.setData({ recognizing: false, recognizeResult: result.name, recognizeDesc: result.desc })
@@ -110,6 +147,11 @@ Page({
   },
 
   onNextStep() {
+    // step 2 已生成文案，直接跳到 step 3 预览
+    if (this.data.step === 2 && this.data.title) {
+      this.setData({ step: 3 })
+      return
+    }
     if (!this.data.photoPath) return
     this.setData({ step: 2 })
     // 进入第二步后自动定位
@@ -319,7 +361,7 @@ Page({
 
     // 进入第二步后自动加载地图数据
     this._loadMapData()
-    // 调用混元 AI 云函数生成内容
+    // 调用混元 AI 生成内容（前端直接调用）
     this._generateAIContent()
       .then(result => {
         if (result.success) {
@@ -339,121 +381,114 @@ Page({
       })
   },
 
-  // 调用混元 AI 生成打卡内容
+  // 调用混元 AI 生成打卡内容（直接调用，不使用云函数）
   _generateAIContent() {
     return new Promise((resolve) => {
+      if (!wx.cloud) {
+        console.error('[Checkin] wx.cloud 不可用')
+        resolve({ success: false })
+        return
+      }
+
       const app = getApp()
       const districtInfo = app.globalData.districtInfo || {}
-      const city = districtInfo.city || '深圳市'
+      const city = (districtInfo.city || '深圳市').replace('市', '')
       const region = app.globalData.locationDesc || ''
 
       // 将图片识别结果一并传入，让文案更精准
       const recognizeResult = this.data.recognizeResult || ''
       const recognizeDesc = this.data.recognizeDesc || ''
-      console.log('recognizeResult', recognizeResult)
-      wx.cloud.callFunction({
-        name: 'generateAICheckin',
-        data: {
-          spotName: this.data.spotName,
-          address: this.data.address,
-          type: this.data.type,
-          city: city.replace('市', ''),
-          region: region,
-          recognizeResult,   // 图片识别到的物体名称
-          recognizeDesc      // 图片识别生成的描述
-        },
-        success: (res) => {
-          console.log('[Checkin] AI 生成结果:', res.result)
-          if (res.result && res.result.success !== false) {
-            resolve(res.result)
-          } else {
-            resolve({ success: false, ...res.result })
-          }
-        },
-        fail: (err) => {
-          console.error('[Checkin] AI 云函数调用失败:', err)
-          this._callHunyuanDirect().then(resolve).catch(() => resolve({ success: false }))
-        }
-      })
-    })
-  },
+      const spotName = this.data.spotName || '未知地点'
+      const type = this.data.type === 'spot' ? '景点' : '美食'
 
-  // 直接调用混元（云函数不可用时的备选）
-  _callHunyuanDirect() {
-    return new Promise((resolve) => {
-      if (!wx.cloud) {
-        resolve({ success: false })
-        return
-      }
+      console.log('[Checkin] 开始生成 AI 文案，参数:', { spotName, type, recognizeResult, recognizeDesc })
+
       try {
         const model = wx.cloud.extend.AI.createModel('hunyuan-exp')
-        const spotName = this.data.spotName || '当前位置'
-        const type = this.data.type === 'spot' ? '景点' : '美食'
-        // 识别结果融入 prompt
-        const recognizePart = this.data.recognizeResult
-          ? `，图片中识别到的是"${this.data.recognizeResult}"`
+
+        // 如果有图片识别结果，融入 prompt 提升文案精准度
+        const recognizePart = recognizeResult
+          ? `\n【重要：图片识别结果】\n识别到的内容：${recognizeResult}${recognizeDesc ? `\n识别描述：${recognizeDesc}` : ''}\n请基于以上识别结果生成文案，标题或正文中必须体现识别到的具体事物。`
           : ''
-        const prompt = `请为"${spotName}"这个${type}生成打卡文案${recognizePart}，要求：
-1. 标题10-14字，有记忆点，带 emoji
-2. 正文25-35字，诗意温暖，避免口语化
-3. 格式：{"title":"标题","description":"正文"}
-只返回JSON，不要其他内容。`
+
+        const systemPrompt = `你是「资深美食/生活记录者」，笔触精致而有温度。
+
+        核心原则：
+        - 写作风格：诗意、轻盈、带有淡淡的感叹感
+        - 标题：10-14字，有记忆点，可用1个emoji点缀
+        - 正文：严格控制在25-35字，诗意轻盈
+        - 美食类：香气、鲜味、舌尖触感优先
+        - 景点类：光影、时空感、城市肌理优先
+
+        重要：如果提供了"图片识别结果"，你必须在文案中体现识别到的具体内容。
+
+        禁止出现：
+        ❌ 口语化表达（如"真的太好吃了"）
+        ❌ "来到这里""打卡成功"等流水账开头`
+
+                const userPrompt = `地点：${spotName}
+        地址：${this.data.address || '未知'}
+        城市：${city}
+        类型：${type}${recognizePart}
+
+        请严格按以下 JSON 格式返回（只返回 JSON，无其他内容）：
+        {
+          "title": "10-14字，有画面感，1个emoji",
+          "description": "25-35字，诗意轻盈，结尾带感叹感"
+        }`
+
+        console.log('[Checkin] SystemPrompt:', systemPrompt)
+        console.log('[Checkin] UserPrompt:', userPrompt)
 
         model.generateText({
           model: 'hunyuan-2.0-instruct-20251111',
-          messages: [{ role: 'user', content: prompt }]
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.8,
+          max_tokens: 300
         }).then(res => {
+          console.log('[Checkin] AI 原始返回:', JSON.stringify(res))
           const raw = res?.choices?.[0]?.message?.content || ''
-          const clean = raw.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '').trim()
-          const parsed = JSON.parse(clean)
-          resolve({
-            success: true,
-            title: parsed.title || `${spotName}打卡`,
-            description: parsed.description || ''
-          })
-        }).catch(() => resolve({ success: false }))
+          console.log('[Checkin] AI 返回内容:', raw)
+          try {
+            const clean = raw.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '').trim()
+            const parsed = JSON.parse(clean)
+            console.log('[Checkin] JSON 解析成功:', parsed)
+            resolve({
+              success: true,
+              title: parsed.title || `${spotName}打卡`,
+              description: parsed.description || ''
+            })
+          } catch (parseErr) {
+            console.error('[Checkin] JSON 解析失败:', parseErr, '原始内容:', raw)
+            resolve({ success: false })
+          }
+        }).catch((err) => {
+          console.error('[Checkin] 模型调用失败:', err)
+          resolve({ success: false })
+        })
       } catch (e) {
+        console.error('[Checkin] 初始化失败:', e)
         resolve({ success: false })
       }
     })
   },
 
-  // 打字机效果展示 AI 内容
+  // 打字机效果展示 AI 内容（使用公共函数）
   _typewriterEffect(title, description) {
-    let tIdx = 0
-    let dIdx = 0
-    const self = this
-
-    function tick() {
-      if (tIdx <= title.length) {
-        self.setData({ generatingTitle: title.slice(0, tIdx) })
-        tIdx++
-        setTimeout(tick, 50)
-      } else {
-        // 标题打完，开始打描述
-        setTimeout(() => {
-          function tickDesc() {
-            if (dIdx <= description.length) {
-              self.setData({ generatingDesc: description.slice(0, dIdx) })
-              dIdx++
-              setTimeout(tickDesc, 30)
-            } else {
-              // 全部打完，正式设置内容并进入 step3
-              self.setData({
-                title: title,
-                description: description,
-                generating: false,
-                generatingTitle: '',
-                generatingDesc: '',
-                step: 3
-              })
-            }
-          }
-          tickDesc()
-        }, 200)
-      }
+    // 停止之前的动画（如果有）
+    if (this._typewriterControl) {
+      this._typewriterControl.stop()
     }
-    tick()
+
+    // 使用公共打字机函数，完成后跳转 step 3
+    this._typewriterControl = typewriterForCheckin(this, title, description, {
+      onComplete: () => {
+        // this.setData({ step: 3 })
+      }
+    })
   },
 
   // 获取兜底内容（AI 不可用时）
@@ -583,5 +618,125 @@ Page({
 
   onBack() {
     wx.navigateBack()
+  },
+
+  // ── 测试 AI 生成文案（模拟数据）────────────────────
+  onTestAIGenerate() {
+    // 模拟数据：苦瓜柠檬茶
+    const testData = {
+      spotName: '润园四季',
+      address: '深圳市南山区科技园店',
+      type: 'food',
+      recognizeResult: '椰子鸡',
+      recognizeDesc: '椰香浓郁，鸡肉鲜嫩，配上椰子，口感层次丰富，回味无穷'
+    }
+
+    // 设置模拟数据到页面
+    this.setData({
+      photoPath: '/images/test-placeholder.png', // 占位图
+      spotName: testData.spotName,
+      address: testData.address,
+      type: testData.type,
+      recognizeResult: testData.recognizeResult,
+      recognizeDesc: testData.recognizeDesc,
+      step: 2,
+      generating: true,
+      generatingTitle: '',
+      generatingDesc: '',
+      aiFailed: false
+    })
+
+    console.log('[Test] 开始测试 AI 生成（直接调用模式），模拟数据:', testData)
+
+    // 直接调用混元 AI（不经过云函数）
+    this._callHunyuanDirectTest()
+      .then(result => {
+        console.log('[Test] AI 生成结果:', result)
+        if (result.success) {
+          this._typewriterEffect(result.title, result.description)
+        } else {
+          const fallback = this._getFallbackContent()
+          this._typewriterEffect(fallback.title, fallback.description)
+          this.setData({ aiFailed: true })
+        }
+      })
+      .catch((err) => {
+        console.error('[Test] AI 生成失败:', err)
+        const fallback = this._getFallbackContent()
+        this._typewriterEffect(fallback.title, fallback.description)
+        this.setData({ aiFailed: true })
+      })
+  },
+
+  // ── 测试专用：直接调用混元 AI（带详细日志）────────────────────
+  _callHunyuanDirectTest() {
+    return new Promise((resolve) => {
+      if (!wx.cloud) {
+        console.error('[Test] wx.cloud 不可用')
+        resolve({ success: false })
+        return
+      }
+      try {
+        const model = wx.cloud.extend.AI.createModel('hunyuan-exp')
+        const spotName = this.data.spotName || '当前位置'
+        const type = this.data.type === 'spot' ? '景点' : '美食'
+        // 识别结果融入 prompt
+        const recognizePart = this.data.recognizeResult
+          ? `\n【重要：图片识别结果】\n识别到的内容：${this.data.recognizeResult}${this.data.recognizeDesc ? `\n识别描述：${this.data.recognizeDesc}` : ''}\n请基于以上识别结果生成文案，标题或正文中必须体现识别到的具体事物。`
+          : ''
+
+        const systemPrompt = `你是「资深美食/生活记录者」，笔触精致而有温度。
+核心原则：
+- 写作风格：诗意、轻盈、带有淡淡的感叹感
+- 标题：10-14字，有记忆点，可用1个emoji点缀
+- 正文：严格控制在25-35字，诗意轻盈
+重要：如果提供了"图片识别结果"，你必须在文案中体现识别到的具体内容。`
+
+        const userPrompt = `地点：${spotName}
+类型：${type}${recognizePart}
+
+请严格按以下 JSON 格式返回（只返回 JSON，无其他内容）：
+{
+  "title": "10-14字，有画面感，1个emoji",
+  "description": "25-35字，诗意轻盈，结尾带感叹感"
+}`
+
+        console.log('[Test] SystemPrompt:', systemPrompt)
+        console.log('[Test] UserPrompt:', userPrompt)
+
+        model.generateText({
+          model: 'hunyuan-2.0-instruct-20251111',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.8,
+          max_tokens: 300
+        }).then(res => {
+          console.log('[Test] AI 原始返回:', JSON.stringify(res))
+          const raw = res?.choices?.[0]?.message?.content || ''
+          console.log('[Test] AI 返回内容:', raw)
+          try {
+            const clean = raw.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '').trim()
+            const parsed = JSON.parse(clean)
+            console.log('[Test] JSON 解析成功:', parsed)
+            resolve({
+              success: true,
+              title: parsed.title || `${spotName}打卡`,
+              description: parsed.description || ''
+            })
+          } catch (parseErr) {
+            console.error('[Test] JSON 解析失败:', parseErr)
+            resolve({ success: false })
+          }
+        }).catch((err) => {
+          console.error('[Test] 模型调用失败:', err)
+          resolve({ success: false })
+        })
+      } catch (e) {
+        console.error('[Test] 初始化失败:', e)
+        resolve({ success: false })
+      }
+    })
   }
 })

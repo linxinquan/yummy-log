@@ -263,7 +263,7 @@ _parsePolyline(polyline) {
 - **实际模型**：`Qwen/Qwen3.5-27B`（控制台里指向的模型）
 - **图片传输**：上传到云存储 → 获取临时访问链接 → 传给 AI（不使用 Base64）
 
-### 识别流程（`utils/recognizeFood.js`）
+### 识别流程（`utils/recognizePhoto.js`）
 1. 压缩图片（`quality: 20` + `width: 800`，目标 < 200KB）
 2. 上传到云存储 `recognize_tmp/`
 3. 获取临时访问链接
@@ -295,7 +295,7 @@ wx.compressImage({
 | `pages/checkin/checkin.js` | `_recognizePhoto()` 正式识别函数 + 测试函数 |
 | `pages/checkin/checkin.wxml` | 三个测试按钮入口 |
 | `pages/checkin/checkin.wxss` | 测试按钮样式（红/蓝/橙） |
-| `utils/recognizeFood.js` | 核心识别逻辑，纯前端 `wx.cloud.extend.AI` 方案 |
+| `utils/recognizePhoto.js` | 核心识别逻辑，纯前端 `wx.cloud.extend.AI` 方案 |
 | `cloud/recognizeAIFood/` | 废弃，云函数调用 `custom-custom` 模型报 404，不适用 |
 
 ### 踩坑记录
@@ -315,4 +315,93 @@ wx.compressImage({
 
 ---
 *最后更新：2026-04-24（AI 图片识别 ✅，纯前端方案稳定）*
+
+## AI 打卡文案生成改为前端直接调用（2026-04-27 ✅）
+
+### 问题背景
+- 云函数方案需要上传部署，调试不便
+- 测试发现云函数调用失败，返回预设文案
+- 前端直接调用方案更灵活，调试更方便
+
+### 技术方案
+- **调用方式**：前端直接调用 `wx.cloud.extend.AI.createModel('hunyuan-exp')`
+- **模型**：`hunyuan-2.0-instruct-20251111`
+- **提示词优化**：明确要求 AI 必须使用 `recognizeResult` 和 `recognizeDesc`
+- **JSON 解析**：处理 markdown 代码块包裹的情况
+
+### 关键代码（`pages/checkin/checkin.js`）
+```javascript
+_generateAIContent() {
+  const model = wx.cloud.extend.AI.createModel('hunyuan-exp')
+  // 提示词中强调必须使用图片识别结果
+  const recognizePart = recognizeResult
+    ? `\n【重要：图片识别结果】\n识别到的内容：${recognizeResult}...\n请基于以上识别结果生成文案`
+    : ''
+  // ...
+}
+```
+
+### 测试结果（✅）
+- **测试数据**：`recognizeResult: "苦瓜柠檬茶"`, `recognizeDesc: "翠绿冰爽，萌猪坐镇，微苦后的回甘令人惊喜"`
+- **生成文案**：
+  - 标题：`苦瓜柠檬茶🐷翠绿萌趣沁心凉`
+  - 正文：`翠绿冰爽的苦瓜柠檬茶，萌猪坐镇，微苦化甘意绵长，饮罢满心惊喜感叹！`
+- **结论**：✅ 文案完美融合了识别结果和描述
+
+### 已修改文件
+| 文件 | 改动 |
+|------|------|
+| `pages/checkin/checkin.js` | 移除 `_generateAIContent()` 中的 `wx.cloud.callFunction`，改为直接调用混元 AI；删除 `_callHunyuanDirect()` 方法（已整合） |
+| `cloud/generateAICheckin/index.js` | 保留（备用），但不再使用 |
+
+### 提示词关键点
+1. **SystemPrompt**：明确告知 AI "如果提供了图片识别结果，必须在文案中体现识别到的具体内容"
+2. **UserPrompt**：使用 `【重要：图片识别结果】` 标记，强化指令
+3. **效果**：AI 生成的文案会包含 `recognizeResult` 和 `recognizeDesc` 的内容
+
+---
+*最后更新：2026-04-27（AI 打卡文案生成改为前端直接调用 ✅）*
+
+## 图片识别打字机效果（2026-04-27 ✅）
+
+### 实现方案
+- `utils/recognizePhoto.js` 支持流式返回，通过 `onToken` 回调实时传递 token
+- `pages/checkin/checkin.js` 实时解析 JSON 并更新 UI
+- `pages/checkin/checkin.wxml` 添加光标动画效果
+
+### 已修改文件
+| 文件 | 改动 |
+|------|------|
+| `utils/recognizePhoto.js` | `recognizePhoto` 添加 `onToken` 回调参数；添加 `forceBase64` 参数（强制使用 base64，跳过云存储）；移除冗余的 `recognizePhotoStream` 和 `recognizePhotoTest` 函数 |
+| `pages/checkin/checkin.js` | `_recognizePhoto` 使用流式回调；添加 `forceBase64` 标志；添加 `onToggleForceBase64` 事件处理 |
+| `pages/checkin/checkin.wxml` | 添加 base64 模式切换开关；添加打字机光标效果 |
+| `pages/checkin/checkin.wxss` | 添加 `.rb-result .cursor` 光标动画样式 |
+| `utils/typewriter.js` | **新建** 打字机效果公共函数，支持可配置速度和完成回调 |
+
+### forceBase64 参数说明
+- `false`（默认）：先尝试云存储，失败则降级为 base64
+- `true`（测试模式）：强制使用 base64，跳过云存储（方便网络不稳定时测试）
+
+### 测试方式
+在打卡页面 Step 1，打开"测试模式"开关，即可强制使用 base64 上传图片。
+
+---
+
+## TODO
+
+- [ ] **路线页面 Loading 状态**
+  - 问题：步行/公交模式下串行请求多段路线，每段间隔 1100ms，3个店铺需要约 3.3 秒，用户无感知
+  - 方案：增加全局 Loading 提示，或进入页面时预加载所有出行方式的路线
+
+- [ ] **打卡入口统一，AI 自动分类**
+  - 问题：当前有"美食打卡"和"景点打卡"两个独立入口，需要用户先选择类型
+  - 方案：合并为单一打卡入口，用户拍照后由 AI 识别内容类型（美食/景点），自动分类存储
+  - 好处：简化用户操作，无需思考"我该去哪个入口"
+
+
+
+
+
+
+
 
