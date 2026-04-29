@@ -112,7 +112,7 @@ Page({
       const mapMarkers = []
       const spotMarkers = []
       const foodMarkers = []
-      allCheckins.forEach((c) => {
+      allCheckins.forEach((c, index) => {
         if (c.latitude && c.longitude) {
           const marker = {
             id: Number(index),

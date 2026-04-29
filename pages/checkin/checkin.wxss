@@ -247,7 +247,7 @@ page {
   background: #E8FAF8;
   border: 2rpx solid rgba(0, 213, 192, 0.2);
   border-radius: 24rpx;
-  padding: 28rpx 32rpx;
+  padding: 28rpx 0rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -691,6 +691,41 @@ page {
 
 .cursor.spot { animation: blink 1s ease-in-out infinite; color: #00D9C0; }
 .cursor.food { animation: blink 1s ease-in-out infinite; color: #FF8B7E; }
+
+/* 图片识别中的光标动画 */
+.rb-result .cursor {
+  animation: blink 1s ease-in-out infinite;
+  font-weight: bold;
+  margin-left: 2rpx;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 调试：base64 模式切换 */
+.debug-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  margin-top: 20rpx;
+  padding: 16rpx 24rpx;
+  background: rgba(0, 217, 192, 0.08);
+  border-radius: 12rpx;
+}
+
+.dt-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.dt-status {
+  font-size: 24rpx;
+  color: #00D9C0;
+  font-weight: 600;
+}
 
 /* 已生成 */
 .aib-result {
