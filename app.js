@@ -19,7 +19,7 @@ App({
     baiduMapKey: 'KuGlOjdoC0kmGUbU1Tw2OQyK6LKQ6gGa',
     // 用户行政区划信息
     districtInfo: {
-      city: '深圳市',      // 城市
+      city: '深圳',      // 城市（不带"市"后缀，与 districtMap key 一致）
       district: '南山区'   // 区
     },
     // 用户详细位置描述
@@ -89,7 +89,9 @@ App({
       success: (res) => {
         if (res.data && res.data.status === 0 && res.data.result) {
           const addr = res.data.result.address_component
-          const city = addr.city || '深圳市'
+          const cityRaw = addr.city || '深圳市'
+          // 去掉「市/自治州/盟」等后缀，与 districtMap key 保持一致
+          const city = cityRaw.replace(/市$|自治州$|盟$/, '')
           const district = addr.district || '南山区'
           const street = addr.street || ''  // 街道
           const street_number = addr.street_number || ''  // 门牌号

@@ -14,7 +14,7 @@ Page({
 
   onLoad(options) {
     const id = parseInt(options.id)
-    const spot = spotData.spotData.find(s => s.id === id)
+    const spot = spotData.find(s => s.id === id)
     if (!spot) {
       wx.showToast({ title: '景点不存在', icon: 'none' })
       setTimeout(() => wx.navigateBack(), 1500)

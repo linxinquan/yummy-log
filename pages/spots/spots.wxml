@@ -1,20 +1,26 @@
-<!-- 觅食图 V2 - 景点页 -->
+<!-- 觅食图 V2 - 景点页 v9.1（对齐首页风格）-->
 <view class="container">
 
-  <!-- ── Header ── -->
+  <!-- ── Header（与首页一致：Logo + 城市选择器 + 天气 + 视图切换）── -->
   <view class="header">
     <view class="header-left">
       <view class="app-brand">
         <image class="logo-img" src="/images/app-logo.jpg" mode="aspectFit" />
         <text class="logo-text">觅食图</text>
       </view>
-      <view class="page-sub-title">
-        <text class="sub-title-text">深圳景点</text>
-        <text class="sub-title-count">{{filteredSpots.length}}个</text>
+      <!-- 城市/区域选择器（点击打开弹窗） -->
+      <view class="location-selector" bindtap="onOpenLocationPicker">
+        <text class="location-main">{{currentCity}}{{currentDistrict && currentDistrict !== '全部' ? '·' + currentDistrict : ''}}</text>
+        <text class="location-arrow">▼</text>
       </view>
     </view>
     <view class="header-right">
-      <!-- 地图/列表切换 -->
+      <!-- 天气Widget -->
+      <view class="weather">
+        <text class="weather-icon">☀️</text>
+        <text class="weather-temp">25°C</text>
+      </view>
+      <!-- 地图/列表切换（胶囊） -->
       <view class="view-toggle">
         <view class="toggle-btn {{viewMode === 'list' ? 'active' : ''}}" bindtap="onSwitchView" data-mode="list">
           <text class="toggle-icon">☰</text>
@@ -155,6 +161,50 @@
     <text class="wantgo-float-icon">❤️</text>
     <text class="wantgo-float-label">想去</text>
     <view class="wantgo-badge" wx:if="{{wantSpots.length > 0}}">{{wantSpots.length > 99 ? '99+' : wantSpots.length}}</view>
+  </view>
+
+  <!-- ── 位置选择器弹窗（城市→区两级） ── -->
+  <view class="location-picker-mask {{showLocationPicker ? 'show' : ''}}" bindtap="onCloseLocationPicker">
+    <view class="location-picker-panel" catchtap>
+      <view class="picker-handle"></view>
+      <view class="picker-header">
+        <text class="picker-title">选择位置</text>
+        <text class="picker-close" catchtap="onCloseLocationPicker">✕</text>
+      </view>
+
+      <view class="picker-content">
+        <!-- 一级：城市 Tab -->
+        <view class="city-tab-row">
+          <view
+            wx:for="{{allCities}}"
+            wx:key="id"
+            class="city-tab {{currentCity === item.name ? 'active' : ''}}"
+            catchtap="onSelectCity"
+            data-city="{{item}}"
+          >
+            <text class="city-tab-icon">{{item.icon}}</text>
+            <text class="city-tab-name">{{item.name}}</text>
+          </view>
+        </view>
+
+        <!-- 二级：区网格 -->
+        <view class="picker-section">
+          <text class="section-title">选择区/县</text>
+          <view class="district-grid">
+            <view
+              wx:for="{{currentDistricts}}"
+              wx:key="name"
+              class="district-chip {{currentDistrict === item.name ? 'active' : ''}}"
+              catchtap="onSelectDistrict"
+              data-item="{{item}}"
+            >
+              <text class="district-chip-icon">{{item.icon}}</text>
+              <text class="district-chip-name">{{item.name}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 
 </view>

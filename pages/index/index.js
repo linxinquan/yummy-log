@@ -1,4 +1,4 @@
-// 觅食图 - 首页逻辑 v8.0
+// 觅食图 - 首页逻辑 v9.0（城市→区两级筛选）
 const app = getApp()
 const shopData = require('../../utils/shopData')
 const spotData = require('../../utils/spotData')
@@ -13,17 +13,17 @@ Page({
       lng: 113.9046
     },
     markers: [],
-    
+
     // 分类
     categories: shopData.categories,
     currentCategory: '全部',
-    
+
     // 搜索
     searchKeyword: '',
-    
+
     // 排序
     sortType: 'distance', // distance | rating
-    
+
     // 店铺数据
     allShops: [],
     filteredShops: [],
@@ -41,14 +41,81 @@ Page({
     // 距离缓存（避免重复计算）
     distanceCache: {},
 
-    // 地理位置选择（小红书风格）
-    currentDistrict: '', // 当前选中的区域
+    // 地理位置选择（城市→区两级）
+    currentDistrict: '',   // 当前选中的区
     currentDistance: 0, // 当前选中的距离（米），0表示不限
     showLocationPicker: false, // 是否显示位置选择器弹窗
-    currentCity: '深圳市', // 当前城市（动态获取）
-    locationMode: 'my', // my=我的位置, district=区域
+    currentCity: '深圳', // 当前城市
+    locationMode: 'my',    // my=我的位置, district=区/城市
     myLocationDesc: '南山区', // 我的位置描述（如"南山街道"）
-    
+
+    // ── 两级筛选数据 ──
+    // 城市列表（Header picker 一级）
+    allCities: [
+      { id: 0, name: '深圳',       icon: '🏙️', center: { lat: 22.5433, lng: 114.0579 } },
+      { id: 1, name: '西双版纳',   icon: '🌴', center: { lat: 22.0097, lng: 100.7975 } },
+      { id: 2, name: '惠州',       icon: '🌊', center: { lat: 23.1115, lng: 114.4152 } },
+      { id: 3, name: '广州',       icon: '🌸', center: { lat: 23.1291, lng: 113.2644 } }
+    ],
+
+    // 各城市对应的区列表（name 与 foodData/spotData 的 district 字段精确匹配）
+    districtMap: {
+      '深圳': [
+        { name: '全部',        icon: '🔥', isHot: true },
+        { name: '我的位置',    icon: '📍', isLocation: true },
+        { name: '福田',        icon: '🏰', lat: 22.5228, lng: 114.0595 },
+        { name: '南山',        icon: '🌟', lat: 22.5312, lng: 113.9299 },
+        { name: '罗湖',        icon: '🏙️', lat: 22.5503, lng: 114.0847 },
+        { name: '宝安',        icon: '🏭', lat: 22.7206, lng: 113.8830 },
+        { name: '龙华',        icon: '🏢', lat: 22.7009, lng: 114.0491 },
+        { name: '龙岗',        icon: '⛰️', lat: 22.7207, lng: 114.2512 },
+        { name: '坪山',        icon: '🌄', lat: 22.6877, lng: 114.3491 },
+        { name: '光明',        icon: '💡', lat: 22.7843, lng: 113.9295 },
+        { name: '盐田',        icon: '🌊', lat: 22.5574, lng: 114.2419 },
+        { name: '大鹏',        icon: '🏖️', lat: 22.5768, lng: 114.4828 }
+      ],
+      '西双版纳': [
+        { name: '全部',    icon: '🔥', isHot: true },
+        { name: '景洪',    icon: '🌴', lat: 22.0097, lng: 100.7975 },
+        { name: '勐腊',    icon: '🌿', lat: 21.4829, lng: 101.5654 },
+        { name: '勐海',    icon: '☁️', lat: 21.9547, lng: 100.2548 }
+      ],
+      '惠州': [
+        { name: '全部',        icon: '🔥', isHot: true },
+        { name: '惠东',        icon: '🌊', lat: 22.9844, lng: 114.7198 },
+        { name: '惠城',        icon: '🏙️', lat: 23.1115, lng: 114.4152 },
+        { name: '惠阳',        icon: '🌟', lat: 22.7899, lng: 114.4569 },
+        { name: '龙门',        icon: '🌲', lat: 23.7279, lng: 114.2576 }
+      ],
+      '广州': [
+        { name: '全部',        icon: '🔥', isHot: true },
+        { name: '天河',        icon: '🏙️', lat: 23.1292, lng: 113.3623 },
+        { name: '越秀',        icon: '🏛️', lat: 23.1285, lng: 113.2740 },
+        { name: '荔湾',        icon: '🌺', lat: 23.1260, lng: 113.2365 },
+        { name: '海珠',        icon: '🌊', lat: 23.0840, lng: 113.3170 },
+        { name: '番禺',        icon: '🌾', lat: 22.9370, lng: 113.3640 },
+        { name: '白云',        icon: '☁️', lat: 23.2677, lng: 113.2730 },
+        { name: '黄埔',        icon: '⚓', lat: 23.1018, lng: 113.4577 },
+        { name: '花都',        icon: '🌸', lat: 23.4040, lng: 113.2203 }
+      ]
+    },
+
+// 当前城市对应的区列表（初始化为深圳）
+    currentDistricts: [
+      { name: '全部',        icon: '🔥', isHot: true },
+      { name: '我的位置',    icon: '📍', isLocation: true },
+      { name: '福田',        icon: '🏰', lat: 22.5228, lng: 114.0595 },
+      { name: '南山',        icon: '🌟', lat: 22.5312, lng: 113.9299 },
+      { name: '罗湖',        icon: '🏙️', lat: 22.5503, lng: 114.0847 },
+      { name: '宝安',        icon: '🏭', lat: 22.7206, lng: 113.8830 },
+      { name: '龙华',        icon: '🏢', lat: 22.7009, lng: 114.0491 },
+      { name: '龙岗',        icon: '⛰️', lat: 22.7207, lng: 114.2512 },
+      { name: '坪山',        icon: '🌄', lat: 22.6877, lng: 114.3491 },
+      { name: '光明',        icon: '💡', lat: 22.7843, lng: 113.9295 },
+      { name: '盐田',        icon: '🌊', lat: 22.5574, lng: 114.2419 },
+      { name: '大鹏',        icon: '🏖️', lat: 22.5768, lng: 114.4828 }
+    ],
+
     // 距离选项
     distanceOptions: [
       { label: '不限', value: 0 },
@@ -77,43 +144,38 @@ Page({
     allMarkers: [],
     spotMarkers: [],
     
-    // 全城选项
-    allDistricts: [
-      { id: 0, name: 'mylocation', icon: '📍', displayName: '我的位置', isLocation: true },
-      { id: 1, name: '', icon: '🔥', displayName: '热门美食圈' },
-      { id: 2, name: '罗湖区', icon: '🏙️', lat: 22.5503, lng: 114.0847 },
-      { id: 3, name: '南山区', icon: '🌟', lat: 22.5312, lng: 113.9299 },
-      { id: 4, name: '福田区', icon: '🏰', lat: 22.5228, lng: 114.0595 },
-      { id: 5, name: '宝安区', icon: '🏭', lat: 22.7206, lng: 113.8830 },
-      { id: 6, name: '龙华区', icon: '🏢', lat: 22.7009, lng: 114.0491 },
-      { id: 7, name: '光明区', icon: '💡', lat: 22.7843, lng: 113.9295 },
-      { id: 8, name: '坪山区', icon: '⛰️', lat: 22.6877, lng: 114.3491 },
-      { id: 9, name: '大鹏新区', icon: '🏖️', lat: 22.5768, lng: 114.4828 },
-      { id: 10, name: '深汕特别合作区', icon: '🏝️', lat: 22.9836, lng: 115.0337 }
-    ]
+    // 全城选项（兼容旧逻辑，保留但不使用）
+    allDistricts: []
   },
 
   onLoad() {
+    console.log('[Index] onLoad 开始')
     // 初始化：只调用一次，后续由回调触发
     this._isLoaded = false
     
     // 预加载/生成标记图标（40x40彩色圆点）
     markerIcons.ensureIcons(() => {
+      console.log('[Index] markerIcons 准备完成')
       this.updateMarkers()
     })
     // 构建景点地图标记
+    console.log('[Index] 开始构建景点标记')
     this._buildSpotMarkers()
     
     // 等待定位就绪，再加载店铺数据（避免重复计算）
     app.whenLocationReady((loc) => {
+      console.log('[Index] 定位就绪:', loc)
       this.setData({ mapCenter: { lat: loc.lat, lng: loc.lng } })
       this._loadAndFilter()
     })
     
     // 等待区划信息就绪，显示当前城市和位置描述
     app.whenDistrictReady((info, locationDesc) => {
+      console.log('[Index] 区划信息就绪:', info)
+      // 去掉"市"后缀，保证与 districtMap key 一致（如"深圳市"→"深圳"）
+      const cityName = (info.city || '深圳').replace(/市$|自治州$|盟$/, '')
       this.setData({ 
-        currentCity: info.city,
+        currentCity: cityName,
         myLocationDesc: locationDesc || info.district
       })
     })
@@ -198,13 +260,19 @@ Page({
 
   // 加载店铺数据
   loadShops() {
+    console.log('[Index] loadShops 开始')
     // 合并：蛇口24家（shopData.shops）+ 深圳V2美食65家（shopData.foods）+ 用户添加的店铺
     const userShops = util.loadData('userAddedShops', [])
+    console.log('[Index] shopData.shops 数量:', shopData.shops.length)
+    console.log('[Index] shopData.foods 数量:', shopData.foods.length)
+    console.log('[Index] userShops 数量:', userShops.length)
+    
     // 为每个店铺添加图片加载状态
     const allShops = [...shopData.shops, ...shopData.foods, ...userShops].map(shop => ({
       ...shop,
       imgError: false
     }))
+    console.log('[Index] allShops 总数:', allShops.length)
     
     this.setData({ allShops })
     this.applyFilters()
@@ -243,12 +311,29 @@ Page({
 
   // 应用筛选和排序（优化：减少重复计算）
   applyFilters() {
-    let { allShops, currentCategory, searchKeyword, sortType, currentDistance, mapCenter } = this.data
-    
+    console.log('[Index] applyFilters 开始')
+    let { allShops, currentCategory, searchKeyword, sortType, currentDistance, mapCenter, currentCity, currentDistrict } = this.data
+
     // 分类筛选
-    let filtered = currentCategory === '全部' 
-      ? allShops 
+    let filtered = currentCategory === '全部'
+      ? allShops
       : allShops.filter(s => s.category === currentCategory)
+
+    // 城市筛选
+    if (currentCity && currentCity !== '深圳') {
+      filtered = filtered.filter(s => s.city === currentCity)
+    }
+
+    // 区筛选（去掉「区/县/市/镇/新区」后缀后比对，兼容逆地理编码返回的完整地名）
+    if (currentDistrict && currentDistrict !== '全部' && currentDistrict !== '我的位置') {
+      const normDistrict = currentDistrict.replace(/区|县|市|镇|新区$/g, '')
+      filtered = filtered.filter(s => {
+        const normItemDistrict = (s.district || '').replace(/区|县|市|镇|新区$/g, '')
+        return normItemDistrict === normDistrict
+      })
+    }
+
+
     
     // 搜索筛选
     if (searchKeyword) {
@@ -292,6 +377,7 @@ Page({
       filteredShops: filtered,
       hasMore: filtered.length > this.data.pageSize
     })
+    console.log('[Index] applyFilters 完成，filteredShops 数量:', filtered.length)
     
     // 地图标记同步更新
     this.updateMarkers()
@@ -299,11 +385,14 @@ Page({
 
   // 更新地图标记 - 圆周旅迹风格（精致小圆点）
   updateMarkers() {
+    console.log('[Index] updateMarkers 开始')
     const shops = this.data.filteredShops
     if (!shops || shops.length === 0) {
+      console.log('[Index] updateMarkers: 没有店铺数据')
       this.setData({ markers: [] })
       return
     }
+    console.log('[Index] updateMarkers: 店铺数量:', shops.length)
 
     const markers = shops.map((shop) => {
       const catColor = markerIcons.getCategoryColor(shop.category)
@@ -346,7 +435,7 @@ Page({
 
   // 构建景点标记
   _buildSpotMarkers() {
-    const spots = spotData.spotData
+    const spots = spotData
     const markers = spots.map(s => ({
       id: s.id,
       latitude: s.lat,
@@ -422,7 +511,11 @@ Page({
 
   // 打开位置选择器
   onOpenLocationPicker() {
-    this.setData({ showLocationPicker: true })
+    const { currentCity, districtMap } = this.data
+    this.setData({
+      showLocationPicker: true,
+      currentDistricts: districtMap[currentCity] || districtMap['深圳']
+    })
   },
 
   // 关闭位置选择器
@@ -430,12 +523,11 @@ Page({
     this.setData({ showLocationPicker: false })
   },
 
-  // 选择区域
+  // 选择区域（两级筛选）
   onSelectDistrict(e) {
-    const districtName = e.currentTarget.dataset.district
     const item = e.currentTarget.dataset.item
-    
-    // 如果是"我的位置"
+
+    // "我的位置"：触发定位
     if (item && item.isLocation) {
       wx.getLocation({
         type: 'gcj02',
@@ -459,7 +551,7 @@ Page({
                 mapCenter: loc,
                 currentDistrict: '',
                 locationMode: 'my',
-                currentCity: '深圳市',
+                currentCity: '深圳',
                 myLocationDesc: locationDesc,
                 showLocationPicker: false
               })
@@ -471,7 +563,7 @@ Page({
                 mapCenter: loc,
                 currentDistrict: '',
                 locationMode: 'my',
-                currentCity: '深圳市',
+                currentCity: '深圳',
                 myLocationDesc: '附近',
                 showLocationPicker: false
               })
@@ -486,11 +578,39 @@ Page({
       })
       return
     }
-    
-    this.setData({ 
-      currentDistrict: districtName,
+
+    // ── 区选择（移动地图 + 筛选） ──
+    // 有经纬度的区 → 移动地图
+    if (item && item.lat && item.lng) {
+      this.setData({
+        currentDistrict: item.name === '全部' ? '' : item.name,
+        locationMode: 'district',
+        mapCenter: { lat: item.lat, lng: item.lng },
+        showLocationPicker: false
+      })
+    } else {
+      // "全部" 或其他
+      this.setData({
+        currentDistrict: item && item.name !== '全部' ? item.name : '',
+        locationMode: 'district',
+        showLocationPicker: false
+      })
+    }
+    this.applyFilters()
+  },
+
+  // ── 城市 Tab 选择（一级切换） ──
+  onSelectCity(e) {
+    const city = e.currentTarget.dataset.city
+    const { districtMap } = this.data
+    const districts = districtMap[city.name] || []
+
+    this.setData({
+      currentCity: city.name,
+      currentDistricts: districts,
+      currentDistrict: '',   // 切换城市时重置区
+      mapCenter: { lat: city.center.lat, lng: city.center.lng },
       locationMode: 'district',
-      showLocationPicker: false
     })
     this.applyFilters()
   },

@@ -1,5 +1,5 @@
 /* ================================================
-  觅食图 · 首页  v8.1
+  觅食图 · 首页  v9.0（城市→区两级筛选）
   - 透明白色emoji标记（28x28）
   - 地图按钮白胶囊 + 主题色激活态
   - 分类胶囊主题色激活态
@@ -783,6 +783,102 @@ page {
 .city-item.location-item .city-item-name {
   color: var(--primary);
   font-weight: 700;
+}
+
+/* ── 城市→区两级选择器 ────────────────────────── */
+
+/* 城市 Tab 行 */
+.city-tab-row {
+  display: flex;
+  gap: 12rpx;
+  padding: 0 4rpx 20rpx;
+  border-bottom: 1rpx solid var(--border);
+  margin-bottom: 20rpx;
+}
+
+.city-tab {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 12rpx 24rpx;
+  background: var(--primary-bg);
+  border: 2rpx solid rgba(0,217,192,0.15);
+  border-radius: var(--radius-pill);
+  flex: 1;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.city-tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 4rpx 16rpx rgba(0,217,192,0.30);
+}
+
+.city-tab-icon {
+  font-size: 26rpx;
+}
+
+.city-tab-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.city-tab.active .city-tab-name {
+  color: #ffffff;
+}
+
+/* 区网格 */
+.district-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.district-chip {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 14rpx 22rpx;
+  background: var(--bg);
+  border: 1.5rpx solid var(--border);
+  border-radius: var(--radius-pill);
+  transition: all 0.18s;
+  min-width: 140rpx;
+  justify-content: center;
+}
+
+.district-chip.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 3rpx 12rpx rgba(0,217,192,0.25);
+}
+
+.district-chip.active .district-chip-name {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.district-chip.location-chip {
+  background: linear-gradient(135deg, var(--primary-bg) 0%, #E8FAF8 100%);
+  border-color: var(--primary);
+}
+
+.district-chip.location-chip .district-chip-name {
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+.district-chip-icon {
+  font-size: 24rpx;
+}
+
+.district-chip-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
 }
 
 /* 隐藏Canvas：图标生成用（已弃用，标记用静态PNG） */

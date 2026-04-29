@@ -1,4 +1,4 @@
-/* 觅食图 V2 - 景点页样式 */
+/* 觅食图 V2 - 景点页样式 v9.1（对齐首页风格）*/
 
 /* ── 全局 ── */
 .container {
@@ -22,7 +22,9 @@
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 12rpx;
+  flex: 1;
+  overflow: hidden;
 }
 
 .app-brand {
@@ -41,6 +43,53 @@
   font-size: 30rpx;
   font-weight: 700;
   color: #00D9C0;
+}
+
+/* ── 城市/区域选择器（与首页一致）── */
+.location-selector {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 6rpx 14rpx;
+  background: var(--primary-bg, #E8FAF8);
+  border-radius: 20rpx;
+  max-width: 240rpx;
+}
+
+.location-main {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--primary-dark, #00B5A6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180rpx;
+}
+
+.location-arrow {
+  font-size: 16rpx;
+  color: var(--primary, #00D9C0);
+  flex-shrink: 0;
+}
+
+/* ── 天气Widget ── */
+.weather {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  background: var(--primary-bg, #E8FAF8);
+  padding: 7rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.weather-icon {
+  font-size: 24rpx;
+}
+
+.weather-temp {
+  font-size: 22rpx;
+  color: #888888;
+  font-weight: 500;
 }
 
 .page-sub-title {
@@ -479,4 +528,213 @@
   align-items: center;
   justify-content: center;
   padding: 0 8rpx;
+}
+
+/* ── Header 城市快捷 Tab ── */
+.city-quick-tabs {
+  display: flex;
+  gap: 8rpx;
+  flex-shrink: 0;
+}
+
+.city-tab {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 8rpx 16rpx;
+  background: #F0F9F8;
+  border: 1.5rpx solid rgba(0,217,192,0.15);
+  border-radius: 20rpx;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.city-tab.active {
+  background: #00D9C0;
+  border-color: #00D9C0;
+}
+
+.city-tab-icon {
+  font-size: 22rpx;
+}
+
+.city-tab-name {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #00B5A6;
+  white-space: nowrap;
+}
+
+.city-tab.active .city-tab-name {
+  color: #ffffff;
+}
+
+/* ── 区筛选触发器 ── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  flex-shrink: 0;
+}
+
+.district-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+  padding: 8rpx 14rpx;
+  background: #F0F9F8;
+  border: 1.5rpx solid rgba(0,217,192,0.2);
+  border-radius: 20rpx;
+}
+
+.district-trigger-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #00B5A6;
+  max-width: 80rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.district-trigger-arrow {
+  font-size: 18rpx;
+  color: #00B5A6;
+}
+
+/* ── 位置选择器弹窗 ── */
+.location-picker-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0);
+  z-index: 200;
+  pointer-events: none;
+  transition: background 0.3s;
+}
+
+.location-picker-mask.show {
+  background: rgba(0,0,0,0.4);
+  pointer-events: auto;
+}
+
+.location-picker-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 20rpx);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 201;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.location-picker-mask.show .location-picker-panel {
+  transform: translateY(0);
+}
+
+.picker-handle {
+  width: 72rpx;
+  height: 8rpx;
+  background: #E5E7EB;
+  border-radius: 4rpx;
+  margin: 20rpx auto 0;
+}
+
+.picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx 0;
+}
+
+.picker-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.picker-close {
+  font-size: 36rpx;
+  color: #9CA3AF;
+  padding: 8rpx;
+}
+
+.picker-content {
+  padding: 24rpx 28rpx;
+}
+
+/* 城市 Tab 行 */
+.city-tab-row {
+  display: flex;
+  gap: 12rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #F3F4F6;
+  margin-bottom: 20rpx;
+}
+
+.city-tab-row .city-tab {
+  flex: 1;
+  justify-content: center;
+  padding: 12rpx 8rpx;
+}
+
+/* 区网格 */
+.picker-section {
+  padding: 0 4rpx;
+}
+
+.section-title {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #9CA3AF;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.district-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.district-chip {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 14rpx 22rpx;
+  background: #F0F9F8;
+  border: 1.5rpx solid rgba(0,217,192,0.15);
+  border-radius: 24rpx;
+  transition: all 0.18s;
+  min-width: 130rpx;
+  justify-content: center;
+}
+
+.district-chip.active {
+  background: #00D9C0;
+  border-color: #00D9C0;
+  box-shadow: 0 3rpx 12rpx rgba(0,217,192,0.25);
+}
+
+.district-chip.active .district-chip-name {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.district-chip-icon {
+  font-size: 24rpx;
+}
+
+.district-chip-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1F2937;
+  white-space: nowrap;
 }

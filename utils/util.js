@@ -451,7 +451,7 @@ function getSpotData() {
   if (!_spotData) {
     _spotData = require('./spotData')
   }
-  return _spotData.spotData || []
+  return Array.isArray(_spotData) ? _spotData : (_spotData.spotData || [])
 }
 
 // ============================================================
