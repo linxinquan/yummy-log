@@ -47,7 +47,7 @@ Page({
     mapScale: 13,
     allMarkers: [],
     recentCheckins: [],
-    forceBase64: true     // 测试用：强制使用 base64（跳过云存储）
+    forceBase64: false     // 测试用：强制使用 base64（跳过云存储）
   },
 
   onLoad(query) {

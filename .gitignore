@@ -6,3 +6,5 @@ cloud/*/node_modules/
 
 .codebuddy
 skills-lock.json
+
+/dataScript
