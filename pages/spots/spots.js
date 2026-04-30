@@ -7,8 +7,12 @@ Page({
   data: {
     spots: [],
     filteredSpots: [],
+    totalFiltered: [], // 全部筛选结果（用于分页）
     categories: [],
     currentCategory: '全部',
+    pageSize: 10,
+    currentPage: 1,
+    hasMore: true,
     viewMode: 'list',
     mapCenter: { lat: 22.5415, lng: 114.0596 },
     mapMarkers: [],
@@ -92,11 +96,11 @@ Page({
     }))
     this.setData({
       spots: spotsWithWant,
-      filteredSpots: spotsWithWant,
       categories: ['全部', ...cats],
       wantSpots: wantSpots
     })
-    this._buildMarkers(spotsWithWant)
+    // 首次进入执行筛选（按当前城市）
+    this.applyFilters()
     this._getUserLocation()
   },
 
@@ -109,9 +113,10 @@ Page({
     }))
     this.setData({
       wantSpots: wantSpots,
-      filteredSpots: updatedSpots,
       spots: updatedSpots
     })
+    // 重新执行筛选（保持当前城市/分类/区过滤）
+    this.applyFilters()
   },
 
   _getUserLocation() {
@@ -148,30 +153,8 @@ Page({
   // ── 分类筛选（含城市+区过滤） ──
   onCategoryChange(e) {
     const cat = e.currentTarget.dataset.cat
-    const { spots, currentCity, currentDistrict } = this.data
-
-    let filtered = cat === '全部' ? spots : spots.filter(s => s.category === cat)
-
-    // 城市筛选
-    if (currentCity && currentCity !== '深圳') {
-      filtered = filtered.filter(s => s.city === currentCity)
-    }
-
-    // 区筛选（去掉「区/县/市/镇/新区」后缀后比对）
-    if (currentDistrict && currentDistrict !== '全部') {
-      const normDistrict = currentDistrict.replace(/区|县|市|镇|新区$/g, '')
-      filtered = filtered.filter(s => {
-        const normItemDistrict = (s.district || '').replace(/区|县|市|镇|新区$/g, '')
-        return normItemDistrict === normDistrict
-      })
-    }
-
-    this.setData({
-      currentCategory: cat,
-      filteredSpots: filtered,
-      activeSpot: null
-    })
-    this._buildMarkers(filtered)
+    this.setData({ currentCategory: cat })
+    this.applyFilters()
   },
 
   // ── 城市 Tab 选择（一级切换） ──
@@ -224,14 +207,17 @@ Page({
 
   // ── 通用筛选（含城市+区过滤） ──
   applyFilters() {
+    // 每次筛选都重置到第一页
+    this.setData({ currentPage: 1 })
+    
     const { spots, currentCategory, currentCity, currentDistrict } = this.data
 
     let filtered = currentCategory === '全部'
       ? spots
       : spots.filter(s => s.category === currentCategory)
 
-    // 城市筛选
-    if (currentCity && currentCity !== '深圳') {
+    // 城市筛选（所有城市都需要筛选）
+    if (currentCity) {
       filtered = filtered.filter(s => s.city === currentCity)
     }
 
@@ -244,8 +230,41 @@ Page({
       })
     }
 
-    this.setData({ filteredSpots: filtered, activeSpot: null })
+    // 缓存全部筛选结果用于分页
+    const totalFiltered = filtered
+    // 只取当前页数据
+    const { currentPage, pageSize } = this.data
+    const startIndex = (currentPage - 1) * pageSize
+    const paginatedSpots = filtered.slice(startIndex, startIndex + pageSize)
+
+    this.setData({
+      totalFiltered,
+      filteredSpots: paginatedSpots,
+      hasMore: totalFiltered.length > startIndex + pageSize,
+      activeSpot: null
+    })
     this._buildMarkers(filtered)
+  },
+
+  // 加载更多
+  onLoadMore() {
+    if (!this.data.hasMore) return
+
+    const { totalFiltered, filteredSpots, currentPage, pageSize } = this.data
+    const nextPage = currentPage + 1
+    const startIndex = (nextPage - 1) * pageSize
+    const nextPageSpots = totalFiltered.slice(startIndex, startIndex + pageSize)
+
+    if (nextPageSpots.length > 0) {
+      this.setData({
+        currentPage: nextPage,
+        filteredSpots: filteredSpots.concat(nextPageSpots),
+        hasMore: totalFiltered.length > startIndex + pageSize
+      })
+      console.log('[Spots] 加载更多，第', nextPage, '页，新增', nextPageSpots.length, '条')
+    } else {
+      this.setData({ hasMore: false })
+    }
   },
 
   onSwitchView(e) {

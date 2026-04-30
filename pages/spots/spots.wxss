@@ -738,3 +738,11 @@
   color: #1F2937;
   white-space: nowrap;
 }
+
+/* ─── Load More ─── */
+.load-more {
+  text-align: center;
+  padding: 32rpx;
+  font-size: 26rpx;
+  color: #9CA3AF;
+}

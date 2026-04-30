@@ -85,7 +85,7 @@
 
     <!-- 列表头 -->
     <view class="list-header">
-      <text class="list-count">{{filteredShops.length}} 家</text>
+      <text class="list-count">{{totalFiltered.length}} 家</text>
       <view class="sort-btns">
         <view
           class="sort-btn {{sortType === 'distance' ? 'active' : ''}}"
