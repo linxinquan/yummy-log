@@ -1,0 +1,145 @@
+.container {
+  min-height: 100vh;
+  background: #f7f5f1;
+  padding-bottom: 80rpx;
+}
+
+.hero {
+  width: 100%;
+  height: 420rpx;
+  background: #d9d4cb;
+}
+
+.content {
+  padding: 0 24rpx;
+}
+
+.hero-card {
+  margin-top: -64rpx;
+  background: #fffdf9;
+  border-radius: 32rpx;
+  padding: 32rpx;
+  box-shadow: 0 16rpx 40rpx rgba(41, 33, 23, 0.08);
+}
+
+.title {
+  display: block;
+  font-size: 40rpx;
+  line-height: 1.4;
+  color: #2d261d;
+  font-weight: 600;
+}
+
+.author {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #7b6e5f;
+}
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+
+.meta-pill {
+  padding: 8rpx 18rpx;
+  border-radius: 999rpx;
+  background: #2f6b57;
+  color: #ffffff;
+  font-size: 22rpx;
+}
+
+.meta-pill.light {
+  background: #ece6dc;
+  color: #5c4d3d;
+}
+
+.desc {
+  display: block;
+  margin-top: 20rpx;
+  font-size: 28rpx;
+  line-height: 1.7;
+  color: #4a4034;
+}
+
+.section {
+  margin-top: 24rpx;
+  background: #fffdf9;
+  border-radius: 28rpx;
+  padding: 28rpx;
+  box-shadow: 0 12rpx 32rpx rgba(41, 33, 23, 0.05);
+}
+
+.section-title {
+  display: block;
+  margin-bottom: 20rpx;
+  font-size: 30rpx;
+  color: #2d261d;
+  font-weight: 600;
+}
+
+.shop-card {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 0;
+  border-top: 1rpx solid #efe8dd;
+}
+
+.shop-card:first-of-type {
+  padding-top: 0;
+  border-top: none;
+}
+
+.shop-cover {
+  width: 164rpx;
+  height: 164rpx;
+  border-radius: 20rpx;
+  background: #e8e1d6;
+  flex-shrink: 0;
+}
+
+.shop-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.shop-name {
+  font-size: 30rpx;
+  color: #2d261d;
+  font-weight: 600;
+}
+
+.shop-meta {
+  font-size: 24rpx;
+  color: #7b6e5f;
+}
+
+.shop-address {
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: #5a5146;
+}
+
+.name-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.name-pill {
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  background: #efe8dd;
+  color: #5c4d3d;
+  font-size: 24rpx;
+}
+
+.name-pill.warn {
+  background: #fff0e7;
+  color: #b55d32;
+}

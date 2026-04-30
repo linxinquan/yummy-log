@@ -1,0 +1,47 @@
+<view class="container" wx:if="{{guide}}">
+  <image class="hero" src="{{guide.coverImage || '/images/app-logo.jpg'}}" mode="aspectFill"></image>
+
+  <view class="content">
+    <view class="hero-card">
+      <text class="title">{{guide.title}}</text>
+      <text class="author">{{guide.author || '匿名作者'}}</text>
+      <view class="meta-row">
+        <text class="meta-pill">{{guide.shopCount || guide.shops.length || 0}} 家店铺</text>
+        <text wx:for="{{guide.tags}}" wx:key="*this" class="meta-pill light">{{item}}</text>
+      </view>
+      <text class="desc" wx:if="{{guide.desc}}">{{guide.desc}}</text>
+    </view>
+
+    <view class="section" wx:if="{{matchedShops.length > 0}}">
+      <text class="section-title">可直接打开的店铺</text>
+      <view
+        wx:for="{{matchedShops}}"
+        wx:key="id"
+        class="shop-card"
+        bindtap="onShopTap"
+        data-shop="{{item}}"
+      >
+        <image class="shop-cover" src="{{item.logo || item.image || item.thumb || '/images/app-logo.jpg'}}" mode="aspectFill"></image>
+        <view class="shop-info">
+          <text class="shop-name">{{item.name}}</text>
+          <text class="shop-meta">{{item.category || '未分类'}}{{item.price ? ' · ¥' + item.price + '/人' : ''}}</text>
+          <text class="shop-address">{{item.address || '暂无地址'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="section" wx:if="{{guide.shops && guide.shops.length > 0}}">
+      <text class="section-title">攻略提到的店铺</text>
+      <view class="name-list">
+        <text wx:for="{{guide.shops}}" wx:key="*this" class="name-pill">{{item}}</text>
+      </view>
+    </view>
+
+    <view class="section" wx:if="{{unmatchedShopNames.length > 0}}">
+      <text class="section-title">尚未收录</text>
+      <view class="name-list">
+        <text wx:for="{{unmatchedShopNames}}" wx:key="*this" class="name-pill warn">{{item}}</text>
+      </view>
+    </view>
+  </view>
+</view>

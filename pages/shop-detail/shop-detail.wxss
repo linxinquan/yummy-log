@@ -1,1 +1,1 @@
-/* shop-detail.wxss - 店铺详情样式 */
+@import "../spot-detail/spot-detail.wxss";

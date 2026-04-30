@@ -3,6 +3,22 @@ const app = getApp()
 const shopData = require('../../utils/shopData')
 const util = require('../../utils/util')
 
+function buildFoodItems() {
+  const userShops = util.loadData('userAddedShops', [])
+  return [...(shopData.shops || []), ...(shopData.foods || []), ...userShops]
+    .map(item => ({ ...item, type: 'food' }))
+}
+
+function buildSpotItems() {
+  return util.getSpotData().map(item => ({ ...item, type: 'spot' }))
+}
+
+function getLikeType(item, routeType) {
+  if (routeType === 'spot') return 'spot'
+  if (routeType === 'food') return 'food'
+  return item.type === 'spot' ? 'spot' : 'food'
+}
+
 Page({
   data: {
     // 地图
@@ -43,6 +59,7 @@ Page({
     routeShops: [],
     totalDistance: '0m',
     totalTime: '0分钟',
+    isMixedRoute: false,
 
     // 导览
     isNavigating: false,
@@ -55,7 +72,12 @@ Page({
   onLoad(options) {
     // 接收 type=food/spot 和 ids=1,2,3 参数
     const { type, ids } = options
-    this.setData({ routeType: type || 'food', presetIds: ids ? ids.split(',').map(Number) : null })
+    const routeType = type === 'spot' ? 'spot' : type === 'plan' ? 'mixed' : 'food'
+    this.setData({
+      routeType,
+      isMixedRoute: routeType === 'mixed',
+      presetIds: ids ? ids.split(',') : null
+    })
     this.getCurrentLocation()
     this.loadRoute()
     app.whenLocationReady && app.whenLocationReady((loc) => {
@@ -101,6 +123,11 @@ Page({
       likedIds = presetIds
     } else if (routeType === 'spot') {
       likedIds = util.loadData('userWantSpots', [])
+    } else if (routeType === 'mixed') {
+      likedIds = [
+        ...util.loadData('userWantFoods', []),
+        ...util.loadData('userWantSpots', [])
+      ]
     } else {
       likedIds = util.loadData('userWantFoods', [])
     }
@@ -108,12 +135,15 @@ Page({
     // 获取对应的数据源
     let allItems = []
     if (routeType === 'spot') {
-      allItems = util.getSpotData()
+      allItems = buildSpotItems()
+    } else if (routeType === 'mixed') {
+      allItems = [...buildFoodItems(), ...buildSpotItems()]
     } else {
-      const userShops = util.loadData('userAddedShops', [])
-      allItems = [...(shopData.shops || []), ...(shopData.foods || []), ...userShops]
+      allItems = buildFoodItems()
     }
-    const rawItems = likedIds.map(id => allItems.find(s => s.id === id)).filter(Boolean)
+    const rawItems = likedIds
+      .map(id => allItems.find(s => String(s.id) === String(id)))
+      .filter(Boolean)
 
     if (rawItems.length === 0) {
       this.setData({ allLikedShops: [], routeShops: [], selectedCount: 0 })
@@ -590,8 +620,8 @@ Page({
   // ─── 移除店铺 ─────────────────────────────────
   onRemoveShop(e) {
     const shopId = e.currentTarget.dataset.shopid
-    const type = this.data.routeType
-    util.toggleLike(shopId, type)
+    const shop = this.data.allLikedShops.find(item => String(item.id) === String(shopId))
+    util.toggleLike(shopId, getLikeType(shop || {}, this.data.routeType))
     this.loadRoute()
     wx.showToast({ title: '已从路线移除', icon: 'none' })
   },
@@ -710,7 +740,9 @@ Page({
       content: '清空后将取消所有「想去」记录，确定吗？',
       success: (res) => {
         if (res.confirm) {
-          this.data.allLikedShops.forEach(shop => util.toggleLike(shop.id, this.data.routeType))
+          this.data.allLikedShops.forEach(shop => {
+            util.toggleLike(shop.id, getLikeType(shop, this.data.routeType))
+          })
           this.loadRoute()
           wx.showToast({ title: '已清空', icon: 'none' })
         }

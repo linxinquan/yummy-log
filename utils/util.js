@@ -23,7 +23,7 @@ function getDistance(lat1, lng1, lat2, lng2) {
  */
 function formatDistance(meters) {
   if (meters < 1000) {
-    return meters + 'm'
+    return Math.round(meters) + 'm'
   } else {
     return (meters / 1000).toFixed(1) + 'km'
   }

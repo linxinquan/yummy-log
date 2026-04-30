@@ -1,17 +1,10 @@
 /* ================================================
-  觅食图 · 店铺详情页  v4.0 青绿色系
+  觅食图 · 店铺详情页  (Refactored to Design System)
   ================================================ */
-
-page {
-  --primary: #00D9C0;
-  --primary-dark: #00B5A6;
-  --primary-light: #E8FAF8;
-  --primary-bg: #F0F9F8;
-}
 
 .container {
   min-height: 100vh;
-  background: #F0F9F8;
+  background: var(--background);
   padding-bottom: 160rpx;
 }
 
@@ -19,7 +12,7 @@ page {
 .cover {
   width: 100%;
   height: 480rpx;
-  background: #e0f7f5;
+  background: var(--primary-light);
   position: relative;
 }
 
@@ -32,7 +25,7 @@ page {
 .cover-fallback {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  background: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,11 +39,11 @@ page {
 .cover-back {
   position: absolute;
   top: env(safe-area-inset-top);
-  left: 24rpx;
+  left: var(--space-md);
   width: 72rpx;
   height: 72rpx;
   background: rgba(0,0,0,0.35);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -60,86 +53,86 @@ page {
 
 /* ─── Content ─────────────────────────────── */
 .content {
-  padding: 0 24rpx;
+  padding: 0 var(--space-md);
 }
 
 /* 店铺基本信息卡片 */
 .shop-card {
-  background: #ffffff;
-  border-radius: 20rpx;
-  padding: 28rpx;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
   margin-top: -40rpx;
-  margin-bottom: 16rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0,217,192,0.10);
+  margin-bottom: var(--space-md);
+  box-shadow: var(--shadow-sm);
   position: relative;
   z-index: 2;
-  border: 1rpx solid rgba(0,217,192,0.06);
+  border: 1rpx solid var(--border);
 }
 
 .shop-emoji {
   font-size: 80rpx;
-  margin-bottom: 12rpx;
+  margin-bottom: var(--space-sm);
 }
 
 .shop-name {
   font-size: 40rpx;
-  font-weight: 900;
-  color: #1A1A2E;
-  margin-bottom: 12rpx;
+  
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
   letter-spacing: -1rpx;
 }
 
 .shop-meta {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  margin-bottom: 20rpx;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 
 .shop-rating {
   font-size: 32rpx;
-  color: #FF8B7E;
-  font-weight: 800;
+  color: var(--warning);
+  
 }
 
 .shop-price {
   font-size: 28rpx;
-  color: #6B7280;
-  font-weight: 500;
+  color: var(--text-secondary);
+  
 }
 
 .shop-category {
   font-size: 24rpx;
-  background: #F0F9F8;
-  color: #00B5A6;
-  padding: 4rpx 16rpx;
-  border-radius: 999rpx;
-  font-weight: 600;
+  background: var(--background);
+  color: var(--primary-dark);
+  padding: 4rpx var(--space-md);
+  border-radius: var(--radius-full);
+  
 }
 
 /* 标签 */
 .shop-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 10rpx;
-  margin-bottom: 20rpx;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
 }
 
 .tag {
   padding: 6rpx 18rpx;
-  border-radius: 999rpx;
+  border-radius: var(--radius-full);
   font-size: 24rpx;
-  font-weight: 500;
-  background: #FFF5F4;
-  color: #FF8B7E;
+  
+  background: rgba(224,82,82,0.1);
+  color: var(--danger);
 }
 
 /* 地址和营业时间 */
 .info-row {
   display: flex;
   align-items: flex-start;
-  padding: 16rpx 0;
-  border-top: 1rpx solid #E5E7EB;
+  padding: var(--space-md) 0;
+  border-top: 1rpx solid var(--divider);
 }
 
 .info-icon {
@@ -152,34 +145,34 @@ page {
 .info-text {
   flex: 1;
   font-size: 28rpx;
-  color: #374151;
+  color: var(--text-primary);
   line-height: 1.5;
 }
 
 .info-arrow {
   font-size: 28rpx;
-  color: #D1D5DB;
+  color: var(--text-disabled);
   flex-shrink: 0;
 }
 
 /* ─── Section ─────────────────────────────── */
 .section {
-  background: #ffffff;
-  border-radius: 20rpx;
-  padding: 28rpx;
-  margin-bottom: 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0,217,192,0.06);
-  border: 1rpx solid rgba(0,217,192,0.06);
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-md);
+  box-shadow: var(--shadow-xs);
+  border: 1rpx solid var(--border);
 }
 
 .section-title {
   font-size: 32rpx;
-  font-weight: 800;
-  color: #1A1A2E;
-  margin-bottom: 20rpx;
+  
+  color: var(--text-primary);
+  margin-bottom: var(--space-lg);
   display: flex;
   align-items: center;
-  gap: 10rpx;
+  gap: var(--space-sm);
 }
 
 .section-icon {
@@ -195,16 +188,16 @@ page {
 .recommend-item {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  padding: 16rpx;
-  background: #F0F9F8;
-  border-radius: 12rpx;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--background);
+  border-radius: var(--radius-md);
 }
 
 .recommend-rank {
   font-size: 28rpx;
-  font-weight: 800;
-  color: #00B5A6;
+  
+  color: var(--primary-dark);
   width: 40rpx;
   text-align: center;
   flex-shrink: 0;
@@ -213,14 +206,14 @@ page {
 .recommend-name {
   flex: 1;
   font-size: 28rpx;
-  font-weight: 600;
-  color: #1A1A2E;
+  
+  color: var(--text-primary);
 }
 
 .recommend-price {
   font-size: 26rpx;
-  color: #FF8B7E;
-  font-weight: 600;
+  color: var(--danger);
+  
 }
 
 /* ─── Record Card (觅食记录) ──────────────────────── */
@@ -228,33 +221,33 @@ page {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20rpx;
+  margin-bottom: var(--space-lg);
 }
 
 .edit-record-btn {
   font-size: 26rpx;
-  color: #FF8B7E;
-  font-weight: 600;
+  color: var(--danger);
+  
 }
 
 .record-card {
-  background: #ffffff;
-  border-radius: 20rpx;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: 0 4rpx 20rpx rgba(0,217,192,0.08);
-  border: 1rpx solid rgba(0,217,192,0.06);
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid var(--border);
 }
 
 /* 记录内容区 */
 .record-body {
-  padding: 24rpx;
+  padding: var(--space-lg);
 }
 
 .record-rating {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  margin-bottom: 16rpx;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
 }
 
 .stars-row {
@@ -264,57 +257,57 @@ page {
 
 .star-item {
   font-size: 36rpx;
-  color: #E5E7EB;
+  color: var(--divider);
   transition: all 0.2s;
 }
 
 .star-item.active {
-  color: #FFB800;
+  color: var(--warning);
 }
 
 .rating-text {
   font-size: 28rpx;
-  color: #FF8B7E;
-  font-weight: 700;
+  color: var(--danger);
+  
 }
 
 .record-content {
-  margin-bottom: 16rpx;
+  margin-bottom: var(--space-md);
 }
 
 .comment-text {
   font-size: 28rpx;
-  color: #374151;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 .record-meta {
   display: flex;
   align-items: center;
-  gap: 8rpx;
+  gap: var(--space-sm);
 }
 
 .meta-dot {
   width: 8rpx;
   height: 8rpx;
-  background: #00D9C0;
+  background: var(--primary);
   border-radius: 50%;
 }
 
 .meta-date {
   font-size: 24rpx;
-  color: #9CA3AF;
+  color: var(--text-disabled);
 }
 
 /* 记录卡片中的定位信息 */
 .record-location {
   display: flex;
   align-items: center;
-  gap: 8rpx;
+  gap: var(--space-sm);
   margin-bottom: 12rpx;
-  padding: 10rpx 16rpx;
-  background: #F0F9F8;
-  border-radius: 8rpx;
+  padding: 10rpx var(--space-md);
+  background: var(--background);
+  border-radius: var(--space-sm);
   width: fit-content;
 }
 
@@ -324,26 +317,26 @@ page {
 
 .location-text-small {
   font-size: 24rpx;
-  color: #00B5A6;
+  color: var(--primary-dark);
 }
 
 /* 未记录状态 */
 .empty-record {
   display: flex;
   align-items: center;
-  gap: 24rpx;
-  background: #ffffff;
-  border-radius: 20rpx;
-  padding: 32rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0,217,192,0.08);
-  border: 2rpx dashed rgba(0,217,192,0.25);
+  gap: var(--space-lg);
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-sm);
+  border: 2rpx dashed var(--border);
 }
 
 .empty-record-icon {
   width: 100rpx;
   height: 100rpx;
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
-  border-radius: 24rpx;
+  background: var(--primary);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -363,23 +356,23 @@ page {
 
 .empty-title {
   font-size: 30rpx;
-  font-weight: 700;
-  color: #1A1A2E;
+  
+  color: var(--text-primary);
 }
 
 .empty-desc {
   font-size: 26rpx;
-  color: #9CA3AF;
+  color: var(--text-disabled);
 }
 
 .empty-record-btn {
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  background: var(--primary);
   color: #ffffff;
   font-size: 28rpx;
-  font-weight: 700;
-  padding: 16rpx 32rpx;
-  border-radius: 999rpx;
-  box-shadow: 0 4rpx 14rpx rgba(0,217,192,0.25);
+  
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-xs);
 }
 
 /* ─── Bottom Bar ─────────────────────────── */
@@ -388,23 +381,24 @@ page {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20rpx 32rpx;
-  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  background: #ffffff;
-  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.06);
+  padding: var(--space-lg) var(--space-xl);
+  padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom));
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
   display: flex;
-  gap: 16rpx;
+  gap: var(--space-md);
+  z-index: 100;
 }
 
 .bottom-btn {
   flex: 1;
-  height: 88rpx;
-  border-radius: 44rpx;
+  height: 88rpx; /* lg size 48px is 96rpx, maybe 88rpx is okay */
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 30rpx;
-  font-weight: 700;
+  
   transition: all 0.18s;
 }
 
@@ -418,33 +412,33 @@ page {
 }
 
 .bottom-btn.want {
-  background: #F0F9F8;
-  color: #00B5A6;
+  background: var(--background);
+  color: var(--primary-dark);
 }
 
 .bottom-btn.want.active {
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  background: var(--primary);
   color: #ffffff;
-  box-shadow: 0 4rpx 14rpx rgba(0,217,192,0.30);
+  box-shadow: var(--shadow-xs);
 }
 
 .bottom-btn.nav {
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  background: var(--primary);
   color: #ffffff;
-  box-shadow: 0 6rpx 20rpx rgba(0,217,192,0.35);
+  box-shadow: var(--shadow-sm);
 }
 
 .bottom-btn.checkin {
-  background: var(--primary-bg);
+  background: var(--background);
   color: var(--primary-dark);
-  border: 1.5rpx solid rgba(0,217,192,0.3);
+  border: 1.5rpx solid var(--border);
 }
 
 .bottom-btn.checkin.active {
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  background: var(--primary);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.25);
+  box-shadow: var(--shadow-xs);
 }
 
 /* ─── Modal ──────────────────────────────── */
@@ -459,8 +453,8 @@ page {
 .modal-content {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  background: #ffffff;
-  border-radius: 24rpx 24rpx 0 0;
+  background: var(--surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   max-height: 80vh;
   overflow-y: auto;
   z-index: 1000;
@@ -470,24 +464,24 @@ page {
 .modal-handle {
   width: 72rpx;
   height: 6rpx;
-  background: #E5E7EB;
-  border-radius: 999rpx;
+  background: var(--border);
+  border-radius: var(--radius-full);
   margin: 18rpx auto 0;
 }
 
 .modal-title {
   font-size: 32rpx;
-  font-weight: 800;
-  color: #1A1A2E;
+  
+  color: var(--text-primary);
   text-align: center;
-  padding: 24rpx 32rpx 16rpx;
+  padding: var(--space-lg) var(--space-xl) var(--space-md);
 }
 
 .star-row {
   display: flex;
   justify-content: center;
-  gap: 16rpx;
-  padding: 24rpx;
+  gap: var(--space-md);
+  padding: var(--space-lg);
 }
 
 .star-btn {
@@ -502,36 +496,36 @@ page {
 .modal-textarea {
   width: calc(100% - 48rpx);
   min-height: 160rpx;
-  background: #F0F9F8;
-  border-radius: 16rpx;
-  padding: 20rpx 24rpx;
+  background: var(--background);
+  border-radius: var(--radius-md);
+  padding: 20rpx var(--space-lg);
   font-size: 28rpx;
-  color: #1A1A2E;
-  margin: 0 24rpx 24rpx;
+  color: var(--text-primary);
+  margin: 0 var(--space-lg) var(--space-lg);
   box-sizing: border-box;
-  border: 1.5rpx solid rgba(0,217,192,0.1);
+  border: 1.5rpx solid var(--divider);
 }
 
 .modal-submit {
   width: calc(100% - 48rpx);
   height: 88rpx;
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  background: var(--primary);
   color: #ffffff;
-  border-radius: 44rpx;
+  border-radius: var(--radius-full);
   font-size: 30rpx;
-  font-weight: 700;
+  
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 24rpx 24rpx;
-  box-shadow: 0 6rpx 20rpx rgba(0,217,192,0.35);
+  margin: 0 var(--space-lg) var(--space-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .modal-cancel {
   text-align: center;
   font-size: 28rpx;
-  color: #9CA3AF;
-  padding: 0 24rpx 24rpx;
+  color: var(--text-disabled);
+  padding: 0 var(--space-lg) var(--space-lg);
 }
 
 /* ─── 底部操作栏（详情页）─────────────────────────────── */
@@ -540,16 +534,16 @@ page {
   bottom: 0;
   left: 0;
   right: 0;
-  background: #ffffff;
-  padding: 16rpx 24rpx;
-  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
-  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.06);
+  background: var(--surface);
+  padding: var(--space-md) var(--space-lg);
+  padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-lg);
   z-index: 100;
 }
 
 .action-main {
   display: flex;
-  gap: 16rpx;
+  gap: var(--space-md);
 }
 
 .action-btn {
@@ -557,36 +551,36 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8rpx;
-  padding: 20rpx 16rpx;
-  border-radius: 40rpx;
+  gap: var(--space-sm);
+  padding: 20rpx var(--space-md);
+  border-radius: var(--radius-full);
   font-size: 28rpx;
-  font-weight: 600;
+  
   transition: all 0.18s;
-  background: var(--primary-bg);
+  background: var(--background);
   color: var(--primary-dark);
-  border: 1.5rpx solid rgba(0,217,192,0.25);
+  border: 1.5rpx solid var(--border);
 }
 
 .action-btn.liked {
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  background: var(--danger);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.25);
+  box-shadow: var(--shadow-xs);
 }
 
 .action-btn.checked {
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  background: var(--success);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.25);
+  box-shadow: var(--shadow-xs);
 }
 
 .action-btn.primary {
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  background: var(--primary);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.25);
+  box-shadow: var(--shadow-xs);
   flex: 1.2;
 }
 
@@ -597,5 +591,5 @@ page {
 
 .action-text {
   font-size: 26rpx;
-  font-weight: 600;
+  
 }

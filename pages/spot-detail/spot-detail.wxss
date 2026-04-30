@@ -1,378 +1,448 @@
-/* 觅食图 V2 - 景点详情页样式 */
+/* 觅食图 V2 - 景点详情页样式 (基于新版 UI) */
 
 .container {
-  background: #F0F9F8;
+  background: #FFFFFF;
   min-height: 100vh;
-  padding-bottom: 160rpx;
+  padding-bottom: calc(176rpx + env(safe-area-inset-bottom));
 }
 
-/* ── Hero 图片 ── */
+/* ── Hero 图片区 ── */
 .hero-wrap {
   position: relative;
   width: 100%;
-  height: 480rpx;
+  height: 780rpx; /* 390px */
 }
 
 .hero-img {
   width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
-.back-btn {
-  position: absolute;
-  top: 80rpx;
-  left: 28rpx;
-  width: 68rpx;
-  height: 68rpx;
-  background: rgba(0,0,0,0.45);
+.top-bar {
+  position: fixed;
+  left: 48rpx; /* 24px */
+  display: flex;
+  align-items: center;
+  gap: 32rpx; /* 16px 间距 */
+  z-index: 200;
+}
+
+.icon-btn {
+  width: 64rpx; /* 32px */
+  height: 64rpx; /* 32px */
+  background: rgba(0, 0, 0, 0.24);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
 }
 
-.back-icon {
-  font-size: 30rpx;
-  color: #ffffff;
+.icon-btn i {
+  font-size: 40rpx; /* 20px */
+  color: #FFFFFF;
 }
 
-.hero-rating {
+.hero-stats {
   position: absolute;
-  top: 84rpx;
-  right: 24rpx;
-  background: rgba(0,0,0,0.5);
-  padding: 8rpx 18rpx;
-  border-radius: 20rpx;
-  backdrop-filter: blur(4px);
-}
-
-.hero-rating-text {
-  font-size: 24rpx;
-  color: #FFB800;
-  font-weight: 700;
-}
-
-.hero-badges {
-  position: absolute;
-  bottom: 20rpx;
-  left: 24rpx;
+  bottom: 80rpx;
+  left: 48rpx;
+  right: 48rpx;
   display: flex;
-  gap: 12rpx;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
 }
 
-.hero-cat {
-  background: rgba(0,0,0,0.55);
-  color: #ffffff;
-  font-size: 22rpx;
-  padding: 6rpx 16rpx;
-  border-radius: 12rpx;
+.stats-text {
+  font-family: 'PingFang SC', sans-serif;
+  font-size: 28rpx; /* 14px */
+  color: #FFFFFF;
 }
 
-.hero-free.free {
-  background: rgba(82,196,26,0.85);
-  color: #ffffff;
-  font-size: 22rpx;
-  padding: 6rpx 16rpx;
-  border-radius: 12rpx;
+.avatar-group {
+  display: flex;
+  align-items: center;
 }
 
-.hero-free.paid {
-  background: rgba(250,140,22,0.85);
-  color: #ffffff;
-  font-size: 22rpx;
-  padding: 6rpx 16rpx;
-  border-radius: 12rpx;
+.avatar {
+  width: 48rpx; /* 24px */
+  height: 48rpx; /* 24px */
+  border-radius: 50%;
+  border: 2rpx solid #FFFFFF;
+  margin-left: -16rpx; /* -8px overlap */
+  background: #FFFFFF;
+}
+.avatar:first-child {
+  margin-left: 0;
 }
 
-/* ── 基本信息卡片 ── */
-.info-card {
-  margin: -24rpx 0 0;
-  background: #ffffff;
-  border-radius: 32rpx 32rpx 0 0;
-  padding: 32rpx 32rpx 24rpx;
+.hero-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48rpx; /* 24px */
+  background: #FFFFFF;
+  border-radius: 48rpx 48rpx 0 0;
+  z-index: 10;
 }
 
-.spot-name {
-  font-size: 40rpx;
-  font-weight: 800;
-  color: #1F2937;
-  display: block;
-  margin-bottom: 20rpx;
+/* ── 内容区 ── */
+.content-wrap {
+  position: relative;
+  background: #FFFFFF;
+  z-index: 20;
+  margin-top: -8rpx;
+  padding-bottom: 40rpx;
 }
 
-/* 标签 */
-.tags-scroll {
-  margin-bottom: 20rpx;
-  white-space: nowrap;
+/* 基本信息 */
+.main-info {
+  display: flex;
+  flex-direction: column;
+  padding: 0 48rpx 0; 
+
+}
+
+
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24rpx;
+}
+
+.info-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx; /* 16px */
 }
 
 .tags-row {
   display: flex;
-  gap: 10rpx;
+  align-items: center;
+  gap: 16rpx; /* 8px */
 }
 
-.tag {
-  display: inline-block;
-  font-size: 22rpx;
-  color: #00B5A6;
-  background: #E8FAF8;
-  padding: 6rpx 16rpx;
-  border-radius: 10rpx;
-  white-space: nowrap;
+.rating-badge {
+  background: #FDF8E3;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rating-val {
+  color: #EE8733;
+  font-size: 24rpx; /* 12px */
+  font-weight: 400;
+}
+
+.tag-badge {
+  background: #F6F6F6;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tag-badge text {
+  color: #BABABA;
+  font-size: 24rpx; /* 12px */
+}
+
+.spot-title {
+  font-size: 48rpx; /* 24px */
+  font-weight: 500;
+  color: #000000;
+  line-height: 48rpx;
+}
+
+.collect-btn {
   flex-shrink: 0;
+  width: 96rpx; /* 48px */
+  height: 96rpx; /* 48px */
+  background: #FFFFFF;
+  border: 2rpx solid #E8E8E8;
+  border-radius: 24rpx; /* 12px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* 简介 */
-.desc-section {
-  background: #F0F9F8;
-  border-radius: 16rpx;
-  padding: 20rpx;
-  margin-bottom: 20rpx;
+.collect-icon {
+  font-size: 48rpx; /* 24px */
+  color: #000000;
 }
 
-.desc-label {
+.open-time {
+  font-size: 24rpx; /* 12px */
+  color: #C2C2C2;
+  line-height: 24rpx; /* 12px */
+  margin-top: 24rpx; /* 12px 距离上方标题 */
+}
+
+.address-box {
+  display: flex;
+  padding: 24rpx 32rpx; /* 12px 16px */
+  align-items: center;
+  gap: 24rpx; /* 12px */
+  align-self: stretch;
+  border: 2rpx solid #E7E7E7;
+  border-radius: 24rpx; /* 12px */
+  box-sizing: border-box;
+  margin-top: 48rpx; /* 24px 距离上面的营业时间 */
+}
+
+.phone-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  margin-top: 24rpx;
+}
+
+.phone-label {
   font-size: 24rpx;
-  font-weight: 600;
-  color: #00B5A6;
-  display: block;
-  margin-bottom: 10rpx;
+  color: #C1C1C1;
+  line-height: 24rpx;
 }
 
-.desc-text {
-  font-size: 26rpx;
-  color: #374151;
-  line-height: 1.8;
+.phone-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #000000;
+  line-height: 28rpx;
 }
 
-/* 详情行 */
-.detail-rows {
+.address-content {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+  gap: 12rpx; /* 6px */
+  align-self: stretch;
 }
 
-.detail-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12rpx;
+.address-label {
+  font-family: "PingFang SC";
+  font-size: 24rpx; /* 12px */
+  font-weight: 400;
+  color: #C1C1C1;
+  line-height: 100%; /* 12px */
 }
 
-.detail-icon {
-  font-size: 26rpx;
-  flex-shrink: 0;
-  margin-top: 2rpx;
-}
-
-.detail-val {
-  font-size: 26rpx;
-  color: #6B7280;
-  line-height: 1.6;
-}
-
-/* ── 地图卡片 ── */
-.map-card {
-  margin: 16rpx 24rpx;
-  background: #ffffff;
-  border-radius: 24rpx;
+.address-text {
+  font-family: "PingFang SC";
+  font-size: 28rpx; /* 14px */
+  font-weight: 500;
+  color: #000000;
+  line-height: 28rpx; /* 14px */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
   overflow: hidden;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+  align-self: stretch;
 }
 
-.map-card-title {
-  padding: 20rpx 24rpx 12rpx;
+.arrow-icon {
+  font-size: 40rpx; /* 20px */
+  color: #C0C0C0;
 }
 
-.map-title-text {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #1F2937;
+.spot-desc {
+  font-size: 32rpx; /* 16px */
+  color: #868686;
+  line-height: 48rpx; /* 24px */
+  margin-top: 40rpx; /* 20px 距离上面的地址卡片 */
+}
+
+/* 分割线 */
+.divider {
+  height: 2rpx; /* 1px */
+  background: #E8E8E8;
+  margin: 64rpx 48rpx 0;
+}
+
+/* 位置卡片 */
+.map-section {
+  padding: 64rpx 48rpx 0;
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx; /* 16px */
+}
+
+.section-title {
+  font-size: 34rpx; /* 17px */
+  font-weight: 500;
+  color: #000000;
+}
+
+.map-card {
+  width: 100%;
+  height: 240rpx; /* 120px */
+  border-radius: 24rpx; /* 12px */
+  overflow: hidden;
+  background: #F6F6F6;
 }
 
 .mini-map {
   width: 100%;
-  height: 260rpx;
+  height: 100%;
 }
 
-/* ── 附近美食 ── */
+/* 附近美食 */
 .nearby-section {
-  margin: 16rpx 0;
-  padding: 0 24rpx;
+  padding: 64rpx 0 0 48rpx; /* margin-top 32px */
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx; /* 16px */
 }
 
 .section-header {
   display: flex;
-  align-items: baseline;
-  gap: 12rpx;
-  margin-bottom: 16rpx;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 48rpx;
 }
 
-.section-title {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #1F2937;
-}
-
-.section-sub {
-  font-size: 22rpx;
-  color: #9CA3AF;
+.more-btn {
+  font-size: 28rpx; /* 14px */
+  color: #DC6962;
 }
 
 .nearby-scroll {
+  width: 100%;
   white-space: nowrap;
 }
 
 .nearby-list {
   display: flex;
-  gap: 16rpx;
+  gap: 24rpx; /* 12px */
+  padding-right: 48rpx;
 }
 
 .nearby-card {
-  width: 200rpx;
-  background: #ffffff;
-  border-radius: 20rpx;
-  overflow: hidden;
+  width: 280rpx; /* 140px */
   flex-shrink: 0;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx; /* 12px */
 }
 
+.dish-card {
+  width: 280rpx;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+
 .nearby-img {
-  width: 200rpx;
-  height: 140rpx;
+  width: 280rpx; /* 140px */
+  height: 280rpx; /* 140px */
+  border-radius: 24rpx; /* 12px */
+  background: #F6F6F6;
 }
 
 .nearby-info {
-  padding: 14rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx; /* 8px */
 }
 
 .nearby-name {
-  font-size: 24rpx;
-  font-weight: 600;
-  color: #1F2937;
-  display: block;
+  font-size: 32rpx; /* 16px */
+  color: #060606;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 6rpx;
-}
-
-.nearby-cat {
-  font-size: 20rpx;
-  color: #9CA3AF;
-  display: block;
-  margin-bottom: 8rpx;
 }
 
 .nearby-meta {
-  display: flex;
-  justify-content: space-between;
-}
-
-.nearby-rating {
-  font-size: 20rpx;
-  color: #FFB800;
-}
-
-.nearby-dist {
-  font-size: 20rpx;
-  color: #9CA3AF;
+  font-size: 24rpx; /* 12px */
+  color: #C2C2C2;
 }
 
 /* ── 底部操作栏 ── */
-.bottom-bar {
+.bottom-action-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #ffffff;
-  padding: 24rpx 32rpx;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
-  display: flex;
-  gap: 16rpx;
-  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.08);
+  padding: 16rpx 48rpx calc(16rpx + env(safe-area-inset-bottom));
+  z-index: 100;
 }
 
-.btn-nav {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10rpx;
-  background: #00D9C0;
-  border-radius: 20rpx;
-  padding: 24rpx 0;
-}
-
-.btn-food {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10rpx;
-  background: #FF8B7E;
-  border-radius: 20rpx;
-  padding: 24rpx 0;
-}
-
-.btn-want {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10rpx;
-  background: #FFF0F0;
-  border-radius: 20rpx;
-  padding: 24rpx 0;
-}
-
-.btn-want.liked {
-  background: #FFE8E8;
-}
-
-.btn-want.liked .btn-text {
-  color: #FF6B6B;
-}
-
-.btn-route {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10rpx;
-  background: #00B5A6;
-  border-radius: 20rpx;
-  padding: 24rpx 0;
-}
-
-.btn-icon {
-  font-size: 30rpx;
-}
-
-.btn-text {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #ffffff;
-}
-
-/* ── Hero 想去按钮 ── */
-.hero-want {
+.action-bg {
   position: absolute;
-  top: 84rpx;
-  right: 140rpx;
-  width: 68rpx;
-  height: 68rpx;
-  background: rgba(255,255,255,0.9);
-  border-radius: 50%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #FFFFFF;
+}
+
+.action-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 24rpx; /* 12px */
+}
+
+.nav-btn {
+  width: 192rpx; /* 96px */
+  height: 96rpx; /* 48px */
+  border: 2rpx solid #E7E7E7;
+  border-radius: 24rpx; /* 12px */
+  background: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
+  box-sizing: border-box;
 }
 
-.hero-want.liked {
-  background: rgba(255, 107, 107, 0.85);
+.nav-btn text {
+  font-size: 32rpx; /* 16px */
+  font-weight: 500;
+  color: #060606;
+  line-height: 1;
 }
 
-.hero-want.liked text {
-  font-size: 30rpx;
+.want-btn {
+  flex: 1;
+  height: 96rpx; /* 48px */
+  background: #47BFFE;
+  border-radius: 24rpx; /* 12px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.want-btn text {
+  font-size: 32rpx; /* 16px */
+  font-weight: 500;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+.title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-top: 32rpx; /* 16px 距离上方标签 */
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
 }

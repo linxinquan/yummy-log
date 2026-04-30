@@ -6,6 +6,12 @@ const checkinUtil = require('../../utils/checkinUtil')
 
 Page({
   data: {
+    // 导航栏高度（动态计算，与想去页面一致）
+    menuTop: 44,
+    menuHeight: 32,
+    menuRightInset: 24,
+    contentTop: 108,
+
     // 攻略推荐轮播
     guideRecommendations: [],
     // 深圳各区
@@ -55,6 +61,25 @@ Page({
   },
 
   onLoad() {
+    // 动态获取状态栏高度，解决刘海屏遮挡问题（与想去页面一致）
+    const sysInfo = wx.getSystemInfoSync()
+    const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
+    const menuRightInset = menuButtonInfo
+      ? Math.max(sysInfo.windowWidth - menuButtonInfo.left + 8, 24)
+      : 103
+
+    // 顶部内容预留的高度
+    const contentTop = menuTop + menuHeight + 12
+
+    this.setData({
+      menuTop,
+      menuHeight,
+      menuRightInset,
+      contentTop
+    })
+
     this.loadGuideRecommendations()
     this.loadDistrictGuides()
     this.loadMyGuides()
@@ -135,7 +160,7 @@ Page({
         id: 1,
         title: '深圳南山老字号餐厅❗14年+老店真的好吃',
         author: '@大湾区探店王',
-        coverImage: '/images/guides/guide_laozihao.jpg.jpg',
+        coverImage: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=400&h=300&fit=crop',
         shopCount: 10,
         tag: '老字号',
         shops: ['嘉华小吃', '好好味面馆', '翠湖广东乡下菜', '老字号德记烧腊', '小煵记', '湛记佬海鲜', '蛇口老街鱼仔档', '海燕餐厅', '华洋酒楼', '新高记湛江鸡饭店']
@@ -144,7 +169,7 @@ Page({
         id: 2,
         title: '深圳蛇口必吃地道老店推荐❗赶紧收藏❗',
         author: '@小胖又饿了',
-        coverImage: '/images/guides/guide_shekou_bibei.jpg',
+        coverImage: 'https://images.unsplash.com/photo-1529543544277-750e0c097d84?w=400&h=300&fit=crop',
         shopCount: 8,
         tag: '必吃榜',
         shops: ['同兴旺湛江鸡饭店', '嘉华小吃', '益康堂鱼仔码头', '蛇口老街鱼仔档', '冬阴功泰国菜', '原乡车田情', '鹅最好', '百草堂祖传凉茶铺']
@@ -169,7 +194,7 @@ Page({
           id: 'ns_1',
           title: '深圳南山老字号餐厅❗14年+老店',
           author: '@大湾区探店王',
-          coverImage: '/images/guides/guide_laozihao.jpg.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=400&h=400&fit=crop',
           shopCount: 10,
           tags: ['老字号', '粤菜'],
           desc: '嘉华小吃、好好味面馆、翠湖广东乡下菜等10家南山老字号'
@@ -178,7 +203,7 @@ Page({
           id: 'ns_2',
           title: '深圳蛇口必吃地道老店推荐',
           author: '@小胖又饿了',
-          coverImage: '/images/guides/guide_shekou_bibei.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1529543544277-750e0c097d84?w=400&h=400&fit=crop',
           shopCount: 8,
           tags: ['必吃榜', '蛇口'],
           desc: '同兴旺湛江鸡、嘉华小吃、益康堂鱼仔码头等蛇口老店'
@@ -187,7 +212,7 @@ Page({
           id: 'ns_3',
           title: '南山科技园打工人美食地图',
           author: '@深圳吃货',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=400&fit=crop',
           shopCount: 12,
           tags: ['科技园', '工作餐'],
           desc: '科技园周边高性价比美食推荐'
@@ -196,7 +221,7 @@ Page({
           id: 'ns_4',
           title: '南山海上世界美食攻略',
           author: '@探店达人',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1544148103-0773bf10d330?w=400&h=400&fit=crop',
           shopCount: 6,
           tags: ['海上世界', '西餐'],
           desc: '海上世界周边精品餐厅推荐'
@@ -207,7 +232,7 @@ Page({
           id: 'ft_1',
           title: '福田CBD商务宴请餐厅指南',
           author: '@商务美食家',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=400&fit=crop',
           shopCount: 8,
           tags: ['CBD', '商务'],
           desc: '福田会展中心周边高端餐厅'
@@ -216,7 +241,7 @@ Page({
           id: 'ft_2',
           title: '华强北地道小吃一条街',
           author: '@街头美食',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=400&fit=crop',
           shopCount: 15,
           tags: ['华强北', '小吃'],
           desc: '华强北隐藏美食小店大搜罗'
@@ -224,8 +249,8 @@ Page({
         {
           id: 'ft_3',
           title: '福田皇庭广场美食攻略',
-          author: '@ mall美食',
-          coverImage: '/images/app-logo.jpg',
+          author: '@mall美食',
+          coverImage: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&h=400&fit=crop',
           shopCount: 10,
           tags: ['皇庭广场', '商场'],
           desc: '皇庭广场必吃餐厅推荐'
@@ -234,7 +259,7 @@ Page({
           id: 'ft_4',
           title: '福田梅林美食地图',
           author: '@梅林吃货',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1552611052-33e04de081de?w=400&h=400&fit=crop',
           shopCount: 9,
           tags: ['梅林', '本地'],
           desc: '梅林片区老字号美食推荐'
@@ -245,7 +270,7 @@ Page({
           id: 'lh_1',
           title: '罗湖黄贝岭老字号美食',
           author: '@老街坊',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1567191142883-8b2c53e7f3a9?w=400&h=400&fit=crop',
           shopCount: 7,
           tags: ['黄贝岭', '老字号'],
           desc: '龟老吉凉粉、新发烧腊等25年老字号'
@@ -254,7 +279,7 @@ Page({
           id: 'lh_2',
           title: '罗湖东门町美食攻略',
           author: '@东门通',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=400&fit=crop',
           shopCount: 20,
           tags: ['东门', '小吃街'],
           desc: '东门步行街美食全攻略'
@@ -263,7 +288,7 @@ Page({
           id: 'lh_3',
           title: '罗湖万象城高端美食',
           author: '@品质生活',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&h=400&fit=crop',
           shopCount: 6,
           tags: ['万象城', '高端'],
           desc: '万象城精品餐厅推荐'
@@ -272,7 +297,7 @@ Page({
           id: 'lh_4',
           title: '罗湖潮汕美食聚集地',
           author: '@潮汕人',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&h=400&fit=crop',
           shopCount: 11,
           tags: ['潮汕', '牛肉火锅'],
           desc: '罗湖正宗潮汕牛肉火锅推荐'
@@ -283,7 +308,7 @@ Page({
           id: 'ba_1',
           title: '宝安壹方城美食全攻略',
           author: '@宝安吃货',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=400&fit=crop',
           shopCount: 14,
           tags: ['壹方城', '商场'],
           desc: '壹方城必吃餐厅一网打尽'
@@ -292,7 +317,7 @@ Page({
           id: 'ba_2',
           title: '宝安盐田夜市美食地图',
           author: '@夜市达人',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1563899362581-7e76a5b458b0?w=400&h=400&fit=crop',
           shopCount: 25,
           tags: ['夜市', '小吃'],
           desc: '宝安盐田夜市各地小吃推荐'
@@ -301,7 +326,7 @@ Page({
           id: 'ba_3',
           title: '宝安欢乐港湾美食指南',
           author: '@湾区美食',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
           shopCount: 8,
           tags: ['欢乐港湾', '海景'],
           desc: '欢乐港湾海景餐厅推荐'
@@ -312,7 +337,7 @@ Page({
           id: 'lg_1',
           title: '龙岗中心城美食攻略',
           author: '@龙岗通',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=400&h=400&fit=crop',
           shopCount: 10,
           tags: ['中心城', '本地'],
           desc: '龙岗中心城人气餐厅推荐'
@@ -321,7 +346,7 @@ Page({
           id: 'lg_2',
           title: '龙岗坂田美食地图',
           author: '@坂田吃货',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=400&fit=crop',
           shopCount: 12,
           tags: ['坂田', '华为'],
           desc: '坂田华为周边美食推荐'
@@ -330,7 +355,7 @@ Page({
           id: 'lg_3',
           title: '龙岗罗瑞合美食街',
           author: '@美食街探店',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&h=400&fit=crop',
           shopCount: 18,
           tags: ['美食街', '客家'],
           desc: '罗瑞合客家美食一条街'
@@ -341,7 +366,7 @@ Page({
           id: 'lh_1',
           title: '龙华壹方天地美食攻略',
           author: '@龙华吃货',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=400&h=400&fit=crop',
           shopCount: 9,
           tags: ['壹方天地', '商场'],
           desc: '龙华壹方天地美食推荐'
@@ -350,7 +375,7 @@ Page({
           id: 'lh_2',
           title: '龙华民治夜市美食',
           author: '@夜市猎人',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1544148103-0773bf10d330?w=400&h=400&fit=crop',
           shopCount: 16,
           tags: ['民治', '夜市'],
           desc: '民治大道夜市烟火气美食'
@@ -361,7 +386,7 @@ Page({
           id: 'yt_1',
           title: '盐田海鲜街美食攻略',
           author: '@海鲜控',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=400&h=400&fit=crop',
           shopCount: 8,
           tags: ['海鲜', '海边'],
           desc: '盐田海鲜街新鲜海鲜推荐'
@@ -370,7 +395,7 @@ Page({
           id: 'yt_2',
           title: '大梅沙海滨美食指南',
           author: '@海边美食',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=400&fit=crop',
           shopCount: 6,
           tags: ['大梅沙', '度假'],
           desc: '大梅沙海滨度假区餐厅推荐'
@@ -381,7 +406,7 @@ Page({
           id: 'gm_1',
           title: '光明三宝美食之旅',
           author: '@光明通',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1567191142883-8b2c53e7f3a9?w=400&h=400&fit=crop',
           shopCount: 5,
           tags: ['光明三宝', '乳鸽'],
           desc: '光明乳鸽、甜玉米、牛初乳'
@@ -390,7 +415,7 @@ Page({
           id: 'gm_2',
           title: '光明农场美食攻略',
           author: '@农场美食',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1482049016gy6b3-88b8d5a7e1c2?w=400&h=400&fit=crop',
           shopCount: 7,
           tags: ['农场', '有机'],
           desc: '光明农场周边农家菜推荐'
@@ -401,7 +426,7 @@ Page({
           id: 'ps_1',
           title: '坪山牛肉一条街',
           author: '@牛肉控',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&h=400&fit=crop',
           shopCount: 6,
           tags: ['牛肉火锅', '现宰'],
           desc: '坪山潮汕现宰牛肉火锅'
@@ -412,7 +437,7 @@ Page({
           id: 'dp_1',
           title: '大鹏所城美食攻略',
           author: '@古城美食',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop',
           shopCount: 8,
           tags: ['大鹏所城', '海鲜'],
           desc: '大鹏所城特色餐厅推荐'
@@ -421,7 +446,7 @@ Page({
           id: 'dp_2',
           title: '较场尾海边美食',
           author: '@海边吃货',
-          coverImage: '/images/app-logo.jpg',
+          coverImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=400&fit=crop',
           shopCount: 5,
           tags: ['较场尾', '民宿'],
           desc: '较场尾海边民宿美食'
@@ -652,6 +677,18 @@ Page({
       const shops = this.data.recommendShops
       shops[index].imgError = true
       this.setData({ recommendShops: shops })
+    }
+  },
+
+  // 攻略封面图片加载失败
+  onGuideImageError(e) {
+    const index = e.currentTarget.dataset.index
+    if (index !== undefined) {
+      const guides = this.data.myGuides
+      if (guides[index]) {
+        guides[index].coverImage = '/images/app-logo.jpg'
+        this.setData({ myGuides: guides })
+      }
     }
   },
 
