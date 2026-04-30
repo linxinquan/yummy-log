@@ -360,7 +360,7 @@ _generateAIContent() {
 3. **效果**：AI 生成的文案会包含 `recognizeResult` 和 `recognizeDesc` 的内容
 
 ---
-*最后更新：2026-04-27（AI 打卡文案生成改为前端直接调用 ✅）*
+*最后更新：2026-04-29（新增 dataScript 数据脚本目录）*
 
 ## 图片识别打字机效果（2026-04-27 ✅）
 
@@ -384,6 +384,46 @@ _generateAIContent() {
 
 ### 测试方式
 在打卡页面 Step 1，打开"测试模式"开关，即可强制使用 base64 上传图片。
+
+---
+
+## 数据脚本目录（dataScript）
+
+### 目录结构
+```
+dataScript/
+├── foods/              # 美食图片备份
+├── spots/              # 景点图片备份
+├── foods.json          # 美食数据（JSON格式）
+├── spots.json          # 景点数据（JSON格式）
+├── shopData.json       # 店铺数据（JSON格式）
+├── js2json.py          # JS转JSON脚本
+├── js2json.js          # JS转JSON脚本（JS版本）
+├── convert_data_to_json.py  # 数据转换脚本
+├── upload_to_cos.py    # 上传到腾讯云COS
+├── fix_paths.py        # 修复图片路径
+├── fix_food_images.py  # 修复美食图片路径
+├── fix_spot_images.py   # 修复景点图片路径
+├── sync_cos_paths.py   # 同步COS路径
+├── check_food.py       # 检查美食数据
+├── debug_extract.py    # 调试提取
+├── debug_food.py       # 调试美食数据
+├── foodData_backup.js  # 美食数据备份
+├── spotData_backup.js  # 景点数据备份
+├── *.bak / *.bak2 / *.bak3  # 多版本备份
+└── sync_log.txt        # 同步日志
+```
+
+### 说明
+- **图片备份**：`foods/` 和 `spots/` 存放本地图片，用于上传到COS或GitHub备份
+- **JSON数据**：原始数据文件，与 `utils/` 下的JS文件内容同步
+- **Python脚本**：数据处理和上传工具
+- **备份文件**：数据更新前自动备份的版本
+
+### 工作流程
+1. 编辑 Excel 数据 → 生成 JSON → 运行脚本同步到 COS
+2. 更新 `utils/` 下的 JS 文件
+3. 原图备份在 `dataScript/foods/` 和 `dataScript/spots/`
 
 ---
 
