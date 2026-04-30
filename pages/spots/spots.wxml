@@ -76,11 +76,11 @@
   </view>
 
   <!-- ── 列表视图 ── -->
-  <scroll-view class="spot-list" scroll-y wx:if="{{viewMode === 'list'}}">
+  <scroll-view class="spot-list" scroll-y bindscrolltolower="onLoadMore" wx:if="{{viewMode === 'list'}}">
 
     <!-- 推荐标语 -->
     <view class="list-banner">
-      <text class="banner-text">📍 边逛景点，边觅美食</text>
+      <text class="banner-text">📍 边逛景点，边觅美食 · 共 {{totalFiltered.length}} 个</text>
     </view>
 
     <!-- 景点卡片列表 -->
@@ -154,6 +154,11 @@
 
     <!-- 底部间距 -->
     <view class="list-bottom"></view>
+
+    <!-- 加载更多 -->
+    <view wx:if="{{hasMore}}" class="load-more" bindtap="onLoadMore">
+      <text>查看更多</text>
+    </view>
   </scroll-view>
 
   <!-- ── 想去清单浮动按钮 ── -->

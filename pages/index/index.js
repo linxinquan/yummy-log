@@ -27,6 +27,7 @@ Page({
     // 店铺数据
     allShops: [],
     filteredShops: [],
+    totalFiltered: [], // 全部筛选结果（用于分页）
     pageSize: 10,
     currentPage: 1,
     hasMore: true,
@@ -312,6 +313,9 @@ Page({
   // 应用筛选和排序（优化：减少重复计算）
   applyFilters() {
     console.log('[Index] applyFilters 开始')
+    // 每次筛选都重置到第一页
+    this.setData({ currentPage: 1 })
+    
     let { allShops, currentCategory, searchKeyword, sortType, currentDistance, mapCenter, currentCity, currentDistrict } = this.data
 
     // 分类筛选
@@ -373,11 +377,19 @@ Page({
       filtered.sort((a, b) => b.rating - a.rating)
     }
     
+    // 缓存全部筛选结果用于分页
+    const totalFiltered = filtered
+    // 只取当前页数据
+    const { currentPage, pageSize } = this.data
+    const startIndex = (currentPage - 1) * pageSize
+    const paginatedShops = filtered.slice(startIndex, startIndex + pageSize)
+    
     this.setData({ 
-      filteredShops: filtered,
-      hasMore: filtered.length > this.data.pageSize
+      totalFiltered,
+      filteredShops: paginatedShops,
+      hasMore: totalFiltered.length > startIndex + pageSize
     })
-    console.log('[Index] applyFilters 完成，filteredShops 数量:', filtered.length)
+    console.log('[Index] applyFilters 完成，totalFiltered:', totalFiltered.length, '页:', currentPage, '显示:', paginatedShops.length)
     
     // 地图标记同步更新
     this.updateMarkers()
@@ -485,7 +497,7 @@ Page({
   // 分类切换
   onCategoryChange(e) {
     const category = e.currentTarget.dataset.category
-    this.setData({ currentCategory: category, currentPage: 1 })
+    this.setData({ currentCategory: category })
     this.applyFilters()
   },
 
@@ -496,14 +508,14 @@ Page({
 
   // 搜索确认
   onSearchConfirm(e) {
-    this.setData({ searchKeyword: e.detail.value, currentPage: 1 })
+    this.setData({ searchKeyword: e.detail.value })
     this.applyFilters()
   },
 
   // 排序切换
   onSortChange(e) {
     const sortType = e.currentTarget.dataset.sort
-    this.setData({ sortType, currentPage: 1 })
+    this.setData({ sortType })
     this.applyFilters()
   },
 
@@ -619,8 +631,7 @@ Page({
   onDistrictChange(e) {
     const category = e.currentTarget.dataset.district
     this.setData({ 
-      currentCategory: category === '全部' ? '全部' : category,
-      currentPage: 1
+      currentCategory: category === '全部' ? '全部' : category
     })
     this.applyFilters()
   },
@@ -740,9 +751,21 @@ Page({
   onLoadMore() {
     if (!this.data.hasMore) return
     
-    const nextPage = this.data.currentPage + 1
-    this.setData({ currentPage: nextPage })
-    // 可以在这里实现分页加载
+    const { totalFiltered, filteredShops, currentPage, pageSize } = this.data
+    const nextPage = currentPage + 1
+    const startIndex = (nextPage - 1) * pageSize
+    const nextPageShops = totalFiltered.slice(startIndex, startIndex + pageSize)
+    
+    if (nextPageShops.length > 0) {
+      this.setData({
+        currentPage: nextPage,
+        filteredShops: filteredShops.concat(nextPageShops),
+        hasMore: totalFiltered.length > startIndex + pageSize
+      })
+      console.log('[Index] 加载更多，第', nextPage, '页，新增', nextPageShops.length, '条')
+    } else {
+      this.setData({ hasMore: false })
+    }
   },
 
   // 图片加载失败处理
