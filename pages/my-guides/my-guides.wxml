@@ -1,0 +1,73 @@
+<!-- 觅食图 - 我的攻略页面 -->
+<view class="container">
+
+  <!-- 自定义导航栏 -->
+  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
+    <view class="nav-content">
+      <view class="nav-left" bindtap="navigateBack">
+        <i class="mgc_left_line"></i>
+      </view>
+      <text class="nav-title">我的攻略</text>
+      <view class="nav-right">
+        <text class="manage-btn" bindtap="onManageGuides" wx:if="{{guideCount > 0}}">管理</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 攻略列表 -->
+  <scroll-view class="guide-list" scroll-y wx:if="{{myGuides.length > 0}}">
+    <view 
+      class="guide-card"
+      wx:for="{{myGuides}}"
+      wx:key="id"
+      bindtap="onLoadGuide" 
+      data-guide="{{item}}"
+    >
+      <!-- 封面图片 -->
+      <view class="card-img-wrap">
+        <image 
+          class="card-img" 
+          src="{{item.coverImage}}" 
+          mode="aspectFill"
+          binderror="onImageError"
+          data-index="{{index}}"
+        />
+        <view class="card-cat-badge">攻略</view>
+      </view>
+
+      <!-- 信息区 -->
+      <view class="card-info">
+        <view class="card-info-inner">
+          <view class="card-name">{{item.title}}</view>
+          <view class="card-rating">
+            <view class="rating-star">
+              <text>{{item.shopCount || 0}}</text>
+            </view>
+            <text class="spot-tag">家店铺</text>
+          </view>
+        </view>
+        <view class="card-footer">
+          <text class="card-desc">{{item.dateStr}}</text>
+        </view>
+      </view>
+
+      <!-- 右侧操作 -->
+      <view class="card-action">
+        <view class="delete-btn" catchtap="onDeleteGuide" data-id="{{item.id}}">
+          <i class="mgc_heart_fill delete-icon"></i>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部安全区 -->
+    <view class="safe-area-bottom"></view>
+  </scroll-view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:else>
+    <i class="mgc_document_line empty-icon"></i>
+    <text class="empty-title">还没有攻略</text>
+    <text class="empty-desc">去发现页导入攻略吧</text>
+  </view>
+
+</view>

@@ -1,57 +1,42 @@
 <!-- 觅食图 V1 - 想去清单页（美食/景点/已到访，拖拽排序） -->
 <view class="container" style="padding-top: {{contentTop}}px;">
 
-  <!-- ── 顶部导航栏 ── -->
-  <view class="nav-bar" style="height: {{navBarHeight}}px; padding-top: {{statusBarHeight}}px;">
-    <view class="nav-back" bindtap="onBack">
-      <text class="nav-back-icon">‹</text>
-    </view>
-    <view class="nav-title-wrap">
-      <text class="nav-title">想去清单</text>
-    </view>
-    <view class="nav-shortcuts">
-      <view class="shortcut-btn" bindtap="onGoHome">
-        <text>🏠</text>
+  <!-- ── Tab切换 ── -->
+  <view class="tab-bar" style="padding-top: {{menuTop}}px; height: {{menuHeight}}px; padding-right: {{menuRightInset}}px;">
+    <view class="tab-left">
+      <view
+        class="tab-item {{tab === 'want' ? 'active' : ''}}"
+        bindtap="onTabChange"
+        data-tab="want"
+      >
+        <text>想去</text>
+      </view>
+      <view
+        class="tab-item {{tab === 'plan' ? 'active' : ''}}"
+        bindtap="onTabChange"
+        data-tab="plan"
+      >
+        <text>路线</text>
+      </view>
+      <view
+        class="tab-item {{tab === 'visited' ? 'active' : ''}}"
+        bindtap="onTabChange"
+        data-tab="visited"
+      >
+        <text>足迹</text>
       </view>
     </view>
-  </view>
-
-  <!-- ── Tab切换 ── -->
-  <view class="tab-bar" style="top: {{navBarHeight}}px;">
-    <view
-      class="tab-item {{tab === 'food' ? 'active' : ''}}"
-      bindtap="onTabChange"
-      data-tab="food"
-    >
-      <text>🍜 美食</text>
-      <view class="tab-line" wx:if="{{tab === 'food'}}"></view>
-    </view>
-    <view
-      class="tab-item {{tab === 'spot' ? 'active' : ''}}"
-      bindtap="onTabChange"
-      data-tab="spot"
-    >
-      <text>🏔️ 景点</text>
-      <view class="tab-line" wx:if="{{tab === 'spot'}}"></view>
-    </view>
-    <view
-      class="tab-item {{tab === 'visited' ? 'active' : ''}}"
-      bindtap="onTabChange"
-      data-tab="visited"
-    >
-      <text>📍 已到访</text>
-      <view class="tab-line" wx:if="{{tab === 'visited'}}"></view>
-    </view>
+    <view class="tab-right"></view>
   </view>
 
   <!-- ── 空状态 ── -->
   <view wx:if="{{empty}}" class="empty-wrap">
     <view class="empty-illustration">
-      <text class="empty-icon">{{tab === 'spot' ? '🏔️' : (tab === 'visited' ? '📍' : '🍜')}}</text>
+      <i class="empty-icon {{tab === 'want' ? 'mgc_heart_line' : (tab === 'plan' ? 'mgc_map_line' : 'mgc_location_line')}}"></i>
     </view>
     <text class="empty-title">{{titles[tab]}}</text>
-    <text class="empty-hint">{{tab === 'spot' ? '去景点页收藏心仪的地点吧' : (tab === 'visited' ? '还没标记任何到访记录' : '去首页点击 ♡ 收藏心仪的美食')}}</text>
-    <view class="empty-btn" bindtap="onGoHome">{{tab === 'spot' ? '去景点' : '去首页'}}</view>
+    <text class="empty-hint">{{tab === 'want' ? '正在开发中，敬请期待...' : (tab === 'plan' ? '去探索页收藏心仪的美食和景点吧' : '还没标记任何到访记录')}}</text>
+    <view class="empty-btn" bindtap="onGoHome" wx:if="{{tab !== 'want'}}">去探索</view>
   </view>
 
   <!-- ── 有数据时 ── -->
@@ -60,20 +45,20 @@
     <!-- 规划路线横幅 -->
     <view class="route-banner" bindtap="onPlanRoute">
       <view class="banner-icon-wrap">
-        <text class="banner-icon">🗺️</text>
+        <i class="mgc_map_line banner-icon"></i>
       </view>
       <view class="banner-info">
         <text class="banner-title">规划最优路线</text>
         <text class="banner-sub">{{items.length}}个地点 · 长按拖拽调整顺序</text>
       </view>
       <view class="banner-arrow-wrap">
-        <text class="banner-arrow">›</text>
+        <i class="mgc_right_line banner-arrow"></i>
       </view>
     </view>
 
     <!-- 提示：长按拖拽 -->
     <view class="sort-tip" wx:if="{{items.length > 1}}">
-      <text class="tip-icon">✋</text>
+      <i class="mgc_coin_line tip-icon"></i>
       <text class="tip-text">长按拖拽卡片可自定义出行顺序</text>
     </view>
 
@@ -89,7 +74,7 @@
         >
           <!-- 拖拽手柄 -->
           <view class="drag-handle" catchtap="onDragStart" data-index="{{index}}">
-            <text>☰</text>
+            <i class="mgc_dots_line"></i>
           </view>
 
           <!-- 序号 -->
@@ -100,28 +85,28 @@
           <!-- 图片 -->
           <image
             class="item-img"
-            src="{{item.logo || item.image || (tab === 'spot' ? '' : '/images/app-logo.jpg')}}"
+            src="{{item.logo || item.image || item.thumb}}"
             mode="aspectFill"
-            wx:if="{{item.logo || item.image}}"
+            wx:if="{{item.logo || item.image || item.thumb}}"
           />
           <view class="item-img placeholder" wx:else>
-            <text>{{tab === 'spot' ? '🏔️' : '🍜'}}</text>
+            <i class="{{item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price ? 'mgc_tree_line' : 'mgc_fork_spoon_line'}}"></i>
           </view>
 
           <!-- 信息 -->
           <view class="item-info">
             <text class="item-name">{{item.name}}</text>
-            <text class="item-meta">{{item.category || item.district || ''}}{{item.rating || item.score ? ' · ⭐ ' + (item.rating || item.score) : ''}}</text>
+            <text class="item-meta">{{item.category || item.district || ''}}{{item.rating || item.score ? ' · ★ ' + (item.rating || item.score) : ''}}</text>
             <text class="item-address" wx:if="{{item.address || item.district}}">{{item.district || item.address}}</text>
           </view>
 
           <!-- 操作 -->
           <view class="item-actions">
             <view class="navi-btn" catchtap="onNavigate" data-item="{{item}}">
-              <text>🧭</text>
+              <i class="mgc_send_plane_line"></i>
             </view>
             <view class="remove-btn" catchtap="onRemove" data-id="{{item.id}}">
-              <text>✕</text>
+              <i class="mgc_close_line"></i>
             </view>
           </view>
         </view>

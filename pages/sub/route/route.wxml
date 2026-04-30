@@ -18,12 +18,12 @@
 
     <!-- 返回按钮 -->
     <view class="map-back-btn" bindtap="onBack" wx:if="{{!isNavigating}}">
-      <text class="map-back-icon">‹</text>
+      <i class="mgc_left_line map-back-icon"></i>
     </view>
 
     <!-- 地图右下角缩放适配按钮 -->
     <view class="map-fit-btn" bindtap="onFitRoute" wx:if="{{!isNavigating && routeShops.length > 0}}">
-      <text class="map-fit-icon">⊞</text>
+      <i class="mgc_fullscreen_exit_2_line map-fit-icon"></i>
     </view>
 
     <!-- 路线信息浮层（仅常规模式） -->
@@ -54,13 +54,13 @@
         ></view>
         <text class="remaining-text">剩余 {{routeShops.length - currentNavIndex - 1}} 站</text>
       </view>
-      <view class="nav-close-btn" bindtap="onExitNav">✕ 退出</view>
+      <view class="nav-close-btn" bindtap="onExitNav"><i class="mgc_close_line"></i> 退出</view>
     </view>
   </view>
 
   <!-- ══════════ 导览完成全屏 ══════════ -->
   <view class="nav-complete" wx:if="{{isNavComplete}}">
-    <text class="complete-icon">🎉</text>
+    <i class="mgc_celebrate_fill complete-icon"></i>
     <text class="complete-title">美食之旅完成！</text>
     <text class="complete-sub">已走访 {{visitedCount}} 家店铺</text>
     <button class="complete-btn" bindtap="onExitNav">返回路线</button>
@@ -70,7 +70,7 @@
   <view class="nav-card" wx:if="{{isNavigating && !isNavComplete}}">
     <view class="nav-card-header">
       <view class="nav-header-left">
-        <text class="nav-label">📍 下一站</text>
+        <text class="nav-label"><i class="mgc_location_line"></i> 下一站</text>
         <view class="nav-badge">{{currentNavIndex + 1}} / {{routeShops.length}}</view>
       </view>
       <text class="nav-remain">剩余 {{routeShops.length - currentNavIndex - 1}} 家</text>
@@ -98,13 +98,13 @@
         <text class="ns-lbl">{{travelMode === 'walk' ? '步行' : travelMode === 'transit' ? '地铁' : '驾车'}}</text>
       </view>
       <view class="nav-stat">
-        <text class="ns-val">⭐ {{currentNavShop.rating}}</text>
+        <text class="ns-val"><i class="mgc_star_fill"></i> {{currentNavShop.rating}}</text>
         <text class="ns-lbl">评分</text>
       </view>
     </view>
     <view class="nav-btns-row">
-      <button class="nav-go-btn" bindtap="onNavToCurrent">🧭 开始导航</button>
-      <button class="nav-next-btn" bindtap="onVisitNav">✓ 已到达，下一站</button>
+      <button class="nav-go-btn" bindtap="onNavToCurrent"><i class="mgc_send_plane_line"></i> 开始导航</button>
+      <button class="nav-next-btn" bindtap="onVisitNav"><i class="mgc_check_line"></i> 已到达，下一站</button>
     </view>
   </view>
 
@@ -113,9 +113,9 @@
 
     <!-- 起点选择行 -->
     <view class="start-row" bindtap="onToggleStart">
-      <text class="start-dot">●</text>
+      <i class="mgc_circle_fill start-dot"></i>
       <text class="start-name">出发：{{currentStart.name}}</text>
-      <text class="start-chevron">{{startExpanded ? '∧' : '∨'}}</text>
+      <i class="{{startExpanded ? 'mgc_up_line' : 'mgc_down_line'}} start-chevron"></i>
     </view>
     <view class="start-expand" wx:if="{{startExpanded}}">
       <scroll-view class="start-chips" scroll-x enable-flex>
@@ -126,7 +126,7 @@
           bindtap="onSelectStart"
           data-start="{{item}}"
         >{{item.name}}</view>
-        <view class="start-chip map-chip" bindtap="onChooseStartOnMap">🗺️ 地图选点</view>
+        <view class="start-chip map-chip" bindtap="onChooseStartOnMap"><i class="mgc_map_line"></i> 地图选点</view>
       </scroll-view>
     </view>
 
@@ -139,10 +139,10 @@
         bindtap="onSelectMode"
         data-mode="{{item}}"
       >
-        <text>{{item === 'drive' ? '🚗 驾车' : item === 'transit' ? '🚇 地铁' : '🚶 步行'}}</text>
+        <text><i class="{{item === 'drive' ? 'mgc_car_line' : item === 'transit' ? 'mgc_train_line' : 'mgc_walk_line'}}"></i> {{item === 'drive' ? '驾车' : item === 'transit' ? '地铁' : '步行'}}</text>
       </view>
       <view class="mode-chip optimize" bindtap="onOptimizeRoute">
-        <text>⚡ 最优</text>
+        <text><i class="mgc_flashlight_line"></i> 最优</text>
       </view>
     </view>
 
@@ -153,12 +153,12 @@
         bindtap="onSwitchSelectMode"
         data-mode="all"
       >
-        <text class="ms-icon">⚡</text>
+        <i class="mgc_flashlight_line ms-icon"></i>
         <view class="ms-text-wrap">
           <text class="ms-title">最优路径</text>
           <text class="ms-sub">自动贪心排序</text>
         </view>
-        <view class="ms-check" wx:if="{{selectMode === 'all'}}">✓</view>
+        <view class="ms-check" wx:if="{{selectMode === 'all'}}"><i class="mgc_check_line"></i></view>
       </view>
       <view class="mode-switch-sep"></view>
       <view
@@ -166,12 +166,12 @@
         bindtap="onSwitchSelectMode"
         data-mode="custom"
       >
-        <text class="ms-icon">✏️</text>
+        <i class="mgc_pencil_line ms-icon"></i>
         <view class="ms-text-wrap">
           <text class="ms-title">自定义选择</text>
           <text class="ms-sub">勾选 · 手动排序</text>
         </view>
-        <view class="ms-check" wx:if="{{selectMode === 'custom'}}">✓</view>
+        <view class="ms-check" wx:if="{{selectMode === 'custom'}}"><i class="mgc_check_line"></i></view>
       </view>
     </view>
 
@@ -191,12 +191,12 @@
         data-shopid="{{item.id}}"
       >
         <view class="cand-check {{item.selected ? 'on' : ''}}">
-          <text wx:if="{{item.selected}}">✓</text>
+          <i wx:if="{{item.selected}}" class="mgc_check_line"></i>
         </view>
         <image class="cand-logo" src="{{item.logo || '/images/app-logo.jpg'}}" mode="aspectFill"/>
         <view class="cand-info">
           <text class="cand-name">{{item.name}}</text>
-          <text class="cand-meta">{{item.category}} · ⭐{{item.rating}}{{item.price ? ' · ¥' + item.price + '/人' : ''}}</text>
+          <text class="cand-meta">{{item.category}} · <i class="mgc_star_fill"></i>{{item.rating}}{{item.price ? ' · ¥' + item.price + '/人' : ''}}</text>
         </view>
         <view class="cand-badge {{item.selected ? 'show' : ''}}">{{item.orderNum}}</view>
       </view>
@@ -205,9 +205,10 @@
     <!-- ★ 路线顺序 Timeline -->
     <view class="timeline-card" wx:if="{{routeShops.length > 0}}">
       <view class="timeline-header">
-        <text class="timeline-title">🗺️ 游览顺序</text>
+        <text class="timeline-title"><i class="mgc_route_line"></i> 游览顺序</text>
         <view class="edit-pill" bindtap="onToggleEdit">
-          <text>{{isEditing ? '✓ 完成' : '调整顺序'}}</text>
+          <text wx:if="{{isEditing}}"><i class="mgc_check_line"></i> 完成</text>
+          <text wx:else>调整顺序</text>
         </view>
       </view>
 
@@ -244,8 +245,8 @@
               </view>
               <!-- 常规操作 -->
               <view class="tl-actions" wx:if="{{!isEditing}}">
-                <view class="tl-btn nav" catchtap="onNavigateToShop" data-shop="{{item}}">🧭</view>
-                <view class="tl-btn del" catchtap="onRemoveShop" data-shopid="{{item.id}}">✕</view>
+                <view class="tl-btn nav" catchtap="onNavigateToShop" data-shop="{{item}}"><i class="mgc_send_plane_line"></i></view>
+                <view class="tl-btn del" catchtap="onRemoveShop" data-shopid="{{item.id}}"><i class="mgc_close_line"></i></view>
               </view>
               <!-- 编辑排序 -->
               <view class="tl-sort" wx:if="{{isEditing}}">
@@ -253,12 +254,12 @@
                   class="sort-arrow up {{index === 0 ? 'off' : ''}}"
                   catchtap="onMoveUp"
                   data-index="{{index}}"
-                >↑</view>
+                ><i class="mgc_arrow_up_line"></i></view>
                 <view
                   class="sort-arrow down {{index === routeShops.length - 1 ? 'off' : ''}}"
                   catchtap="onMoveDown"
                   data-index="{{index}}"
-                >↓</view>
+                ><i class="mgc_arrow_down_line"></i></view>
               </view>
             </view>
           </view>
@@ -279,15 +280,15 @@
 
     <!-- 空状态：无想去店铺 -->
     <view class="empty-box" wx:if="{{routeShops.length === 0 && allLikedShops.length === 0}}">
-      <text class="empty-icon">🗺️</text>
+      <i class="mgc_map_line empty-icon"></i>
       <text class="empty-text">还没有「想去」的店铺</text>
       <text class="empty-hint">在首页点击 ♡ 收藏喜欢的店铺</text>
-      <button class="empty-btn" bindtap="onBackToHome">去首页看看</button>
+      <button class="empty-btn" bindtap="onBackToHome">去探索看看</button>
     </view>
 
     <!-- 空状态：自选模式未勾选 -->
     <view class="empty-box" wx:if="{{routeShops.length === 0 && allLikedShops.length > 0 && selectMode === 'custom'}}">
-      <text class="empty-icon">☝️</text>
+      <i class="mgc_cursor_line empty-icon"></i>
       <text class="empty-text">请在上方勾选店铺</text>
       <text class="empty-hint">至少选择一家才能规划路线</text>
     </view>
@@ -296,6 +297,6 @@
   <!-- ══════════ 底部操作栏 ══════════ -->
   <view class="bottom-bar" wx:if="{{routeShops.length > 0 && !isNavigating}}">
     <view class="bb-clear" bindtap="onClearRoute">清空</view>
-    <button class="bb-start" bindtap="onStartNavigation">🚀 开始导览</button>
+    <button class="bb-start" bindtap="onStartNavigation"><i class="mgc_rocket_line"></i> 开始导览</button>
   </view>
 </view>

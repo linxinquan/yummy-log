@@ -1,107 +1,111 @@
 /* ================================================
-  觅食图 · 添加店铺页  v4.0 青绿色系
+  觅食图 · 添加店铺页  (Refactored to Design System)
   ================================================ */
 
 .container {
   min-height: 100vh;
-  background: #F0F9F8;
-  padding: 24rpx;
+  background: var(--background);
+  padding: var(--space-lg) var(--space-md);
   padding-bottom: 160rpx;
 }
 
 /* ─── Section ─────────────────────────────── */
 .form-section {
-  background: #ffffff;
-  border-radius: 16rpx;
-  padding: 28rpx 28rpx 24rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0,217,192,0.06);
-  border: 1rpx solid rgba(0,217,192,0.06);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg) var(--space-lg) var(--space-md);
+  margin-bottom: var(--space-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .form-label {
   font-size: 28rpx;
-  font-weight: 700;
-  color: #1A1A2E;
-  margin-bottom: 18rpx;
+  
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
   display: block;
 }
 
 .form-input {
   width: 100%;
-  height: 88rpx;
-  background: #F0F9F8;
-  border-radius: 12rpx;
-  padding: 0 24rpx;
+  height: 88rpx; /* 44px */
+  background: var(--background);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-md);
   font-size: 28rpx;
   box-sizing: border-box;
-  color: #1A1A2E;
-  border: 1.5rpx solid rgba(0,217,192,0.1);
+  color: var(--text-primary);
+  border: 1.5rpx solid var(--divider);
   transition: border-color 0.18s;
 }
 
 .form-input:focus {
-  border-color: #00D9C0;
-  background: #ffffff;
+  border-color: var(--primary);
+  background: var(--surface);
 }
 
 /* ─── Category Pills ─────────────────────── */
 .category-select {
   display: flex;
   flex-wrap: wrap;
-  gap: 14rpx;
+  gap: var(--space-sm);
 }
 
 .cat-pill {
   padding: 12rpx 26rpx;
-  background: #F0F9F8;
-  border-radius: 999rpx;
+  background: var(--background);
+  border-radius: var(--radius-full);
   font-size: 26rpx;
-  font-weight: 500;
-  color: #6B7280;
+  
+  color: var(--text-secondary);
   transition: all 0.18s;
-  border: 1rpx solid rgba(0,217,192,0.1);
+  border: 1rpx solid var(--divider);
 }
 
 .cat-pill.active {
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  background: var(--primary);
   color: #ffffff;
-  font-weight: 700;
-  box-shadow: 0 4rpx 14rpx rgba(0,217,192,0.30);
+  
+  box-shadow: var(--shadow-xs);
+  border-color: var(--primary);
+}
+
+.cat-pill.active .cat-icon {
+  color: #ffffff;
 }
 
 /* ─── Emoji Select ─────────────────────────── */
 .emoji-select {
   display: flex;
   flex-wrap: wrap;
-  gap: 14rpx;
+  gap: var(--space-sm);
 }
 
 .emoji-item {
   font-size: 50rpx;
   padding: 10rpx;
-  background: #F0F9F8;
-  border-radius: 12rpx;
+  background: var(--background);
+  border-radius: var(--radius-sm);
   transition: all 0.18s;
   border: 2rpx solid transparent;
 }
 
 .emoji-item.active {
-  background: #F0F9F8;
-  box-shadow: 0 0 0 3rpx #00D9C0;
-  border-color: #00D9C0;
+  background: var(--primary-light);
+  box-shadow: 0 0 0 3rpx var(--primary);
+  border-color: var(--primary);
 }
 
 /* ─── 🗺️ Map Choose Button ─────────────── */
 .choose-location-btn {
   display: flex;
   align-items: center;
-  background: #F0F9F8;
-  border: 2rpx solid #00D9C0;
-  border-radius: 16rpx;
-  padding: 24rpx 28rpx;
-  margin-bottom: 20rpx;
-  gap: 16rpx;
+  background: var(--primary-light);
+  border: 2rpx solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg) var(--space-lg);
+  margin-bottom: var(--space-md);
+  gap: var(--space-md);
 }
 
 .choose-loc-icon {
@@ -118,32 +122,32 @@
 
 .choose-loc-title {
   font-size: 30rpx;
-  font-weight: 700;
-  color: #00B5A6;
+  
+  color: var(--primary-dark);
 }
 
 .choose-loc-sub {
   font-size: 24rpx;
-  color: #9CA3AF;
+  color: var(--text-secondary);
 }
 
 .choose-loc-arrow {
   font-size: 40rpx;
-  color: #00D9C0;
-  font-weight: bold;
+  color: var(--primary);
+  
 }
 
 /* ─── Coord Input ─────────────────────────── */
 .coord-hint {
   font-size: 24rpx;
-  color: #9CA3AF;
-  margin-bottom: 14rpx;
-  font-weight: 500;
+  color: var(--text-disabled);
+  margin-bottom: var(--space-sm);
+  
 }
 
 .coord-row {
   display: flex;
-  gap: 16rpx;
+  gap: var(--space-md);
 }
 
 .coord-input {
@@ -151,22 +155,21 @@
 }
 
 .quick-coord {
-  margin-top: 14rpx;
+  margin-top: var(--space-sm);
   font-size: 26rpx;
-  color: #00B5A6;
-  font-weight: 600;
+  color: var(--primary);
+  
 }
 
 /* ─── Map Picker ──────────────────────────── */
 .map-picker {
   position: relative;
   height: 380rpx;
-  background: #ffffff;
-  border-radius: 16rpx;
+  background: var(--surface);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0,217,192,0.06);
-  border: 1rpx solid rgba(0,217,192,0.06);
+  margin-bottom: var(--space-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .map {
@@ -190,25 +193,26 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20rpx 32rpx;
-  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  background: #ffffff;
-  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.06);
+  padding: var(--space-md) var(--space-md);
+  padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  z-index: 100;
 }
 
 .btn-submit {
   width: 100%;
-  height: 88rpx;
-  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  height: 96rpx; /* lg size 48px */
+  background: var(--primary);
   color: #ffffff;
-  border-radius: 44rpx;
-  font-size: 30rpx;
-  font-weight: 700;
+  border-radius: var(--radius-full);
+  font-size: 32rpx;
+  
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  box-shadow: 0 8rpx 24rpx rgba(0,217,192,0.35);
+  box-shadow: var(--shadow-sm);
   letter-spacing: 0.5rpx;
 }
 
@@ -217,6 +221,55 @@
 }
 
 .btn-submit:active {
-  opacity: 0.9;
+  background: var(--primary-dark);
   transform: scale(0.98);
+}
+
+/* Batch Mode */
+.batch-header {
+  margin-bottom: var(--space-lg);
+}
+
+.batch-title {
+  font-size: 40rpx;
+  
+  color: var(--text-primary);
+  display: block;
+  margin-bottom: var(--space-xs);
+}
+
+.batch-hint {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+
+.batch-item {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.batch-item-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.batch-emoji {
+  font-size: 40rpx;
+}
+
+.batch-name {
+  font-size: 32rpx;
+  
+  color: var(--text-primary);
+}
+
+.batch-detail {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xs);
 }

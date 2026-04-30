@@ -121,7 +121,7 @@ Page({
             width: 36,
             height: 36,
             callout: {
-              content: c.spotName || (c.type === 'spot' ? '🏞️' : '🍜'),
+              content: c.spotName || (c.type === 'spot' ? '景点' : '美食'),
               color: '#ffffff',
               fontSize: 11,
               borderRadius: 6,
@@ -195,7 +195,7 @@ Page({
   // 统一采集入口
   onGoCheckin() {
     wx.showActionSheet({
-      itemList: ['🍜 美食采集', '🏞️ 景点采集'],
+      itemList: ['美食采集', '景点采集'],
       success: (res) => {
         if (res.tapIndex === 0) {
           wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
@@ -267,83 +267,30 @@ Page({
         nickName: userInfo.nickName,
         avatarUrl: userInfo.avatarUrl
       })
+    } else {
+      this.setData({
+        isLoggedIn: false,
+        userInfo: {},
+        nickName: '',
+        avatarUrl: '/images/app-logo.jpg'
+      })
     }
   },
 
-  // 选择头像（微信一键登录）
-  onChooseAvatar(e) {
-    const { avatarUrl } = e.detail
-    console.log('选择了头像:', avatarUrl)
-
-    const hasNickname = !!this.data.nickName
-
-    this.setData({
-      avatarUrl,
-      hasAvatar: true
-    })
-
-    // 如果已有昵称，显示登录按钮状态
-    if (hasNickname) {
-      this.setData({ hasNickname: true })
-    }
-  },
-
-  // 输入昵称
-  onInputNickname(e) {
-    const nickName = e.detail.value.trim()
-    const hasNickname = nickName.length > 0
-    this.setData({
-      nickName,
-      hasNickname
-    })
-  },
-
-  // 昵称输入框失焦
-  onNicknameBlur(e) {
-    const nickName = e.detail.value.trim()
-    const hasNickname = nickName.length > 0
-    this.setData({
-      nickName: nickName || this.data.nickName,
-      hasNickname
-    })
-  },
-
-  // 快速登录
+  // 快速登录（模拟直接登录）
   onQuickLogin() {
-    const { nickName, avatarUrl, hasNickname, hasAvatar } = this.data
-
-    if (!hasNickname) {
-      wx.showToast({ title: '请先设置昵称', icon: 'none' })
-      return
-    }
-
-    this.completeLogin(avatarUrl)
-  },
-
-  // 完成登录/注册
-  onCompleteLogin() {
-    const { nickName, avatarUrl } = this.data
-    if (!nickName) {
-      wx.showToast({ title: '请输入昵称', icon: 'none' })
-      return
-    }
-    this.completeLogin(avatarUrl)
-  },
-
-  // 完成注册流程
-  completeLogin(avatarUrl) {
     const userInfo = {
       uid: 'MS' + Date.now().toString(36).toUpperCase(),
       nickName: this.data.nickName || '觅食者',
-      avatarUrl: avatarUrl || '/images/app-logo.jpg',
-      phone: this.data.userInfo?.phone || '',
+      avatarUrl: this.data.avatarUrl || '/images/app-logo.jpg',
+      phone: '',
       level: 'Lv.1 入门吃货',
       isVip: false,
-      visits: this.data.stats.visitedCount,
+      visits: this.data.stats.visitedCount || 0,
+      days: 1,
       createdAt: new Date().toISOString()
     }
 
-    // 保存到本地
     util.saveData('userInfo', userInfo)
     
     this.setData({
@@ -356,31 +303,33 @@ Page({
       icon: 'success',
       duration: 2000
     })
-
-    // 显示用户菜单
-    this.animateUserMenu()
   },
 
-  // 用户菜单动画
-  animateUserMenu() {
-    setTimeout(() => {
-      this.setData({ showUserMenu: true })
-    }, 300)
+  // 标题栏未登录点击
+  onShowLogin() {
+    if (this.data.isLoggedIn) {
+      return
+    }
+    // 点击登录，直接调用快速登录（为了方便测试体验，目前直接生成默认账号）
+    this.setData({
+      nickName: '觅食者',
+      avatarUrl: '/images/app-logo.jpg',
+      hasNickname: true,
+      hasAvatar: true
+    })
+    this.onQuickLogin()
   },
 
   // 编辑资料
   onEditProfile() {
     wx.showActionSheet({
-      itemList: ['修改昵称', '更换头像', '退出登录'],
+      itemList: ['修改昵称', '退出登录'],
       success: (res) => {
         switch (res.tapIndex) {
           case 0: // 修改昵称
             this.showEditNickname()
             break
-          case 1: // 更换头像
-            // 头像修改通过点击头像区域
-            break
-          case 2: // 退出登录
+          case 1: // 退出登录
             this.onLogout()
             break
         }
@@ -436,40 +385,68 @@ Page({
   // 菜单点击
   onMenuTap(e) {
     const type = e.currentTarget.dataset.type
-    const labels = ['我的收藏', '觅食足迹', '我的攻略', '设置']
-    wx.showToast({ 
-      title: labels[['favorites', 'history', 'guides', 'settings'].indexOf(type)],
-      icon: 'none' 
-    })
+    
+    if (type === 'favorites') {
+      // 跳转到我的收藏页面
+      wx.navigateTo({ url: '/pages/my-favorites/my-favorites' })
+      return
+    }
+    
+    if (type === 'guides') {
+      // 跳转到我的攻略页面
+      wx.navigateTo({ url: '/pages/my-guides/my-guides' })
+      return
+    }
+    
+    if (type === 'settings') {
+      wx.showToast({ title: '设置', icon: 'none' })
+      return
+    }
+    
+    if (type === 'share') {
+      wx.showToast({ title: '分享我们', icon: 'none' })
+      return
+    }
   },
 
   // 加载数据
   loadData() {
-    const userData = util.getUserShops()
     const userAddedShops = util.loadData('userAddedShops', [])
-    
-    // 所有店铺
-    const allShops = [...shopData.shops, ...userAddedShops]
-    const shopMap = {}
-    allShops.forEach(s => shopMap[s.id] = s)
-    
-    // 想去列表
-    const likedShops = (userData.likedShops || [])
-      .map(id => shopMap[id])
-      .filter(s => s)
-    
-    // 到访列表（觅食记录）
-    const visitedList = Object.entries(userData.checkedInShops || {})
-      .map(([shopId, data]) => ({
-        shopId: parseInt(shopId),
-        shop: shopMap[parseInt(shopId)],
-        data: {
-          ...data,
-          dateStr: new Date(data.date).toLocaleDateString('zh-CN')
-        }
-      }))
-      .filter(item => item.shop)
-      .sort((a, b) => new Date(b.data.date) - new Date(a.data.date))
+    const foodItems = [...shopData.shops, ...(shopData.foods || []), ...userAddedShops]
+      .map(item => ({ ...item, type: 'food' }))
+    const spotItems = util.getSpotData().map(item => ({ ...item, type: 'spot' }))
+    const allItems = [...foodItems, ...spotItems]
+    const itemMap = {}
+    allItems.forEach(item => {
+      itemMap[String(item.id)] = item
+    })
+
+    const likedIds = [
+      ...util.loadData('userWantFoods', []),
+      ...util.loadData('userWantSpots', [])
+    ]
+    const likedShops = likedIds
+      .map(id => itemMap[String(id)])
+      .filter(Boolean)
+
+    const userData = util.getUserShops()
+    const legacyVisitedMap = userData.checkedInShops || {}
+    const visitedIds = util.loadData('userCheckedIn', [])
+    const visitedList = visitedIds
+      .map(id => {
+        const key = String(id)
+        const shop = itemMap[key]
+        const rawData = legacyVisitedMap[key] || legacyVisitedMap[Number(id)] || {}
+        return shop ? {
+          shopId: Number(id),
+          shop,
+          data: {
+            ...rawData,
+            dateStr: rawData.date ? new Date(rawData.date).toLocaleDateString('zh-CN') : '已标记到访'
+          }
+        } : null
+      })
+      .filter(Boolean)
     
     this.setData({
       likedShops,
@@ -500,8 +477,13 @@ Page({
   // 店铺点击
   onShopTap(e) {
     const shop = e.currentTarget.dataset.shop
+    if (!shop) return
+    if (shop.type === 'spot') {
+      wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${shop.id}` })
+      return
+    }
     wx.navigateTo({
-      url: `/pages/sub/shop-detail/shop-detail?shop=${encodeURIComponent(JSON.stringify(shop))}`
+      url: `/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(shop))}`
     })
   },
 
@@ -540,7 +522,7 @@ Page({
 
   // 前往「想去清单」独立页面
   onGoWantgo() {
-    wx.navigateTo({ url: '/pages/wantgo/wantgo' })
+    wx.switchTab({ url: '/pages/wantgo/wantgo' })
   },
 
   // 前往路线规划页
@@ -581,11 +563,7 @@ Page({
     }
   },
 
-  // 标题栏未登录点击
-  onShowLogin() {
-    // 滚动到统计条以下位置，那里还有未登录表单
-    wx.pageScrollTo({ scrollTop: 200, duration: 300 })
-  },
+
 
   // 景点地图点击
   onSpotMapTap() {

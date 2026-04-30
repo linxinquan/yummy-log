@@ -36,7 +36,7 @@ Page({
       return Object.assign({}, c, {
         dateStr: mm + '/' + dd + '/' + yyyy,
         shortAddr: shortAddr,
-        typeIcon: c.type === 'spot' ? '🏞️' : '🍜',
+        typeIcon: c.type === 'spot' ? 'mgc_scenery_line' : 'mgc_fork_spoon_line',
         typeLabel: c.type === 'spot' ? '景点' : '美食',
         // 地图标记用 spotName（店名/景点名）或地址
         mapTitle: c.spotName || c.address || '未知地点'

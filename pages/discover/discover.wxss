@@ -23,6 +23,60 @@ page {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* ─── 自定义导航栏（与想去页面一致）── */
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48rpx;
+  background: #FFFFFF;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 19;
+  box-sizing: content-box;
+  padding-bottom: 24rpx;
+}
+
+.nav-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.nav-title {
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 500;
+  font-size: 48rpx;
+  line-height: 48rpx;
+  color: #000000;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.nav-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-bg);
+  border-radius: 50%;
+  font-size: 28rpx;
+  transition: all 0.2s;
+}
+
+.nav-btn:active {
+  transform: scale(0.95);
+  background: var(--primary-light);
+}
+
 /* ─── Header ─────────────────────────────────── */
 .header {
   padding: 20rpx 24rpx 12rpx;
@@ -453,7 +507,180 @@ page {
   box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.3);
 }
 
-/* ─── 各区攻略网格 ─────────────────────────────── */
+/* ─── 各区攻略横向卡片（与探索页一致）────────── */
+.guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.guide-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 32rpx;
+  background: var(--surface);
+  border-radius: 24rpx;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+  transition: transform 0.2s;
+}
+
+.guide-card-row:active {
+  transform: scale(0.98);
+}
+
+.guide-img-wrap {
+  width: 200rpx;
+  height: 200rpx;
+  flex-shrink: 0;
+  border-radius: 24rpx;
+  overflow: hidden;
+  position: relative;
+  background: #f0f0f0;
+}
+
+.guide-thumb-wrap {
+  background: var(--primary-bg);
+}
+
+.guide-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.guide-cat-badge {
+  position: absolute;
+  top: 12rpx;
+  left: 12rpx;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8rpx;
+  padding: 6rpx 8rpx;
+  font-family: 'PingFang SC';
+  font-size: 20rpx;
+  color: #ffffff;
+  line-height: 20rpx;
+  backdrop-filter: blur(4px);
+}
+
+.guide-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 200rpx;
+  box-sizing: border-box;
+  width: calc(100vw - 328rpx);
+  min-width: 0;
+  padding: 16rpx 0;
+}
+
+.guide-info-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+  min-width: 0;
+  width: 100%;
+}
+
+.guide-name {
+  font-family: 'PingFang SC';
+  font-weight: 500;
+  font-size: 32rpx;
+  color: #262626;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  display: block;
+  padding-right: 64rpx;
+  box-sizing: border-box;
+}
+
+.guide-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  width: 100%;
+}
+
+.guide-rating {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: #FDF8E3;
+  border-radius: 12rpx;
+  padding: 8rpx 16rpx;
+  font-family: 'PingFang SC';
+  font-size: 24rpx;
+  color: #EE8733;
+  line-height: 24rpx;
+  flex-shrink: 0;
+}
+
+.guide-author-tag {
+  font-family: 'PingFang SC';
+  font-size: 24rpx;
+  color: #C2C2C2;
+  line-height: 24rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.guide-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 64rpx;
+}
+
+.guide-tags {
+  display: flex;
+  gap: 8rpx;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.guide-tag-item {
+  font-family: 'PingFang SC';
+  font-size: 24rpx;
+  color: #BABABA;
+  background: #F6F6F6;
+  border-radius: 12rpx;
+  padding: 8rpx 16rpx;
+  line-height: 24rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.guide-action {
+  position: absolute;
+  right: 48rpx;
+  top: 0;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
+  background: linear-gradient(180deg, rgba(197, 211, 227, 0.1) 0%, rgba(216, 225, 236, 0.1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.guide-arrow {
+  font-size: 32rpx;
+  color: #C2C2C2;
+  font-weight: 300;
+}
+
+/* ─── 各区攻略网格（旧样式保留兼容性）────────── */
 .guide-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

@@ -1,17 +1,19 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/spots/spots",
+    "pages/wantgo/wantgo",
     "pages/discover/discover",
+    "pages/guide-detail/guide-detail",
     "pages/my/my",
     "pages/shop-detail/shop-detail",
     "pages/spot-detail/spot-detail",
     "pages/route/route",
-    "pages/wantgo/wantgo",
     "pages/add-shop/add-shop",
     "pages/webview/webview",
     "pages/checkin/checkin",
-    "pages/collection/collection"
+    "pages/collection/collection",
+    "pages/my-favorites/my-favorites",
+    "pages/my-guides/my-guides"
   ],
   "lazyCodeLoading": "requiredComponents",
   "window": {
@@ -21,26 +23,26 @@
     "navigationBarTextStyle": "black"
   },
   "tabBar": {
-    "color": "#9CA3AF",
-    "selectedColor": "#00D9C0",
+    "color": "#E1E1E1",
+    "selectedColor": "#3D403F",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "美食",
+        "text": "探索",
         "iconPath": "images/tabbar-home.png",
         "selectedIconPath": "images/tabbar-home-active.png"
       },
       {
-        "pagePath": "pages/spots/spots",
-        "text": "景点",
+        "pagePath": "pages/wantgo/wantgo",
+        "text": "想去",
         "iconPath": "images/tabbar-spots.png",
         "selectedIconPath": "images/tabbar-spots-active.png"
       },
       {
         "pagePath": "pages/discover/discover",
-        "text": "发现",
+        "text": "攻略",
         "iconPath": "images/tabbar-discover.png",
         "selectedIconPath": "images/tabbar-discover-active.png"
       },

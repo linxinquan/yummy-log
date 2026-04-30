@@ -30,7 +30,7 @@
       <view class="shop-title">
         <text class="shop-name">{{shop.name}}</text>
         <view class="shop-meta">
-          <text class="shop-rating">⭐ {{shop.rating}}</text>
+          <text class="shop-rating"><i class="mgc_star_fill"></i> {{shop.rating}}</text>
           <text class="shop-price">¥{{shop.price || '--'}}/人</text>
           <text class="shop-category">{{shop.category}}</text>
         </view>
@@ -45,17 +45,17 @@
   <!-- 基础信息 -->
   <view class="info-section">
     <view class="info-row" bindtap="onCopyAddress">
-      <text class="info-icon">📍</text>
+      <i class="mgc_location_line info-icon"></i>
       <text class="info-text">{{shop.address || '--'}}</text>
       <text class="info-action">复制</text>
     </view>
     <view class="info-row" wx:if="{{shop.phone}}">
-      <text class="info-icon">📞</text>
+      <i class="mgc_phone_line info-icon"></i>
       <text class="info-text">{{shop.phone}}</text>
       <text class="info-action" bindtap="onCall">拨打</text>
     </view>
     <view class="info-row" wx:if="{{shop.hours}}">
-      <text class="info-icon">🕐</text>
+      <i class="mgc_time_line info-icon"></i>
       <text class="info-text">{{shop.hours}}</text>
     </view>
   </view>
@@ -85,11 +85,11 @@
         <!-- 评分 -->
         <view class="record-rating">
           <view class="stars-row">
-            <text 
+            <i 
               wx:for="{{5}}" 
               wx:key="index" 
-              class="star-item {{index < recordData.rating ? 'active' : ''}}"
-            >★</text>
+              class="mgc_star_fill star-item {{index < recordData.rating ? 'active' : ''}}"
+            ></i>
           </view>
           <text class="rating-text">{{recordData.rating}}.0分</text>
         </view>
@@ -101,7 +101,7 @@
         
         <!-- 定位信息 -->
         <view class="record-location" wx:if="{{recordData.location}}">
-          <text class="location-icon-small">📍</text>
+          <i class="mgc_location_line location-icon-small"></i>
           <text class="location-text-small">{{recordData.location}}</text>
         </view>
         
@@ -116,7 +116,7 @@
     <!-- 未记录状态 -->
     <view wx:else class="empty-record">
       <view class="empty-record-icon">
-        <text class="icon-fork">🍴</text>
+        <i class="mgc_fork_spoon_line icon-fork"></i>
       </view>
       <view class="empty-record-text">
         <text class="empty-title">记录你的美食之旅</text>
@@ -133,19 +133,19 @@
     <view class="action-main">
       <!-- 想去按钮 -->
       <view class="action-btn {{isLiked ? 'liked' : ''}}" bindtap="onToggleLike">
-        <text class="action-icon">{{isLiked ? '❤️' : '🤍'}}</text>
+        <i class="{{isLiked ? 'mgc_heart_fill' : 'mgc_heart_line'}} action-icon"></i>
         <text class="action-text">{{isLiked ? '已添加想去' : '想去'}}</text>
       </view>
       
       <!-- 记录按钮 -->
       <view class="action-btn {{recordData ? 'checked' : ''}}" bindtap="onToggleRecord">
-        <text class="action-icon">{{recordData ? '✅' : '🍴'}}</text>
+        <i class="{{recordData ? 'mgc_check_circle_fill' : 'mgc_fork_spoon_line'}} action-icon"></i>
         <text class="action-text">{{recordData ? '已到访' : '到访'}}</text>
       </view>
       
       <!-- 导航按钮 -->
       <view class="action-btn primary" bindtap="onNavigate">
-        <text class="action-icon">🧭</text>
+        <i class="mgc_send_plane_line action-icon"></i>
         <text class="action-text">导航</text>
       </view>
     </view>
