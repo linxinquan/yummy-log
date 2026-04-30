@@ -1,10 +1,17 @@
 /* ================================================
-  觅食图 · 店铺详情页  (Refactored to Design System)
+  觅食图 · 店铺详情页  v4.0 青绿色系
   ================================================ */
+
+page {
+  --primary: #00D9C0;
+  --primary-dark: #00B5A6;
+  --primary-light: #E8FAF8;
+  --primary-bg: #F0F9F8;
+}
 
 .container {
   min-height: 100vh;
-  background: var(--background);
+  background: #F0F9F8;
   padding-bottom: 160rpx;
 }
 
@@ -12,7 +19,7 @@
 .cover {
   width: 100%;
   height: 480rpx;
-  background: var(--primary-light);
+  background: #e0f7f5;
   position: relative;
 }
 
@@ -25,7 +32,7 @@
 .cover-fallback {
   width: 100%;
   height: 100%;
-  background: var(--primary);
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,11 +46,11 @@
 .cover-back {
   position: absolute;
   top: env(safe-area-inset-top);
-  left: var(--space-md);
+  left: 24rpx;
   width: 72rpx;
   height: 72rpx;
   background: rgba(0,0,0,0.35);
-  border-radius: var(--radius-full);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -53,86 +60,86 @@
 
 /* ─── Content ─────────────────────────────── */
 .content {
-  padding: 0 var(--space-md);
+  padding: 0 24rpx;
 }
 
 /* 店铺基本信息卡片 */
 .shop-card {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 28rpx;
   margin-top: -40rpx;
-  margin-bottom: var(--space-md);
-  box-shadow: var(--shadow-sm);
+  margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,217,192,0.10);
   position: relative;
   z-index: 2;
-  border: 1rpx solid var(--border);
+  border: 1rpx solid rgba(0,217,192,0.06);
 }
 
 .shop-emoji {
   font-size: 80rpx;
-  margin-bottom: var(--space-sm);
+  margin-bottom: 12rpx;
 }
 
 .shop-name {
   font-size: 40rpx;
-  
-  color: var(--text-primary);
-  margin-bottom: var(--space-sm);
+  font-weight: 900;
+  color: #1A1A2E;
+  margin-bottom: 12rpx;
   letter-spacing: -1rpx;
 }
 
 .shop-meta {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-lg);
+  gap: 16rpx;
+  margin-bottom: 20rpx;
 }
 
 .shop-rating {
   font-size: 32rpx;
-  color: var(--warning);
-  
+  color: #FF8B7E;
+  font-weight: 800;
 }
 
 .shop-price {
   font-size: 28rpx;
-  color: var(--text-secondary);
-  
+  color: #6B7280;
+  font-weight: 500;
 }
 
 .shop-category {
   font-size: 24rpx;
-  background: var(--background);
-  color: var(--primary-dark);
-  padding: 4rpx var(--space-md);
-  border-radius: var(--radius-full);
-  
+  background: #F0F9F8;
+  color: #00B5A6;
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+  font-weight: 600;
 }
 
 /* 标签 */
 .shop-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
+  gap: 10rpx;
+  margin-bottom: 20rpx;
 }
 
 .tag {
   padding: 6rpx 18rpx;
-  border-radius: var(--radius-full);
+  border-radius: 999rpx;
   font-size: 24rpx;
-  
-  background: rgba(224,82,82,0.1);
-  color: var(--danger);
+  font-weight: 500;
+  background: #FFF5F4;
+  color: #FF8B7E;
 }
 
 /* 地址和营业时间 */
 .info-row {
   display: flex;
   align-items: flex-start;
-  padding: var(--space-md) 0;
-  border-top: 1rpx solid var(--divider);
+  padding: 16rpx 0;
+  border-top: 1rpx solid #E5E7EB;
 }
 
 .info-icon {
@@ -145,34 +152,34 @@
 .info-text {
   flex: 1;
   font-size: 28rpx;
-  color: var(--text-primary);
+  color: #374151;
   line-height: 1.5;
 }
 
 .info-arrow {
   font-size: 28rpx;
-  color: var(--text-disabled);
+  color: #D1D5DB;
   flex-shrink: 0;
 }
 
 /* ─── Section ─────────────────────────────── */
 .section {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  padding: var(--space-lg);
-  margin-bottom: var(--space-md);
-  box-shadow: var(--shadow-xs);
-  border: 1rpx solid var(--border);
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  margin-bottom: 16rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,217,192,0.06);
+  border: 1rpx solid rgba(0,217,192,0.06);
 }
 
 .section-title {
   font-size: 32rpx;
-  
-  color: var(--text-primary);
-  margin-bottom: var(--space-lg);
+  font-weight: 800;
+  color: #1A1A2E;
+  margin-bottom: 20rpx;
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 10rpx;
 }
 
 .section-icon {
@@ -188,16 +195,16 @@
 .recommend-item {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md);
-  background: var(--background);
-  border-radius: var(--radius-md);
+  gap: 16rpx;
+  padding: 16rpx;
+  background: #F0F9F8;
+  border-radius: 12rpx;
 }
 
 .recommend-rank {
   font-size: 28rpx;
-  
-  color: var(--primary-dark);
+  font-weight: 800;
+  color: #00B5A6;
   width: 40rpx;
   text-align: center;
   flex-shrink: 0;
@@ -206,14 +213,14 @@
 .recommend-name {
   flex: 1;
   font-size: 28rpx;
-  
-  color: var(--text-primary);
+  font-weight: 600;
+  color: #1A1A2E;
 }
 
 .recommend-price {
   font-size: 26rpx;
-  color: var(--danger);
-  
+  color: #FF8B7E;
+  font-weight: 600;
 }
 
 /* ─── Record Card (觅食记录) ──────────────────────── */
@@ -221,33 +228,33 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-lg);
+  margin-bottom: 20rpx;
 }
 
 .edit-record-btn {
   font-size: 26rpx;
-  color: var(--danger);
-  
+  color: #FF8B7E;
+  font-weight: 600;
 }
 
 .record-card {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
+  background: #ffffff;
+  border-radius: 20rpx;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  border: 1rpx solid var(--border);
+  box-shadow: 0 4rpx 20rpx rgba(0,217,192,0.08);
+  border: 1rpx solid rgba(0,217,192,0.06);
 }
 
 /* 记录内容区 */
 .record-body {
-  padding: var(--space-lg);
+  padding: 24rpx;
 }
 
 .record-rating {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  margin-bottom: var(--space-md);
+  gap: 16rpx;
+  margin-bottom: 16rpx;
 }
 
 .stars-row {
@@ -257,57 +264,57 @@
 
 .star-item {
   font-size: 36rpx;
-  color: var(--divider);
+  color: #E5E7EB;
   transition: all 0.2s;
 }
 
 .star-item.active {
-  color: var(--warning);
+  color: #FFB800;
 }
 
 .rating-text {
   font-size: 28rpx;
-  color: var(--danger);
-  
+  color: #FF8B7E;
+  font-weight: 700;
 }
 
 .record-content {
-  margin-bottom: var(--space-md);
+  margin-bottom: 16rpx;
 }
 
 .comment-text {
   font-size: 28rpx;
-  color: var(--text-secondary);
+  color: #374151;
   line-height: 1.6;
 }
 
 .record-meta {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 8rpx;
 }
 
 .meta-dot {
   width: 8rpx;
   height: 8rpx;
-  background: var(--primary);
+  background: #00D9C0;
   border-radius: 50%;
 }
 
 .meta-date {
   font-size: 24rpx;
-  color: var(--text-disabled);
+  color: #9CA3AF;
 }
 
 /* 记录卡片中的定位信息 */
 .record-location {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 8rpx;
   margin-bottom: 12rpx;
-  padding: 10rpx var(--space-md);
-  background: var(--background);
-  border-radius: var(--space-sm);
+  padding: 10rpx 16rpx;
+  background: #F0F9F8;
+  border-radius: 8rpx;
   width: fit-content;
 }
 
@@ -317,26 +324,26 @@
 
 .location-text-small {
   font-size: 24rpx;
-  color: var(--primary-dark);
+  color: #00B5A6;
 }
 
 /* 未记录状态 */
 .empty-record {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  padding: var(--space-xl);
-  box-shadow: var(--shadow-sm);
-  border: 2rpx dashed var(--border);
+  gap: 24rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,217,192,0.08);
+  border: 2rpx dashed rgba(0,217,192,0.25);
 }
 
 .empty-record-icon {
   width: 100rpx;
   height: 100rpx;
-  background: var(--primary);
-  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  border-radius: 24rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -356,23 +363,23 @@
 
 .empty-title {
   font-size: 30rpx;
-  
-  color: var(--text-primary);
+  font-weight: 700;
+  color: #1A1A2E;
 }
 
 .empty-desc {
   font-size: 26rpx;
-  color: var(--text-disabled);
+  color: #9CA3AF;
 }
 
 .empty-record-btn {
-  background: var(--primary);
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
   color: #ffffff;
   font-size: 28rpx;
-  
-  padding: var(--space-md) var(--space-xl);
-  border-radius: var(--radius-full);
-  box-shadow: var(--shadow-xs);
+  font-weight: 700;
+  padding: 16rpx 32rpx;
+  border-radius: 999rpx;
+  box-shadow: 0 4rpx 14rpx rgba(0,217,192,0.25);
 }
 
 /* ─── Bottom Bar ─────────────────────────── */
@@ -381,24 +388,23 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: var(--space-lg) var(--space-xl);
-  padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom));
-  background: var(--surface);
-  box-shadow: var(--shadow-lg);
+  padding: 20rpx 32rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.06);
   display: flex;
-  gap: var(--space-md);
-  z-index: 100;
+  gap: 16rpx;
 }
 
 .bottom-btn {
   flex: 1;
-  height: 88rpx; /* lg size 48px is 96rpx, maybe 88rpx is okay */
-  border-radius: var(--radius-full);
+  height: 88rpx;
+  border-radius: 44rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 30rpx;
-  
+  font-weight: 700;
   transition: all 0.18s;
 }
 
@@ -412,33 +418,33 @@
 }
 
 .bottom-btn.want {
-  background: var(--background);
-  color: var(--primary-dark);
+  background: #F0F9F8;
+  color: #00B5A6;
 }
 
 .bottom-btn.want.active {
-  background: var(--primary);
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
   color: #ffffff;
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 4rpx 14rpx rgba(0,217,192,0.30);
 }
 
 .bottom-btn.nav {
-  background: var(--primary);
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
   color: #ffffff;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 6rpx 20rpx rgba(0,217,192,0.35);
 }
 
 .bottom-btn.checkin {
-  background: var(--background);
+  background: var(--primary-bg);
   color: var(--primary-dark);
-  border: 1.5rpx solid var(--border);
+  border: 1.5rpx solid rgba(0,217,192,0.3);
 }
 
 .bottom-btn.checkin.active {
-  background: var(--primary);
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.25);
 }
 
 /* ─── Modal ──────────────────────────────── */
@@ -453,8 +459,8 @@
 .modal-content {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  background: var(--surface);
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: #ffffff;
+  border-radius: 24rpx 24rpx 0 0;
   max-height: 80vh;
   overflow-y: auto;
   z-index: 1000;
@@ -464,24 +470,24 @@
 .modal-handle {
   width: 72rpx;
   height: 6rpx;
-  background: var(--border);
-  border-radius: var(--radius-full);
+  background: #E5E7EB;
+  border-radius: 999rpx;
   margin: 18rpx auto 0;
 }
 
 .modal-title {
   font-size: 32rpx;
-  
-  color: var(--text-primary);
+  font-weight: 800;
+  color: #1A1A2E;
   text-align: center;
-  padding: var(--space-lg) var(--space-xl) var(--space-md);
+  padding: 24rpx 32rpx 16rpx;
 }
 
 .star-row {
   display: flex;
   justify-content: center;
-  gap: var(--space-md);
-  padding: var(--space-lg);
+  gap: 16rpx;
+  padding: 24rpx;
 }
 
 .star-btn {
@@ -496,36 +502,36 @@
 .modal-textarea {
   width: calc(100% - 48rpx);
   min-height: 160rpx;
-  background: var(--background);
-  border-radius: var(--radius-md);
-  padding: 20rpx var(--space-lg);
+  background: #F0F9F8;
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
   font-size: 28rpx;
-  color: var(--text-primary);
-  margin: 0 var(--space-lg) var(--space-lg);
+  color: #1A1A2E;
+  margin: 0 24rpx 24rpx;
   box-sizing: border-box;
-  border: 1.5rpx solid var(--divider);
+  border: 1.5rpx solid rgba(0,217,192,0.1);
 }
 
 .modal-submit {
   width: calc(100% - 48rpx);
   height: 88rpx;
-  background: var(--primary);
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
   color: #ffffff;
-  border-radius: var(--radius-full);
+  border-radius: 44rpx;
   font-size: 30rpx;
-  
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 var(--space-lg) var(--space-lg);
-  box-shadow: var(--shadow-sm);
+  margin: 0 24rpx 24rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0,217,192,0.35);
 }
 
 .modal-cancel {
   text-align: center;
   font-size: 28rpx;
-  color: var(--text-disabled);
-  padding: 0 var(--space-lg) var(--space-lg);
+  color: #9CA3AF;
+  padding: 0 24rpx 24rpx;
 }
 
 /* ─── 底部操作栏（详情页）─────────────────────────────── */
@@ -534,16 +540,16 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--surface);
-  padding: var(--space-md) var(--space-lg);
-  padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
-  box-shadow: var(--shadow-lg);
+  background: #ffffff;
+  padding: 16rpx 24rpx;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.06);
   z-index: 100;
 }
 
 .action-main {
   display: flex;
-  gap: var(--space-md);
+  gap: 16rpx;
 }
 
 .action-btn {
@@ -551,36 +557,36 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
-  padding: 20rpx var(--space-md);
-  border-radius: var(--radius-full);
+  gap: 8rpx;
+  padding: 20rpx 16rpx;
+  border-radius: 40rpx;
   font-size: 28rpx;
-  
+  font-weight: 600;
   transition: all 0.18s;
-  background: var(--background);
+  background: var(--primary-bg);
   color: var(--primary-dark);
-  border: 1.5rpx solid var(--border);
+  border: 1.5rpx solid rgba(0,217,192,0.25);
 }
 
 .action-btn.liked {
-  background: var(--danger);
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.25);
 }
 
 .action-btn.checked {
-  background: var(--success);
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.25);
 }
 
 .action-btn.primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.25);
   flex: 1.2;
 }
 
@@ -591,5 +597,5 @@
 
 .action-text {
   font-size: 26rpx;
-  
+  font-weight: 600;
 }

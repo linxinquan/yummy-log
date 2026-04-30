@@ -1,4 +1,4 @@
-<!-- pages/checkin/checkin.wxml - 采集 v6 · 美食/景点采集卡片 · 基于 Design System v1.0 -->
+<!-- pages/checkin/checkin.wxml - 采集 v6 · 美食/景点采集卡片 · 精炼现代风 -->
 
 <!-- WXS -->
 <wxs module="utils">
@@ -10,10 +10,10 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
   <!-- ══ 导航栏 ══ -->
   <view class="nav-bar">
     <view class="nav-back" bindtap="onBack">‹</view>
-    <text class="nav-title heading-3">{{type === 'spot' ? '记录景点' : '记录美食'}}</text>
+    <text class="nav-title">{{type === 'spot' ? '记录景点' : '记录美食'}}</text>
     <view class="nav-album-btn" bindtap="onGoCollection">
-      <text class="nav-album-icon caption">✦</text>
-      <text class="nav-album-text caption">采集本</text>
+      <text class="nav-album-icon">✦</text>
+      <text class="nav-album-text">采集本</text>
     </view>
   </view>
 
@@ -25,8 +25,8 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
     <!-- 引导语 -->
     <view class="guide-tip">
       <view class="gt-dot"></view>
-      <text class="gt-title heading-2">{{type === 'spot' ? '定格城市足迹' : '记录舌尖美味'}}</text>
-      <text class="gt-sub body-sm">{{type === 'spot' ? '拍下这一刻的城市风景' : '一张照片，留住探店的味道'}}</text>
+      <text class="gt-title">{{type === 'spot' ? '定格城市足迹' : '记录舌尖美味'}}</text>
+      <text class="gt-sub">{{type === 'spot' ? '拍下这一刻的城市风景' : '一张照片，留住探店的味道'}}</text>
     </view>
 
     <!-- 拍照卡片 -->
@@ -34,22 +34,22 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
       <view wx:if="{{photoPath}}" class="pc-preview">
         <image class="pc-photo" src="{{photoPath}}" mode="aspectFill" />
         <view class="pc-retake-btn" catchtap="onChoosePhoto">
-          <text class="caption">重新拍摄</text>
+          <text>重新拍摄</text>
         </view>
       </view>
       <view wx:else class="pc-empty">
         <view class="pce-camera">
           <text class="pce-icon">📷</text>
         </view>
-        <text class="pce-title heading-3">点击拍照</text>
-        <text class="pce-sub caption">或从相册选择</text>
+        <text class="pce-title">点击拍照</text>
+        <text class="pce-sub">或从相册选择</text>
       </view>
     </view>
 
     <!-- 下一步 -->
     <view class="btn-primary {{photoPath ? 'ready' : ''}}" bindtap="onNextStep">
-      <text class="btn-primary-text body">{{photoPath ? '下一步 · AI 识别位置' : '请先拍照'}}</text>
-      <text class="btn-primary-arrow body" wx:if="{{photoPath}}">→</text>
+      <text class="btn-primary-text">{{photoPath ? '下一步 · AI 识别位置' : '请先拍照'}}</text>
+      <text class="btn-primary-arrow" wx:if="{{photoPath}}">→</text>
     </view>
   </view>
 
@@ -59,7 +59,7 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
   <view class="section" wx:if="{{step === 2}}">
 
     <!-- 主卡片 -->
-    <view class="main-card card">
+    <view class="main-card">
 
       <!-- 照片 + 日期顶栏 -->
       <view class="mc-top">
@@ -69,31 +69,31 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
         <view class="mct-meta">
           <view class="mct-type-badge {{type}}">
             <text class="mct-type-dot"></text>
-            <text class="mct-type-label caption">{{type === 'spot' ? '景点' : '美食'}}</text>
+            <text class="mct-type-label">{{type === 'spot' ? '景点' : '美食'}}</text>
           </view>
-          <text class="mct-date caption">{{dateInfo.mm}}.{{dateInfo.dd}} · {{dateInfo.yyyy}}</text>
+          <text class="mct-date">{{dateInfo.mm}}.{{dateInfo.dd}} · {{dateInfo.yyyy}}</text>
         </view>
       </view>
 
       <!-- 精确位置区 -->
       <view class="location-block">
         <view class="lb-icon-wrap {{type}}">
-          <i class="mgc_location_line lb-icon caption"></i>
+          <text class="lb-icon">📍</text>
         </view>
         <view class="lb-info">
           <!-- 加载中 -->
           <view class="lb-loading" wx:if="{{locationLoading}}">
-            <text class="lb-loading-text caption">正在定位...</text>
+            <text class="lb-loading-text">正在定位...</text>
             <view class="lb-spinner"></view>
           </view>
           <!-- 已定位 -->
           <view class="lb-result" wx:else>
             <!-- 地点名称（可编辑） -->
             <view class="lb-name-row">
-              <text class="lb-name heading-1 {{spotName ? '' : 'placeholder'}}"
+              <text class="lb-name {{spotName ? '' : 'placeholder'}}"
                     wx:if="{{!editingName}}"
                     bindtap="onToggleNameEdit">{{spotName || '点击设置地点名称'}}</text>
-              <input class="lb-name-input heading-1"
+              <input class="lb-name-input"
                      wx:else
                      value="{{spotName}}"
                      bindinput="onNameInput"
@@ -101,14 +101,14 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
                      focus
                      placeholder="输入地点名称"
                      maxlength="30" />
-              <view class="lb-edit-btn caption" bindtap="onToggleNameEdit" wx:if="{{!editingName}}">✎</view>
+              <view class="lb-edit-btn" bindtap="onToggleNameEdit" wx:if="{{!editingName}}">✎</view>
             </view>
             <!-- 详细地址（可编辑） -->
             <view class="lb-addr-row">
-              <text class="lb-addr caption {{address ? '' : 'dim'}}"
+              <text class="lb-addr {{address ? '' : 'dim'}}"
                     wx:if="{{!editingAddr}}"
                     bindtap="onToggleAddrEdit">{{address || '详细地址（点击补充）'}}</text>
-              <input class="lb-addr-input caption"
+              <input class="lb-addr-input"
                      wx:else
                      value="{{address}}"
                      bindinput="onAddrInput"
@@ -121,7 +121,7 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
         </view>
         <!-- 刷新按钮 -->
         <view class="lb-refresh {{type}}" bindtap="onGetLocation">
-          <text class="caption">⟳</text>
+          <text>⟳</text>
         </view>
       </view>
 
@@ -131,37 +131,37 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
 
         <!-- 未生成 -->
         <view class="aib-empty {{generatingTitle || generatingDesc ? 'hidden' : ''}}" bindtap="onGenerate">
-          <view class="aibe-icon {{type}} caption">✦</view>
+          <view class="aibe-icon {{type}}">✦</view>
           <view class="aibe-texts">
-            <text class="aibe-title body">生成打卡内容</text>
-            <text class="aibe-hint caption">AI 将根据位置和美食特色生成描述文案</text>
+            <text class="aibe-title">生成打卡内容</text>
+            <text class="aibe-hint">AI 将根据位置和美食特色生成描述文案</text>
           </view>
-          <view class="aibe-arrow {{type}} caption">→</view>
+          <view class="aibe-arrow {{type}}">→</view>
         </view>
 
         <!-- 生成中：打字动画 -->
         <view class="aib-generating {{(!generatingTitle && !generatingDesc) ? 'hidden' : ''}}">
           <view class="aibg-header">
             <view class="aibg-badge {{type}}">
-              <text class="aibg-badge-text caption">AI 生成中</text>
+              <text class="aibg-badge-text">AI 生成中</text>
             </view>
           </view>
-          <text class="aibg-title heading-2">{{generatingTitle}}<text class="cursor {{type}}">|</text></text>
-          <text class="aibg-desc body-sm" wx:if="{{generatingDesc}}">{{generatingDesc}}<text class="cursor {{type}}">|</text></text>
+          <text class="aibg-title">{{generatingTitle}}<text class="cursor {{type}}">|</text></text>
+          <text class="aibg-desc" wx:if="{{generatingDesc}}">{{generatingDesc}}<text class="cursor {{type}}">|</text></text>
         </view>
 
         <!-- 已生成：展示文案 -->
         <view class="aib-result {{(title && !generatingTitle && !generatingDesc) ? '' : 'hidden'}}" wx:if="{{title}}">
           <view class="aibr-header">
             <view class="aibr-badge {{type}}">
-              <text class="aibr-badge-text caption">AI 打卡文案</text>
+              <text class="aibr-badge-text">AI 打卡文案</text>
             </view>
-            <view class="aibr-retry {{type}} caption" bindtap="onGenerate">
+            <view class="aibr-retry {{type}}" bindtap="onGenerate">
               <text>重新生成</text>
             </view>
           </view>
-          <text class="aibr-title heading-2">{{title}}</text>
-          <text class="aibr-desc body-sm">{{description}}</text>
+          <text class="aibr-title">{{title}}</text>
+          <text class="aibr-desc">{{description}}</text>
         </view>
       </view>
 
@@ -169,15 +169,15 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
 
     <!-- 底部按钮 -->
     <view class="btn-row">
-      <view class="btn-ghost body" bindtap="onPrevStep">← 返回</view>
+      <view class="btn-ghost" bindtap="onPrevStep">← 返回</view>
       <view class="btn-primary {{generatingTitle || generatingDesc ? 'generating' : ''}}" bindtap="onGenerate">
-        <text class="btn-primary-text body">{{generatingTitle || generatingDesc ? '生成中...' : '生成打卡内容'}}</text>
+        <text class="btn-primary-text">{{generatingTitle || generatingDesc ? '生成中...' : '生成打卡内容'}}</text>
       </view>
     </view>
 
     <!-- 继续提示 -->
     <view class="continue-tip" wx:if="{{title && !generatingTitle && !generatingDesc}}">
-      <text class="ct-text caption">文案已生成，可直接点击「确认采集」保存这一刻</text>
+      <text class="ct-text">文案已生成，可直接点击「确认采集」保存这一刻</text>
     </view>
 
   </view>
@@ -188,18 +188,18 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
   <view class="section" wx:if="{{step === 3}}">
 
     <!-- 预览卡片 -->
-    <view class="preview-card card">
+    <view class="preview-card">
 
       <!-- 照片区：顶上大图 + 叠加层 -->
       <view class="pvc-photo-wrap" wx:if="{{photoPath}}">
         <image class="pvc-photo" src="{{photoPath}}" mode="aspectFill" />
         <!-- 类型标签：左上 -->
-        <view class="pvc-type-tag {{type}} caption">
+        <view class="pvc-type-tag {{type}}">
           <text class="pvc-type-dot"></text>
           {{type === 'spot' ? '景点' : '美食'}}
         </view>
         <!-- 附近美食：右下半透明条 -->
-        <view class="pvc-nearby caption" wx:if="{{nearbyFood}}">
+        <view class="pvc-nearby" wx:if="{{nearbyFood}}">
           <text>{{nearbyFood}}</text>
         </view>
       </view>
@@ -208,25 +208,25 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
       <view class="pvc-info">
         <!-- AI 标题：emoji + 主标题｜POI副标题 -->
         <view class="pvci-title-row" wx:if="{{title}}">
-          <i class="{{type === 'spot' ? 'mgc_scenery_line' : 'mgc_fork_spoon_line'}} pvci-emoji {{type}}"></i>
-          <text class="pvci-title-main heading-2">{{title}}</text>
+          <text class="pvci-emoji {{type}}">{{type === 'spot' ? '🏛' : '🍜'}}</text>
+          <text class="pvci-title-main">{{title}}</text>
         </view>
         <view class="pvci-subtitle-row">
-          <text class="pvci-title-sub body-sm">{{spotName || '未知地点'}}</text>
+          <text class="pvci-title-sub">{{spotName || '未知地点'}}</text>
         </view>
 
         <!-- AI 描述：单独一行 + badge左上 -->
         <view class="pvci-ai" wx:if="{{description}}">
           <view class="pvia-badge {{type}}">
-            <text class="pvia-badge-text caption">AI</text>
+            <text class="pvia-badge-text">AI</text>
           </view>
-          <text class="pvia-text body-sm">{{description}}</text>
+          <text class="pvia-text">{{description}}</text>
         </view>
 
         <!-- 日期：右下角竖排 -->
         <view class="pvci-date">
-          <text class="pvic-month body-sm">{{dateInfo.mm}}/{{dateInfo.dd}}</text>
-          <text class="pvic-year caption">{{dateInfo.yyyy}}</text>
+          <text class="pvic-month">{{dateInfo.mm}}/{{dateInfo.dd}}</text>
+          <text class="pvic-year">{{dateInfo.yyyy}}</text>
         </view>
       </view>
 
@@ -237,12 +237,12 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
     <!-- 确认按钮 -->
     <view class="btn-primary main {{saving ? 'loading' : ''}}" bindtap="onSaveCheckin">
       <view wx:if="{{!saving}}" class="bpm-inner">
-        <text class="bpm-icon heading-3">✦</text>
-        <text class="bpm-text body">确认采集</text>
+        <text class="bpm-icon">✦</text>
+        <text class="bpm-text">确认采集</text>
       </view>
-      <text wx:else class="bpm-loading body">保存中...</text>
+      <text wx:else class="bpm-loading">保存中...</text>
     </view>
-    <view class="btn-ghost body" bindtap="onPrevStep">← 重新编辑</view>
+    <view class="btn-ghost" bindtap="onPrevStep">← 重新编辑</view>
 
   </view>
 
@@ -254,54 +254,54 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
     <!-- 成功动画 -->
     <view class="success-hero">
       <view class="sh-ring"></view>
-      <view class="sh-icon {{type}} heading-2">✦</view>
-      <text class="sh-title display">采集成功</text>
-      <text class="sh-sub caption">已收入你的旅行足迹</text>
+      <view class="sh-icon {{type}}">✦</view>
+      <text class="sh-title">采集成功</text>
+      <text class="sh-sub">已收入你的旅行足迹</text>
     </view>
 
     <!-- 打卡卡片 -->
-    <view class="preview-card card">
+    <view class="preview-card">
       <view class="pvc-photo-wrap" wx:if="{{photoPath}}">
         <image class="pvc-photo" src="{{photoPath}}" mode="aspectFill" />
-        <view class="pvc-type-tag {{type}} caption">
+        <view class="pvc-type-tag {{type}}">
           <text class="pvc-type-dot"></text>
           {{type === 'spot' ? '景点' : '美食'}}
         </view>
-        <view class="pvc-nearby caption" wx:if="{{nearbyFood}}">
+        <view class="pvc-nearby" wx:if="{{nearbyFood}}">
           <text>{{nearbyFood}}</text>
         </view>
       </view>
       <view class="pvc-info">
         <!-- AI 标题：emoji + 主标题｜POI副标题 -->
         <view class="pvci-title-row" wx:if="{{title}}">
-          <i class="{{type === 'spot' ? 'mgc_scenery_line' : 'mgc_fork_spoon_line'}} pvci-emoji {{type}}"></i>
-          <text class="pvci-title-main heading-2">{{title}}</text>
+          <text class="pvci-emoji {{type}}">{{type === 'spot' ? '🏛' : '🍜'}}</text>
+          <text class="pvci-title-main">{{title}}</text>
         </view>
         <view class="pvci-subtitle-row">
-          <text class="pvci-title-sub body-sm">{{spotName || '未知地点'}}</text>
+          <text class="pvci-title-sub">{{spotName || '未知地点'}}</text>
         </view>
         <!-- AI 描述：单独一行 + badge左上 -->
         <view class="pvci-ai" wx:if="{{description}}">
           <view class="pvia-badge {{type}}">
-            <text class="pvia-badge-text caption">AI</text>
+            <text class="pvia-badge-text">AI</text>
           </view>
-          <text class="pvia-text body-sm">{{description}}</text>
+          <text class="pvia-text">{{description}}</text>
         </view>
         <!-- 日期：右下角竖排 -->
         <view class="pvci-date">
-          <text class="pvic-month body-sm">{{dateInfo.mm}}/{{dateInfo.dd}}</text>
-          <text class="pvic-year caption">{{dateInfo.yyyy}}</text>
+          <text class="pvic-month">{{dateInfo.mm}}/{{dateInfo.dd}}</text>
+          <text class="pvic-year">{{dateInfo.yyyy}}</text>
         </view>
       </view>
     </view>
 
     <!-- 足迹地图 -->
-    <view class="map-section card">
+    <view class="map-section">
       <view class="ms-header">
-        <text class="ms-title body">足迹地图</text>
+        <text class="ms-title">足迹地图</text>
         <view class="ms-toggle">
-          <view class="mst-btn caption {{mapView === 'map' ? 'active' : ''}}" data-view="map" bindtap="onSwitchView">地图</view>
-          <view class="mst-btn caption {{mapView === 'list' ? 'active' : ''}}" data-view="list" bindtap="onSwitchView">列表</view>
+          <view class="mst-btn {{mapView === 'map' ? 'active' : ''}}" data-view="map" bindtap="onSwitchView">地图</view>
+          <view class="mst-btn {{mapView === 'list' ? 'active' : ''}}" data-view="list" bindtap="onSwitchView">列表</view>
         </view>
       </view>
 
@@ -310,29 +310,29 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
         <map class="ms-map" latitude="{{mapCenter.latitude}}" longitude="{{mapCenter.longitude}}"
              scale="{{mapScale}}" markers="{{allMarkers}}" show-location enable-zoom />
         <view class="ms-stat-badge">
-          <text class="mssb-num heading-2">{{allMarkers.length}}</text>
-          <text class="mssb-label caption">个足迹</text>
+          <text class="mssb-num">{{allMarkers.length}}</text>
+          <text class="mssb-label">个足迹</text>
         </view>
       </view>
 
       <!-- 列表视图 -->
       <view class="ms-list" wx:if="{{mapView === 'list'}}">
-        <view class="msl-empty caption" wx:if="{{recentCheckins.length === 0}}">暂无记录</view>
+        <view class="msl-empty" wx:if="{{recentCheckins.length === 0}}">暂无记录</view>
         <view class="msl-item" wx:for="{{recentCheckins}}" wx:key="id">
           <view class="msli-dot {{item.type === 'spot' ? 'spot' : 'food'}}"></view>
           <view class="msli-info">
-            <text class="msli-name body">{{item.spotName || '未知地点'}}</text>
-            <text class="msli-meta caption">{{item.type === 'spot' ? '景点' : '美食'}} · {{item.dateStr || ''}}</text>
+            <text class="msli-name">{{item.spotName || '未知地点'}}</text>
+            <text class="msli-meta">{{item.type === 'spot' ? '景点' : '美食'}} · {{item.dateStr || ''}}</text>
           </view>
-          <view class="msli-icon {{item.type}} caption">{{item.type === 'spot' ? '🏛' : '🍽'}}</view>
+          <view class="msli-icon {{item.type}}">{{item.type === 'spot' ? '🏛' : '🍽'}}</view>
         </view>
       </view>
     </view>
 
     <!-- 操作按钮 -->
     <view class="btn-row success-actions">
-      <view class="btn-ghost body" bindtap="onReset">继续采集</view>
-      <view class="btn-primary body" bindtap="onGoCollection">
+      <view class="btn-ghost" bindtap="onReset">继续采集</view>
+      <view class="btn-primary" bindtap="onGoCollection">
         <text class="btn-primary-text">查看采集本 →</text>
       </view>
     </view>

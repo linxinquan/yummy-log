@@ -1,0 +1,482 @@
+/* 觅食图 V2 - 景点页样式 */
+
+/* ── 全局 ── */
+.container {
+  background: #F0F9F8;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 32rpx 16rpx;
+  background: #ffffff;
+  box-shadow: 0 2rpx 12rpx rgba(0,217,192,0.08);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.logo-img {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 10rpx;
+}
+
+.logo-text {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #00D9C0;
+}
+
+.page-sub-title {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 4rpx 14rpx;
+  background: #E8FAF8;
+  border-radius: 20rpx;
+}
+
+.sub-title-text {
+  font-size: 22rpx;
+  color: #00B5A6;
+  font-weight: 600;
+}
+
+.sub-title-count {
+  font-size: 20rpx;
+  color: #00B5A6;
+  opacity: 0.7;
+}
+
+/* ── 视图切换 ── */
+.view-toggle {
+  display: flex;
+  background: #F0F9F8;
+  border-radius: 16rpx;
+  padding: 4rpx;
+  gap: 4rpx;
+}
+
+.toggle-btn {
+  padding: 10rpx 18rpx;
+  border-radius: 12rpx;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active {
+  background: #00D9C0;
+}
+
+.toggle-icon {
+  font-size: 28rpx;
+}
+
+/* ── 分类筛选 ── */
+.category-scroll {
+  background: #ffffff;
+  padding: 0 16rpx;
+  white-space: nowrap;
+}
+
+.category-list {
+  display: flex;
+  gap: 12rpx;
+  padding: 16rpx 8rpx;
+}
+
+.cat-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 10rpx 24rpx;
+  border-radius: 32rpx;
+  background: #F0F9F8;
+  color: #6B7280;
+  font-size: 24rpx;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 2rpx solid transparent;
+  transition: all 0.2s;
+}
+
+.cat-pill.active {
+  background: #00D9C0;
+  color: #ffffff;
+  font-weight: 600;
+  border-color: #00D9C0;
+}
+
+/* ── 地图视图 ── */
+.map-view {
+  position: relative;
+  flex: 1;
+}
+
+.spot-map {
+  width: 100%;
+  height: 100vh;
+}
+
+/* 底部浮动卡片 */
+.float-card {
+  position: fixed;
+  bottom: 200rpx;
+  left: 24rpx;
+  right: 24rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.15);
+  overflow: hidden;
+  z-index: 100;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40rpx); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+.float-card-inner {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx;
+}
+
+.float-img {
+  width: 140rpx;
+  height: 120rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+}
+
+.float-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.float-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1F2937;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.float-meta {
+  display: flex;
+  gap: 10rpx;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.float-cat {
+  font-size: 20rpx;
+  color: #6B7280;
+  background: #F3F4F6;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.float-rating {
+  font-size: 22rpx;
+  color: #FFB800;
+  font-weight: 600;
+}
+
+.float-free.free {
+  font-size: 20rpx;
+  color: #52C41A;
+  background: #F6FFED;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.float-free.paid {
+  font-size: 20rpx;
+  color: #FA8C16;
+  background: #FFF7E6;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.float-desc {
+  font-size: 22rpx;
+  color: #6B7280;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.float-close {
+  position: absolute;
+  top: 16rpx;
+  right: 20rpx;
+  font-size: 28rpx;
+  color: #9CA3AF;
+  padding: 8rpx;
+}
+
+/* ── 列表视图 ── */
+.spot-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.list-banner {
+  margin: 20rpx 24rpx 16rpx;
+  padding: 20rpx 24rpx;
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
+  border-radius: 20rpx;
+}
+
+.banner-text {
+  font-size: 26rpx;
+  color: #ffffff;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+/* 景点卡片 */
+.spot-card {
+  margin: 0 24rpx 24rpx;
+  background: #ffffff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.06);
+  transition: transform 0.2s;
+}
+
+.spot-card:active {
+  transform: scale(0.98);
+}
+
+/* 图片区域 */
+.card-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 280rpx;
+}
+
+.card-img {
+  width: 100%;
+  height: 100%;
+}
+
+.card-cat-badge {
+  position: absolute;
+  top: 16rpx;
+  left: 16rpx;
+  background: rgba(0,0,0,0.55);
+  color: #ffffff;
+  font-size: 20rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+  backdrop-filter: blur(6px);
+}
+
+.card-free-badge {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  font-size: 20rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+}
+
+.card-free-badge.free {
+  background: rgba(82,196,26,0.85);
+  color: #ffffff;
+}
+
+.card-free-badge.paid {
+  background: rgba(250,140,22,0.85);
+  color: #ffffff;
+}
+
+/* 信息区域 */
+.card-info {
+  padding: 20rpx 24rpx 16rpx;
+  position: relative;
+}
+
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.card-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.card-rating {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.rating-star {
+  font-size: 24rpx;
+}
+
+.rating-num {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #FFB800;
+}
+
+/* 标签行 */
+.tags-scroll {
+  margin-bottom: 12rpx;
+  white-space: nowrap;
+}
+
+.tags-row {
+  display: flex;
+  gap: 8rpx;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 20rpx;
+  color: #00B5A6;
+  background: #E8FAF8;
+  padding: 6rpx 14rpx;
+  border-radius: 10rpx;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 简介 */
+.card-desc {
+  font-size: 24rpx;
+  color: #6B7280;
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 16rpx;
+}
+
+/* 底部行 */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12rpx;
+  border-top: 1rpx solid #F3F4F6;
+}
+
+.footer-hours {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.hours-icon {
+  font-size: 20rpx;
+}
+
+.hours-text {
+  font-size: 20rpx;
+  color: #9CA3AF;
+}
+
+.food-btn {
+  font-size: 22rpx;
+  color: #FF8B7E;
+  background: #FFF0EF;
+  padding: 8rpx 20rpx;
+  border-radius: 16rpx;
+  font-weight: 600;
+}
+
+.list-bottom {
+  height: 120rpx;
+}
+
+/* ── 想去按钮 ── */
+.want-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48rpx;
+  height: 48rpx;
+  margin-left: 8rpx;
+}
+
+.want-btn text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.want-btn.wanted text {
+  color: #FF1744;
+}
+
+/* ── 想去清单浮动按钮 ── */
+.wantgo-float-btn {
+  position: fixed;
+  right: 24rpx;
+  bottom: calc(100rpx + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100rpx;
+  height: 100rpx;
+  background: linear-gradient(135deg, #FF8B7E 0%, #FF6B6B 100%);
+  border-radius: 50%;
+  box-shadow: 0 6rpx 24rpx rgba(255,107,107,0.4);
+  z-index: 90;
+}
+
+.wantgo-float-icon {
+  font-size: 36rpx;
+  line-height: 1;
+}
+
+.wantgo-float-label {
+  font-size: 20rpx;
+  color: #ffffff;
+  font-weight: 600;
+  margin-top: 2rpx;
+}
+
+.wantgo-badge {
+  position: absolute;
+  top: -6rpx;
+  right: -6rpx;
+  min-width: 36rpx;
+  height: 36rpx;
+  background: #FF5722;
+  color: #ffffff;
+  font-size: 20rpx;
+  font-weight: 700;
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8rpx;
+}

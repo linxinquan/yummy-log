@@ -1,35 +1,35 @@
-<!-- pages/collection/collection.wxml - 我的采集本 (基于 Design System v1.0) -->
-<view class="container">
+<!-- pages/collection/collection.wxml -->
+<view class="page">
 
   <!-- 顶部统计横幅 -->
   <view class="hero-bar">
-    <view class="hero-title display">我的采集本</view>
+    <view class="hero-title">我的采集本</view>
     <view class="hero-stats">
       <view class="hs-item">
-        <text class="hs-num display">{{stats.totalCount}}</text>
-        <text class="hs-label caption">采集</text>
+        <text class="hs-num">{{stats.totalCount}}</text>
+        <text class="hs-label">采集</text>
       </view>
-      <view class="hs-sep body">·</view>
+      <view class="hs-sep">·</view>
       <view class="hs-item">
-        <text class="hs-num display">{{stats.cityCount}}</text>
-        <text class="hs-label caption">城市</text>
+        <text class="hs-num">{{stats.cityCount}}</text>
+        <text class="hs-label">城市</text>
       </view>
-      <view class="hs-sep body">·</view>
+      <view class="hs-sep">·</view>
       <view class="hs-item">
-        <text class="hs-num display">{{stats.spotCount}}</text>
-        <text class="hs-label caption">景点</text>
+        <text class="hs-num">{{stats.spotCount}}</text>
+        <text class="hs-label">景点</text>
       </view>
     </view>
   </view>
 
   <!-- 视图切换 Tab -->
   <view class="view-tabs">
-    <view class="vt-item body-sm {{viewMode === 'list' ? 'active' : ''}}" bindtap="onSwitchView" data-view="list">
-      <i class="mgc_list_check_line vt-icon heading-3"></i>
+    <view class="vt-item {{viewMode === 'list' ? 'active' : ''}}" bindtap="onSwitchView" data-view="list">
+      <text class="vt-icon">📋</text>
       <text>列表</text>
     </view>
-    <view class="vt-item body-sm {{viewMode === 'map' ? 'active' : ''}}" bindtap="onSwitchView" data-view="map">
-      <i class="mgc_map_line vt-icon heading-3"></i>
+    <view class="vt-item {{viewMode === 'map' ? 'active' : ''}}" bindtap="onSwitchView" data-view="map">
+      <text class="vt-icon">🗺️</text>
       <text>地图</text>
     </view>
   </view>
@@ -37,28 +37,28 @@
   <!-- 列表视图 -->
   <block wx:if="{{viewMode === 'list'}}">
     <view class="empty-state" wx:if="{{checkins.length === 0}}">
-      <i class="mgc_ticket_line empty-icon display"></i>
-      <text class="empty-title heading-2">采集本还是空的</text>
-      <text class="empty-desc body-sm">去拍下你的第一张采集邮票吧</text>
-      <button class="btn btn-primary" bindtap="onGoCheckinFood"><i class="mgc_fork_spoon_line"></i> 美食打卡 →</button>
-      <button class="btn btn-secondary" bindtap="onGoCheckinSpot"><i class="mgc_scenery_line"></i> 景点打卡 →</button>
+      <text class="empty-icon">🎫</text>
+      <text class="empty-title">采集本还是空的</text>
+      <text class="empty-desc">去拍下你的第一张采集邮票吧</text>
+      <view class="empty-btn" bindtap="onGoCheckinFood">🍜 美食打卡 →</view>
+      <view class="empty-btn secondary" bindtap="onGoCheckinSpot">🏞️ 景点打卡 →</view>
     </view>
 
     <view class="stamps-grid" wx:else>
       <view class="stamp-item" wx:for="{{checkins}}" wx:key="id" bindtap="onCheckinTap" data-id="{{item.id}}">
-        <view class="stamp-card card">
+        <view class="stamp-card">
           <!-- 类型标签 -->
-          <view class="stamp-type-tag caption"><i class="{{item.typeIcon}}"></i> {{item.typeLabel}}</view>
+          <view class="stamp-type-tag">{{item.typeIcon}} {{item.typeLabel}}</view>
           <view class="stamp-photo-wrap">
             <image class="stamp-photo" src="{{item.photoPath}}" mode="aspectFill" />
             <view class="stamp-postmark">
-              <text class="pm-date caption">{{item.dateStr}}</text>
+              <text class="pm-date">{{item.dateStr}}</text>
             </view>
           </view>
           <view class="stamp-info">
             <!-- 优先显示店名/景点名，再显示地址 -->
-            <text class="stamp-name body">{{item.spotName || item.shortAddr || '未知地点'}}</text>
-            <text class="stamp-addr caption">{{item.shortAddr}}</text>
+            <text class="stamp-name">{{item.spotName || item.shortAddr || '未知地点'}}</text>
+            <text class="stamp-addr">{{item.shortAddr}}</text>
           </view>
         </view>
       </view>
@@ -80,21 +80,21 @@
       />
     </view>
     <scroll-view class="map-list" scroll-x enable-flex>
-      <view class="map-card card" wx:for="{{checkins}}" wx:key="id" bindtap="onCheckinTap" data-id="{{item.id}}">
+      <view class="map-card" wx:for="{{checkins}}" wx:key="id" bindtap="onCheckinTap" data-id="{{item.id}}">
         <image class="mc-photo" src="{{item.photoPath}}" mode="aspectFill" />
         <view class="mc-info">
-          <view class="mc-icon body"><i class="{{item.typeIcon}}"></i></view>
-          <text class="mc-name body-sm">{{item.spotName || item.address}}</text>
-          <text class="mc-date caption">{{item.dateStr}}</text>
+          <text class="mc-icon">{{item.typeIcon}}</text>
+          <text class="mc-name">{{item.spotName || item.address}}</text>
+          <text class="mc-date">{{item.dateStr}}</text>
         </view>
       </view>
     </scroll-view>
   </block>
 
-  <!-- 浮动采集按钮 (FAB) -->
+  <!-- 浮动采集按钮 -->
   <view class="fab" bindtap="onGoCheckinFood">
-    <text class="fab-icon display">＋</text>
-    <text class="fab-text caption">采集</text>
+    <text class="fab-icon">＋</text>
+    <text class="fab-text">采集</text>
   </view>
 
 </view>

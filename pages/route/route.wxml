@@ -1,4 +1,4 @@
-<!-- 觅食图 · 路线规划页 v6.0 地图+自选+最优 (基于 Design System v1.0) -->
+<!-- 觅食图 · 路线规划页 v6.0 地图+自选+最优 -->
 <view class="container">
 
   <!-- ══════════ 地图区域（始终显示）══════════ -->
@@ -18,29 +18,29 @@
 
     <!-- 返回按钮 -->
     <view class="map-back-btn" bindtap="onBack" wx:if="{{!isNavigating}}">
-      <i class="mgc_left_line map-back-icon"></i>
+      <text class="map-back-icon">‹</text>
     </view>
 
     <!-- 地图右下角缩放适配按钮 -->
     <view class="map-fit-btn" bindtap="onFitRoute" wx:if="{{!isNavigating && routeShops.length > 0}}">
-      <i class="mgc_fullscreen_exit_2_line map-fit-icon"></i>
+      <text class="map-fit-icon">⊞</text>
     </view>
 
     <!-- 路线信息浮层（仅常规模式） -->
     <view class="map-info-bar" wx:if="{{!isNavigating && routeShops.length > 0}}">
       <view class="map-info-item">
-        <text class="map-info-val heading-3">{{routeShops.length}}</text>
-        <text class="map-info-lbl caption">{{isMixedRoute ? '个地点' : (routeType === 'spot' ? '个景点' : '家店')}}</text>
+        <text class="map-info-val">{{routeShops.length}}</text>
+        <text class="map-info-lbl">{{routeType === 'spot' ? '个景点' : '家店'}}</text>
       </view>
       <view class="map-info-divider"></view>
       <view class="map-info-item">
-        <text class="map-info-val heading-3">{{totalDistance}}</text>
-        <text class="map-info-lbl caption">总路程</text>
+        <text class="map-info-val">{{totalDistance}}</text>
+        <text class="map-info-lbl">总路程</text>
       </view>
       <view class="map-info-divider"></view>
       <view class="map-info-item">
-        <text class="map-info-val heading-3">{{totalTime}}</text>
-        <text class="map-info-lbl caption">预计时长</text>
+        <text class="map-info-val">{{totalTime}}</text>
+        <text class="map-info-lbl">预计时长</text>
       </view>
     </view>
 
@@ -52,59 +52,59 @@
           wx:key="id"
           class="progress-dot {{index < currentNavIndex ? 'done' : ''}} {{index === currentNavIndex ? 'active' : ''}}"
         ></view>
-        <text class="remaining-text caption">剩余 {{routeShops.length - currentNavIndex - 1}} 站</text>
+        <text class="remaining-text">剩余 {{routeShops.length - currentNavIndex - 1}} 站</text>
       </view>
-      <view class="nav-close-btn caption" bindtap="onExitNav"><i class="mgc_close_line"></i> 退出</view>
+      <view class="nav-close-btn" bindtap="onExitNav">✕ 退出</view>
     </view>
   </view>
 
   <!-- ══════════ 导览完成全屏 ══════════ -->
   <view class="nav-complete" wx:if="{{isNavComplete}}">
-    <i class="mgc_celebrate_fill complete-icon"></i>
-    <text class="complete-title heading-1">美食之旅完成！</text>
-    <text class="complete-sub body-sm">已走访 {{visitedCount}} 家店铺</text>
-    <button class="btn btn-secondary complete-btn" bindtap="onExitNav">返回路线</button>
+    <text class="complete-icon">🎉</text>
+    <text class="complete-title">美食之旅完成！</text>
+    <text class="complete-sub">已走访 {{visitedCount}} 家店铺</text>
+    <button class="complete-btn" bindtap="onExitNav">返回路线</button>
   </view>
 
   <!-- ══════════ 导览模式下一站卡片 ══════════ -->
   <view class="nav-card" wx:if="{{isNavigating && !isNavComplete}}">
     <view class="nav-card-header">
       <view class="nav-header-left">
-        <text class="nav-label heading-3"><i class="mgc_location_line"></i> 下一站</text>
-        <view class="nav-badge caption">{{currentNavIndex + 1}} / {{routeShops.length}}</view>
+        <text class="nav-label">📍 下一站</text>
+        <view class="nav-badge">{{currentNavIndex + 1}} / {{routeShops.length}}</view>
       </view>
-      <text class="nav-remain caption">剩余 {{routeShops.length - currentNavIndex - 1}} 家</text>
+      <text class="nav-remain">剩余 {{routeShops.length - currentNavIndex - 1}} 家</text>
     </view>
     <view class="nav-shop-row">
-      <view class="nav-shop-num body-sm">{{currentNavIndex + 1}}</view>
+      <view class="nav-shop-num">{{currentNavIndex + 1}}</view>
         <image
         class="nav-shop-thumb"
         src="{{currentNavShop.logo || currentNavShop.image || '/images/app-logo.jpg'}}"
         mode="aspectFill"
       />
       <view class="nav-shop-info">
-        <text class="nav-shop-name heading-3">{{currentNavShop.name}}</text>
-        <text class="nav-shop-meta caption">{{currentNavShop.category}}{{currentNavShop.price ? ' · ¥' + currentNavShop.price + '/人' : ''}}</text>
-        <text class="nav-shop-addr caption">{{currentNavShop.address}}</text>
+        <text class="nav-shop-name">{{currentNavShop.name}}</text>
+        <text class="nav-shop-meta">{{currentNavShop.category}}{{currentNavShop.price ? ' · ¥' + currentNavShop.price + '/人' : ''}}</text>
+        <text class="nav-shop-addr">{{currentNavShop.address}}</text>
       </view>
     </view>
     <view class="nav-stats-row">
       <view class="nav-stat">
-        <text class="ns-val body">{{currentNavShop.distanceStr}}</text>
-        <text class="ns-lbl caption">距离</text>
+        <text class="ns-val">{{currentNavShop.distanceStr}}</text>
+        <text class="ns-lbl">距离</text>
       </view>
       <view class="nav-stat">
-        <text class="ns-val body">{{currentNavShop.timeStr || '5分钟'}}</text>
-        <text class="ns-lbl caption">{{travelMode === 'walk' ? '步行' : travelMode === 'transit' ? '地铁' : '驾车'}}</text>
+        <text class="ns-val">{{currentNavShop.timeStr || '5分钟'}}</text>
+        <text class="ns-lbl">{{travelMode === 'walk' ? '步行' : travelMode === 'transit' ? '地铁' : '驾车'}}</text>
       </view>
       <view class="nav-stat">
-        <text class="ns-val body"><i class="mgc_star_fill"></i> {{currentNavShop.rating}}</text>
-        <text class="ns-lbl caption">评分</text>
+        <text class="ns-val">⭐ {{currentNavShop.rating}}</text>
+        <text class="ns-lbl">评分</text>
       </view>
     </view>
     <view class="nav-btns-row">
-      <button class="btn btn-secondary nav-go-btn" bindtap="onNavToCurrent"><i class="mgc_send_plane_line"></i> 开始导航</button>
-      <button class="btn btn-primary nav-next-btn" bindtap="onVisitNav"><i class="mgc_check_line"></i> 已到达，下一站</button>
+      <button class="nav-go-btn" bindtap="onNavToCurrent">🧭 开始导航</button>
+      <button class="nav-next-btn" bindtap="onVisitNav">✓ 已到达，下一站</button>
     </view>
   </view>
 
@@ -113,36 +113,36 @@
 
     <!-- 起点选择行 -->
     <view class="start-row" bindtap="onToggleStart">
-      <i class="mgc_circle_fill start-dot"></i>
-      <text class="start-tag caption">出发</text>
-      <text class="start-name body-sm">{{currentStart.name}}</text>
-      <i class="{{startExpanded ? 'mgc_up_line' : 'mgc_down_line'}} start-chevron caption"></i>
+      <text class="start-dot">●</text>
+      <text class="start-tag">出发</text>
+      <text class="start-name">{{currentStart.name}}</text>
+      <text class="start-chevron">{{startExpanded ? '∧' : '∨'}}</text>
     </view>
     <view class="start-expand" wx:if="{{startExpanded}}">
       <scroll-view class="start-chips" scroll-x enable-flex>
         <view
           wx:for="{{startPoints}}"
           wx:key="index"
-          class="start-chip body-sm {{currentStart.type === 'current' && item.type === 'current' ? 'active' : currentStart.lat === item.lat && currentStart.lng === item.lng ? 'active' : ''}}"
+          class="start-chip {{currentStart.type === 'current' && item.type === 'current' ? 'active' : currentStart.lat === item.lat && currentStart.lng === item.lng ? 'active' : ''}}"
           bindtap="onSelectStart"
           data-start="{{item}}"
         >{{item.name}}</view>
-        <view class="start-chip map-chip caption" bindtap="onChooseStartOnMap"><i class="mgc_map_line"></i> 地图选点</view>
+        <view class="start-chip map-chip" bindtap="onChooseStartOnMap">🗺️ 地图选点</view>
       </scroll-view>
     </view>
 
     <!-- 终点选择行 -->
     <view class="start-row end-row" bindtap="onToggleEnd">
       <text class="start-dot end-dot">●</text>
-      <text class="start-tag end-tag caption">终点</text>
-      <text class="start-name body-sm">{{currentEnd.type === 'return' ? '返回 ' + currentStart.name : currentEnd.name}}</text>
-      <text class="start-chevron caption">{{endExpanded ? '∧' : '∨'}}</text>
+      <text class="start-tag end-tag">终点</text>
+      <text class="start-name">{{currentEnd.type === 'return' ? '返回 ' + currentStart.name : currentEnd.name}}</text>
+      <text class="start-chevron">{{endExpanded ? '∧' : '∨'}}</text>
     </view>
     <view class="start-expand" wx:if="{{endExpanded}}">
       <scroll-view class="start-chips" scroll-x enable-flex>
         <!-- 返回起点 -->
         <view
-          class="start-chip body-sm {{currentEnd.type === 'return' ? 'active' : ''}}"
+          class="start-chip {{currentEnd.type === 'return' ? 'active' : ''}}"
           bindtap="onSelectEnd"
           data-endtype="return"
         >↩ 返回 {{currentStart.name}}</view>
@@ -150,11 +150,11 @@
         <view
           wx:for="{{startPoints}}"
           wx:key="index"
-          class="start-chip body-sm {{currentEnd.type !== 'return' && (currentEnd.type === 'current' && item.type === 'current' ? 'active' : currentEnd.lat === item.lat && currentEnd.lng === item.lng ? 'active' : '')}}"
+          class="start-chip {{currentEnd.type !== 'return' && (currentEnd.type === 'current' && item.type === 'current' ? 'active' : currentEnd.lat === item.lat && currentEnd.lng === item.lng ? 'active' : '')}}"
           bindtap="onSelectEnd"
           data-end="{{item}}"
         >{{item.name}}</view>
-        <view class="start-chip map-chip body-sm" bindtap="onChooseEndOnMap"><i class="mgc_map_line"></i> 地图选点</view>
+        <view class="start-chip map-chip" bindtap="onChooseEndOnMap">🗺️ 地图选点</view>
       </scroll-view>
     </view>
 
@@ -163,14 +163,14 @@
       <view
         wx:for="{{['drive','transit','walk']}}"
         wx:key="*this"
-        class="mode-chip body-sm {{travelMode === item ? 'active' : ''}}"
+        class="mode-chip {{travelMode === item ? 'active' : ''}}"
         bindtap="onSelectMode"
         data-mode="{{item}}"
       >
-        <text><i class="{{item === 'drive' ? 'mgc_car_line' : item === 'transit' ? 'mgc_train_line' : 'mgc_walk_line'}}"></i> {{item === 'drive' ? '驾车' : item === 'transit' ? '地铁' : '步行'}}</text>
+        <text>{{item === 'drive' ? '🚗 驾车' : item === 'transit' ? '🚇 地铁' : '🚶 步行'}}</text>
       </view>
-      <view class="mode-chip optimize body-sm" bindtap="onOptimizeRoute">
-        <text><i class="mgc_flashlight_line"></i> 最优</text>
+      <view class="mode-chip optimize" bindtap="onOptimizeRoute">
+        <text>⚡ 最优</text>
       </view>
     </view>
 
@@ -181,12 +181,12 @@
         bindtap="onSwitchSelectMode"
         data-mode="all"
       >
-        <i class="mgc_flashlight_line ms-icon display"></i>
+        <text class="ms-icon">⚡</text>
         <view class="ms-text-wrap">
-          <text class="ms-title body-sm">智能最优路线</text>
-          <text class="ms-sub caption">贪心算法自动排序，最省时</text>
+          <text class="ms-title">最优路径</text>
+          <text class="ms-sub">自动贪心排序</text>
         </view>
-        <view class="ms-check" wx:if="{{selectMode === 'all'}}"><i class="mgc_check_line"></i></view>
+        <view class="ms-check" wx:if="{{selectMode === 'all'}}">✓</view>
       </view>
       <view class="mode-switch-sep"></view>
       <view
@@ -194,20 +194,20 @@
         bindtap="onSwitchSelectMode"
         data-mode="custom"
       >
-        <i class="mgc_pencil_line ms-icon display"></i>
+        <text class="ms-icon">✏️</text>
         <view class="ms-text-wrap">
-          <text class="ms-title body-sm">自定义选择</text>
-          <text class="ms-sub caption">手动勾选，调整游玩顺序</text>
+          <text class="ms-title">自定义选择</text>
+          <text class="ms-sub">勾选 · 手动排序</text>
         </view>
-        <view class="ms-check" wx:if="{{selectMode === 'custom'}}"><i class="mgc_check_line"></i></view>
+        <view class="ms-check" wx:if="{{selectMode === 'custom'}}">✓</view>
       </view>
     </view>
 
     <!-- ★ 自选模式：候选勾选面板 -->
     <view class="candidate-panel" wx:if="{{selectMode === 'custom' && allLikedShops.length > 0}}">
       <view class="candidate-header">
-        <text class="candidate-title body-sm">选择参与路线的{{isMixedRoute ? '地点' : (routeType === 'spot' ? '景点' : '店铺')}}</text>
-        <view class="select-all-pill caption" bindtap="onToggleSelectAll">
+        <text class="candidate-title">选择参与路线的{{routeType === 'spot' ? '景点' : '店铺'}}</text>
+        <view class="select-all-pill" bindtap="onToggleSelectAll">
           <text>{{isAllSelected ? '取消全选' : '全选'}}</text>
         </view>
       </view>
@@ -218,25 +218,24 @@
         bindtap="onToggleCandidate"
         data-shopid="{{item.id}}"
       >
-        <view class="cand-check caption {{item.selected ? 'on' : ''}}">
-          <i wx:if="{{item.selected}}" class="mgc_check_line"></i>
+        <view class="cand-check {{item.selected ? 'on' : ''}}">
+          <text wx:if="{{item.selected}}">✓</text>
         </view>
         <image class="cand-logo" src="{{item.logo || item.image || '/images/app-logo.jpg'}}" mode="aspectFill"/>
         <view class="cand-info">
-          <text class="cand-name body-sm">{{item.name}}</text>
-          <text class="cand-meta caption">{{item.category}} · <i class="mgc_star_fill"></i>{{item.rating}}{{item.price ? ' · ¥' + item.price + '/人' : ''}}</text>
+          <text class="cand-name">{{item.name}}</text>
+          <text class="cand-meta">{{item.category}} · ⭐{{item.rating}}{{item.price ? ' · ¥' + item.price + '/人' : ''}}</text>
         </view>
-        <view class="cand-badge caption {{item.selected ? 'show' : ''}}">{{item.orderNum}}</view>
+        <view class="cand-badge {{item.selected ? 'show' : ''}}">{{item.orderNum}}</view>
       </view>
     </view>
 
     <!-- ★ 路线顺序 Timeline -->
     <view class="timeline-card" wx:if="{{routeShops.length > 0}}">
       <view class="timeline-header">
-        <text class="timeline-title heading-3"><i class="mgc_route_line"></i> 游览顺序</text>
-        <view class="edit-pill caption" bindtap="onToggleEdit">
-          <text wx:if="{{isEditing}}"><i class="mgc_check_line"></i> 完成</text>
-          <text wx:else>调整顺序</text>
+        <text class="timeline-title">🗺️ 游览顺序</text>
+        <view class="edit-pill" bindtap="onToggleEdit">
+          <text>{{isEditing ? '✓ 完成' : '调整顺序'}}</text>
         </view>
       </view>
 
@@ -247,8 +246,8 @@
           <view class="tl-line"></view>
         </view>
         <view class="tl-content">
-          <text class="tl-tag-start caption">起点</text>
-          <text class="tl-name body-sm">{{currentStart.name}}</text>
+          <text class="tl-tag-start">起点</text>
+          <text class="tl-name">{{currentStart.name}}</text>
         </view>
       </view>
 
@@ -256,7 +255,7 @@
       <block wx:for="{{routeShops}}" wx:key="id">
         <view class="tl-item {{isEditing ? 'editing' : ''}}">
           <view class="tl-node-wrap">
-            <view class="tl-num caption {{item.isFirst ? 'first' : ''}}">{{index + 1}}</view>
+            <view class="tl-num {{item.isFirst ? 'first' : ''}}">{{index + 1}}</view>
             <view class="tl-line" wx:if="{{index < routeShops.length - 1}}"></view>
           </view>
           <view class="tl-content">
@@ -267,14 +266,14 @@
                 mode="aspectFill"
               />
               <view class="tl-shop-info">
-                <text class="tl-name body-sm">{{item.name}}</text>
-                <text class="tl-meta caption">{{item.category}}{{item.price ? ' · ¥' + item.price + '/人' : ''}}</text>
-                <text class="tl-dist caption" wx:if="{{item.distanceStr}}">→ 下一站 {{item.distanceStr}}</text>
+                <text class="tl-name">{{item.name}}</text>
+                <text class="tl-meta">{{item.category}}{{item.price ? ' · ¥' + item.price + '/人' : ''}}</text>
+                <text class="tl-dist" wx:if="{{item.distanceStr}}">→ 下一站 {{item.distanceStr}}</text>
               </view>
               <!-- 常规操作 -->
               <view class="tl-actions" wx:if="{{!isEditing}}">
-                <view class="tl-btn nav" catchtap="onNavigateToShop" data-shop="{{item}}"><i class="mgc_send_plane_line"></i></view>
-                <view class="tl-btn del" catchtap="onRemoveShop" data-shopid="{{item.id}}"><i class="mgc_close_line"></i></view>
+                <view class="tl-btn nav" catchtap="onNavigateToShop" data-shop="{{item}}">🧭</view>
+                <view class="tl-btn del" catchtap="onRemoveShop" data-shopid="{{item.id}}">✕</view>
               </view>
               <!-- 编辑排序 -->
               <view class="tl-sort" wx:if="{{isEditing}}">
@@ -282,12 +281,12 @@
                   class="sort-arrow up {{index === 0 ? 'off' : ''}}"
                   catchtap="onMoveUp"
                   data-index="{{index}}"
-                ><i class="mgc_arrow_up_line"></i></view>
+                >↑</view>
                 <view
                   class="sort-arrow down {{index === routeShops.length - 1 ? 'off' : ''}}"
                   catchtap="onMoveDown"
                   data-index="{{index}}"
-                ><i class="mgc_arrow_down_line"></i></view>
+                >↓</view>
               </view>
             </view>
           </view>
@@ -300,31 +299,31 @@
           <view class="tl-dot end-dot-node"></view>
         </view>
         <view class="tl-content">
-          <text class="tl-tag-end caption">终点</text>
-          <text class="tl-name body-sm">{{currentEnd.type === 'return' ? '返回 ' + currentStart.name : currentEnd.name}}</text>
+          <text class="tl-tag-end">终点</text>
+          <text class="tl-name">{{currentEnd.type === 'return' ? '返回 ' + currentStart.name : currentEnd.name}}</text>
         </view>
       </view>
     </view>
 
     <!-- 空状态：无想去店铺 -->
     <view class="empty-box" wx:if="{{routeShops.length === 0 && allLikedShops.length === 0}}">
-      <i class="mgc_map_line empty-icon display"></i>
-      <text class="empty-text body">{{isMixedRoute ? '还没有可规划的地点' : (routeType === 'spot' ? '还没有「想去」的景点' : '还没有「想去」的店铺')}}</text>
-      <text class="empty-hint body-sm">{{isMixedRoute ? '先在探索页或景点页收藏想去地点' : (routeType === 'spot' ? '在景点页点击 ♡ 收藏喜欢的景点' : '在探索页点击 ♡ 收藏喜欢的店铺')}}</text>
-      <button class="btn btn-primary" bindtap="onBackToHome">去探索看看</button>
+      <text class="empty-icon">🗺️</text>
+      <text class="empty-text">{{routeType === 'spot' ? '还没有「想去」的景点' : '还没有「想去」的店铺'}}</text>
+      <text class="empty-hint">{{routeType === 'spot' ? '在景点页点击 ♡ 收藏喜欢的景点' : '在首页点击 ♡ 收藏喜欢的店铺'}}</text>
+      <button class="empty-btn" bindtap="onBackToHome">去首页看看</button>
     </view>
 
     <!-- 空状态：自选模式未勾选 -->
     <view class="empty-box" wx:if="{{routeShops.length === 0 && allLikedShops.length > 0 && selectMode === 'custom'}}">
-      <i class="mgc_cursor_line empty-icon display"></i>
-      <text class="empty-text body">请在上方勾选{{isMixedRoute ? '地点' : (routeType === 'spot' ? '景点' : '店铺')}}</text>
-      <text class="empty-hint body-sm">至少选择一家才能规划路线</text>
+      <text class="empty-icon">☝️</text>
+      <text class="empty-text">请在上方勾选{{routeType === 'spot' ? '景点' : '店铺'}}</text>
+      <text class="empty-hint">至少选择一家才能规划路线</text>
     </view>
   </view>
 
   <!-- ══════════ 底部操作栏 ══════════ -->
   <view class="bottom-bar" wx:if="{{routeShops.length > 0 && !isNavigating}}">
-    <view class="bb-clear body-sm" bindtap="onClearRoute">清空</view>
-    <button class="btn btn-primary bb-start" bindtap="onStartNavigation"><i class="mgc_rocket_line"></i> 开始导览</button>
+    <view class="bb-clear" bindtap="onClearRoute">清空</view>
+    <button class="bb-start" bindtap="onStartNavigation">🚀 开始导览</button>
   </view>
 </view>

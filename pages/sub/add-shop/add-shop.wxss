@@ -1,111 +1,107 @@
 /* ================================================
-  觅食图 · 添加店铺页  (Refactored to Design System)
+  觅食图 · 添加店铺页  v4.0 青绿色系
   ================================================ */
 
 .container {
   min-height: 100vh;
-  background: var(--background);
-  padding: var(--space-lg) var(--space-md);
+  background: #F0F9F8;
+  padding: 24rpx;
   padding-bottom: 160rpx;
 }
 
 /* ─── Section ─────────────────────────────── */
 .form-section {
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  padding: var(--space-lg) var(--space-lg) var(--space-md);
-  margin-bottom: var(--space-md);
-  box-shadow: var(--shadow-sm);
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 28rpx 28rpx 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,217,192,0.06);
+  border: 1rpx solid rgba(0,217,192,0.06);
 }
 
 .form-label {
   font-size: 28rpx;
-  
-  color: var(--text-primary);
-  margin-bottom: var(--space-sm);
+  font-weight: 700;
+  color: #1A1A2E;
+  margin-bottom: 18rpx;
   display: block;
 }
 
 .form-input {
   width: 100%;
-  height: 88rpx; /* 44px */
-  background: var(--background);
-  border-radius: var(--radius-sm);
-  padding: 0 var(--space-md);
+  height: 88rpx;
+  background: #F0F9F8;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
   font-size: 28rpx;
   box-sizing: border-box;
-  color: var(--text-primary);
-  border: 1.5rpx solid var(--divider);
+  color: #1A1A2E;
+  border: 1.5rpx solid rgba(0,217,192,0.1);
   transition: border-color 0.18s;
 }
 
 .form-input:focus {
-  border-color: var(--primary);
-  background: var(--surface);
+  border-color: #00D9C0;
+  background: #ffffff;
 }
 
 /* ─── Category Pills ─────────────────────── */
 .category-select {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
+  gap: 14rpx;
 }
 
 .cat-pill {
   padding: 12rpx 26rpx;
-  background: var(--background);
-  border-radius: var(--radius-full);
+  background: #F0F9F8;
+  border-radius: 999rpx;
   font-size: 26rpx;
-  
-  color: var(--text-secondary);
+  font-weight: 500;
+  color: #6B7280;
   transition: all 0.18s;
-  border: 1rpx solid var(--divider);
+  border: 1rpx solid rgba(0,217,192,0.1);
 }
 
 .cat-pill.active {
-  background: var(--primary);
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
   color: #ffffff;
-  
-  box-shadow: var(--shadow-xs);
-  border-color: var(--primary);
-}
-
-.cat-pill.active .cat-icon {
-  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4rpx 14rpx rgba(0,217,192,0.30);
 }
 
 /* ─── Emoji Select ─────────────────────────── */
 .emoji-select {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
+  gap: 14rpx;
 }
 
 .emoji-item {
   font-size: 50rpx;
   padding: 10rpx;
-  background: var(--background);
-  border-radius: var(--radius-sm);
+  background: #F0F9F8;
+  border-radius: 12rpx;
   transition: all 0.18s;
   border: 2rpx solid transparent;
 }
 
 .emoji-item.active {
-  background: var(--primary-light);
-  box-shadow: 0 0 0 3rpx var(--primary);
-  border-color: var(--primary);
+  background: #F0F9F8;
+  box-shadow: 0 0 0 3rpx #00D9C0;
+  border-color: #00D9C0;
 }
 
 /* ─── 🗺️ Map Choose Button ─────────────── */
 .choose-location-btn {
   display: flex;
   align-items: center;
-  background: var(--primary-light);
-  border: 2rpx solid var(--primary);
-  border-radius: var(--radius-md);
-  padding: var(--space-lg) var(--space-lg);
-  margin-bottom: var(--space-md);
-  gap: var(--space-md);
+  background: #F0F9F8;
+  border: 2rpx solid #00D9C0;
+  border-radius: 16rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 20rpx;
+  gap: 16rpx;
 }
 
 .choose-loc-icon {
@@ -122,32 +118,32 @@
 
 .choose-loc-title {
   font-size: 30rpx;
-  
-  color: var(--primary-dark);
+  font-weight: 700;
+  color: #00B5A6;
 }
 
 .choose-loc-sub {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: #9CA3AF;
 }
 
 .choose-loc-arrow {
   font-size: 40rpx;
-  color: var(--primary);
-  
+  color: #00D9C0;
+  font-weight: bold;
 }
 
 /* ─── Coord Input ─────────────────────────── */
 .coord-hint {
   font-size: 24rpx;
-  color: var(--text-disabled);
-  margin-bottom: var(--space-sm);
-  
+  color: #9CA3AF;
+  margin-bottom: 14rpx;
+  font-weight: 500;
 }
 
 .coord-row {
   display: flex;
-  gap: var(--space-md);
+  gap: 16rpx;
 }
 
 .coord-input {
@@ -155,21 +151,22 @@
 }
 
 .quick-coord {
-  margin-top: var(--space-sm);
+  margin-top: 14rpx;
   font-size: 26rpx;
-  color: var(--primary);
-  
+  color: #00B5A6;
+  font-weight: 600;
 }
 
 /* ─── Map Picker ──────────────────────────── */
 .map-picker {
   position: relative;
   height: 380rpx;
-  background: var(--surface);
-  border-radius: var(--radius-md);
+  background: #ffffff;
+  border-radius: 16rpx;
   overflow: hidden;
-  margin-bottom: var(--space-md);
-  box-shadow: var(--shadow-sm);
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,217,192,0.06);
+  border: 1rpx solid rgba(0,217,192,0.06);
 }
 
 .map {
@@ -193,26 +190,25 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: var(--space-md) var(--space-md);
-  padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
-  z-index: 100;
+  padding: 20rpx 32rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.06);
 }
 
 .btn-submit {
   width: 100%;
-  height: 96rpx; /* lg size 48px */
-  background: var(--primary);
+  height: 88rpx;
+  background: linear-gradient(135deg, #00D9C0 0%, #00B5A6 100%);
   color: #ffffff;
-  border-radius: var(--radius-full);
-  font-size: 32rpx;
-  
+  border-radius: 44rpx;
+  font-size: 30rpx;
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 8rpx 24rpx rgba(0,217,192,0.35);
   letter-spacing: 0.5rpx;
 }
 
@@ -221,55 +217,6 @@
 }
 
 .btn-submit:active {
-  background: var(--primary-dark);
+  opacity: 0.9;
   transform: scale(0.98);
-}
-
-/* Batch Mode */
-.batch-header {
-  margin-bottom: var(--space-lg);
-}
-
-.batch-title {
-  font-size: 40rpx;
-  
-  color: var(--text-primary);
-  display: block;
-  margin-bottom: var(--space-xs);
-}
-
-.batch-hint {
-  font-size: 28rpx;
-  color: var(--text-secondary);
-}
-
-.batch-item {
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  padding: var(--space-lg);
-  margin-bottom: var(--space-md);
-  box-shadow: var(--shadow-sm);
-}
-
-.batch-item-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
-}
-
-.batch-emoji {
-  font-size: 40rpx;
-}
-
-.batch-name {
-  font-size: 32rpx;
-  
-  color: var(--text-primary);
-}
-
-.batch-detail {
-  font-size: 24rpx;
-  color: var(--text-secondary);
-  margin-bottom: var(--space-xs);
 }

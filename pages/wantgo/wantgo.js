@@ -9,11 +9,11 @@ const ITEM_H = 60 // px，每项高度用于计算排序
 Page({
   data: {
     // 当前Tab
-    tab: 'want',
+    tab: 'food',
     titles: {
-      want: '想去',
-      plan: '路线',
-      visited: '足迹'
+      food: '想去的美食',
+      spot: '想去的景点',
+      visited: '已到访'
     },
     // 数据
     items: [],
@@ -22,7 +22,7 @@ Page({
     statusBarHeight: 44,
     navBarHeight: 88,
     tabBarTop: 88,
-    contentTop: 108,
+    contentTop: 132,
     // 拖拽状态
     dragging: false,
     dragIndex: -1,
@@ -31,26 +31,13 @@ Page({
 
   onLoad(options) {
     // 支持从外部传入 tab 参数
-    const tab = options.tab || 'want'
+    const tab = options.tab || 'food'
     // 动态获取状态栏高度，解决刘海屏遮挡问题
-    const sysInfo = wx.getSystemInfoSync()
-    const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
-    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
-    const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
-    const menuRightInset = menuButtonInfo
-      ? Math.max(sysInfo.windowWidth - menuButtonInfo.left + 8, 24)
-      : 103
-    
-    // 顶部内容预留的高度（留出一些下边距）
-    const contentTop = menuTop + menuHeight + 12
-    
-    this.setData({ 
-      tab, 
-      menuTop,
-      menuHeight,
-      menuRightInset,
-      contentTop 
-    })
+    const { statusBarHeight } = wx.getSystemInfoSync()
+    const navBarHeight = statusBarHeight + 44 // 状态栏 + 导航栏内容区
+    const tabBarTop = navBarHeight            // Tab栏紧跟导航栏
+    const contentTop = navBarHeight + 44      // 内容区在Tab栏下方
+    this.setData({ tab, navBarHeight, statusBarHeight, tabBarTop, contentTop })
   },
 
   // ─── 返回 ─────────────────────────────
@@ -79,57 +66,34 @@ Page({
 
   _loadData() {
     const { tab } = this.data
-    let items = []
+    let ids = []
+    let allItems = []
 
-    if (tab === 'want') {
-      // 想去页面暂为空白，后续开发
-      this.setData({ items: [], empty: true })
-    } else if (tab === 'plan') {
-      const foodIds = util.loadData('userWantFoods', [])
-      const spotIds = util.loadData('userWantSpots', [])
-      
+    if (tab === 'food') {
+      ids = util.loadData('userWantFoods', [])
       const foods = shopData.foods || []
       const shops = shopData.shops || []
       const userShops = util.loadData('userAddedShops', [])
+      allItems = [...shops, ...foods, ...userShops]
+      // 统一用字符串比较，避免类型不一致
+      const items = ids.map(id => allItems.find(s => String(s.id) === String(id))).filter(Boolean)
+      this.setData({ items, empty: items.length === 0 })
+    } else if (tab === 'spot') {
+      ids = util.loadData('userWantSpots', [])
       const spots = util.getSpotData()
-      
-      const allFoodItems = [...shops, ...foods, ...userShops]
-      
-      const foodItems = foodIds.map(id => allFoodItems.find(s => String(s.id) === String(id))).filter(Boolean)
-      const spotItems = spotIds.map(id => spots.find(s => String(s.id) === String(id))).filter(Boolean)
-      
-      items = [...foodItems, ...spotItems].map(item => {
-        const baseWant = item.wantCount || 1024
-        const actualWant = baseWant + 1 // 既然在想去列表里，那就是想去状态，人数+1
-        let displayWantCount = actualWant
-        if (actualWant >= 10000) {
-          displayWantCount = (actualWant / 10000).toFixed(1).replace('.0', '') + 'w'
-        } else if (actualWant >= 1000) {
-          displayWantCount = (actualWant / 1000).toFixed(1).replace('.0', '') + 'k'
-        }
-        return { ...item, displayWantCount }
-      })
+      // 统一用字符串比较
+      const items = ids.map(id => spots.find(s => String(s.id) === String(id))).filter(Boolean)
       this.setData({ items, empty: items.length === 0 })
     } else {
-      // 足迹
-      const ids = util.loadData('userCheckedIn', [])
+      // 已到访
+      ids = util.loadData('userCheckedIn', [])
       const foods = shopData.foods || []
       const shops = shopData.shops || []
       const userShops = util.loadData('userAddedShops', [])
       const spots = util.getSpotData()
-      const allItems = [...shops, ...foods, ...userShops, ...spots]
-      
+      allItems = [...shops, ...foods, ...userShops, ...spots]
       // 统一用字符串比较
-      items = ids.map(id => allItems.find(s => String(s.id) === String(id))).filter(Boolean).map(item => {
-        const baseWant = item.wantCount || 1024
-        let displayWantCount = baseWant
-        if (baseWant >= 10000) {
-          displayWantCount = (baseWant / 10000).toFixed(1).replace('.0', '') + 'w'
-        } else if (baseWant >= 1000) {
-          displayWantCount = (baseWant / 1000).toFixed(1).replace('.0', '') + 'k'
-        }
-        return { ...item, displayWantCount }
-      })
+      const items = ids.map(id => allItems.find(s => String(s.id) === String(id))).filter(Boolean)
       this.setData({ items, empty: items.length === 0 })
     }
   },
@@ -137,11 +101,8 @@ Page({
   // ─── 点击项目 ─────────────────────────────
   onItemTap(e) {
     const item = e.currentTarget.dataset.item
-    
-    // 判断是否为景点：根据 category 是否包含'景点'、'公园'等，或者是否存在特定的字段
-    const isSpot = item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price
-    
-    if (isSpot) {
+    const { tab } = this.data
+    if (tab === 'spot') {
       wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${item.id}` })
     } else {
       const shopStr = encodeURIComponent(JSON.stringify(item))
@@ -181,12 +142,10 @@ Page({
     const { tab, items } = this.data
     if (!this.data.dragging) return
     // 保存排序后的顺序
-    if (tab === 'plan') {
-      // 区分出 spot 和 food 并分别保存
-      const spotIds = items.filter(item => item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price).map(s => s.id)
-      const foodIds = items.filter(item => !(item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price)).map(s => s.id)
-      util.saveData('userWantSpots', spotIds)
-      util.saveData('userWantFoods', foodIds)
+    if (tab === 'spot') {
+      util.saveData('userWantSpots', items.map(s => s.id))
+    } else if (tab === 'food') {
+      util.saveData('userWantFoods', items.map(s => s.id))
     }
     this.setData({ dragging: false, dragIndex: -1 })
   },
@@ -208,12 +167,8 @@ Page({
   onRemove(e) {
     e.stopPropagation()
     const id = e.currentTarget.dataset.id
-    const { items } = this.data
-    const item = items.find(i => i.id === id)
-    if (!item) return
-
-    const isSpot = item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price
-    const type = isSpot ? 'spot' : 'food'
+    const { tab } = this.data
+    const type = tab === 'spot' ? 'spot' : 'food'
     util.toggleLike(id, type)
     this._loadData()
     wx.showToast({ title: '已移除', icon: 'none', duration: 1000 })
@@ -226,10 +181,9 @@ Page({
       wx.showToast({ title: '清单为空', icon: 'none' })
       return
     }
+    const type = tab === 'spot' ? 'spot' : 'food'
     const ids = items.map(i => i.id).join(',')
-    // 如果是合并列表，传递 type 为 plan，在 route 页内可能需要额外处理。
-    // 目前 route 页是根据 ids 在全局里查找对应的点，所以传混合 ids 应该也可以。
-    wx.navigateTo({ url: `/pages/route/route?type=plan&ids=${ids}` })
+    wx.navigateTo({ url: `/pages/route/route?type=${type}&ids=${ids}` })
   },
 
   onGoHome() {

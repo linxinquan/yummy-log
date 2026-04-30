@@ -1,6 +1,5 @@
 {
   "usingComponents": {},
-  "navigationBarTitleText": "探索",
-  "navigationStyle": "custom",
-  "enablePullDownRefresh": false
+  "navigationBarTitleText": "觅食图",
+  "enablePullDownRefresh": true
 }

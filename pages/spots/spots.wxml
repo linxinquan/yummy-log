@@ -1,0 +1,160 @@
+<!-- 觅食图 V2 - 景点页 -->
+<view class="container">
+
+  <!-- ── Header ── -->
+  <view class="header">
+    <view class="header-left">
+      <view class="app-brand">
+        <image class="logo-img" src="/images/app-logo.jpg" mode="aspectFit" />
+        <text class="logo-text">觅食图</text>
+      </view>
+      <view class="page-sub-title">
+        <text class="sub-title-text">深圳景点</text>
+        <text class="sub-title-count">{{filteredSpots.length}}个</text>
+      </view>
+    </view>
+    <view class="header-right">
+      <!-- 地图/列表切换 -->
+      <view class="view-toggle">
+        <view class="toggle-btn {{viewMode === 'list' ? 'active' : ''}}" bindtap="onSwitchView" data-mode="list">
+          <text class="toggle-icon">☰</text>
+        </view>
+        <view class="toggle-btn {{viewMode === 'map' ? 'active' : ''}}" bindtap="onSwitchView" data-mode="map">
+          <text class="toggle-icon">🗺️</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ── 分类筛选 ── -->
+  <scroll-view class="category-scroll" scroll-x enable-flex>
+    <view class="category-list">
+      <view
+        wx:for="{{categories}}"
+        wx:key="*this"
+        class="cat-pill {{currentCategory === item ? 'active' : ''}}"
+        bindtap="onCategoryChange"
+        data-cat="{{item}}"
+      >{{item}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- ── 地图视图 ── -->
+  <view class="map-view" wx:if="{{viewMode === 'map'}}">
+    <map
+      id="spotMap"
+      class="spot-map"
+      latitude="{{mapCenter.lat}}"
+      longitude="{{mapCenter.lng}}"
+      scale="11"
+      show-location
+      markers="{{mapMarkers}}"
+      bindmarkertap="onMarkerTap"
+    ></map>
+    <!-- 底部浮动卡片 -->
+    <view class="float-card" wx:if="{{activeSpot}}">
+      <view class="float-card-inner" bindtap="onGoDetail" data-id="{{activeSpot.id}}">
+        <image class="float-img" src="{{activeSpot.image}}" mode="aspectFill" />
+        <view class="float-info">
+          <text class="float-name">{{activeSpot.name}}</text>
+          <view class="float-meta">
+            <text class="float-cat">{{activeSpot.category}}</text>
+            <text class="float-rating">⭐ {{activeSpot.rating}}</text>
+            <text class="float-free {{activeSpot.free ? 'free' : 'paid'}}">{{activeSpot.free ? '免费' : '收费'}}</text>
+          </view>
+          <text class="float-desc">{{activeSpot.desc}}</text>
+        </view>
+      </view>
+      <view class="float-close" bindtap="onCloseCard">✕</view>
+    </view>
+  </view>
+
+  <!-- ── 列表视图 ── -->
+  <scroll-view class="spot-list" scroll-y wx:if="{{viewMode === 'list'}}">
+
+    <!-- 推荐标语 -->
+    <view class="list-banner">
+      <text class="banner-text">📍 边逛景点，边觅美食</text>
+    </view>
+
+    <!-- 景点卡片列表 -->
+    <view
+      class="spot-card"
+      wx:for="{{filteredSpots}}"
+      wx:key="id"
+      bindtap="onGoDetail"
+      data-id="{{item.id}}"
+    >
+      <!-- 景点图片 -->
+      <view class="card-img-wrap">
+        <image
+          class="card-img"
+          src="{{item.image || '/images/app-logo.jpg'}}"
+          mode="aspectFill"
+          lazy-load
+        />
+        <!-- 分类标签 -->
+        <view class="card-cat-badge">{{item.category}}</view>
+        <!-- 免费/收费标签 -->
+        <view class="card-free-badge {{item.free ? 'free' : 'paid'}}">
+          {{item.free ? '🆓 免费' : '🎫 收费'}}
+        </view>
+      </view>
+
+      <!-- 景点信息 -->
+      <view class="card-info">
+        <view class="card-header-row">
+          <text class="card-name">{{item.name}}</text>
+          <view class="card-rating">
+            <text class="rating-star">⭐</text>
+            <text class="rating-num">{{item.rating}}</text>
+            <view
+              class="want-btn {{item.isWanted ? 'wanted' : ''}}"
+              catchtap="onWantTap"
+              data-id="{{item.id}}"
+            >
+              <text>{{item.isWanted ? '❤️' : '🤍'}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 标签 -->
+        <scroll-view class="tags-scroll" scroll-x enable-flex>
+          <view class="tags-row">
+            <text
+              wx:for="{{item.tags}}"
+              wx:key="*this"
+              wx:for-item="tag"
+              class="tag"
+            >{{tag}}</text>
+          </view>
+        </scroll-view>
+
+        <!-- 简介 -->
+        <text class="card-desc">{{item.desc}}</text>
+
+        <!-- 底部行：营业时间 + 附近美食 -->
+        <view class="card-footer">
+          <view class="footer-hours">
+            <text class="hours-icon">🕐</text>
+            <text class="hours-text">{{item.openHours}}</text>
+          </view>
+          <view class="footer-food" wx:if="{{item.nearbyFood}}" bindtap="onFindNearbyFood" data-id="{{item.id}}" catchtap="stopProp">
+            <text class="food-btn">🍜 附近美食</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部间距 -->
+    <view class="list-bottom"></view>
+  </scroll-view>
+
+  <!-- ── 想去清单浮动按钮 ── -->
+  <view class="wantgo-float-btn" bindtap="onOpenWantList" wx:if="{{viewMode === 'list'}}">
+    <text class="wantgo-float-icon">❤️</text>
+    <text class="wantgo-float-label">想去</text>
+    <view class="wantgo-badge" wx:if="{{wantSpots.length > 0}}">{{wantSpots.length > 99 ? '99+' : wantSpots.length}}</view>
+  </view>
+
+</view>

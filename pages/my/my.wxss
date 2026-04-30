@@ -1,210 +1,1443 @@
-/* my.wxss - 我的页面样式 (Figma Design 1044_132) */
+/* ================================================
+   觅食图 · 我的页面 v10.0 采集中心整合版
+   主色调：青绿色 #00D9C0 + 白色卡片 + 浅色背景
+   ================================================ */
+
+page {
+  --primary: #00D9C0;
+  --primary-dark: #00B5A6;
+  --primary-light: #E8FAF8;
+  --accent: #FFB347;       /* 暖橙色替代红色 */
+  --accent-dark: #FF9500;
+  --accent-soft: #FFF8F0;
+  --text-primary: #1A1A2E;
+  --text-secondary: #6B7280;
+  --text-hint: #9CA3AF;
+  --bg: #F0F9F8;
+  --bg-card: #FFFFFF;
+  --shadow-sm: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  --shadow-md: 0 4rpx 16rpx rgba(0,0,0,0.08);
+  --shadow-primary: 0 4rpx 20rpx rgba(0,217,192,0.28);
+  --shadow-accent: 0 4rpx 20rpx rgba(255,179,71,0.28);
+  --radius-sm: 12rpx;
+  --radius-md: 16rpx;
+  --radius-lg: 20rpx;
+  --radius-xl: 24rpx;
+  --radius-pill: 999rpx;
+}
 
 .container {
   min-height: 100vh;
-  background: #F6F6F6;
+  background: var(--bg);
   padding-bottom: env(safe-area-inset-bottom);
-  position: relative;
 }
 
-/* ── 顶部背景 ── */
-.top-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
+/* ─── 顶部标题栏（标题 + 用户信息 + 设置）────── */
+.page-header {
+  padding: 20rpx 32rpx 20rpx;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  gap: 0;
+}
+
+.page-title {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: -1rpx;
+  flex: 1;
+}
+
+/* 标题栏右侧用户信息（已登录） */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 8rpx 16rpx 8rpx 10rpx;
+  background: var(--bg-card);
+  border-radius: 40rpx;
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid rgba(0,217,192,0.12);
+  margin-right: 16rpx;
+}
+
+.hu-nickname {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 120rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hu-avatar {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--primary-light);
+  flex-shrink: 0;
+}
+
+/* 标题栏右侧登录入口（未登录） */
+.header-user-login {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 8rpx 16rpx 8rpx 10rpx;
+  background: var(--primary-light);
+  border-radius: 40rpx;
+  border: 1rpx solid rgba(0,217,192,0.2);
+  margin-right: 16rpx;
+}
+
+.hul-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+.hul-avatar {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--primary);
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  width: 68rpx;
+  height: 68rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  border-radius: 50%;
+  font-size: 30rpx;
+  flex-shrink: 0;
+}
+
+/* ══ 采集统计条独立卡片 ═══════════════════════════════════════ */
+.stats-bar-card {
+  margin: 0 24rpx 24rpx;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-primary);
+  border: 1rpx solid rgba(0,217,192,0.15);
+}
+
+/* 顶边渐变条 */
+.stats-bar-card::before {
+  content: '';
+  display: block;
+  height: 6rpx;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 50%, var(--primary-dark) 100%);
+}
+
+.stats-bar {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 20rpx;
+  gap: 0;
+}
+
+.sb-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.sb-num {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -2rpx;
+}
+
+.sb-num.sb-spot { color: var(--primary); }
+.sb-num.sb-food { color: #FF9500; } /* 暖橙色 */
+
+.sb-label {
+  font-size: 22rpx;
+  color: var(--text-hint);
+  font-weight: 500;
+  margin-top: 4rpx;
+}
+
+.sb-div {
+  width: 1rpx;
+  height: 40rpx;
+  background: #E5E7EB;
+  flex-shrink: 0;
+}
+
+.sb-stamp {
+  position: relative;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.sb-stamp-img {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 2rpx solid var(--primary-light);
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.1);
+}
+
+.sb-stamp-date {
+  font-size: 20rpx;
+  color: var(--text-hint);
+}
+
+/* ══ 双地图横向滚动区（优化版 - 圆周旅迹风格）══════════════════════════════════════ */
+.journey-section {
+  padding: 0;
+  margin-bottom: 20rpx;
+}
+
+/* 横向滚动容器 - 更流畅的滑动体验 */
+.journey-scroll {
+  display: flex;
+  white-space: nowrap;
+  gap: 0;
+  /* 平滑滚动指示 */
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 地图卡片 - 放大到屏幕宽度，更协调 */
+.journey-card {
+  width: 100vw;  /* 全屏宽度 */
+  flex-shrink: 0;
+  background: var(--bg-card);
+  transition: transform 0.25s ease;
+  scroll-snap-align: center;
+}
+
+/* 卡片顶部色条 - 圆周旅迹风格：青绿 + 暖黄 */
+.journey-card.spot {
+  border-top: 8rpx solid var(--primary);
+}
+
+.journey-card.food {
+  border-top: 8rpx solid #FFB347; /* 暖橙色替代红色 */
+}
+
+.jc-header {
+  padding: 20rpx 32rpx 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.jc-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.jc-emoji {
+  font-size: 36rpx;
+  font-weight: 600;
+}
+
+.jc-emoji.food-icon {
+  color: #FF9500;
+}
+
+.jc-emoji.spot-icon {
+  color: var(--primary-dark);
+}
+
+.jc-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.jc-badge {
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #fff;
+}
+
+.jc-badge.spot {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+}
+
+.jc-badge.food {
+  background: linear-gradient(135deg, #FFB347, #FF9500);
+}
+
+.jc-sub {
+  font-size: 24rpx;
+  color: var(--text-hint);
+  font-weight: 500;
+}
+
+/* 地图容器 - 增高地图高度 */
+.jc-map-wrap {
+  position: relative;
   width: 100%;
-  height: 400rpx;
-  background: linear-gradient(180deg, #B3C4DC 0%, #F6F6F6 100%);
-  z-index: 0;
+  height: 65vh;  /* 增高到65% */
+  max-height: 560rpx;
+  min-height: 460rpx;
+  background: var(--primary-light);
 }
 
-/* 保证内容层级在背景之上 */
-.user-section, .shortcut-section, .record-section, .list-section {
-  position: relative;
+.jc-map {
+  width: 100%;
+  height: 100%;
+}
+
+/* 地图上的标记点样式 - 使用数据可视化 */
+.jc-map::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   z-index: 1;
 }
 
-/* ── 用户信息栏 ── */
-.user-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 256rpx 48rpx 0; /* 128px */
-  height: 416rpx; /* 256 + 160 */
-  box-sizing: border-box;
+/* 圆形渐变遮罩 - 增强地图视觉层次 */
+.jc-circle-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 60%, transparent 30%, rgba(0,0,0,0.06) 100%);
 }
 
-.user-info {
+/* 脉冲效果 - 圆周旅迹风格：青绿+暖橙 */
+.jdv-pulse {
+  border-color: var(--primary);
+}
+
+.journey-card.food .jdv-pulse {
+  border-color: #FFB347;
+}
+
+/* 无数据引导层 */
+.jc-empty {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(240,249,248,0.92) 0%, rgba(240,249,248,0.96) 100%);
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
-  margin-top: 36rpx; /* 18px */
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  z-index: 2;
 }
 
-.user-nickname {
-  font-family: 'mue', 'PingFang SC', sans-serif;
-  font-weight: normal;
-  font-size: 64rpx; /* 32px */
-  color: #000000;
-  line-height: 64rpx;
+.jce-icon {
+  width: 100rpx;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24rpx;
+  font-size: 48rpx;
+  margin-bottom: 8rpx;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
-.user-desc {
-  font-family: 'PingFang SC';
-  font-weight: 400; /* Regular */
-  font-size: 28rpx; /* 14px */
-  color: #7C7C79;
-  line-height: 28rpx;
+.jce-icon.food-icon {
+  background: #FFF8F0;
+  color: #FF9500;
 }
 
-.user-avatar {
-  width: 160rpx; /* 80px */
-  height: 160rpx;
-  border-radius: 50%;
-  flex-shrink: 0;
+.jce-text {
+  font-size: 28rpx;
+  color: var(--text-hint);
+  font-weight: 600;
 }
 
-.user-avatar-default {
-  width: 160rpx; /* 80px */
-  height: 160rpx;
-  border-radius: 50%;
-  background: linear-gradient(180deg, #C5D3E3 0%, #D8E1EC 100%);
+.jce-btn {
+  margin-top: 8rpx;
+  padding: 12rpx 40rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #fff;
+  border-radius: 28rpx;
+}
+
+.journey-card.spot .jce-btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 6rpx 20rpx rgba(0,217,192,0.4);
+}
+
+.journey-card.food .jce-btn {
+  background: linear-gradient(135deg, #FFB347, #FF9500);
+  box-shadow: 0 6rpx 20rpx rgba(255,179,71,0.4);
+}
+
+/* 地图指示点 */
+.journey-indicator {
   display: flex;
   justify-content: center;
+  gap: 10rpx;
+  padding: 16rpx 0 20rpx;
+}
+
+.ji-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #D1D5DB;
+  transition: all 0.3s;
+}
+
+.ji-dot.active {
+  width: 32rpx;
+  border-radius: 5rpx;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+}
+
+/* 地图标记点动画 */
+@keyframes markerPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 数据可视化脉冲波纹效果 */
+.jc-data-viz {
+  position: absolute;
+  bottom: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.jdv-pulse {
+  position: absolute;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--primary);
+  opacity: 0;
+  animation: dataPulse 3s ease-out infinite;
+}
+
+.journey-card.food .jdv-pulse {
+  border-color: var(--accent);
+}
+
+.jdv-pulse-1 { animation-delay: 0s; }
+.jdv-pulse-2 { animation-delay: 1s; }
+.jdv-pulse-3 { animation-delay: 2s; }
+
+@keyframes dataPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
+
+/* ══ 旧版样式兼容（已废弃，保留以防万一）── */
+/* 旧版 profile-stats-card - 已拆分为 stats-bar-card + header */
+.profile-stats-card { display: none; }
+
+.profile-stats-card {
+  margin: 0 24rpx 20rpx;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-primary);
+  border: 1rpx solid rgba(0,217,192,0.15);
+}
+
+/* 顶部渐变条 */
+.profile-stats-card::before {
+  content: '';
+  display: block;
+  height: 8rpx;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+/* 主信息行 */
+.psc-main {
+  display: flex;
   align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 24rpx 16rpx;
+}
+
+/* 头像包装 */
+.psc-avatar-wrap {
+  position: relative;
   flex-shrink: 0;
 }
 
-.user-avatar-default i {
-  font-size: 80rpx; /* 40px */
-  color: #FFFFFF;
+.psc-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: var(--primary-light);
+  border: 3rpx solid var(--primary-light);
 }
 
-/* ── 快捷功能 ── */
-.shortcut-section {
-  display: flex;
-  justify-content: space-between;
-  padding: 64rpx 32rpx 0;
-  gap: 32rpx;
-}
-
-.shortcut-card {
-  width: 342rpx; /* 171px * 2 */
-  height: 144rpx; /* 72px * 2 */
-  background: #FFFFFF;
-  border-radius: 32rpx; /* 16px * 2 */
+/* 小相机点 */
+.camera-dot-sm {
+  position: absolute;
+  bottom: -2rpx;
+  right: -2rpx;
+  width: 32rpx;
+  height: 32rpx;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  padding-left: 32rpx; /* 16px * 2 */
-  gap: 16rpx; /* 8px * 2 */
-  box-sizing: border-box;
+  justify-content: center;
+  font-size: 16rpx;
+  border: 2rpx solid var(--bg-card);
 }
 
-.shortcut-card text {
-  font-family: 'PingFang SC';
+/* 等级徽章 */
+.level-dot {
+  position: absolute;
+  bottom: -4rpx;
+  right: -4rpx;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #fff;
+  font-size: 16rpx;
+  font-weight: 800;
+  padding: 3rpx 10rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid var(--bg-card);
+  white-space: nowrap;
+}
+
+/* 用户身份信息 */
+.psc-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.psc-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-bottom: 4rpx;
+}
+
+.psc-name {
+  font-size: 34rpx;
+  font-weight: 800;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vip-tag {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 700;
+  padding: 4rpx 12rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+}
+
+.psc-visits {
+  font-size: 22rpx;
+  color: var(--text-hint);
+}
+
+/* 采集本入口按钮 */
+.psc-collection-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rpx;
+  padding: 10rpx 16rpx;
+  background: var(--primary-light);
+  border-radius: var(--radius-md);
+  border: 1rpx solid rgba(0,217,192,0.2);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.psc-collection-btn:active {
+  transform: scale(0.95);
+  background: rgba(0,217,192,0.15);
+}
+
+.psc-col-icon {
+  font-size: 32rpx;
+}
+
+.psc-col-label {
+  font-size: 18rpx;
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
+.psc-col-count {
+  position: absolute;
+  top: -6rpx;
+  right: -6rpx;
+  background: var(--accent);
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 700;
+  min-width: 32rpx;
+  height: 32rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6rpx;
+}
+
+/* 昵称输入框 */
+.psc-nickname-input {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-hint);
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 240rpx;
+  margin-bottom: 4rpx;
+}
+
+.psc-nickname-input.active {
+  color: var(--text-primary);
+}
+
+.nickname-ph {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-hint);
+}
+
+.psc-login-tip {
+  font-size: 22rpx;
+  color: var(--text-hint);
+}
+
+/* 登录按钮 */
+.psc-login-btn {
+  width: 110rpx;
+  height: 56rpx;
+  background: var(--primary-light);
+  border-radius: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.psc-login-btn.ready {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 4rpx 14rpx rgba(0,217,192,0.3);
+}
+
+.psc-login-btn text {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.psc-login-btn.ready text {
+  color: #fff;
+}
+
+/* 采集统计条 */
+.psc-stats-row {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx 20rpx;
+  border-top: 1rpx solid rgba(0,0,0,0.05);
+  gap: 0;
+}
+
+.psc-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.psc-stat-num {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: var(--primary);
+  line-height: 1;
+  letter-spacing: -1rpx;
+}
+
+.psc-stat-label {
+  font-size: 20rpx;
+  color: var(--text-hint);
   font-weight: 500;
-  font-size: 30rpx; /* 15px * 2 */
-  line-height: 40rpx; /* 20px * 2 */
-  color: #262626;
+  margin-top: 2rpx;
 }
 
-/* 图标渐变色 */
-.icon-gradient {
-  background: linear-gradient(180deg, #C5D3E3 0%, #D8E1EC 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-size: 40rpx; /* 20px * 2 */
+.psc-stat-div {
+  width: 1rpx;
+  height: 36rpx;
+  background: #E5E7EB;
+  flex-shrink: 0;
 }
 
-/* ── 记录卡片 ── */
-.record-section {
-  margin: 32rpx 32rpx 0; /* 16px */
-  background: #FFFFFF;
-  border-radius: 32rpx; /* 16px */
-  padding: 32rpx; /* 16px */
+/* 最新邮票缩略图 */
+.psc-latest-stamp {
+  position: relative;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
+.psc-stamp-img {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 2rpx solid var(--primary-light);
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.1);
+}
+
+.psc-stamp-date {
+  font-size: 18rpx;
+  color: var(--text-hint);
+  text-align: center;
+  margin-top: 4rpx;
+}
+
+/* ══ 采集快捷入口卡片 ═══════════════════════════════════════ */
+.entry-cards {
+  display: flex;
+  gap: 16rpx;
+  padding: 0 24rpx 20rpx;
+}
+
+.entry-card {
+  flex: 1;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 24rpx 18rpx;
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid rgba(0,0,0,0.04);
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.entry-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5rpx;
+  border-radius: 0 4rpx 4rpx 0;
+}
+
+.entry-card.food::before {
+  background: linear-gradient(180deg, #FFB347, #FF9500);
+}
+
+.entry-card.spot::before {
+  background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+}
+
+.entry-card:active {
+  transform: scale(0.97);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 圆周旅迹风格图标 - 简洁现代 */
+.ec-icon {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.ec-icon.food-icon {
+  background: linear-gradient(135deg, #FFF8F0, #FFE8CC);
+  color: #FF9500;
+}
+
+.ec-icon.spot-icon {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}
+
+.ec-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+.ec-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.ec-sub {
+  font-size: 22rpx;
+  color: var(--text-hint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ec-arrow {
+  font-size: 40rpx;
+  color: var(--text-hint);
+  font-weight: 300;
+  flex-shrink: 0;
+}
+
+/* ══ 近期采集缩略图 ═══════════════════════════════════════ */
+.recent-section {
+  padding: 0 24rpx 20rpx;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.section-more {
+  font-size: 24rpx;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.stamp-scroll {
+  display: flex;
+  white-space: nowrap;
+  gap: 16rpx;
+  padding-bottom: 8rpx;
+}
+
+.stamp-thumb {
+  position: relative;
+  width: 150rpx;
+  flex-shrink: 0;
+}
+
+.st-photo {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.12);
+  border: 3rpx solid var(--bg-card);
+}
+
+.st-tag {
+  position: absolute;
+  top: 8rpx;
+  left: 8rpx;
+  font-size: 18rpx;
+  font-weight: 600;
+  background: var(--primary);
+  color: #fff;
+  padding: 4rpx 12rpx;
+  border-radius: 10rpx;
+}
+
+.st-tag.food {
+  background: #FF9500;
+}
+
+.st-date {
+  font-size: 22rpx;
+  color: var(--text-hint);
+  text-align: center;
+  margin-top: 8rpx;
+}
+
+/* ─── 用户菜单 ──────────────────────────────── */
+.user-menu {
+  padding: 0 24rpx 20rpx;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14rpx;
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22rpx 8rpx;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid rgba(0,0,0,0.04);
+  transition: all 0.2s;
+}
+
+.menu-item:active {
+  transform: scale(0.95);
+  background: var(--primary-light);
+}
+
+/* 圆周旅迹风格菜单图标 */
+.menu-icon {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  transition: all 0.2s;
+}
+
+.menu-icon.heart-icon {
+  background: #FFF5F5;
+  color: #FF6B8A;
+}
+
+.menu-text {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ─── 统计卡片 ──────────────────────────────── */
+.stats-section {
+  padding: 0 24rpx 24rpx;
+}
+
+.stats-card {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 26rpx 28rpx;
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid rgba(0,0,0,0.04);
+}
+
+.stat-item {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-clickable {
+  transition: all 0.15s;
+}
+
+.stat-clickable:active {
+  opacity: 0.7;
+  transform: scale(0.95);
+}
+
+.stat-value {
+  display: block;
+  font-size: 48rpx;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 6rpx;
+  letter-spacing: -2rpx;
+}
+
+.stat-liked {
+  color: var(--primary);
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: var(--text-hint);
+  font-weight: 500;
+}
+
+.stat-divider {
+  width: 1rpx;
+  height: 56rpx;
+  background: #E5E7EB;
+}
+
+/* ─── Tab Bar ──────────────────────────────── */
+.tab-bar {
+  display: flex;
+  background: var(--bg-card);
+  padding: 0 24rpx;
+  border-bottom: 1rpx solid #F0F0F0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 26rpx 0;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text-hint);
+  position: relative;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56rpx;
+  height: 4rpx;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 999rpx;
+}
+
+/* ─── Shop List ────────────────────────────── */
+.shop-list {
+  padding: 16rpx 24rpx;
+}
+
+/* ─── 规划路线入口卡片 ─────────────────────── */
+.route-entry-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: var(--radius-lg);
+  padding: 24rpx 28rpx;
+  margin-bottom: 16rpx;
+  box-shadow: var(--shadow-primary);
+}
+
+.route-entry-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.route-entry-icon {
+  width: 72rpx;
+  height: 72rpx;
+  background: rgba(255,255,255,0.25);
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+
+.route-entry-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.route-entry-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #fff;
+}
+
+.route-entry-sub {
+  font-size: 24rpx;
+  color: rgba(255,255,255,0.85);
+}
+
+.route-entry-arrow {
+  font-size: 48rpx;
+  color: rgba(255,255,255,0.8);
+  font-weight: 300;
+  line-height: 1;
+}
+
+/* ─── 店铺卡片 ──────────────────────────────── */
+.shop-card {
+  display: flex;
+  align-items: center;
+  padding: 16rpx;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  margin-bottom: 14rpx;
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid rgba(0,0,0,0.04);
+}
+
+.shop-img {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  margin-right: 16rpx;
+}
+
+.shop-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6rpx;
+}
+
+.shop-meta {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.shop-tag {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-size: 20rpx;
+  font-weight: 600;
+  border-radius: 20rpx;
+}
+
+.remove-btn {
+  font-size: 32rpx;
+  color: var(--text-hint);
+  padding: 12rpx;
+}
+
+/* ─── Record Card (觅食记录) ────────────────── */
+.record-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 20rpx;
+  margin-bottom: 14rpx;
+  box-shadow: var(--shadow-sm);
+  border: 1rpx solid rgba(0,0,0,0.04);
 }
 
 .record-header {
   display: flex;
   align-items: center;
-  gap: 16rpx; /* 8px */
-  margin-bottom: 32rpx; /* 16px */
 }
 
-.record-header text {
-  font-family: 'PingFang SC';
-  font-weight: 500;
-  font-size: 30rpx; /* 15px */
-  color: #262626;
+.record-img {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  margin-right: 16rpx;
 }
 
-.record-cards {
+.record-info {
+  flex: 1;
+}
+
+.record-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.record-stars {
+  display: flex;
+  gap: 4rpx;
+}
+
+.record-date {
+  font-size: 22rpx;
+  color: var(--text-hint);
+  font-weight: 400;
+}
+
+.record-comment {
+  display: block;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--bg);
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ─── Add Hint ────────────────────────────── */
+.add-hint {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 8rpx 4rpx;
+  margin-bottom: 12rpx;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+
+.add-btn {
+  color: var(--primary);
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+/* ─── Empty State ──────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx 0;
+  color: var(--text-hint);
+}
+
+.empty-icon {
+  font-size: 96rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.4;
+}
+
+.empty-text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 10rpx;
+}
+
+.empty-hint {
+  font-size: 26rpx;
+  color: var(--text-hint);
+  text-align: center;
+  padding: 0 60rpx;
+  line-height: 1.6;
+}
+
+/* ─── 想去清单入口卡片 ─────────────────────── */
+.wantgo-entry-wrap {
+  padding: 16rpx 24rpx;
+}
+
+.wantgo-card {
+  background: var(--bg-card);
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.07);
+  border: 1rpx solid rgba(0,217,192,0.12);
+}
+
+.wc-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  padding: 32rpx 28rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.wc-header::before {
+  content: '';
+  position: absolute;
+  top: -40rpx;
+  right: -40rpx;
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+}
+
+.wc-logo-stack {
+  display: flex;
+  align-items: center;
+}
+
+.wc-logo-item {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  border: 3rpx solid rgba(255,255,255,0.8);
+  flex-shrink: 0;
+}
+
+.wc-logo-more {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -24rpx;
+  border: 3rpx solid rgba(255,255,255,0.5);
+  z-index: 0;
+  flex-shrink: 0;
+}
+
+.wc-logo-more text {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #fff;
+}
+
+.wc-count-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 1;
+}
+
+.wc-count {
+  font-size: 64rpx;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -2rpx;
+}
+
+.wc-count-lbl {
+  font-size: 22rpx;
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+}
+
+.wc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx 16rpx;
+  border-bottom: 1rpx solid #F5F5F5;
+}
+
+.wc-footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.wc-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.wc-sub {
+  font-size: 24rpx;
+  color: var(--text-hint);
+}
+
+.wc-arrow-btn {
+  width: 56rpx;
+  height: 56rpx;
+  background: var(--primary-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wc-arrow {
+  font-size: 40rpx;
+  color: var(--primary);
+  font-weight: 300;
+  line-height: 1;
+}
+
+.wc-actions {
+  display: flex;
+  padding: 16rpx 24rpx 20rpx;
   gap: 16rpx;
 }
 
-.record-item {
-  width: 206rpx; /* 103px / 104px */
-  height: 136rpx; /* 68px */
-  border-radius: 16rpx; /* 8px */
+.wca-btn {
+  flex: 1;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
-  padding-left: 24rpx; /* 12px */
-  gap: 20rpx; /* 10px */
+  gap: 10rpx;
+  padding: 18rpx 0;
+  background: var(--primary-light);
+  border-radius: 20rpx;
+  transition: all 0.15s;
 }
 
-.item-collect { background: #E8F5FC; }
-.item-city { background: #F1F1FC; }
-.item-footprint { background: #FDF1F0; }
+.wca-btn.primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 4rpx 14rpx rgba(0,217,192,0.3);
+}
 
-.record-label {
-  font-family: 'PingFang SC';
+.wca-btn:active {
+  opacity: 0.85;
+  transform: scale(0.97);
+}
+
+.wca-icon {
+  font-size: 22rpx;
   font-weight: 600;
-  font-size: 24rpx; /* 12px */
-  line-height: 24rpx; /* 12px */
-  color: #7D7F85;
 }
 
-.record-value {
-  font-family: 'DIN Alternate', sans-serif;
+.wca-icon.heart-icon {
+  color: #FF6B8A;
+}
+
+.wca-text {
+  font-size: 26rpx;
   font-weight: 700;
-  font-size: 44rpx; /* 22px */
-  line-height: 44rpx; /* 22px */
-  color: #000000;
+  color: var(--primary-dark);
 }
 
-/* ── 列表菜单 ── */
-.list-section {
-  margin: 32rpx 32rpx 0; /* 16px */
-  background: #FFFFFF;
-  border-radius: 32rpx; /* 16px */
-  padding: 16rpx 32rpx; /* 8px 16px */
+.wca-btn.primary .wca-text {
+  color: #fff;
 }
 
-.list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 112rpx; /* 56px */
-}
+/* ─── 旧版样式兼容（已废弃，保留以防万一）── */
+/* 旧版打卡采集统计条 - 已整合到 profile-stats-card */
+.checkin-stats { display: none; }
 
-.list-item-left {
-  display: flex;
-  align-items: center;
-  gap: 16rpx; /* 8px */
-}
-
-.list-item-left text {
-  font-family: 'PingFang SC';
-  font-weight: 500;
-  font-size: 30rpx; /* 15px */
-  color: #262626;
-}
-
-.arrow-icon {
-  color: #C0C0C0;
-  font-size: 40rpx; /* 20px */
-}
+/* 旧版采集英雄卡 - 已整合到 profile-stats-card */
+.hero-card { display: none; }

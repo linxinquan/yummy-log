@@ -10,49 +10,29 @@ Page({
     mapMarkers: [],
     nearbyShops: [],
     isLiked: false,
-    isCollected: false,
-    displayAvatars: [],
-    secondaryTag: '',
-    wantStatText: '',
-    openTimeText: '',
   },
 
   onLoad(options) {
-    const sysInfo = wx.getSystemInfoSync()
-    const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
-    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
-    const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
-    const menuRightInset = menuButtonInfo
-      ? Math.max(sysInfo.windowWidth - menuButtonInfo.left + 8, 24)
-      : 103
-
-    const id = parseInt(options.id) || 101 // 兼容没传参情况，默认 101 是中山公园
-    const sourceSpot = spotData.spotData.find(s => s.id === id) || spotData.spotData[0]
-    const spot = sourceSpot ? {
-      ...sourceSpot,
-      wantCount: sourceSpot.wantCount || 4232
-    } : null
+    const id = parseInt(options.id)
+    const spot = spotData.spotData.find(s => s.id === id)
     if (!spot) {
       wx.showToast({ title: '景点不存在', icon: 'none' })
       setTimeout(() => wx.navigateBack(), 1500)
       return
     }
 
-    const isLiked = util.loadData('userWantSpots', []).some(id => String(id) === String(spot.id))
-    const isCollected = util.loadData('userCollectedSpots', []).some(id => String(id) === String(spot.id))
+    const isLiked = util.isLiked(id, 'spot')
+    const marker = [{
+      id: spot.id,
+      latitude: spot.lat,
+      longitude: spot.lng,
+      title: spot.name,
+      width: 44,
+      height: 44,
+      iconPath: '/images/tabbar-spots-active.png'
+    }]
 
-    this.setData({ 
-      spot, 
-      mapMarkers: [],
-      isLiked,
-      isCollected,
-      menuTop,
-      menuHeight,
-      menuRightInset,
-      secondaryTag: (spot.tags && spot.tags[0]) || spot.district || '热门地点',
-      wantStatText: `${spot.wantCount || 4232} 人想去 · 883m`,
-      openTimeText: `营业时间：${spot.openHours || '全天'}`
-    })
+    this.setData({ spot, mapMarkers: marker, isLiked })
     wx.setNavigationBarTitle({ title: spot.name })
 
     this._loadNearbyShops(spot)
@@ -60,18 +40,16 @@ Page({
 
   _loadNearbyShops(spot) {
     // 附近美食：从合并后的全量美食数据中筛选
-    const userAddedShops = util.loadData('userAddedShops', [])
-    const allShops = [...(shopData.shops || []), ...(shopData.foods || []), ...userAddedShops]
+    const allShops = [...(shopData.shops || []), ...(shopData.foods || [])]
     const nearby = allShops
-      .filter(s => (s.lat || s.latitude) && (s.lng || s.longitude))
+      .filter(s => s.lat && s.lng)
       .map(s => {
         const lat = s.lat || s.latitude
         const lng = s.lng || s.longitude
         return {
           ...s,
           dist: util.getDistance(spot.lat, spot.lng, lat, lng),
-          distText: '',
-          coverImage: s.logo || s.image || s.thumb || '/images/app-logo.jpg'
+          distText: ''
         }
       })
       .filter(s => s.dist <= 5000)
@@ -79,52 +57,13 @@ Page({
       .slice(0, 8)
       .map(s => ({
         ...s,
-        distText: util.formatDistance(s.dist).replace('.00', '').replace(/\.0+km/, 'km')
+        distText: util.formatDistance(s.dist)
       }))
-
-    const displayAvatars = [
-      ...nearby.map(item => item.coverImage).filter(Boolean),
-      spot.image || '/images/app-logo.jpg'
-    ].slice(0, 6)
-
-    this.setData({
-      nearbyShops: nearby,
-      displayAvatars
-    })
+    this.setData({ nearbyShops: nearby })
   },
 
   onBack() {
     wx.navigateBack()
-  },
-
-  onShareTap() {
-    wx.showToast({ title: '请点击右上角分享', icon: 'none' })
-  },
-
-  // 收藏/取消收藏
-  onCollect() {
-    const { spot } = this.data
-    if (!spot) return
-    
-    // 这里使用一个新的缓存key，例如 userCollectedSpots
-    let collects = util.loadData('userCollectedSpots', [])
-    const index = collects.findIndex(id => String(id) === String(spot.id))
-    let isCollected = false
-    
-    if (index > -1) {
-      collects.splice(index, 1)
-    } else {
-      collects.push(spot.id)
-      isCollected = true
-    }
-    wx.setStorageSync('userCollectedSpots', collects)
-    
-    this.setData({ isCollected })
-    wx.showToast({
-      title: isCollected ? '已收藏' : '已取消收藏',
-      icon: 'none',
-      duration: 1200
-    })
   },
 
   // 想去/取消想去
@@ -134,7 +73,7 @@ Page({
     const isLiked = util.toggleLike(spot.id, 'spot')
     this.setData({ isLiked })
     wx.showToast({
-      title: isLiked ? '已添加到想去' : '已移出想去',
+      title: isLiked ? '已收藏 ❤️' : '已取消',
       icon: 'none',
       duration: 1200
     })
@@ -178,13 +117,5 @@ Page({
     wx.navigateTo({
       url: `/pages/route/route?type=spot&ids=${spot.id}`
     })
-  },
-
-  onShareAppMessage() {
-    const { spot } = this.data
-    return {
-      title: spot ? `${spot.name} · 景点详情` : '景点详情',
-      path: spot ? `/pages/spot-detail/spot-detail?id=${spot.id}` : '/pages/index/index'
-    }
   }
 })

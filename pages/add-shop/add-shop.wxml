@@ -1,1 +1,2 @@
-<include src="../sub/add-shop/add-shop.wxml" />
+<!--pages/add-shop/add-shop.wxml-->
+<text>pages/add-shop/add-shop.wxml</text>

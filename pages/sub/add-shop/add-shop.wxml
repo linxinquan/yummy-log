@@ -10,11 +10,11 @@
     <view class="batch-list">
       <view wx:for="{{batchShops}}" wx:key="index" class="batch-item">
         <view class="batch-item-header">
-          <i class="mgc_store_line batch-emoji"></i>
+          <text class="batch-emoji">🏪</text>
           <text class="batch-name">{{item.name}}</text>
         </view>
         <view class="batch-detail" wx:if="{{item.address}}">
-          <i class="mgc_location_line"></i> {{item.address}}
+          📍 {{item.address}}
         </view>
         <view class="batch-detail" wx:if="{{item.dishes.length > 0}}">
           推荐菜：{{item.dishes.join('、')}}
@@ -123,12 +123,12 @@
       
       <!-- 🆕 主推：用微信地图选点 -->
       <view class="choose-location-btn" bindtap="onChooseLocation">
-        <i class="mgc_map_line choose-loc-icon"></i>
+        <text class="choose-loc-icon">🗺️</text>
         <view class="choose-loc-text">
           <text class="choose-loc-title">打开地图选点</text>
           <text class="choose-loc-sub">{{shopForm.lat ? '已选：' + shopForm.lat + ', ' + shopForm.lng : '点击在地图上精准定位'}}</text>
         </view>
-        <i class="mgc_right_line choose-loc-arrow"></i>
+        <text class="choose-loc-arrow">›</text>
       </view>
       
       <!-- 备用：手动输入坐标 -->
@@ -150,7 +150,7 @@
         />
       </view>
       <view class="quick-coord" bindtap="onUseCenterCoord">
-        <text><i class="mgc_location_line"></i> 使用蛇口中心坐标</text>
+        <text>📍 使用蛇口中心坐标</text>
       </view>
     </view>
 
@@ -166,7 +166,7 @@
         bindtap="onMapTap"
         show-location
       ></map>
-      <view class="map-center-icon"><i class="mgc_location_fill"></i></view>
+      <view class="map-center-icon">📍</view>
     </view>
   </block>
 
