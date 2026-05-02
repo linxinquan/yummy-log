@@ -1,34 +1,23 @@
 /* ================================================
-  觅食图 · 发现页 v7.0 青绿色系
-  配色参考：LOGO #00D9C0 青绿色
+  觅食图 · 攻略页
   ================================================ */
 
 page {
-  --primary: #00D9C0;
-  --primary-dark: #00B5A6;
-  --primary-light: #E8FAF8;
-  --primary-bg: #F0F9F8;
-  --accent: #FF8B7E;
-  --accent-soft: #FFF5F4;
-  --text-primary: #1A1A2E;
-  --text-secondary: #6B7280;
-  --text-hint: #9CA3AF;
-  --bg: #F7FDFC;
-  --surface: #FFFFFF;
+  background: #FFFFFF;
 }
 
 .container {
   min-height: 100vh;
-  background: var(--bg);
+  background: #FFFFFF;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* ─── 自定义导航栏（与想去页面一致）── */
+/* ─── 自定义导航栏 ─── */
 .nav-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 48rpx;
+  padding: 0 24px;
   background: #FFFFFF;
   position: fixed;
   top: 0;
@@ -36,7 +25,7 @@ page {
   right: 0;
   z-index: 19;
   box-sizing: content-box;
-  padding-bottom: 24rpx;
+  padding-bottom: 12px;
 }
 
 .nav-left {
@@ -49,368 +38,159 @@ page {
 .nav-title {
   font-family: 'PingFang SC', sans-serif;
   font-weight: 500;
-  font-size: 48rpx;
-  line-height: 48rpx;
+  font-size: 24px;
+  line-height: 32px;
   color: #000000;
 }
 
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 16rpx;
 }
 
 .nav-btn {
-  width: 64rpx;
-  height: 64rpx;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary-bg);
-  border-radius: 50%;
-  font-size: 28rpx;
-  transition: all 0.2s;
 }
 
-.nav-btn:active {
-  transform: scale(0.95);
-  background: var(--primary-light);
+.search-icon {
+  width: 24px;
+  height: 24px;
+  background: #262626;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") center/contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") center/contain no-repeat;
 }
 
-/* ─── Header ─────────────────────────────────── */
-.header {
-  padding: 20rpx 24rpx 12rpx;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  background: var(--surface);
-}
-
-.header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-}
-
-.app-name {
-  font-size: 22rpx;
-  font-weight: 700;
-  color: var(--primary);
-  letter-spacing: 1rpx;
-}
-
-.city-row {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.city-name {
-  font-size: 36rpx;
-  font-weight: 900;
-  color: var(--black);
-  letter-spacing: -1rpx;
-  line-height: 1.1;
-}
-
-.city-arrow {
-  font-size: 20rpx;
-  color: var(--text-hint);
-  margin-top: 4rpx;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-}
-
-/* 位置行 */
-.location-row {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.location-icon {
-  font-size: 24rpx;
-}
-
-.location-text {
-  font-size: 36rpx;
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: -1rpx;
-  line-height: 1.1;
-}
-
-/* 天气徽章 - 放在定位旁边 */
-.weather-badge {
-  display: flex;
-  align-items: center;
-  gap: 4rpx;
-  padding: 4rpx 10rpx;
-  background: var(--primary-bg);
-  border-radius: 16rpx;
-  margin-left: 8rpx;
-}
-
-.weather-badge .weather-icon {
-  font-size: 20rpx;
-}
-
-.weather-badge .weather-temp {
-  font-size: 22rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-/* 天气显示（右侧） - 保留兼容性 */
-.weather-display {
-  display: flex;
-  align-items: center;
-  gap: 4rpx;
-  padding: 8rpx 12rpx;
-  background: var(--primary-bg);
-  border-radius: 20rpx;
-}
-
-.weather-display .weather-icon {
-  font-size: 24rpx;
-}
-
-.weather-display .weather-temp {
-  font-size: 24rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.header-btn {
-  width: 64rpx;
-  height: 64rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--primary-bg);
-  border-radius: 50%;
-  font-size: 28rpx;
-  transition: all 0.2s;
-}
-
-.header-btn:active {
-  transform: scale(0.95);
-  background: var(--primary-light);
-}
-
-/* ─── Quick Entry ─────────────────────────────── */
-/* 圆周旅迹风格：紧凑入口卡片 */
-.quick-entry {
-  padding: 20rpx 24rpx 16rpx;
+/* ─── 分类标签 ─── */
+.category-row {
   display: flex;
   flex-direction: row;
-  gap: 16rpx;
-}
-
-.entry-card {
-  flex: 1;
-  background: var(--surface);
-  border-radius: 14rpx;
-  padding: 20rpx;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 10rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
-  transition: all 0.2s;
+  padding: 0 24px;
+  gap: 16px;
+  margin-top: 12px;
+  background: #FFFFFF;
 }
 
-.entry-card:active {
-  transform: scale(0.97);
-}
-
-.entry-card.primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-}
-
-.entry-card.primary .entry-title,
-.entry-card.primary .entry-desc {
-  color: var(--white);
-}
-
-.entry-icon {
-  width: 64rpx;
-  height: 64rpx;
-  background: var(--primary-bg);
-  border-radius: 14rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32rpx;
+.category-item {
+  font-family: 'PingFang SC';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 100%;
+  color: #C1C1C1;
   flex-shrink: 0;
 }
 
-.entry-card.primary .entry-icon {
-  background: rgba(255,255,255,0.25);
+.category-item.active {
+  color: #000000;
 }
 
-.entry-text {
-  text-align: center;
+/* ─── 精选攻略卡片（横向滚动）── */
+.featured-scroll {
+  white-space: nowrap;
+  margin-top: 16px;
 }
 
-.entry-title {
-  display: block;
-  font-size: 26rpx;
-  font-weight: 700;
-  color: var(--black);
-  margin-bottom: 4rpx;
+.featured-list {
+  display: flex;
+  padding: 0 24px;
+  gap: 24px;
 }
 
-.entry-desc {
-  font-size: 20rpx;
-  color: var(--text-secondary);
+.featured-card {
+  width: 300px;
+  flex-shrink: 0;
 }
 
-/* ─── AI 个性化推荐卡片 ────────────────────────── */
-.ai-recommend-card {
-  margin: 0 24rpx 20rpx;
-  background: linear-gradient(135deg, #E8FAFF, #CCE8FF);
-  border-radius: 24rpx;
-  padding: 22rpx 24rpx;
-  border: 1rpx solid rgba(0,197,255,0.2);
-  box-shadow: 0 4rpx 20rpx rgba(0,197,255,0.1);
+.featured-cover-wrap {
   position: relative;
+  width: 300px;
+  height: 200px;
+  border-radius: 16px;
   overflow: hidden;
 }
 
-.ai-recommend-card::before {
-  content: '';
+.featured-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.featured-overlay {
   position: absolute;
-  top: -40rpx;
-  right: -40rpx;
-  width: 160rpx;
-  height: 160rpx;
-  background: radial-gradient(circle, rgba(0,197,255,0.12), transparent 70%);
-  border-radius: 50%;
-}
-
-.arc-header {
+  width: 300px;
+  height: 54px;
+  left: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.2) 100%);
+  border-radius: 0 0 16px 16px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14rpx;
-}
-
-.arc-label {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-}
-
-.arc-spark {
-  font-size: 20rpx;
-  color: #00C5FF;
-  font-weight: 700;
-}
-
-.arc-label-text {
-  font-size: 22rpx;
-  color: #009FD4;
-  font-weight: 600;
-}
-
-.arc-time-badge {
-  font-size: 20rpx;
-  color: #009FD4;
-  background: rgba(0,197,255,0.1);
-  padding: 4rpx 14rpx;
-  border-radius: 20rpx;
-  font-weight: 600;
-}
-
-.arc-body {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-  margin-bottom: 14rpx;
-}
-
-.arc-title {
-  font-size: 30rpx;
-  font-weight: 800;
-  color: #1A1A2E;
-  line-height: 1.3;
-}
-
-.arc-desc {
-  font-size: 24rpx;
-  color: #555;
-  line-height: 1.5;
-}
-
-.arc-footer {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.arc-cta {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  background: linear-gradient(135deg, #00C5FF, #009FD4);
-  color: #FFFFFF;
-  padding: 10rpx 20rpx;
-  border-radius: 20rpx;
-  font-size: 24rpx;
-  font-weight: 700;
-  box-shadow: 0 4rpx 16rpx rgba(0,197,255,0.3);
-}
-
-.arc-cta-icon { font-size: 20rpx; }
-.arc-cta-text { font-size: 24rpx; }
-
-/* ─── 攻略推荐轮播 ─────────────────────────────── */
-.featured-section {
-  margin: 0 24rpx 20rpx;
-  background: var(--surface);
-  border-radius: 24rpx;
-  padding: 20rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
-}
-
-.featured-header {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  margin-bottom: 16rpx;
+  align-items: flex-end;
+  padding: 0 16px 18px;
+  box-sizing: border-box;
 }
 
 .featured-title {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-family: 'PingFang SC';
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 100%;
+  color: #FFFFFF;
 }
 
-.featured-subtitle {
-  font-size: 22rpx;
-  color: var(--text-hint);
-  background: var(--primary-bg);
-  padding: 4rpx 12rpx;
-  border-radius: 999rpx;
+.featured-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0;
+  gap: 8px;
+  margin-top: 16px;
 }
 
-.featured-swiper {
-  height: 280rpx;
-  border-radius: 20rpx;
+.featured-tag {
+  font-family: 'PingFang SC';
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 100%;
+  color: #BABABA;
+}
+
+.featured-name {
+  font-family: 'PingFang SC';
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 100%;
+  color: #000000;
+}
+
+/* ─── 攻略列表 ─── */
+.guide-list {
+  padding: 0 24px;
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.guide-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.guide-cover-wrap {
+  width: 160px;
+  height: 120px;
+  border-radius: 12px;
   overflow: hidden;
-}
-
-/* 攻略卡片样式 */
-.guide-card-large {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 20rpx;
-  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .guide-cover {
@@ -419,578 +199,74 @@ page {
   object-fit: cover;
 }
 
-.guide-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 100rpx 24rpx 24rpx;
-  background: linear-gradient(transparent 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.7) 100%);
-}
-
-.guide-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
-
-.guide-title-large {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #FFFFFF;
-  text-shadow: 0 2rpx 6rpx rgba(0,0,0,0.4);
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.guide-author {
-  font-size: 22rpx;
-  color: rgba(255,255,255,0.85);
-  font-weight: 500;
-}
-
-.guide-stats {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  margin-top: 4rpx;
-}
-
-.guide-shops {
-  font-size: 22rpx;
-  color: #FFB800;
-  font-weight: 600;
-}
-
-.guide-tag {
-  font-size: 20rpx;
-  color: #FFFFFF;
-  background: var(--primary);
-  padding: 4rpx 12rpx;
-  border-radius: 999rpx;
-  font-weight: 500;
-}
-
-/* ─── 深圳各区标签 ─────────────────────────────── */
-.district-row {
-  display: flex;
-  gap: 12rpx;
-  padding: 16rpx 24rpx;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  background: var(--bg);
-}
-
-.district-row::-webkit-scrollbar {
-  display: none;
-}
-
-.district-item {
-  padding: 10rpx 24rpx;
-  background: var(--surface);
-  border-radius: 999rpx;
-  font-size: 26rpx;
-  font-weight: 500;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.2s;
-  box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.04);
-}
-
-.district-item.active {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: #FFFFFF;
-  box-shadow: 0 4rpx 12rpx rgba(0,217,192,0.3);
-}
-
-/* ─── 各区攻略横向卡片（与探索页一致）────────── */
-.guide-list {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-}
-
-.guide-card-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 32rpx;
-  background: var(--surface);
-  border-radius: 24rpx;
-  padding: 0;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
-  transition: transform 0.2s;
-}
-
-.guide-card-row:active {
-  transform: scale(0.98);
-}
-
-.guide-img-wrap {
-  width: 200rpx;
-  height: 200rpx;
-  flex-shrink: 0;
-  border-radius: 24rpx;
-  overflow: hidden;
-  position: relative;
-  background: #f0f0f0;
-}
-
-.guide-thumb-wrap {
-  background: var(--primary-bg);
-}
-
-.guide-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.guide-cat-badge {
-  position: absolute;
-  top: 12rpx;
-  left: 12rpx;
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 8rpx;
-  padding: 6rpx 8rpx;
-  font-family: 'PingFang SC';
-  font-size: 20rpx;
-  color: #ffffff;
-  line-height: 20rpx;
-  backdrop-filter: blur(4px);
-}
-
-.guide-info {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 200rpx;
-  box-sizing: border-box;
-  width: calc(100vw - 328rpx);
-  min-width: 0;
-  padding: 16rpx 0;
-}
-
-.guide-info-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-  min-width: 0;
-  width: 100%;
-}
-
-.guide-name {
-  font-family: 'PingFang SC';
-  font-weight: 500;
-  font-size: 32rpx;
-  color: #262626;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-  display: block;
-  padding-right: 64rpx;
-  box-sizing: border-box;
-}
-
-.guide-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  flex-wrap: nowrap;
-  overflow: hidden;
-  width: 100%;
-}
-
-.guide-rating {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  background: #FDF8E3;
-  border-radius: 12rpx;
-  padding: 8rpx 16rpx;
-  font-family: 'PingFang SC';
-  font-size: 24rpx;
-  color: #EE8733;
-  line-height: 24rpx;
-  flex-shrink: 0;
-}
-
-.guide-author-tag {
-  font-family: 'PingFang SC';
-  font-size: 24rpx;
-  color: #C2C2C2;
-  line-height: 24rpx;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.guide-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  min-width: 0;
-  width: 100%;
-  box-sizing: border-box;
-  padding-right: 64rpx;
-}
-
-.guide-tags {
-  display: flex;
-  gap: 8rpx;
-  flex-wrap: nowrap;
-  overflow: hidden;
-}
-
-.guide-tag-item {
-  font-family: 'PingFang SC';
-  font-size: 24rpx;
-  color: #BABABA;
-  background: #F6F6F6;
-  border-radius: 12rpx;
-  padding: 8rpx 16rpx;
-  line-height: 24rpx;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-.guide-action {
-  position: absolute;
-  right: 48rpx;
-  top: 0;
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 16rpx;
-  background: linear-gradient(180deg, rgba(197, 211, 227, 0.1) 0%, rgba(216, 225, 236, 0.1) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.guide-arrow {
-  font-size: 32rpx;
-  color: #C2C2C2;
-  font-weight: 300;
-}
-
-/* ─── 各区攻略网格（旧样式保留兼容性）────────── */
-.guide-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16rpx;
-}
-
-.guide-card {
-  background: var(--surface);
-  border-radius: 20rpx;
-  overflow: hidden;
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
-  transition: transform 0.2s;
-}
-
-.guide-card:active {
-  transform: scale(0.98);
-}
-
-.guide-img-wrap {
-  position: relative;
-  width: 100%;
-  height: 200rpx;
-  overflow: hidden;
-}
-
-.guide-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.guide-img-overlay {
-  position: absolute;
-  top: 12rpx;
-  right: 12rpx;
-  background: rgba(0,0,0,0.6);
-  padding: 6rpx 12rpx;
-  border-radius: 999rpx;
-}
-
-.guide-shop-count {
-  font-size: 20rpx;
-  color: #FFFFFF;
-  font-weight: 500;
-}
-
-.guide-card-info {
-  padding: 16rpx;
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
-
-.guide-card-title {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: var(--text-primary);
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.guide-card-author {
-  font-size: 22rpx;
-  color: var(--text-hint);
-}
-
-.guide-card-tags {
-  display: flex;
-  gap: 8rpx;
-  flex-wrap: wrap;
-}
-
-.guide-tag-item {
-  font-size: 20rpx;
-  color: var(--primary);
-  background: var(--primary-bg);
-  padding: 4rpx 12rpx;
-  border-radius: 999rpx;
-}
-
-/* ─── Section ─────────────────────────────────── */
-.section {
-  padding: 0 24rpx 24rpx;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16rpx;
-  padding-top: 24rpx;
-}
-
-.section-title {
-  font-size: 30rpx;
-  font-weight: 800;
-  color: var(--black);
-}
-
-.section-more {
-  font-size: 24rpx;
-  color: var(--primary);
-  font-weight: 600;
-}
-
-/* ─── Recommend Grid ─────────────────────────── */
-/* 圆周旅迹风格：紧凑卡片网格 */
-.recommend-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16rpx;
-  padding-bottom: 20rpx;
-}
-
-.shop-card {
-  background: var(--surface);
-  border-radius: 12rpx;
-  overflow: hidden;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
-  transition: all 0.2s;
-}
-
-.shop-card:active {
-  transform: scale(0.98);
-}
-
-.shop-img {
-  width: 100%;
-  height: 160rpx;
-  background: var(--primary-bg);
-}
-
-.shop-img.hidden {
-  opacity: 0;
-  position: absolute;
-}
-
-.shop-img-fallback {
-  width: 100%;
-  height: 160rpx;
-  background: linear-gradient(135deg, var(--primary-bg) 0%, #E0F2F1 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.shop-img-fallback text {
-  font-size: 48rpx;
-  opacity: 0.5;
-}
-
-.shop-img-fallback.show {
-  display: flex;
-}
-
-.shop-img-fallback:not(.show) {
-  display: none;
-}
-
-.shop-card {
-  position: relative;
-  overflow: hidden;
-}
-
-.shop-info {
-  padding: 16rpx;
-}
-
-.shop-name {
-  display: block;
-  font-size: 26rpx;
-  font-weight: 700;
-  color: var(--black);
-  margin-bottom: 6rpx;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.shop-meta {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-  margin-bottom: 8rpx;
-}
-
-.rating {
-  font-size: 22rpx;
-  color: #FFB800;
-  font-weight: 600;
-}
-
-.price {
-  font-size: 22rpx;
-  color: var(--gray-2);
-}
-
-.shop-tag {
-  display: inline-block;
-  font-size: 20rpx;
-  padding: 4rpx 10rpx;
-  background: var(--primary-bg);
-  color: var(--primary-dark);
-  border-radius: 999rpx;
-  font-weight: 500;
-}
-
-/* ─── Guide List ─────────────────────────────── */
-.guide-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-}
-
-.guide-card {
-  background: var(--surface);
-  border-radius: 14rpx;
-  padding: 20rpx;
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
-  transition: all 0.2s;
-}
-
-.guide-card:active {
-  transform: scale(0.98);
-}
-
-.guide-icon {
-  width: 72rpx;
-  height: 72rpx;
-  background: var(--primary-bg);
-  border-radius: 14rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32rpx;
-  flex-shrink: 0;
-}
-
 .guide-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   min-width: 0;
 }
 
 .guide-title {
-  display: block;
-  font-size: 26rpx;
-  font-weight: 700;
-  color: var(--black);
-  margin-bottom: 4rpx;
-  white-space: nowrap;
+  font-family: 'PingFang SC';
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 1.4;
+  color: #000000;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.guide-desc {
+  font-family: 'PingFang SC';
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #BABABA;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .guide-meta {
-  font-size: 22rpx;
-  color: var(--text-secondary);
-}
-
-.guide-arrow {
-  font-size: 32rpx;
-  color: var(--text-hint);
-  font-weight: 300;
-}
-
-/* ─── Guide Empty ─────────────────────────────── */
-.guide-empty {
-  background: var(--surface);
-  border-radius: 14rpx;
-  padding: 40rpx;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.04);
+  gap: 4px;
+  margin-top: auto;
 }
 
-.empty-icon {
-  font-size: 56rpx;
-  opacity: 0.6;
+.guide-author {
+  font-family: 'PingFang SC';
+  font-weight: 400;
+  font-size: 12px;
+  color: #C1C1C1;
 }
 
-.empty-title {
-  font-size: 26rpx;
-  font-weight: 700;
-  color: var(--text-primary);
+.guide-stats {
+  font-family: 'PingFang SC';
+  font-weight: 400;
+  font-size: 12px;
+  color: #C1C1C1;
 }
 
-.empty-desc {
-  font-size: 22rpx;
-  color: var(--text-secondary);
+.guide-likes {
+  font-family: 'PingFang SC';
+  font-weight: 400;
+  font-size: 12px;
+  color: #C1C1C1;
 }
 
-/* ─── Modal ─────────────────────────────────── */
+/* ─── 搜索弹窗 ─── */
 .modal-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 999;
   opacity: 0;
   pointer-events: none;
@@ -1002,352 +278,82 @@ page {
   pointer-events: auto;
 }
 
-.import-modal,
-.result-modal {
+.search-modal {
   position: absolute;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  background: var(--surface);
-  border-radius: 32rpx 32rpx 0 0;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  transform: translateY(100%);
+  background: #FFFFFF;
+  border-radius: 0 0 32rpx 32rpx;
+  max-height: 70vh;
+  overflow-y: auto;
+  transform: translateY(-100%);
   transition: transform 0.3s;
 }
 
-.modal-mask.show .import-modal,
-.modal-mask.show .result-modal {
+.modal-mask.show .search-modal {
   transform: translateY(0);
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 32rpx 32rpx 24rpx;
-  border-bottom: 1rpx solid var(--gray-5);
+.search-header {
+  padding: 24px;
+  border-bottom: 1px solid #F0F0F0;
 }
 
-.modal-title {
-  font-size: 34rpx;
-  font-weight: 800;
-  color: var(--black);
-}
-
-.modal-close {
-  width: 64rpx;
-  height: 64rpx;
+.search-input-wrap {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 36rpx;
-  color: var(--gray-3);
-  background: var(--gray-6);
-  border-radius: 50%;
+  background: #F5F5F5;
+  border-radius: 12px;
+  padding: 12px 16px;
 }
 
-/* ─── Import Tabs ─────────────────────────────── */
-.import-tabs {
-  display: flex;
-  gap: 0;
-  background: var(--gray-6);
-  border-radius: 999rpx;
-  padding: 6rpx;
-  margin: 24rpx 32rpx;
+.search-icon-text {
+  width: 20px;
+  height: 20px;
+  background: #999999;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") center/contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") center/contain no-repeat;
+  margin-right: 12px;
 }
 
-.tab {
+.search-input {
   flex: 1;
-  text-align: center;
-  padding: 16rpx 0;
-  font-size: 28rpx;
-  font-weight: 500;
-  color: var(--gray-2);
-  border-radius: 999rpx;
-  transition: all 0.2s;
+  font-size: 16px;
+  color: #333333;
 }
 
-.tab.active {
-  background: var(--white);
-  color: var(--black);
-  font-weight: 700;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.08);
+.search-clear {
+  font-size: 20px;
+  color: #999999;
+  padding: 0 8px;
 }
 
-/* ─── Tab Content ─────────────────────────────── */
-.tab-content {
-  flex: 1;
-  padding: 0 32rpx 32rpx;
-  overflow-y: auto;
+.search-history,
+.search-hot {
+  padding: 16px 24px;
 }
 
-.import-tip {
-  display: flex;
-  align-items: flex-start;
-  gap: 12rpx;
-  background: var(--gray-6);
-  border-radius: 16rpx;
-  padding: 20rpx;
-  margin-bottom: 20rpx;
-}
-
-.tip-icon {
-  font-size: 32rpx;
-  flex-shrink: 0;
-}
-
-.tip-text {
-  font-size: 26rpx;
-  color: var(--gray-2);
-  line-height: 1.5;
-}
-
-.guide-input {
-  width: 100%;
-  min-height: 240rpx;
-  background: var(--gray-6);
-  border-radius: 16rpx;
-  padding: 24rpx;
-  font-size: 28rpx;
-  color: var(--black);
-  box-sizing: border-box;
-  border: none;
-}
-
-.input-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 20rpx;
-}
-
-.char-count {
-  font-size: 24rpx;
-  color: var(--gray-3);
-}
-
-.btn-parse {
-  padding: 16rpx 40rpx;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: var(--white);
-  font-size: 28rpx;
-  font-weight: 700;
-  border-radius: 999rpx;
-  border: none;
-  box-shadow: 0 4rpx 16rpx rgba(0,217,192,0.3);
-}
-
-.btn-parse[disabled] {
-  background: var(--gray-4);
-  box-shadow: none;
-}
-
-.btn-parse::after {
-  border: none;
-}
-
-/* ─── Result Modal ─────────────────────────────── */
-.result-modal {
-  max-height: 90vh;
-}
-
-.result-modal .modal-header {
-  padding: 28rpx 32rpx;
-}
-
-.empty-result {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 60rpx 32rpx;
-  gap: 12rpx;
-}
-
-.empty-result .empty-icon {
-  font-size: 80rpx;
-  opacity: 0.5;
-}
-
-.empty-result .empty-hint {
-  font-size: 26rpx;
-  color: var(--gray-3);
-  margin-top: 8rpx;
-}
-
-.result-summary {
-  padding: 20rpx 32rpx;
-  background: var(--gray-6);
-  font-size: 28rpx;
-  color: var(--black);
-  font-weight: 600;
-}
-
-.result-hint {
-  color: var(--gray-2);
-  font-weight: 400;
-  margin-left: 8rpx;
-}
-
-.result-section {
-  padding: 20rpx 32rpx;
-}
-
-.result-section-title {
-  font-size: 26rpx;
-  font-weight: 700;
-  color: var(--gray-2);
-  margin-bottom: 16rpx;
-}
-
-.result-item {
-  background: var(--gray-6);
-  border-radius: 16rpx;
-  padding: 20rpx;
-  margin-bottom: 12rpx;
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
-
-.result-item.found {
-  padding: 16rpx;
-}
-
-.result-thumb {
-  width: 100rpx;
-  height: 100rpx;
-  border-radius: 12rpx;
-  background: var(--gray-5);
-  flex-shrink: 0;
-}
-
-.result-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.result-name {
+.history-title,
+.hot-title {
   display: block;
-  font-size: 28rpx;
-  font-weight: 700;
-  color: var(--black);
-  margin-bottom: 6rpx;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 14px;
+  color: #999999;
+  margin-bottom: 12px;
 }
 
-.result-meta {
-  font-size: 24rpx;
-  color: var(--gray-2);
-}
-
-.result-arrow {
-  font-size: 40rpx;
-  color: var(--gray-4);
-  font-weight: 300;
-}
-
-.result-item.new {
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.result-header {
+.history-list,
+.hot-list {
   display: flex;
-  align-items: center;
-  gap: 10rpx;
-  margin-bottom: 10rpx;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.result-emoji {
-  font-size: 32rpx;
-}
-
-.result-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 6rpx;
-  font-size: 24rpx;
-  color: var(--gray-2);
-  margin-bottom: 14rpx;
-}
-
-.btn-add {
-  padding: 14rpx 32rpx;
-  background: var(--primary);
-  color: var(--white);
-  font-size: 26rpx;
-  font-weight: 700;
-  border-radius: 999rpx;
-  border: none;
-}
-
-.btn-add::after {
-  border: none;
-}
-
-.batch-add {
-  padding: 20rpx 32rpx 40rpx;
-}
-
-.btn-batch {
-  width: 100%;
-  padding: 24rpx;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: var(--white);
-  font-size: 30rpx;
-  font-weight: 700;
-  border-radius: 16rpx;
-  border: none;
-}
-
-.btn-batch::after {
-  border: none;
-}
-
-/* ─── Guide Select List ─────────────────────────── */
-.guide-select-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-}
-
-.guide-select-item {
-  background: var(--gray-6);
-  border-radius: 16rpx;
-  padding: 20rpx;
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
-
-.guide-select-icon {
-  font-size: 36rpx;
-}
-
-.guide-select-info {
-  flex: 1;
-}
-
-.guide-select-title {
-  display: block;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: var(--black);
-  margin-bottom: 6rpx;
-}
-
-.guide-select-count {
-  font-size: 24rpx;
-  color: var(--gray-3);
-}
-
-.empty-select {
-  text-align: center;
-  padding: 60rpx 0;
-  color: var(--gray-3);
-  font-size: 28rpx;
+.history-item,
+.hot-item {
+  padding: 8px 16px;
+  background: #F5F5F5;
+  border-radius: 999px;
+  font-size: 14px;
+  color: #333333;
 }

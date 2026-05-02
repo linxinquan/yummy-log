@@ -1,67 +1,39 @@
-// 觅食迹 - 发现页
+// 觅食图 - 攻略页
 const app = getApp()
-const shopData = require('../../utils/shopData')
 const util = require('../../utils/util')
-const checkinUtil = require('../../utils/checkinUtil')
 
 Page({
   data: {
-    // 导航栏高度（动态计算，与想去页面一致）
+    // 导航栏高度
     menuTop: 44,
     menuHeight: 32,
     menuRightInset: 24,
     contentTop: 108,
 
-    // 攻略推荐轮播
-    guideRecommendations: [],
-    // 深圳各区
-    districts: [
-      { name: '南山区' },
-      { name: '福田区' },
-      { name: '罗湖区' },
-      { name: '宝安区' },
-      { name: '龙岗区' },
-      { name: '龙华区' },
-      { name: '盐田区' },
-      { name: '光明区' },
-      { name: '坪山区' },
-      { name: '大鹏新区' }
+    // 分类
+    categories: [
+      { name: '全部' },
+      { name: '热门' },
+      { name: '美食' },
+      { name: '小众' }
     ],
-    currentDistrict: '南山区',
-    // 各区美食攻略
-    districtGuides: {},
+    currentCategory: '全部',
+
+    // 精选攻略
+    featuredGuides: [],
+
+    // 攻略列表
+    allGuides: [],
     currentGuides: [],
 
-    // ── AI 个性化推荐 ──────────────────────────
-    // 用户打卡画像
-    checkinProfile: null,       // { foodCount, spotCount, districts: [], lastType }
-    aiRecommendation: null,     // 当前推荐
-    recommendLoading: false,
-
-    // 我的攻略
-    myGuides: [],
-    
-    // 导入弹窗
-    showImportModal: false,
-    importTab: 'text',
-    importText: '',
-    
-    // 识别结果
-    showResultModal: false,
-    foundShops: [],
-    notFoundShops: [],
-
-    // 当前行政区划
-    currentDistrict: '南山区',  // 默认值，等待定位更新
-    currentCity: '深圳市',
-
-    // 天气信息
-    weatherIcon: '☀️',
-    weatherTemp: '25°C'
+    // 搜索
+    showSearchModal: false,
+    searchText: '',
+    searchHistory: [],
+    hotSearches: ['深圳美食', '网红打卡', '周末出游', '小众景点']
   },
 
   onLoad() {
-    // 动态获取状态栏高度，解决刘海屏遮挡问题（与想去页面一致）
     const sysInfo = wx.getSystemInfoSync()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
     const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
@@ -70,7 +42,6 @@ Page({
       ? Math.max(sysInfo.windowWidth - menuButtonInfo.left + 8, 24)
       : 103
 
-    // 顶部内容预留的高度
     const contentTop = menuTop + menuHeight + 12
 
     this.setData({
@@ -80,105 +51,122 @@ Page({
       contentTop
     })
 
-    this.loadGuideRecommendations()
-    this.loadDistrictGuides()
-    this.loadMyGuides()
-    // 获取行政区划信息
-    this.loadDistrictInfo()
-    // 获取天气
-    this.loadWeather()
-    // 加载 AI 个性化推荐
-    this.loadAIRecommendation()
+    this.loadGuides()
+    this.loadSearchHistory()
   },
 
-  onShow() {
-    this.loadMyGuides()
-    // 每次进入页面刷新推荐
-    this.loadAIRecommendation()
-  },
-
-  // 加载行政区划信息
-  loadDistrictInfo() {
-    app.whenDistrictReady((info) => {
-      this.setData({
-        currentDistrict: info.district,
-        currentCity: info.city
-      })
-      // 区划更新后重新获取天气
-      this.loadWeather()
-    })
-  },
-
-  // 加载天气信息
-  loadWeather() {
-    const location = app.globalData.location
-    if (!location) return
-    
-    // 使用和风天气API（免费版）
-    wx.request({
-      url: 'https://devapi.qweather.com/v7/weather/now',
-      data: {
-        location: `${Math.round(location.lng * 100) / 100},${Math.round(location.lat * 100) / 100}`,
-        key: '6e62e8e03d5e4e7ebc4e95e9e7e0a5e5'  // 和风天气API Key
-      },
-      success: (res) => {
-        if (res.data && res.data.code === '200') {
-          const now = res.data.now
-          const iconMap = {
-            '100': '☀️', '101': '☁️', '102': '⛅', '103': '🌤️',
-            '104': '☁️', '200': '🌬️', '201': '🌬️', '202': '🌬️',
-            '300': '🌦️', '301': '🌧️', '302': '⛈️', '303': '🌨️',
-            '304': '❄️', '305': '🌧️', '306': '🌧️', '307': '🌨️',
-            '308': '🌨️', '309': '🌧️', '310': '🌧️', '311': '🌧️',
-            '312': '⛈️', '313': '⛈️', '314': '🌧️', '315': '🌧️',
-            '316': '🌨️', '317': '🌨️', '318': '🌨️', '400': '🌙',
-            '401': '☁️', '402': '🌨️', '403': '❄️', '404': '❄️',
-            '405': '🌨️', '406': '🌨️', '407': '❄️', '408': '❄️',
-            '409': '🌨️', '410': '❄️', '456': '🌧️', '457': '🌨️'
-          }
-          this.setData({
-            weatherIcon: iconMap[now.icon] || '🌡️',
-            weatherTemp: now.temp + '°C'
-          })
-        }
-      },
-      fail: () => {
-        // 静默失败，保持默认天气
-      }
-    })
-  },
-
-  onPullDownRefresh() {
-    this.loadRecommend()
-    wx.stopPullDownRefresh()
-  },
-
-  // 加载攻略推荐（精选探店攻略）
-  loadGuideRecommendations() {
-    const guides = [
+  loadGuides() {
+    const featuredGuides = [
       {
         id: 1,
-        title: '深圳南山老字号餐厅❗14年+老店真的好吃',
-        author: '@大湾区探店王',
-        coverImage: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=400&h=300&fit=crop',
-        shopCount: 10,
-        tag: '老字号',
-        shops: ['嘉华小吃', '好好味面馆', '翠湖广东乡下菜', '老字号德记烧腊', '小煵记', '湛记佬海鲜', '蛇口老街鱼仔档', '海燕餐厅', '华洋酒楼', '新高记湛江鸡饭店']
+        name: '蛇口的海与月',
+        title: '深圳蛇口必吃地道老店推荐',
+        coverImage: 'https://images.unsplash.com/photo-1529543544277-750e0c097d84?w=300&h=200&fit=crop',
+        author: '@小胖又饿了',
+        duration: '2天',
+        shopCount: 14,
+        likes: 4222
       },
       {
         id: 2,
-        title: '深圳蛇口必吃地道老店推荐❗赶紧收藏❗',
-        author: '@小胖又饿了',
-        coverImage: 'https://images.unsplash.com/photo-1529543544277-750e0c097d84?w=400&h=300&fit=crop',
+        name: '春日踏青',
+        title: '深圳春日赏花攻略',
+        coverImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=200&fit=crop',
+        author: '@旅行博主',
+        duration: '1天',
         shopCount: 8,
-        tag: '必吃榜',
-        shops: ['同兴旺湛江鸡饭店', '嘉华小吃', '益康堂鱼仔码头', '蛇口老街鱼仔档', '冬阴功泰国菜', '原乡车田情', '鹅最好', '百草堂祖传凉茶铺']
+        likes: 2841
       }
     ]
-    this.setData({ guideRecommendations: guides })
+
+    const allGuides = [
+      {
+        id: 3,
+        category: '美食',
+        title: '舌尖上的长安：3天吃遍西安老味道',
+        desc: '西安美食小吃：腊味酥饼糕点各种地道小吃：双皮奶、鱼皮、煲仔饭等等，有些热门...',
+        coverImage: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=160&h=120&fit=crop',
+        author: '@打工人',
+        duration: '3天',
+        shopCount: 14,
+        likes: 4232
+      },
+      {
+        id: 4,
+        category: '热门',
+        title: '深圳南山老字号餐厅攻略',
+        desc: '14年+老店真的好吃，嘉华小吃、好好味面馆、翠湖广东乡下菜等10家南山老字号',
+        coverImage: 'https://images.unsplash.com/photo-1529543544277-750e0c097d84?w=160&h=120&fit=crop',
+        author: '@大湾区探店王',
+        duration: '1天',
+        shopCount: 10,
+        likes: 3891
+      },
+      {
+        id: 5,
+        category: '小众',
+        title: '深圳隐藏的文艺角落',
+        desc: '远离喧嚣，发现深圳那些不为人知的文艺小店和咖啡馆',
+        coverImage: 'https://images.unsplash.com/photo-1493770348161-369560ae357d?w=160&h=120&fit=crop',
+        author: '@文艺青年',
+        duration: '1天',
+        shopCount: 6,
+        likes: 1567
+      },
+      {
+        id: 6,
+        category: '美食',
+        title: '福田CBD商务宴请餐厅指南',
+        desc: '福田会展中心周边高端餐厅推荐，适合商务宴请和朋友聚会',
+        coverImage: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=160&h=120&fit=crop',
+        author: '@商务美食家',
+        duration: '1天',
+        shopCount: 8,
+        likes: 2103
+      },
+      {
+        id: 7,
+        category: '热门',
+        title: '东门町美食攻略',
+        desc: '东门步行街美食全攻略，20家必吃小吃等你来打卡',
+        coverImage: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=160&h=120&fit=crop',
+        author: '@东门通',
+        duration: '半天',
+        shopCount: 20,
+        likes: 5678
+      },
+      {
+        id: 8,
+        category: '小众',
+        title: '盐田海滨栈道徒步',
+        desc: '最美海岸线徒步路线，山海相连的绝美风景',
+        coverImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=160&h=120&fit=crop',
+        author: '@户外达人',
+        duration: '1天',
+        shopCount: 4,
+        likes: 1892
+      }
+    ]
+
+    this.setData({
+      featuredGuides,
+      allGuides,
+      currentGuides: allGuides
+    })
   },
 
-  // 点击攻略推荐卡片
+  onCategoryChange(e) {
+    const category = e.currentTarget.dataset.category
+    this.setData({ currentCategory: category })
+
+    if (category === '全部') {
+      this.setData({ currentGuides: this.data.allGuides })
+    } else {
+      const filtered = this.data.allGuides.filter(g => g.category === category)
+      this.setData({ currentGuides: filtered })
+    }
+  },
+
   onGuideTap(e) {
     const guide = e.currentTarget.dataset.guide
     wx.navigateTo({
@@ -186,649 +174,60 @@ Page({
     })
   },
 
-  // 加载各区美食攻略
-  loadDistrictGuides() {
-    const districtGuides = {
-      '南山区': [
-        {
-          id: 'ns_1',
-          title: '深圳南山老字号餐厅❗14年+老店',
-          author: '@大湾区探店王',
-          coverImage: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=400&h=400&fit=crop',
-          shopCount: 10,
-          tags: ['老字号', '粤菜'],
-          desc: '嘉华小吃、好好味面馆、翠湖广东乡下菜等10家南山老字号'
-        },
-        {
-          id: 'ns_2',
-          title: '深圳蛇口必吃地道老店推荐',
-          author: '@小胖又饿了',
-          coverImage: 'https://images.unsplash.com/photo-1529543544277-750e0c097d84?w=400&h=400&fit=crop',
-          shopCount: 8,
-          tags: ['必吃榜', '蛇口'],
-          desc: '同兴旺湛江鸡、嘉华小吃、益康堂鱼仔码头等蛇口老店'
-        },
-        {
-          id: 'ns_3',
-          title: '南山科技园打工人美食地图',
-          author: '@深圳吃货',
-          coverImage: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=400&fit=crop',
-          shopCount: 12,
-          tags: ['科技园', '工作餐'],
-          desc: '科技园周边高性价比美食推荐'
-        },
-        {
-          id: 'ns_4',
-          title: '南山海上世界美食攻略',
-          author: '@探店达人',
-          coverImage: 'https://images.unsplash.com/photo-1544148103-0773bf10d330?w=400&h=400&fit=crop',
-          shopCount: 6,
-          tags: ['海上世界', '西餐'],
-          desc: '海上世界周边精品餐厅推荐'
-        }
-      ],
-      '福田区': [
-        {
-          id: 'ft_1',
-          title: '福田CBD商务宴请餐厅指南',
-          author: '@商务美食家',
-          coverImage: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=400&fit=crop',
-          shopCount: 8,
-          tags: ['CBD', '商务'],
-          desc: '福田会展中心周边高端餐厅'
-        },
-        {
-          id: 'ft_2',
-          title: '华强北地道小吃一条街',
-          author: '@街头美食',
-          coverImage: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=400&fit=crop',
-          shopCount: 15,
-          tags: ['华强北', '小吃'],
-          desc: '华强北隐藏美食小店大搜罗'
-        },
-        {
-          id: 'ft_3',
-          title: '福田皇庭广场美食攻略',
-          author: '@mall美食',
-          coverImage: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&h=400&fit=crop',
-          shopCount: 10,
-          tags: ['皇庭广场', '商场'],
-          desc: '皇庭广场必吃餐厅推荐'
-        },
-        {
-          id: 'ft_4',
-          title: '福田梅林美食地图',
-          author: '@梅林吃货',
-          coverImage: 'https://images.unsplash.com/photo-1552611052-33e04de081de?w=400&h=400&fit=crop',
-          shopCount: 9,
-          tags: ['梅林', '本地'],
-          desc: '梅林片区老字号美食推荐'
-        }
-      ],
-      '罗湖区': [
-        {
-          id: 'lh_1',
-          title: '罗湖黄贝岭老字号美食',
-          author: '@老街坊',
-          coverImage: 'https://images.unsplash.com/photo-1567191142883-8b2c53e7f3a9?w=400&h=400&fit=crop',
-          shopCount: 7,
-          tags: ['黄贝岭', '老字号'],
-          desc: '龟老吉凉粉、新发烧腊等25年老字号'
-        },
-        {
-          id: 'lh_2',
-          title: '罗湖东门町美食攻略',
-          author: '@东门通',
-          coverImage: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=400&fit=crop',
-          shopCount: 20,
-          tags: ['东门', '小吃街'],
-          desc: '东门步行街美食全攻略'
-        },
-        {
-          id: 'lh_3',
-          title: '罗湖万象城高端美食',
-          author: '@品质生活',
-          coverImage: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&h=400&fit=crop',
-          shopCount: 6,
-          tags: ['万象城', '高端'],
-          desc: '万象城精品餐厅推荐'
-        },
-        {
-          id: 'lh_4',
-          title: '罗湖潮汕美食聚集地',
-          author: '@潮汕人',
-          coverImage: 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&h=400&fit=crop',
-          shopCount: 11,
-          tags: ['潮汕', '牛肉火锅'],
-          desc: '罗湖正宗潮汕牛肉火锅推荐'
-        }
-      ],
-      '宝安区': [
-        {
-          id: 'ba_1',
-          title: '宝安壹方城美食全攻略',
-          author: '@宝安吃货',
-          coverImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=400&fit=crop',
-          shopCount: 14,
-          tags: ['壹方城', '商场'],
-          desc: '壹方城必吃餐厅一网打尽'
-        },
-        {
-          id: 'ba_2',
-          title: '宝安盐田夜市美食地图',
-          author: '@夜市达人',
-          coverImage: 'https://images.unsplash.com/photo-1563899362581-7e76a5b458b0?w=400&h=400&fit=crop',
-          shopCount: 25,
-          tags: ['夜市', '小吃'],
-          desc: '宝安盐田夜市各地小吃推荐'
-        },
-        {
-          id: 'ba_3',
-          title: '宝安欢乐港湾美食指南',
-          author: '@湾区美食',
-          coverImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-          shopCount: 8,
-          tags: ['欢乐港湾', '海景'],
-          desc: '欢乐港湾海景餐厅推荐'
-        }
-      ],
-      '龙岗区': [
-        {
-          id: 'lg_1',
-          title: '龙岗中心城美食攻略',
-          author: '@龙岗通',
-          coverImage: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=400&h=400&fit=crop',
-          shopCount: 10,
-          tags: ['中心城', '本地'],
-          desc: '龙岗中心城人气餐厅推荐'
-        },
-        {
-          id: 'lg_2',
-          title: '龙岗坂田美食地图',
-          author: '@坂田吃货',
-          coverImage: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=400&fit=crop',
-          shopCount: 12,
-          tags: ['坂田', '华为'],
-          desc: '坂田华为周边美食推荐'
-        },
-        {
-          id: 'lg_3',
-          title: '龙岗罗瑞合美食街',
-          author: '@美食街探店',
-          coverImage: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&h=400&fit=crop',
-          shopCount: 18,
-          tags: ['美食街', '客家'],
-          desc: '罗瑞合客家美食一条街'
-        }
-      ],
-      '龙华区': [
-        {
-          id: 'lh_1',
-          title: '龙华壹方天地美食攻略',
-          author: '@龙华吃货',
-          coverImage: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=400&h=400&fit=crop',
-          shopCount: 9,
-          tags: ['壹方天地', '商场'],
-          desc: '龙华壹方天地美食推荐'
-        },
-        {
-          id: 'lh_2',
-          title: '龙华民治夜市美食',
-          author: '@夜市猎人',
-          coverImage: 'https://images.unsplash.com/photo-1544148103-0773bf10d330?w=400&h=400&fit=crop',
-          shopCount: 16,
-          tags: ['民治', '夜市'],
-          desc: '民治大道夜市烟火气美食'
-        }
-      ],
-      '盐田区': [
-        {
-          id: 'yt_1',
-          title: '盐田海鲜街美食攻略',
-          author: '@海鲜控',
-          coverImage: 'https://images.unsplash.com/photo-1534080564583-6be75777b70a?w=400&h=400&fit=crop',
-          shopCount: 8,
-          tags: ['海鲜', '海边'],
-          desc: '盐田海鲜街新鲜海鲜推荐'
-        },
-        {
-          id: 'yt_2',
-          title: '大梅沙海滨美食指南',
-          author: '@海边美食',
-          coverImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=400&fit=crop',
-          shopCount: 6,
-          tags: ['大梅沙', '度假'],
-          desc: '大梅沙海滨度假区餐厅推荐'
-        }
-      ],
-      '光明区': [
-        {
-          id: 'gm_1',
-          title: '光明三宝美食之旅',
-          author: '@光明通',
-          coverImage: 'https://images.unsplash.com/photo-1567191142883-8b2c53e7f3a9?w=400&h=400&fit=crop',
-          shopCount: 5,
-          tags: ['光明三宝', '乳鸽'],
-          desc: '光明乳鸽、甜玉米、牛初乳'
-        },
-        {
-          id: 'gm_2',
-          title: '光明农场美食攻略',
-          author: '@农场美食',
-          coverImage: 'https://images.unsplash.com/photo-1482049016gy6b3-88b8d5a7e1c2?w=400&h=400&fit=crop',
-          shopCount: 7,
-          tags: ['农场', '有机'],
-          desc: '光明农场周边农家菜推荐'
-        }
-      ],
-      '坪山区': [
-        {
-          id: 'ps_1',
-          title: '坪山牛肉一条街',
-          author: '@牛肉控',
-          coverImage: 'https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=400&h=400&fit=crop',
-          shopCount: 6,
-          tags: ['牛肉火锅', '现宰'],
-          desc: '坪山潮汕现宰牛肉火锅'
-        }
-      ],
-      '大鹏新区': [
-        {
-          id: 'dp_1',
-          title: '大鹏所城美食攻略',
-          author: '@古城美食',
-          coverImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop',
-          shopCount: 8,
-          tags: ['大鹏所城', '海鲜'],
-          desc: '大鹏所城特色餐厅推荐'
-        },
-        {
-          id: 'dp_2',
-          title: '较场尾海边美食',
-          author: '@海边吃货',
-          coverImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=400&fit=crop',
-          shopCount: 5,
-          tags: ['较场尾', '民宿'],
-          desc: '较场尾海边民宿美食'
-        }
-      ]
-    }
-    
-    this.setData({ 
-      districtGuides: districtGuides,
-      currentGuides: districtGuides['南山区'] || []
-    })
+  onOpenSearch() {
+    this.setData({ showSearchModal: true })
   },
 
-  // 切换区
-  onDistrictChange(e) {
-    const district = e.currentTarget.dataset.district
-    const guides = this.data.districtGuides[district] || []
-    this.setData({ 
-      currentDistrict: district,
-      currentGuides: guides
-    })
+  onCloseSearch() {
+    this.setData({ showSearchModal: false, searchText: '' })
   },
 
-  // 点击区攻略卡片
-  onDistrictGuideTap(e) {
-    const guide = e.currentTarget.dataset.guide
-    wx.navigateTo({
-      url: `/pages/guide-detail/guide-detail?guide=${encodeURIComponent(JSON.stringify(guide))}`
-    })
+  onSearchInput(e) {
+    this.setData({ searchText: e.detail.value })
   },
 
-  // 刷新当前区攻略
-  onRefreshGuides() {
-    // 随机打乱当前区攻略顺序
-    const guides = [...this.data.currentGuides]
-    for (let i = guides.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[guides[i], guides[j]] = [guides[j], guides[i]]
-    }
-    this.setData({ currentGuides: guides })
+  onSearch() {
+    const text = this.data.searchText.trim()
+    if (!text) return
+
+    this.saveSearchHistory(text)
+    this.setData({ showSearchModal: false })
+
+    const filtered = this.data.allGuides.filter(g => 
+      g.title.includes(text) || g.desc.includes(text)
+    )
+    this.setData({ currentGuides: filtered, currentCategory: '全部' })
   },
 
-  // 加载推荐网格（按人气/打卡数排序，取6家）
-  loadRecommend() {
-    const shops = shopData.shops
-    const sorted = [...shops].sort((a, b) => (b.checkInCount || 0) - (a.checkInCount || 0))
-    const recommend = sorted.slice(0, 6)
-    this.setData({ recommendShops: recommend })
+  onClearSearch() {
+    this.setData({ searchText: '' })
   },
 
-  // 加载我的攻略
-  loadMyGuides() {
-    const guides = util.loadData('myGuides', [])
-    guides.forEach(g => {
-      g.dateStr = new Date(g.date).toLocaleDateString('zh-CN')
-    })
-    this.setData({ myGuides: guides })
+  loadSearchHistory() {
+    const history = util.loadData('searchHistory', [])
+    this.setData({ searchHistory: history.slice(0, 10) })
   },
 
-  // 打开导入弹窗
-  onOpenImport() {
-    this.setData({ showImportModal: true, importTab: 'text', importText: '' })
-    
-    // 自动读取剪贴板
-    wx.getClipboardData({
-      success: (res) => {
-        const clipboardText = res.data || ''
-        if (clipboardText) {
-          // 检测是否是链接
-          const isLink = /xhs\.cn|xhslink\.com|xiaohongshu\.com|redbook|大众点评|dianping/.test(clipboardText)
-          // 检测是否像攻略文本
-          const looksLikeGuide = clipboardText.includes('✅') || clipboardText.includes('店名') || clipboardText.includes('推荐')
-          
-          if (isLink || looksLikeGuide || clipboardText.length > 20) {
-            this.setData({ importText: clipboardText })
-            // 自动提示用户
-            wx.showToast({
-              title: isLink ? '检测到链接，可直接解析' : '已粘贴剪贴板内容',
-              icon: 'none',
-              duration: 2000
-            })
-          }
-        }
-      }
-    })
+  saveSearchHistory(text) {
+    let history = util.loadData('searchHistory', [])
+    history = history.filter(h => h !== text)
+    history.unshift(text)
+    if (history.length > 10) history.pop()
+    util.saveData('searchHistory', history)
+    this.setData({ searchHistory: history })
   },
 
-  // 关闭导入弹窗
-  onCloseImport() {
-    this.setData({ showImportModal: false })
+  onHistoryTap(e) {
+    const text = e.currentTarget.dataset.text
+    this.setData({ searchText: text })
+    this.onSearch()
   },
 
-  // 切换 Tab
-  onSwitchTab(e) {
-    const tab = e.currentTarget.dataset.tab
-    this.setData({ importTab: tab })
+  onHotTap(e) {
+    const text = e.currentTarget.dataset.text
+    this.setData({ searchText: text })
+    this.onSearch()
   },
 
-  // 文本输入
-  onTextInput(e) {
-    this.setData({ importText: e.detail.value })
-  },
-
-  // 解析攻略
-  onParseGuide() {
-    const text = this.data.importText.trim()
-    if (!text) {
-      wx.showToast({ title: '请先输入攻略内容', icon: 'none' })
-      return
-    }
-    
-    util.showLoading('智能识别中...')
-    
-    // 延迟模拟解析
-    setTimeout(() => {
-      const result = util.parseBlockBasedGuide(text)
-      
-      this.setData({
-        showImportModal: false,
-        showResultModal: true,
-        foundShops: result.foundShops,
-        notFoundShops: result.notFoundShops
-      })
-      
-      util.hideLoading()
-      
-      // 显示识别结果提示
-      const total = result.foundShops.length + result.notFoundShops.length
-      if (total === 0) {
-        wx.showToast({ 
-          title: '未识别到店铺，请检查格式', 
-          icon: 'none',
-          duration: 2500 
-        })
-      } else {
-        wx.showToast({ 
-          title: `识别到 ${total} 家店铺`, 
-          icon: 'success' 
-        })
-      }
-      
-      // 保存攻略
-      if (total > 0) {
-        this.saveGuide(text, result)
-      }
-    }, 800)
-  },
-
-  // 保存攻略
-  saveGuide(text, result) {
-    const guides = util.loadData('myGuides', [])
-    const newGuide = {
-      id: Date.now(),
-      title: text.substring(0, 30) + (text.length > 30 ? '...' : ''),
-      content: text,
-      shopCount: result.foundShops.length + result.notFoundShops.length,
-      date: new Date().toISOString()
-    }
-    guides.unshift(newGuide)
-    // 只保留最近10篇
-    if (guides.length > 10) guides.pop()
-    util.saveData('myGuides', guides)
-    this.loadMyGuides()
-  },
-
-  // 关闭结果弹窗
-  onCloseResult() {
-    this.setData({ showResultModal: false })
-  },
-
-  // 加载攻略
-  onLoadGuide(e) {
-    const guide = e.currentTarget.dataset.guide
-    this.setData({ 
-      importText: guide.content,
-      importTab: 'text'
-    })
-    this.onParseGuide()
-  },
-
-  // 选择攻略
-  onSelectGuide(e) {
-    const guide = e.currentTarget.dataset.guide
-    this.onLoadGuide({ currentTarget: { dataset: { guide } } })
-    this.onCloseImport()
-  },
-
-  // 添加新店
-  onAddNewShop(e) {
-    const shop = e.currentTarget.dataset.shop
-    wx.navigateTo({
-      url: `/pages/sub/add-shop/add-shop?shop=${encodeURIComponent(JSON.stringify(shop))}`
-    })
-  },
-
-  // 批量添加
-  onBatchAdd() {
-    wx.navigateTo({
-      url: `/pages/sub/add-shop/add-shop?batch=${encodeURIComponent(JSON.stringify(this.data.notFoundShops))}`
-    })
-  },
-
-  // 添加店铺
-  onAddShop() {
-    wx.navigateTo({
-      url: '/pages/add-shop/add-shop'
-    })
-  },
-
-  // 店铺点击
-  onShopTap(e) {
-    const shop = e.currentTarget.dataset.shop
-    wx.navigateTo({
-      url: `/pages/sub/shop-detail/shop-detail?shop=${encodeURIComponent(JSON.stringify(shop))}`
-    })
-  },
-
-  // 换一批推荐
-  onRefreshRecommend() {
-    this.loadRecommend()
-    wx.showToast({ title: '已换一批', icon: 'none' })
-  },
-
-  // 图片加载失败
-  onImageError(e) {
-    const index = e.currentTarget.dataset.index
-    if (index !== undefined) {
-      const shops = this.data.recommendShops
-      shops[index].imgError = true
-      this.setData({ recommendShops: shops })
-    }
-  },
-
-  // 攻略封面图片加载失败
-  onGuideImageError(e) {
-    const index = e.currentTarget.dataset.index
-    if (index !== undefined) {
-      const guides = this.data.myGuides
-      if (guides[index]) {
-        guides[index].coverImage = '/images/app-logo.jpg'
-        this.setData({ myGuides: guides })
-      }
-    }
-  },
-
-  // 管理攻略
-  onManageGuides() {
-    wx.showActionSheet({
-      itemList: ['清空所有攻略'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          wx.showModal({
-            title: '确认清空',
-            content: '确定要清空所有攻略吗？',
-            success: (m) => {
-              if (m.confirm) {
-                util.saveData('myGuides', [])
-                this.loadMyGuides()
-                wx.showToast({ title: '已清空', icon: 'success' })
-              }
-            }
-          })
-        }
-      }
-    })
-  },
-
-  // ── AI 个性化推荐 ──────────────────────────────────
-
-  // 加载 AI 推荐（每次进入页面刷新）
-  loadAIRecommendation() {
-    if (!checkinUtil) return
-    const profile = checkinUtil.getCheckinStats() || {}
-    const checkins = checkinUtil.getCheckins() || []
-
-    // 构建用户画像
-    const foodCount = checkins.filter(c => c.type === 'food').length
-    const spotCount = checkins.filter(c => c.type === 'spot').length
-    const districts = [...new Set(checkins.map(c => c.district || '').filter(Boolean))]
-    const lastType = checkins.length > 0 ? checkins[checkins.length - 1].type : null
-
-    const userProfile = { foodCount, spotCount, districts, lastType, total: checkins.length }
-    this.setData({ checkinProfile: userProfile })
-
-    // 基于时间 + 画像生成推荐
-    const rec = this._buildRecommendation(profile, userProfile)
-    this.setData({ aiRecommendation: rec })
-  },
-
-  // 构建推荐内容（规则引擎 + AI 生成描述）
-  _buildRecommendation(profile, userProfile) {
-    const hour = new Date().getHours()
-    const city = (getApp().globalData.districtInfo?.city || '深圳').replace('市', '')
-
-    // 时段关键词
-    let timeLabel, timeIcon, recType, recTitle
-    if (hour < 9) {
-      timeLabel = '早餐'; timeIcon = '🌅'; recType = 'food'
-      recTitle = '今日早餐灵感'
-    } else if (hour < 14) {
-      timeLabel = '午餐'; timeIcon = '☀️'; recType = 'food'
-      recTitle = '附近午餐推荐'
-    } else if (hour < 18) {
-      timeLabel = '下午茶'; timeIcon = '🍵'; recType = 'food'
-      recTitle = '下午茶时光'
-    } else if (hour < 22) {
-      timeLabel = '晚餐'; timeIcon = '🌙'; recType = 'food'
-      recTitle = '晚餐觅食'
-    } else {
-      timeLabel = '夜宵'; timeIcon = '🌃'; recType = 'food'
-      recTitle = '深夜食堂'
-    }
-
-    // 新用户引导
-    if (userProfile.total < 3) {
-      return {
-        type: recType,
-        timeLabel,
-        timeIcon,
-        recTitle: '开始你的觅食之旅',
-        recDesc: `还没有太多记录？从${city}南山区开始探索吧，这里有丰富的美食和景点等你发现～`,
-        actionText: '去探索',
-        actionPath: '/pages/spots/spots',
-        ctaIcon: '✦',
-        isNewUser: true
-      }
-    }
-
-    // 美食爱好者
-    if (userProfile.foodCount > userProfile.spotCount) {
-      const spotRatio = Math.round(userProfile.spotCount / (userProfile.foodCount + 1) * 100)
-      return {
-        type: 'spot',
-        timeLabel,
-        timeIcon,
-        recTitle: '换个口味？去景点走走吧',
-        recDesc: `记录了${userProfile.foodCount}次美食，但景点只有${userProfile.spotCount}个。${city}的自然风光也值得一去哦～`,
-        actionText: '发现景点',
-        actionPath: '/pages/spots/spots',
-        ctaIcon: '✦',
-        isNewUser: false
-      }
-    }
-
-    // 景点爱好者
-    if (userProfile.spotCount > userProfile.foodCount) {
-      return {
-        type: 'food',
-        timeLabel,
-        timeIcon,
-        recTitle: '肚子饿了？附近觅食',
-        recDesc: `已经打卡了${userProfile.spotCount}个景点！美食也在等你，南山区的老字号值得一试～`,
-        actionText: '去觅食',
-        actionPath: '/pages/index/index',
-        ctaIcon: '✦',
-        isNewUser: false
-      }
-    }
-
-    // 均衡型
-    return {
-      type: recType,
-      timeLabel,
-      timeIcon,
-      recTitle: `${timeLabel} ${timeIcon} 不错的选择`,
-      recDesc: `足迹 ${userProfile.total} 条 · 美食 ${userProfile.foodCount} · 景点 ${userProfile.spotCount} · ${city}等你继续探索`,
-      actionText: '继续探索',
-      actionPath: recType === 'food' ? '/pages/index/index' : '/pages/spots/spots',
-      ctaIcon: '✦',
-      isNewUser: false
-    }
-  },
-
-  // 点击 AI 推荐卡片
-  onAIRecommendTap() {
-    const rec = this.data.aiRecommendation
-    if (!rec) return
-    if (rec.actionPath) {
-      wx.switchTab({ url: rec.actionPath })
-    }
-  },
-
-  // 阻止冒泡
   stopPropagation() {}
 })
