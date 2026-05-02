@@ -10,6 +10,7 @@
   <!-- 精选攻略卡片（横向滚动） -->
   <scroll-view class="featured-scroll" scroll-x enable-flex>
     <view class="featured-list">
+      <view class="featured-card-placeholder"></view>
       <view 
         wx:for="{{featuredGuides}}"
         wx:key="id"
@@ -28,7 +29,7 @@
           </view>
         </view>
       </view>
-      <view class="featured-card-placeholder"></view>
+      <view class="featured-card-placeholder end"></view>
     </view>
   </scroll-view>
 

@@ -130,7 +130,6 @@ page {
 .featured-scroll {
   white-space: nowrap;
   margin-top: 32rpx;
-  padding-left: 48rpx;
 }
 
 .featured-list {
@@ -141,6 +140,10 @@ page {
 .featured-card-placeholder {
   width: 48rpx;
   flex-shrink: 0;
+}
+
+.featured-card-placeholder.end {
+  width: 0;
 }
 
 .featured-card {
