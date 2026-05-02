@@ -70,14 +70,12 @@ Page({
     ]
 
     const cardColors = [
-      '#F2EEEB', // 米白色
-      '#E8F4E8', // 浅绿色
-      '#FDF2E8', // 浅橙色
-      '#E8F0F4', // 浅蓝色
-      '#F4E8F0', // 浅粉色
-      '#F0F4E8', // 浅黄绿色
-      '#E8ECF4', // 浅紫蓝色
-      '#F4F0E8'  // 浅棕色
+      '#F2EEEB',
+      '#E8F4E8',
+      '#FDF2E8',
+      '#E8F0F4',
+      '#F4E8F0',
+      '#F0F4E8'
     ]
 
     const featuredGuides = [
@@ -86,7 +84,7 @@ Page({
         name: '蛇口的海与月',
         title: '深圳蛇口必吃地道老店推荐',
         coverImage: coverImages[0],
-        author: '@小胖又饿了',
+        author: '小胖又饿了',
         duration: '2天',
         shopCount: 14,
         likes: 4222
@@ -96,7 +94,7 @@ Page({
         name: '春日踏青',
         title: '深圳春日赏花攻略',
         coverImage: coverImages[1],
-        author: '@旅行博主',
+        author: '旅行博主',
         duration: '1天',
         shopCount: 8,
         likes: 2841
@@ -106,7 +104,7 @@ Page({
         name: '周末寻味',
         title: '深圳本地人常去的美食街',
         coverImage: coverImages[2],
-        author: '@美食达人',
+        author: '美食达人',
         duration: '1天',
         shopCount: 12,
         likes: 3567
@@ -116,7 +114,7 @@ Page({
         name: '文艺慢生活',
         title: '蛇口值得打卡的咖啡馆',
         coverImage: coverImages[3],
-        author: '@文艺青年',
+        author: '文艺青年',
         duration: '半天',
         shopCount: 6,
         likes: 2156
@@ -126,7 +124,7 @@ Page({
         name: '海滨漫步',
         title: '深圳最值得去的海边景点',
         coverImage: coverImages[4],
-        author: '@旅行家',
+        author: '旅行家',
         duration: '1天',
         shopCount: 5,
         likes: 1987
@@ -142,7 +140,7 @@ Page({
         desc: '西安美食小吃：腊味酥饼糕点各种地道小吃：双皮奶、鱼皮、煲仔饭等等，有些热门...',
         coverImage: coverImages[5],
         cardColor: cardColors[0],
-        author: '@打工人',
+        author: '打工人',
         duration: '3天',
         shopCount: 14,
         likes: 4232
@@ -155,7 +153,7 @@ Page({
         desc: '14年+老店真的好吃，嘉华小吃、好好味面馆、翠湖广东乡下菜等10家南山老字号',
         coverImage: coverImages[6],
         cardColor: cardColors[1],
-        author: '@大湾区探店王',
+        author: '大湾区探店王',
         duration: '1天',
         shopCount: 10,
         likes: 3891
@@ -168,7 +166,7 @@ Page({
         desc: '远离喧嚣，发现深圳那些不为人知的文艺小店和咖啡馆',
         coverImage: coverImages[7],
         cardColor: cardColors[2],
-        author: '@文艺青年',
+        author: '文艺青年',
         duration: '1天',
         shopCount: 6,
         likes: 1567
@@ -181,7 +179,7 @@ Page({
         desc: '福田会展中心周边高端餐厅推荐，适合商务宴请和朋友聚会',
         coverImage: coverImages[0],
         cardColor: cardColors[3],
-        author: '@商务美食家',
+        author: '商务美食家',
         duration: '1天',
         shopCount: 8,
         likes: 2103
@@ -194,7 +192,7 @@ Page({
         desc: '东门步行街美食全攻略，20家必吃小吃等你来打卡',
         coverImage: coverImages[1],
         cardColor: cardColors[4],
-        author: '@东门通',
+        author: '东门通',
         duration: '半天',
         shopCount: 20,
         likes: 5678
@@ -207,7 +205,7 @@ Page({
         desc: '最美海岸线徒步路线，山海相连的绝美风景',
         coverImage: coverImages[2],
         cardColor: cardColors[5],
-        author: '@户外达人',
+        author: '户外达人',
         duration: '1天',
         shopCount: 4,
         likes: 1892

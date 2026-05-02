@@ -213,7 +213,7 @@ page {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding: 0 24px;
+  padding: 0 16px;
 }
 
 .guide-card {
@@ -245,7 +245,7 @@ page {
   position: absolute;
   left: 132px;
   top: 16px;
-  width: 194px;
+  width: calc(100% - 160px);
 }
 
 .guide-desc {
@@ -275,15 +275,15 @@ page {
   height: 0;
   left: 16px;
   top: 136px;
-  opacity: 0.5;
-  border: 1px solid #FFFFFF;
+  opacity: 0.2;
+  border-top: 0.5px solid #FFFFFF;
 }
 
 .guide-footer {
   position: absolute;
   width: calc(100% - 32px);
   left: 16px;
-  top: 152px;
+  top: 144px;
 }
 
 .guide-title {
@@ -293,7 +293,7 @@ page {
   line-height: 100%;
   color: #060606;
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .guide-meta {
