@@ -289,7 +289,7 @@ page {
   position: absolute;
   width: calc(100% - 64rpx);
   left: 32rpx;
-  top: 288rpx;
+  top: 304rpx;
 }
 
 .guide-title {
@@ -299,7 +299,7 @@ page {
   line-height: 100%;
   color: #060606;
   display: block;
-  margin-bottom: 16rpx;
+  margin-bottom: 32rpx;
 }
 
 .guide-meta {
