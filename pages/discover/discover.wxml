@@ -59,12 +59,18 @@
       <view class="guide-cover-wrap">
         <image class="guide-cover" src="{{item.coverImage}}" mode="aspectFill" />
       </view>
-      <view class="guide-content">
-        <text class="guide-title">{{item.title}}</text>
+      <view class="guide-info">
         <text class="guide-desc">{{item.desc}}</text>
+        <text class="guide-stats">{{item.duration}} · {{item.shopCount}} 个地点</text>
+      </view>
+      <view class="guide-divider"></view>
+      <view class="guide-footer">
+        <text class="guide-title">{{item.title}}</text>
         <view class="guide-meta">
-          <text class="guide-author">{{item.author}}</text>
-          <text class="guide-stats">{{item.duration}} · {{item.shopCount}} 个地点</text>
+          <view class="guide-author-wrap">
+            <image class="guide-author-avatar" src="{{item.coverImage}}" mode="aspectFill" />
+            <text class="guide-author">{{item.author}}</text>
+          </view>
           <text class="guide-likes">{{item.likes}} 人收藏</text>
         </view>
       </view>
