@@ -248,7 +248,7 @@ page {
 .guide-info {
   position: absolute;
   left: 264rpx;
-  width: 176rpx;
+  width: 388rpx;
   display: flex;
   flex-direction: column;
 }
