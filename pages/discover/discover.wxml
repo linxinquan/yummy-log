@@ -5,33 +5,6 @@
     <view class="nav-left">
       <text class="nav-title">攻略</text>
     </view>
-    <view class="nav-right">
-      <view class="nav-btn" bindtap="onOpenSearch">
-        <text class="search-icon">search_line</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 区域标签 -->
-  <view class="district-row">
-    <view 
-      wx:for="{{districts}}"
-      wx:key="name"
-      class="district-item {{currentDistrict === item.name ? 'active' : ''}}"
-      bindtap="onDistrictChange"
-      data-district="{{item.name}}"
-    >{{item.name}}</view>
-  </view>
-
-  <!-- 分类标签 -->
-  <view class="category-row">
-    <view 
-      wx:for="{{categories}}"
-      wx:key="name"
-      class="category-item {{currentCategory === item.name ? 'active' : ''}}"
-      bindtap="onCategoryChange"
-      data-category="{{item.name}}"
-    >{{item.name}}</view>
   </view>
 
   <!-- 精选攻略卡片（横向滚动） -->
@@ -57,6 +30,26 @@
       </view>
     </view>
   </scroll-view>
+
+  <!-- 区域标签 -->
+  <view class="district-row">
+    <view 
+      wx:for="{{districts}}"
+      wx:key="name"
+      class="district-item"
+    >{{item.name}}</view>
+  </view>
+
+  <!-- 分类标签 -->
+  <view class="category-row">
+    <view 
+      wx:for="{{categories}}"
+      wx:key="name"
+      class="category-item {{currentCategory === item.name ? 'active' : ''}}"
+      bindtap="onCategoryChange"
+      data-category="{{item.name}}"
+    >{{item.name}}</view>
+  </view>
 
   <!-- 攻略列表 -->
   <view class="guide-list">
@@ -88,46 +81,4 @@
     </view>
   </view>
 
-  <!-- 搜索弹窗 -->
-  <view class="modal-mask {{showSearchModal ? 'show' : ''}}" bindtap="onCloseSearch">
-    <view class="search-modal" catchtap="stopPropagation">
-      <view class="search-header">
-        <view class="search-input-wrap">
-          <text class="search-icon-text">search_line</text>
-          <input 
-            class="search-input" 
-            placeholder="搜索攻略" 
-            value="{{searchText}}"
-            bindinput="onSearchInput"
-            bindconfirm="onSearch"
-          />
-          <text class="search-clear" wx:if="{{searchText}}" bindtap="onClearSearch">×</text>
-        </view>
-      </view>
-      <view class="search-history" wx:if="{{searchHistory.length > 0}}">
-        <text class="history-title">搜索历史</text>
-        <view class="history-list">
-          <text 
-            wx:for="{{searchHistory}}" 
-            wx:key="*this" 
-            class="history-item"
-            bindtap="onHistoryTap"
-            data-text="{{item}}"
-          >{{item}}</text>
-        </view>
-      </view>
-      <view class="search-hot" wx:if="{{hotSearches.length > 0}}">
-        <text class="hot-title">热门搜索</text>
-        <view class="hot-list">
-          <text 
-            wx:for="{{hotSearches}}" 
-            wx:key="*this" 
-            class="hot-item"
-            bindtap="onHotTap"
-            data-text="{{item}}"
-          >{{item}}</text>
-        </view>
-      </view>
-    </view>
   </view>
-</view>
