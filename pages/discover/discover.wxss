@@ -138,6 +138,12 @@ page {
   gap: 24px;
 }
 
+.featured-list::after {
+  content: '';
+  width: 24px;
+  flex-shrink: 0;
+}
+
 .featured-card {
   width: 300px;
   height: 258px;
