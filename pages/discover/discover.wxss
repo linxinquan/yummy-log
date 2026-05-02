@@ -248,7 +248,7 @@ page {
 .guide-info {
   position: absolute;
   left: 264rpx;
-  width: calc(100% - 320rpx);
+  width: 176rpx;
   display: flex;
   flex-direction: column;
 }
@@ -272,7 +272,7 @@ page {
   font-size: 24rpx;
   line-height: 100%;
   color: #C2C2C2;
-  margin-top: 48rpx;
+  margin-top:32rpx;
 }
 
 .guide-divider {
