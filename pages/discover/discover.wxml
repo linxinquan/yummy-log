@@ -12,6 +12,17 @@
     </view>
   </view>
 
+  <!-- 区域标签 -->
+  <view class="district-row">
+    <view 
+      wx:for="{{districts}}"
+      wx:key="name"
+      class="district-item {{currentDistrict === item.name ? 'active' : ''}}"
+      bindtap="onDistrictChange"
+      data-district="{{item.name}}"
+    >{{item.name}}</view>
+  </view>
+
   <!-- 分类标签 -->
   <view class="category-row">
     <view 
@@ -33,15 +44,15 @@
         bindtap="onGuideTap"
         data-guide="{{item}}"
       >
+        <view class="featured-header">
+          <text class="featured-tag">精选攻略</text>
+          <text class="featured-name">{{item.name}}</text>
+        </view>
         <view class="featured-cover-wrap">
           <image class="featured-cover" src="{{item.coverImage}}" mode="aspectFill" />
           <view class="featured-overlay">
             <text class="featured-title">{{item.title}}</text>
           </view>
-        </view>
-        <view class="featured-info">
-          <text class="featured-tag">精选攻略</text>
-          <text class="featured-name">{{item.name}}</text>
         </view>
       </view>
     </view>

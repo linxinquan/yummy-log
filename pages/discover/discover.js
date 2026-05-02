@@ -10,12 +10,20 @@ Page({
     menuRightInset: 24,
     contentTop: 108,
 
+    // 区域
+    districts: [
+      { name: '南山区' },
+      { name: '福田区' },
+      { name: '罗湖区' },
+      { name: '盐田区' },
+      { name: '大鹏新区' }
+    ],
+    currentDistrict: '南山区',
+
     // 分类
     categories: [
       { name: '全部' },
-      { name: '热门' },
-      { name: '美食' },
-      { name: '小众' }
+      { name: '推荐' }
     ],
     currentCategory: '全部',
 
@@ -153,6 +161,11 @@ Page({
       allGuides,
       currentGuides: allGuides
     })
+  },
+
+  onDistrictChange(e) {
+    const district = e.currentTarget.dataset.district
+    this.setData({ currentDistrict: district })
   },
 
   onCategoryChange(e) {

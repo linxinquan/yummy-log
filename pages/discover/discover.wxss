@@ -64,6 +64,41 @@ page {
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") center/contain no-repeat;
 }
 
+/* ─── 区域标签 ─── */
+.district-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 24px;
+  gap: 12px;
+  margin-top: 16px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.district-row::-webkit-scrollbar {
+  display: none;
+}
+
+.district-item {
+  padding: 10rpx 24rpx;
+  background: #FFFFFF;
+  border-radius: 999rpx;
+  font-family: 'PingFang SC';
+  font-weight: 500;
+  font-size: 26rpx;
+  color: #888888;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid #E8E8E8;
+}
+
+.district-item.active {
+  background: #000000;
+  color: #FFFFFF;
+  border-color: #000000;
+}
+
 /* ─── 分类标签 ─── */
 .category-row {
   display: flex;
@@ -103,7 +138,35 @@ page {
 
 .featured-card {
   width: 300px;
+  height: 258px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.featured-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 300px;
+}
+
+.featured-tag {
+  font-family: 'PingFang SC';
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 100%;
+  color: #BABABA;
+}
+
+.featured-name {
+  font-family: 'PingFang SC';
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 100%;
+  color: #000000;
 }
 
 .featured-cover-wrap {
@@ -140,31 +203,6 @@ page {
   font-size: 14px;
   line-height: 100%;
   color: #FFFFFF;
-}
-
-.featured-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 0;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.featured-tag {
-  font-family: 'PingFang SC';
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 100%;
-  color: #BABABA;
-}
-
-.featured-name {
-  font-family: 'PingFang SC';
-  font-weight: 500;
-  font-size: 20px;
-  line-height: 100%;
-  color: #000000;
 }
 
 /* ─── 攻略列表 ─── */
