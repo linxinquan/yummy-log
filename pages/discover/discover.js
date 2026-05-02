@@ -13,9 +13,12 @@ Page({
     districts: [
       { name: '南山区' },
       { name: '福田区' },
-      { name: '罗湖区' },
+      { name: '龙岗区' },
       { name: '盐田区' },
-      { name: '大鹏新区' }
+      { name: '大鹏新区' },
+      { name: '罗湖区' },
+      { name: '宝安区' },
+      { name: '龙华区' }
     ],
 
     // 分类
