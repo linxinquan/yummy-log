@@ -10,8 +10,6 @@ page {
   min-height: 100vh;
   background: #FFFFFF;
   padding-bottom: env(safe-area-inset-bottom);
-  padding-left: 48rpx;
-  padding-right: 48rpx;
 }
 
 /* ─── 自定义导航栏 ─── */
@@ -134,7 +132,11 @@ page {
 
 .featured-list {
   display: flex;
+  padding-left: 48rpx;
+  padding-right: 48rpx;
   gap: 48rpx;
+  width: calc(100% + 96rpx);
+  box-sizing: border-box;
 }
 
 .featured-card {
@@ -212,6 +214,7 @@ page {
   display: flex;
   flex-direction: column;
   gap: 48rpx;
+  padding: 0 48rpx;
 }
 
 .guide-card {
