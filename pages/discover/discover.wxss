@@ -135,8 +135,13 @@ page {
 .featured-list {
   display: flex;
   padding-left: 48rpx;
-  padding-right: 48rpx;
   gap: 48rpx;
+}
+
+.featured-list::after {
+  content: '';
+  width: 48rpx;
+  flex-shrink: 0;
 }
 
 .featured-card {
