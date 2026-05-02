@@ -33,10 +33,17 @@ Page({
   data: {
     guide: null,
     matchedShops: [],
-    unmatchedShopNames: []
+    unmatchedShopNames: [],
+    menuTop: 0,
+    menuHeight: 32
   },
 
   onLoad(options) {
+    const sysInfo = wx.getSystemInfoSync()
+    const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
+
     if (!options.guide) {
       wx.showToast({ title: '攻略不存在', icon: 'none' })
       setTimeout(() => wx.navigateBack({ delta: 1 }), 1200)
@@ -66,10 +73,18 @@ Page({
         shops: shopNames
       },
       matchedShops,
-      unmatchedShopNames
+      unmatchedShopNames,
+      menuTop,
+      menuHeight
     })
+  },
 
-    wx.setNavigationBarTitle({ title: '攻略详情' })
+  onBack() {
+    wx.navigateBack()
+  },
+
+  onShareTap() {
+    wx.showToast({ title: '请点击右上角分享', icon: 'none' })
   },
 
   onShopTap(e) {

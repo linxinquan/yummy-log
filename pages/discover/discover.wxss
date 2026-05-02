@@ -71,7 +71,7 @@ page {
   align-items: flex-start;
   padding: 0 48rpx;
   gap: 24rpx;
-  margin-top: 48rpx;
+  margin-top: 64rpx;
   overflow-x: auto;
   white-space: nowrap;
 }
@@ -96,7 +96,7 @@ page {
   font-weight: 500;
   font-size: 24rpx;
   line-height: 100%;
-  color: #BABABA;
+  color: #7D7F85;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -108,7 +108,7 @@ page {
   align-items: center;
   padding: 0 48rpx;
   gap: 32rpx;
-  margin-top: 48rpx;
+  margin-top: 64rpx;
   background: #FFFFFF;
 }
 
@@ -231,8 +231,8 @@ page {
 
 .guide-cover-wrap {
   position: absolute;
-  width: 208rpx;
-  height: 208rpx;
+  width: 216rpx;
+  height: 216rpx;
   left: 32rpx;
   top: 32rpx;
   border-radius: 24rpx;
@@ -247,8 +247,8 @@ page {
 
 .guide-info {
   position: absolute;
-  left: 264rpx;
-  width: 484rpx;
+  left: 272rpx;
+  width: 350rpx;
   display: flex;
   flex-direction: column;
 }
@@ -262,8 +262,9 @@ page {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
-  overflow: hidden; 
-  margin-top: 8rpx
+  overflow: hidden;
+  margin-top: 8rpx;
+  height: 132rpx;
 }
 
 .guide-stats {
@@ -272,7 +273,7 @@ page {
   font-size: 24rpx;
   line-height: 100%;
   color: #C2C2C2;
-  margin-top:32rpx;
+  margin-top: 48rpx;
 }
 
 .guide-divider {
@@ -280,7 +281,7 @@ page {
   width: calc(100% - 64rpx);
   height: 0;
   left: 32rpx;
-  top: 272rpx;
+  top: 280rpx;
   opacity: 0.05;
   border-top: 1rpx solid #000000;
 }
@@ -289,7 +290,7 @@ page {
   position: absolute;
   width: calc(100% - 64rpx);
   left: 32rpx;
-  top: 304rpx;
+  top: 312rpx;
 }
 
 .guide-title {
@@ -337,4 +338,28 @@ page {
   font-size: 24rpx;
   line-height: 100%;
   color: #C2C2C2;
+}
+
+.no-more {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 32rpx 64rpx;
+  gap: 16rpx;
+  margin-top: 48rpx;
+}
+
+.no-more-line {
+  width: 160rpx;
+  height: 1rpx;
+  background: #E7E7E7;
+}
+
+.no-more-text {
+  font-family: 'PingFang SC';
+  font-weight: 400;
+  font-size: 24rpx;
+  line-height: 100%;
+  color: #BABABA;
 }

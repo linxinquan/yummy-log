@@ -1,0 +1,41 @@
+<view class="container">
+  <view class="header">
+    <view class="district-title">{{districtName}}</view>
+  </view>
+  
+  <view class="guide-list">
+    <view 
+      wx:for="{{guides}}" 
+      wx:key="id" 
+      class="guide-card"
+      style="background: {{item.cardColor}}"
+      bindtap="onGuideTap"
+      data-guide="{{item}}"
+    >
+      <view class="guide-cover-wrap">
+        <image class="guide-cover" src="{{item.coverImage}}" mode="aspectFill" />
+      </view>
+      <view class="guide-info">
+        <view class="guide-desc">{{item.desc}}</view>
+        <view class="guide-stats">{{item.duration}} · {{item.shopCount}}个地点</view>
+      </view>
+      <view class="guide-divider"></view>
+      <view class="guide-footer">
+        <view class="guide-title">{{item.title}}</view>
+        <view class="guide-meta">
+          <view class="guide-author-wrap">
+            <image class="guide-author-avatar" src="{{item.coverImage}}" mode="aspectFill" />
+            <text class="guide-author">{{item.author}}</text>
+          </view>
+          <text class="guide-likes">{{item.likes}}人收藏</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="no-more">
+      <view class="no-more-line"></view>
+      <text class="no-more-text">已经没有更多了</text>
+      <view class="no-more-line"></view>
+    </view>
+  </view>
+</view>

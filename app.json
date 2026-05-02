@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/wantgo/wantgo",
     "pages/discover/discover",
+    "pages/district-guide/district-guide",
     "pages/guide-detail/guide-detail",
     "pages/my/my",
     "pages/shop-detail/shop-detail",

@@ -11,14 +11,16 @@ Page({
 
     // 区域
     districts: [
-      { name: '南山区', id: 'nanshan' },
       { name: '福田区', id: 'futian' },
-      { name: '龙岗区', id: 'longgang' },
-      { name: '盐田区', id: 'yantian' },
-      { name: '大鹏新区', id: 'dapeng' },
+      { name: '南山区', id: 'nanshan' },
       { name: '罗湖区', id: 'luohu' },
       { name: '宝安区', id: 'baoan' },
-      { name: '龙华区', id: 'longhua' }
+      { name: '龙岗区', id: 'longgang' },
+      { name: '龙华区', id: 'longhua' },
+      { name: '光明区', id: 'guangming' },
+      { name: '坪山区', id: 'pingshan' },
+      { name: '盐田区', id: 'yantian' },
+      { name: '大鹏新区', id: 'dapeng' }
     ],
 
     // 分类
@@ -161,15 +163,15 @@ Page({
       {
         id: 8,
         district: 'luohu',
-        category: 'all',
-        title: '深圳隐藏的文艺角落',
-        desc: '远离喧嚣，发现深圳那些不为人知的文艺小店和咖啡馆',
+        category: 'recommend',
+        title: '深圳必打卡网红餐厅合集',
+        desc: '深圳最火的网红餐厅推荐，打卡拍照两不误',
         coverImage: coverImages[7],
         cardColor: cardColors[2],
-        author: '文艺青年',
-        duration: '1天',
-        shopCount: 6,
-        likes: 1567
+        author: '美食博主',
+        duration: '2天',
+        shopCount: 12,
+        likes: 6789
       },
       {
         id: 9,
@@ -187,35 +189,113 @@ Page({
       {
         id: 10,
         district: 'longgang',
+        category: 'recommend',
+        title: '深圳夜市攻略',
+        desc: '深圳各大夜市美食全攻略，从沙井到东门一网打尽',
+        coverImage: coverImages[1],
+        cardColor: cardColors[4],
+        author: '夜市达人',
+        duration: '1天',
+        shopCount: 25,
+        likes: 8901
+      },
+      {
+        id: 11,
+        district: 'dapeng',
+        category: 'recommend',
+        title: '大鹏半岛海鲜之旅',
+        desc: '大鹏所城、南澳渔港，最新鲜的海鲜等你来尝',
+        coverImage: coverImages[2],
+        cardColor: cardColors[5],
+        author: '海鲜控',
+        duration: '1天',
+        shopCount: 10,
+        likes: 3456
+      },
+      {
+        id: 12,
+        district: 'baoan',
+        category: 'all',
+        title: '深圳隐藏的文艺角落',
+        desc: '远离喧嚣，发现深圳那些不为人知的文艺小店和咖啡馆',
+        coverImage: coverImages[3],
+        cardColor: cardColors[0],
+        author: '文艺青年',
+        duration: '1天',
+        shopCount: 6,
+        likes: 1567
+      },
+      {
+        id: 13,
+        district: 'longhua',
         category: 'all',
         title: '东门町美食攻略',
         desc: '东门步行街美食全攻略，20家必吃小吃等你来打卡',
-        coverImage: coverImages[1],
-        cardColor: cardColors[4],
+        coverImage: coverImages[4],
+        cardColor: cardColors[1],
         author: '东门通',
         duration: '半天',
         shopCount: 20,
         likes: 5678
       },
       {
-        id: 11,
-        district: 'dapeng',
+        id: 14,
+        district: 'nanshan',
         category: 'all',
         title: '盐田海滨栈道徒步',
         desc: '最美海岸线徒步路线，山海相连的绝美风景',
-        coverImage: coverImages[2],
-        cardColor: cardColors[5],
+        coverImage: coverImages[5],
+        cardColor: cardColors[2],
         author: '户外达人',
         duration: '1天',
         shopCount: 4,
         likes: 1892
+      },
+      {
+        id: 15,
+        district: 'futian',
+        category: 'all',
+        title: '深圳公园打卡指南',
+        desc: '深圳各大公园游玩攻略，周末亲子游好去处',
+        coverImage: coverImages[6],
+        cardColor: cardColors[3],
+        author: '亲子达人',
+        duration: '2天',
+        shopCount: 8,
+        likes: 2345
+      },
+      {
+        id: 16,
+        district: 'luohu',
+        category: 'all',
+        title: '深圳书店地图',
+        desc: '深圳特色书店推荐，阅读爱好者的天堂',
+        coverImage: coverImages[7],
+        cardColor: cardColors[4],
+        author: '书虫',
+        duration: '1天',
+        shopCount: 10,
+        likes: 1234
+      },
+      {
+        id: 17,
+        district: 'yantian',
+        category: 'all',
+        title: '深圳咖啡馆合集',
+        desc: '精选深圳特色咖啡馆，适合办公和约会',
+        coverImage: coverImages[0],
+        cardColor: cardColors[5],
+        author: '咖啡控',
+        duration: '1天',
+        shopCount: 15,
+        likes: 2890
       }
     ]
 
     this.setData({
       featuredGuides,
       allGuides,
-      currentGuides: allGuides
+      currentGuides: [...allGuides]
     })
   },
 
@@ -223,20 +303,25 @@ Page({
     const district = e.currentTarget.dataset.district
     const districtName = e.currentTarget.dataset.name
     wx.navigateTo({
-      url: `/pages/discover/discover?district=${district}&name=${encodeURIComponent(districtName)}`
+      url: `/pages/district-guide/district-guide?district=${district}&name=${encodeURIComponent(districtName)}`
     })
   },
 
   onCategoryChange(e) {
     const category = e.currentTarget.dataset.category
     const categoryName = e.currentTarget.dataset.name
-    this.setData({ currentCategory: categoryName })
-
+    
     if (categoryName === '全部') {
-      this.setData({ currentGuides: this.data.allGuides })
+      this.setData({ 
+        currentCategory: categoryName,
+        currentGuides: [...this.data.allGuides]
+      })
     } else {
       const filtered = this.data.allGuides.filter(g => g.category === 'recommend')
-      this.setData({ currentGuides: filtered })
+      this.setData({ 
+        currentCategory: categoryName,
+        currentGuides: [...filtered]
+      })
     }
   },
 

@@ -1,4 +1,14 @@
 <view class="container" wx:if="{{guide}}">
+  <!-- 自定义导航栏 -->
+  <view class="top-bar" style="top: {{menuTop}}px; height: {{menuHeight}}px;">
+    <view class="icon-btn back-btn" bindtap="onBack">
+      <i class="mgc_left_line back-icon"></i>
+    </view>
+    <view class="icon-btn share-btn" bindtap="onShareTap">
+      <i class="mgc_share_forward_line share-icon"></i>
+    </view>
+  </view>
+
   <image class="hero" src="{{guide.coverImage || '/images/app-logo.jpg'}}" mode="aspectFill"></image>
 
   <view class="content">
