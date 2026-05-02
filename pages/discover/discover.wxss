@@ -250,7 +250,7 @@ page {
 .guide-info {
   position: absolute;
   left: 264rpx;
-  top: 32rpx;
+  top: 48rpx;
   width: calc(100% - 320rpx);
 }
 
@@ -263,7 +263,8 @@ page {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
-  overflow: hidden;
+  overflow: hidden; 
+  margin-top: 8rpx
 }
 
 .guide-stats {
@@ -272,7 +273,7 @@ page {
   font-size: 24rpx;
   line-height: 100%;
   color: #C2C2C2;
-  margin-top: 16rpx;
+  margin-top: 32rpx;
 }
 
 .guide-divider {
