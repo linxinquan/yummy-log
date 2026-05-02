@@ -248,8 +248,9 @@ page {
 .guide-info {
   position: absolute;
   left: 264rpx;
-  top: 48rpx;
   width: calc(100% - 320rpx);
+  display: flex;
+  flex-direction: column;
 }
 
 .guide-desc {
