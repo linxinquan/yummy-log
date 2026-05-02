@@ -134,13 +134,13 @@ page {
 
 .featured-list {
   display: flex;
-  padding-left: 48rpx;
+  padding-left: 96rpx;
   gap: 48rpx;
 }
 
 .featured-list::after {
   content: '';
-  width: 48rpx;
+  width: 96rpx;
   flex-shrink: 0;
 }
 
