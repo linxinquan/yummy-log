@@ -55,14 +55,23 @@ Page({
   },
 
   loadGuides() {
-    const coverImage = 'https://images.unsplash.com/photo-1529543544277-750e0c097d84?w=300&h=200&fit=crop'
+    const coverImages = [
+      '/images/covers/01.jpeg',
+      '/images/covers/02.jpeg',
+      '/images/covers/03.jpeg',
+      '/images/covers/04.jpeg',
+      '/images/covers/05.jpeg',
+      '/images/covers/06.jpeg',
+      '/images/covers/07.jpeg',
+      '/images/covers/08.jpeg'
+    ]
 
     const featuredGuides = [
       {
         id: 1,
         name: '蛇口的海与月',
         title: '深圳蛇口必吃地道老店推荐',
-        coverImage: coverImage,
+        coverImage: coverImages[0],
         author: '@小胖又饿了',
         duration: '2天',
         shopCount: 14,
@@ -72,7 +81,7 @@ Page({
         id: 2,
         name: '春日踏青',
         title: '深圳春日赏花攻略',
-        coverImage: coverImage,
+        coverImage: coverImages[1],
         author: '@旅行博主',
         duration: '1天',
         shopCount: 8,
@@ -86,7 +95,7 @@ Page({
         category: '美食',
         title: '舌尖上的长安：3天吃遍西安老味道',
         desc: '西安美食小吃：腊味酥饼糕点各种地道小吃：双皮奶、鱼皮、煲仔饭等等，有些热门...',
-        coverImage: coverImage,
+        coverImage: coverImages[2],
         author: '@打工人',
         duration: '3天',
         shopCount: 14,
@@ -97,7 +106,7 @@ Page({
         category: '热门',
         title: '深圳南山老字号餐厅攻略',
         desc: '14年+老店真的好吃，嘉华小吃、好好味面馆、翠湖广东乡下菜等10家南山老字号',
-        coverImage: coverImage,
+        coverImage: coverImages[3],
         author: '@大湾区探店王',
         duration: '1天',
         shopCount: 10,
@@ -108,7 +117,7 @@ Page({
         category: '小众',
         title: '深圳隐藏的文艺角落',
         desc: '远离喧嚣，发现深圳那些不为人知的文艺小店和咖啡馆',
-        coverImage: coverImage,
+        coverImage: coverImages[4],
         author: '@文艺青年',
         duration: '1天',
         shopCount: 6,
@@ -119,7 +128,7 @@ Page({
         category: '美食',
         title: '福田CBD商务宴请餐厅指南',
         desc: '福田会展中心周边高端餐厅推荐，适合商务宴请和朋友聚会',
-        coverImage: coverImage,
+        coverImage: coverImages[5],
         author: '@商务美食家',
         duration: '1天',
         shopCount: 8,
@@ -130,7 +139,7 @@ Page({
         category: '热门',
         title: '东门町美食攻略',
         desc: '东门步行街美食全攻略，20家必吃小吃等你来打卡',
-        coverImage: coverImage,
+        coverImage: coverImages[6],
         author: '@东门通',
         duration: '半天',
         shopCount: 20,
@@ -141,7 +150,7 @@ Page({
         category: '小众',
         title: '盐田海滨栈道徒步',
         desc: '最美海岸线徒步路线，山海相连的绝美风景',
-        coverImage: coverImage,
+        coverImage: coverImages[7],
         author: '@户外达人',
         duration: '1天',
         shopCount: 4,
