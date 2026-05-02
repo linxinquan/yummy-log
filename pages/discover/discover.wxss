@@ -217,7 +217,7 @@ page {
 }
 
 .guide-card {
-  width: 342px;
+  width: 358px;
   height: 212px;
   background: #F2EEEB;
   border-radius: 16px;
