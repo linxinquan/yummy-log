@@ -135,14 +135,9 @@ page {
 .featured-list {
   display: flex;
   padding-left: 48rpx;
-  padding-right: 0;
   gap: 48rpx;
-}
-
-.featured-list::after {
-  content: '';
-  width: 48rpx;
-  flex-shrink: 0;
+  width: calc(100% + 48rpx);
+  box-sizing: border-box;
 }
 
 .featured-card {
