@@ -128,22 +128,18 @@ page {
 
 /* ─── 精选攻略卡片（横向滚动）── */
 .featured-scroll {
-  white-space: nowrap;
-  margin-top: 32rpx;
-}
-
-.featured-list {
   display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0 48rpx;
   gap: 48rpx;
+  margin-top: 32rpx;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
-.featured-card-placeholder {
-  width: 48rpx;
-  flex-shrink: 0;
-}
-
-.featured-card-placeholder.end {
-  width: 0;
+.featured-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .featured-card {

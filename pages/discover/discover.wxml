@@ -8,30 +8,26 @@
   </view>
 
   <!-- 精选攻略卡片（横向滚动） -->
-  <scroll-view class="featured-scroll" scroll-x enable-flex>
-    <view class="featured-list">
-      <view class="featured-card-placeholder"></view>
-      <view 
-        wx:for="{{featuredGuides}}"
-        wx:key="id"
-        class="featured-card"
-        bindtap="onGuideTap"
-        data-guide="{{item}}"
-      >
-        <view class="featured-header">
-          <text class="featured-tag">精选攻略</text>
-          <text class="featured-name">{{item.name}}</text>
-        </view>
-        <view class="featured-cover-wrap">
-          <image class="featured-cover" src="{{item.coverImage}}" mode="aspectFill" />
-          <view class="featured-overlay">
-            <text class="featured-title">{{item.title}}</text>
-          </view>
+  <view class="featured-scroll">
+    <view 
+      wx:for="{{featuredGuides}}"
+      wx:key="id"
+      class="featured-card"
+      bindtap="onGuideTap"
+      data-guide="{{item}}"
+    >
+      <view class="featured-header">
+        <text class="featured-tag">精选攻略</text>
+        <text class="featured-name">{{item.name}}</text>
+      </view>
+      <view class="featured-cover-wrap">
+        <image class="featured-cover" src="{{item.coverImage}}" mode="aspectFill" />
+        <view class="featured-overlay">
+          <text class="featured-title">{{item.title}}</text>
         </view>
       </view>
-      <view class="featured-card-placeholder end"></view>
     </view>
-  </scroll-view>
+  </view>
 
   <!-- 区域标签 -->
   <view class="district-row">
