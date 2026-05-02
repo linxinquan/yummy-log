@@ -273,7 +273,7 @@ page {
   font-size: 24rpx;
   line-height: 100%;
   color: #C2C2C2;
-  margin-top: 32rpx;
+  margin-top: 48rpx;
 }
 
 .guide-divider {
