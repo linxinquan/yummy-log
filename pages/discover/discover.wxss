@@ -134,7 +134,8 @@ page {
 
 .featured-list {
   display: flex;
-  padding: 0 24px;
+  padding-left: 24px;
+  padding-right: 0;
   gap: 24px;
 }
 
