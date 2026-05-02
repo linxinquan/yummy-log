@@ -70,12 +70,12 @@ Page({
     ]
 
     const cardColors = [
-      '#F2EEEB',
-      '#E8F4E8',
-      '#FDF2E8',
-      '#E8F0F4',
-      '#F4E8F0',
-      '#F0F4E8'
+      '#F7F7F7',
+      '#F5F6F8',
+      '#F6F7F6',
+      '#F5F5F6',
+      '#F6F5F5',
+      '#F4F5F4'
     ]
 
     const featuredGuides = [
