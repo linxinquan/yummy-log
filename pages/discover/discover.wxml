@@ -28,6 +28,7 @@
           </view>
         </view>
       </view>
+      <view class="featured-card-placeholder"></view>
     </view>
   </scroll-view>
 
