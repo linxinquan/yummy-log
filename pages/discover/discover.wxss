@@ -134,12 +134,11 @@ page {
 
 .featured-list {
   display: flex;
-  padding-left: 48rpx;
   gap: 48rpx;
 }
 
 .featured-card-placeholder {
-  width: 0;
+  width: 48rpx;
   flex-shrink: 0;
 }
 
