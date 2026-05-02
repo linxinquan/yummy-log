@@ -139,7 +139,7 @@ page {
 }
 
 .featured-card-placeholder {
-  width: 48rpx;
+  width: 0;
   flex-shrink: 0;
 }
 
