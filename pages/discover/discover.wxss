@@ -212,12 +212,12 @@ page {
   margin-top: 24px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 24px;
+  padding: 0 24px;
 }
 
 .guide-card {
-  width: 342px;
+  width: 100%;
   height: 212px;
   background: #F2EEEB;
   border-radius: 16px;
