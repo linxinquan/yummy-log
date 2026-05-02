@@ -35,8 +35,11 @@
   <view class="district-row">
     <view 
       wx:for="{{districts}}"
-      wx:key="name"
+      wx:key="id"
       class="district-item"
+      bindtap="onDistrictChange"
+      data-district="{{item.id}}"
+      data-name="{{item.name}}"
     >{{item.name}}</view>
   </view>
 
@@ -44,10 +47,11 @@
   <view class="category-row">
     <view 
       wx:for="{{categories}}"
-      wx:key="name"
+      wx:key="id"
       class="category-item {{currentCategory === item.name ? 'active' : ''}}"
       bindtap="onCategoryChange"
-      data-category="{{item.name}}"
+      data-category="{{item.id}}"
+      data-name="{{item.name}}"
     >{{item.name}}</view>
   </view>
 
@@ -57,6 +61,7 @@
       wx:for="{{currentGuides}}"
       wx:key="id"
       class="guide-card"
+      style="background: {{item.cardColor}};"
       bindtap="onGuideTap"
       data-guide="{{item}}"
     >
@@ -81,4 +86,4 @@
     </view>
   </view>
 
-  </view>
+</view>

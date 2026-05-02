@@ -219,7 +219,6 @@ page {
 .guide-card {
   width: 100%;
   height: 212px;
-  background: #F2EEEB;
   border-radius: 16px;
   padding: 16px;
   box-sizing: border-box;
@@ -272,7 +271,7 @@ page {
 
 .guide-divider {
   position: absolute;
-  width: 310px;
+  width: calc(100% - 32px);
   height: 0;
   left: 16px;
   top: 136px;
@@ -282,7 +281,7 @@ page {
 
 .guide-footer {
   position: absolute;
-  width: 310px;
+  width: calc(100% - 32px);
   left: 16px;
   top: 152px;
 }
@@ -333,4 +332,3 @@ page {
   line-height: 100%;
   color: #C2C2C2;
 }
-
