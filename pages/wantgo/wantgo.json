@@ -1,4 +1,7 @@
 {
+  "usingComponents": {
+    "custom-tabbar": "/custom-tabbar/index"
+  },
   "navigationBarTitleText": "想去清单",
   "navigationBarBackgroundColor": "#ffffff",
   "navigationBarTextStyle": "black",

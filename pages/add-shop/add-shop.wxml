@@ -1,1 +1,4 @@
 <include src="../sub/add-shop/add-shop.wxml" />
+
+<!-- 自定义TabBar -->
+<custom-tabbar></custom-tabbar>

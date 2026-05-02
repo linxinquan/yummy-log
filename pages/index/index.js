@@ -106,10 +106,18 @@ Page({
     const headerRowHeight = menuHeight + 20 // nav-bar(含padding) + weather-row(含padding)
     const topPanelHeight = menuTop + headerRowHeight + categoryAreaHeight
     
-    // 计算收起时的精确高度: 
-    // handle area padding + height = 48rpx (24px)
-    const minHeightRpx = 48
+    // 计算收起时的高度: 
+    // handle area高度(24rpx) = 24rpx
+    const minHeightRpx = 24
     const minHeight = minHeightRpx * rpxToPx
+    
+    // 计算最大高度：屏幕高度 - 顶部面板高度 - tabBar高度(50px) - 安全区域底部
+    const tabBarHeight = 50
+    const sysMaxHeight = sysInfo.windowHeight - topPanelHeight - tabBarHeight - (sysInfo.safeAreaBottom || 0)
+    
+    // 计算弹窗底部偏移（tabBar高度 + 安全区域底部 + handle区域高度）
+    const handleHeight = 24 // 24px
+    const sheetBottom = tabBarHeight + (sysInfo.safeAreaBottom || 0) + handleHeight
     
     this.setData({ 
       statusBarHeight: sysInfo.statusBarHeight || 44,
@@ -117,8 +125,10 @@ Page({
       menuHeight: menuHeight,
       menuButtonWidth: menuButtonWidth,
       menuRightInset,
+      topPanelHeight: topPanelHeight,
+      sheetBottom: sheetBottom,
       sysMinHeight: minHeight,
-      sysMaxHeight: sysInfo.windowHeight - topPanelHeight,
+      sysMaxHeight: sysMaxHeight,
       sheetHeight: minHeight, // 默认收起状态
       isSheetExpanded: false // 默认收起状态
     })

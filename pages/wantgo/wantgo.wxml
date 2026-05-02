@@ -116,4 +116,7 @@
 
   <!-- 底部安全区 -->
   <view style="height: calc(32rpx + env(safe-area-inset-bottom))"></view>
+
+  <!-- 自定义TabBar -->
+  <custom-tabbar></custom-tabbar>
 </view>

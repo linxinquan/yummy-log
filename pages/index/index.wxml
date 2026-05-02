@@ -59,7 +59,7 @@
   </view>
 
   <!-- 悬浮按钮组 (半屏及以下时显示) -->
-  <view class="float-btns-group" style="bottom: {{sheetHeight + 16}}px" wx:if="{{sheetHeight < sysMaxHeight - 10}}">
+  <view class="float-btns-group" style="bottom: {{sheetHeight + 16 + sheetBottom}}px" wx:if="{{sheetHeight < sysMaxHeight - 10}}">
     <!-- 左侧：列表展开按钮 -->
     <view class="float-btn explore-float-btn" bindtap="onListBtnTap">
       <i class="mgc_list_check_3_line"></i>
@@ -87,11 +87,11 @@
   <!-- ── Bottom Sheet ── -->
   <view 
     class="bottom-sheet {{isDragging ? 'dragging' : ''}}" 
-    style="height: {{sheetHeight}}px;"
+    style="height: {{sheetHeight}}px; bottom: {{sheetBottom - 50}}px;"
   >
     <!-- 拖拽手柄区域 -->
     <view 
-      class="sheet-handle-area" 
+      class="sheet-handle-area-inner" 
       bindtouchstart="onSheetTouchStart" 
       bindtouchmove="onSheetTouchMove" 
       bindtouchend="onSheetTouchEnd"
@@ -222,4 +222,6 @@
     </view>
   </view>
 
+  <!-- 自定义TabBar -->
+  <custom-tabbar></custom-tabbar>
 </view>
