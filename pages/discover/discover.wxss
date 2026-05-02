@@ -281,7 +281,8 @@ page {
   height: 0;
   left: 32rpx;
   top: 272rpx;
-  border-top: 1rpx solid #E0E0E0;
+  opacity: 0.05;
+  border-top: 1rpx solid #000000;
 }
 
 .guide-footer {
