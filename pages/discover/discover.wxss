@@ -299,7 +299,7 @@ page {
   line-height: 100%;
   color: #060606;
   display: block;
-  margin-bottom: 32rpx;
+  margin-bottom: 24rpx;
 }
 
 .guide-meta {
