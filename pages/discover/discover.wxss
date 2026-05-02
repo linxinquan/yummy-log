@@ -135,10 +135,12 @@ page {
 .featured-list {
   display: flex;
   padding-left: 48rpx;
-  padding-right: 48rpx;
   gap: 48rpx;
-  width: calc(100% + 96rpx);
-  box-sizing: border-box;
+}
+
+.featured-card-placeholder {
+  width: 48rpx;
+  flex-shrink: 0;
 }
 
 .featured-card {
