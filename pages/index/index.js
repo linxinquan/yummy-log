@@ -58,14 +58,13 @@ Page({
     
     // 分类
     exploreCategories: [
-      { name: '全部', icon: 'mgc_category_fill', color: '#9B59B6' },
-      { name: '热门', icon: 'mgc_flame_fill', color: '#E74C3C' },
-      { name: '美食', icon: 'mgc_food_fill', color: '#E67E22' },
-      { name: '景点', icon: 'mgc_tree_pine_fill', color: '#27AE60' },
-      { name: '酒店民宿', icon: 'mgc_home_5_fill', color: '#3498DB' },
-      { name: '饮品甜点', icon: 'mgc_coffee_cup_fill', color: '#9B59B6' },
-      { name: '自然户外', icon: 'mgc_mountain_fill', color: '#2ECC71' },
-      { name: '文化艺术', icon: 'mgc_palette_fill', color: '#F39C12' }
+      { name: '全部', icon: 'mgc_category_line', color: '#9B59B6' },
+      { name: '美食', icon: 'mgc_food_line', color: '#E67E22' },
+      { name: '景点', icon: 'mgc_tree_pine_line', color: '#27AE60' },
+      { name: '酒店民宿', icon: 'mgc_home_5_line', color: '#3498DB' },
+      { name: '饮品甜点', icon: 'mgc_coffee_cup_line', color: '#9B59B6' },
+      { name: '自然户外', icon: 'mgc_mountain_line', color: '#2ECC71' },
+      { name: '文化艺术', icon: 'mgc_palette_line', color: '#F39C12' }
     ],
     currentCategory: '全部',
     

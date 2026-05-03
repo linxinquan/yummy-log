@@ -247,7 +247,7 @@
   z-index: 120;
   display: flex;
   flex-direction: column;
-  transition: height 0.3s cubic-bezier(0.32, 0.72, 0, 1), transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: height 0.5s cubic-bezier(0.32, 0.72, 0, 1), transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .bottom-sheet.dragging {
@@ -289,7 +289,7 @@
   width: 100%;
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 0.3s cubic-bezier(0.32, 0.72, 0, 1), transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: opacity 0.5s cubic-bezier(0.32, 0.72, 0, 1), transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
   box-sizing: border-box;
   padding-top: 0; /* 内容从顶部开始，可穿过拖拽区域 */
   padding-bottom: 120rpx; /* 底部内边距，防止漏出地图 */
