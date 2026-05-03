@@ -137,7 +137,9 @@ Page({
       sysMidHeight: midHeight,
       sysMaxHeight: sysMaxHeight,
       sheetHeight: minHeight, // 默认收起状态
-      isSheetExpanded: false // 默认收起状态
+      isSheetExpanded: false, // 默认收起状态
+      tabBarHeight: tabBarHeight,
+      safeAreaBottom: sysInfo.safeAreaBottom || 0
     })
 
     this.initCityOptions()
