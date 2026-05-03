@@ -48,10 +48,11 @@
           wx:for="{{exploreCategories}}"
           wx:key="name"
           class="cat-pill {{currentCategory === item.name ? 'active' : ''}}"
+          style="{{currentCategory === item.name ? 'color:' + item.color : ''}}"
           bindtap="onCategoryChange"
           data-category="{{item.name}}"
         >
-          <i class="{{item.icon}} cat-icon" style="color: {{item.color}}"></i>
+          <i class="{{item.icon}} cat-icon" style="color: {{currentCategory === item.name ? item.color : '#7D7F85'}}"></i>
           <text class="cat-name">{{item.name}}</text>
         </view>
       </view>

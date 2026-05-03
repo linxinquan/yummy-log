@@ -150,17 +150,10 @@
   transition: all 0.3s;
 }
 
-.cat-pill.active {
-  background: #47bffe;
-}
-
 .cat-icon {
   font-size: 32rpx; /* 16px */
   color: #7D7F85;
-}
-
-.cat-pill.active .cat-icon {
-  color: #ffffff;
+  transition: color 0.3s;
 }
 
 .cat-name {
@@ -169,10 +162,12 @@
   font-weight: 500;
   color: #7D7F85;
   line-height: 40rpx; /* 20px */
+  transition: color 0.3s;
 }
 
-.cat-pill.active .cat-name {
-  color: #ffffff;
+/* 选中状态：字体颜色变为对应颜色，背景保持白色 */
+.cat-pill.active {
+  background: #ffffff;
 }
 
 /* ─── Float Buttons (Right Bottom) ────────────────────────── */
