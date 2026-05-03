@@ -248,8 +248,7 @@
   display: flex;
   flex-direction: column;
   transition: height 0.5s cubic-bezier(0.32, 0.72, 0, 1), transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
-  padding-bottom: env(safe-area-inset-bottom);
-  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .bottom-sheet.dragging {
@@ -287,16 +286,16 @@
 
 .sheet-content {
   flex: 1;
-  height: calc(100% + 100rpx); /* 增加高度确保覆盖底部 */
+  height: 100%;
   width: 100%;
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.5s cubic-bezier(0.32, 0.72, 0, 1), transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
   box-sizing: border-box;
-  padding-top: 0; /* 内容从顶部开始，可穿过拖拽区域 */
-  padding-bottom: 120rpx; /* 底部内边距，防止漏出地图 */
-  background: #ffffff; /* 内容区域有白色背景 */
-  border-radius: 48rpx 48rpx 0 0; /* 24px */
+  padding-top: 64rpx;
+  padding-bottom: 120rpx;
+  background: transparent;
+  border-radius: 0;
 }
 
 .sheet-content.hidden {
