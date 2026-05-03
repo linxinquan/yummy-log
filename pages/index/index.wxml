@@ -58,8 +58,8 @@
     </scroll-view>
   </view>
 
-  <!-- 悬浮按钮组 (显示假底部栏时显示) -->
-  <view class="float-btns-group" style="bottom: {{sheetBottom + 100}}px" wx:if="{{showFakeBar}}">
+  <!-- 悬浮按钮组 -->
+  <view class="float-btns-group" style="bottom: {{showFakeBar ? (126 + (safeAreaBottom || 0)) : (sheetHeight + 16 + sheetBottom)}}px" wx:if="{{!isDragging}}">
     <!-- 左侧：列表展开按钮 -->
     <view class="float-btn explore-float-btn" bindtap="onListBtnTap">
       <i class="mgc_list_check_3_line"></i>
