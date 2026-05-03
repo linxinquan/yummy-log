@@ -45,6 +45,7 @@ Page({
     statusBarHeight: 44,
     sheetHeight: 300,
     isDragging: false,
+    showFakeBar: true, // 是否显示假的底部栏
 
     // 地图配置
     mapCenter: {
@@ -396,7 +397,12 @@ Page({
       finalHeight = midH
     }
     
-    this.setData({ sheetHeight: finalHeight, isSheetExpanded: finalHeight > minH })
+    const isMinHeight = finalHeight === minH
+    this.setData({ 
+      sheetHeight: finalHeight, 
+      isSheetExpanded: finalHeight > minH,
+      showFakeBar: isMinHeight // 收起时显示假底部栏
+    })
   },
 
   // 分类切换
@@ -545,10 +551,11 @@ Page({
   },
 
   onToggleMap() {
-    // 切换收起状态，显示地图
+    // 切换收起状态，显示地图和假底部栏
     this.setData({
       isSheetExpanded: false,
-      sheetHeight: this.data.sysMinHeight // 恢复精确计算的收起高度
+      sheetHeight: this.data.sysMinHeight,
+      showFakeBar: true // 显示假底部栏
     })
   },
 
@@ -569,7 +576,14 @@ Page({
 
     const currentH = this.data.sheetHeight
 
-    if (currentH < midH - 60) {
+    if (this.data.showFakeBar) {
+      // 当前显示假底部栏，点击后隐藏假栏并显示半屏弹窗
+      this.setData({
+        showFakeBar: false,
+        isSheetExpanded: true,
+        sheetHeight: midH
+      })
+    } else if (currentH < midH - 60) {
       // 当前在收起状态，第一次点击 -> 半屏
       this.setData({
         isSheetExpanded: true,
