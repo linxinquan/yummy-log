@@ -237,64 +237,6 @@
   pointer-events: auto; /* 按钮自身可以点击 */
 }
 
-/* ─── Fake Bottom Bar ────────────────────────── */
-.fake-bottom-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  background: #ffffff;
-  border-radius: 48rpx 48rpx 0 0;
-  z-index: 100;
-  padding-top: 20rpx;
-  padding-bottom: 0;
-  box-sizing: border-box;
-  height: 60rpx;
-}
-
-.fake-handle {
-  width: 144rpx;
-  height: 8rpx;
-  background: #f0f0f0;
-  border-radius: 4rpx;
-  margin: 0 auto;
-}
-
-.fake-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 48rpx;
-}
-
-.fake-title {
-  font-family: 'PingFang SC';
-  font-weight: 500;
-  font-size: 32rpx;
-  color: #000000;
-}
-
-.fake-sort {
-  display: flex;
-  align-items: center;
-  gap: 24rpx;
-}
-
-.fake-sort-item {
-  font-family: 'PingFang SC';
-  font-weight: 500;
-  font-size: 28rpx;
-  color: #C2C2C2;
-}
-
-.fake-sort-item.active {
-  color: #E5675F;
-}
-
-.fake-sort-divider {
-  color: #C2C2C2;
-  font-size: 28rpx;
-}
-
 /* ─── Bottom Sheet ───────────────────────────── */
 .bottom-sheet {
   position: fixed;

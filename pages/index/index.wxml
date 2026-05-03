@@ -59,7 +59,7 @@
   </view>
 
   <!-- 悬浮按钮组 (全屏时隐藏) -->
-  <view class="float-btns-group" style="bottom: {{showFakeBar ? (80 + (safeAreaBottom || 0)) : (sheetHeight + 16 + sheetBottom)}}px" wx:if="{{!isDragging && sheetHeight < sysMaxHeight - 10}}">
+  <view class="float-btns-group" style="bottom: {{sheetHeight + 16 + sheetBottom}}px" wx:if="{{!isDragging && sheetHeight < sysMaxHeight - 10}}">
     <!-- 左侧：列表展开按钮 -->
     <view class="float-btn explore-float-btn" bindtap="onListBtnTap">
       <i class="mgc_list_check_3_line"></i>
@@ -84,16 +84,10 @@
     </view>
   </view>
 
-  <!-- 假底部栏 (收起状态显示) -->
-  <view class="fake-bottom-bar" wx:if="{{showFakeBar}}" style="bottom: {{50 + (safeAreaBottom || 0)}}px;">
-    <view class="fake-handle"></view>
-  </view>
-
   <!-- ── Bottom Sheet ── -->
   <view 
     class="bottom-sheet {{isDragging ? 'dragging' : ''}}" 
     style="height: {{sheetHeight}}px; bottom: {{sheetBottom}}px;"
-    wx:if="{{!showFakeBar}}"
   >
     <!-- 拖拽手柄区域 -->
     <view 

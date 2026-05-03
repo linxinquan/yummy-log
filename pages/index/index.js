@@ -45,7 +45,6 @@ Page({
     statusBarHeight: 44,
     sheetHeight: 300,
     isDragging: false,
-    showFakeBar: true, // 是否显示假的底部栏
     tabBarHeight: 50, // tabBar高度
     safeAreaBottom: 0, // 安全区域底部高度
 
@@ -401,11 +400,9 @@ Page({
       finalHeight = midH
     }
     
-    const isMinHeight = finalHeight === minH
     this.setData({ 
       sheetHeight: finalHeight, 
-      isSheetExpanded: finalHeight > minH,
-      showFakeBar: isMinHeight // 收起时显示假底部栏
+      isSheetExpanded: finalHeight > minH
     })
   },
 
@@ -555,11 +552,10 @@ Page({
   },
 
   onToggleMap() {
-    // 切换收起状态，显示地图和假底部栏
+    // 切换收起状态，显示地图
     this.setData({
       isSheetExpanded: false,
-      sheetHeight: this.data.sysMinHeight,
-      showFakeBar: true // 显示假底部栏
+      sheetHeight: this.data.sysMinHeight
     })
   },
 
@@ -580,14 +576,7 @@ Page({
 
     const currentH = this.data.sheetHeight
 
-    if (this.data.showFakeBar) {
-      // 当前显示假底部栏，点击后隐藏假栏并显示半屏弹窗
-      this.setData({
-        showFakeBar: false,
-        isSheetExpanded: true,
-        sheetHeight: midH
-      })
-    } else if (currentH < midH - 60) {
+    if (currentH < midH - 60) {
       // 当前在收起状态，第一次点击 -> 半屏
       this.setData({
         isSheetExpanded: true,
