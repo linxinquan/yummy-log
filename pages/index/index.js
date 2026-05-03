@@ -305,16 +305,19 @@ Page({
       return
     }
 
+    const mapScale = this.data.mapScale
+    const useSmallDot = mapScale < 12 // 缩放级别小于12时使用小圆点
+
     const markers = items.map(item => {
       if (item.type === 'spot') {
         return {
           id: item.id,
           latitude: item.lat,
           longitude: item.lng,
-          iconPath: '/images/markers/marker_景点.png',
-          width: 28,
-          height: 28,
-          callout: {
+          iconPath: useSmallDot ? '/images/markers/dot_spot.png' : '/images/markers/marker_景点.png',
+          width: useSmallDot ? 12 : 28,
+          height: useSmallDot ? 12 : 28,
+          callout: useSmallDot ? {} : {
             content: `🌲 ${item.name}\n★ ${item.rating}  ${item.free ? '免费' : '收费'}`,
             color: '#1A1A2E',
             fontSize: 12,
@@ -327,17 +330,17 @@ Page({
           }
         }
       } else {
-        const catColor = markerIcons.getCategoryColor(item.category)
+        const catColor = markerIcons.getCategoryColor(item.category) || '#E6A817'
         const catEmoji = markerIcons.getCategoryEmoji(item.category)
-        const iconPath = markerIcons.getIconPath(item.category) || '/images/markers/marker_默认.png'
+        const iconPath = useSmallDot ? '/images/markers/dot_food.png' : (markerIcons.getIconPath(item.category) || '/images/markers/marker_默认.png')
         return {
           id: item.id,
           latitude: item.lat,
           longitude: item.lng,
           iconPath: iconPath,
-          width: 28,
-          height: 28,
-          callout: {
+          width: useSmallDot ? 12 : 28,
+          height: useSmallDot ? 12 : 28,
+          callout: useSmallDot ? {} : {
             content: `${catEmoji} ${item.name}\n★ ${item.rating || '暂无'}  ¥${item.price || '--'}/人`,
             color: '#1A1A2E',
             fontSize: 12,
@@ -345,7 +348,7 @@ Page({
             padding: 8,
             display: 'BYCLICK',
             bgColor: '#ffffff',
-            borderColor: catColor || '#E6A817',
+            borderColor: catColor,
             borderWidth: 1.5
           }
         }
