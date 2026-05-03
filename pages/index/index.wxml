@@ -87,7 +87,7 @@
   <!-- ── Bottom Sheet ── -->
   <view 
     class="bottom-sheet {{isDragging ? 'dragging' : ''}}" 
-    style="height: {{sheetHeight}}px; bottom: {{sheetBottom - 50}}px;"
+    style="height: {{sheetHeight}}px; bottom: {{sheetBottom}}px;"
   >
     <!-- 拖拽手柄区域 -->
     <view 
@@ -100,10 +100,10 @@
     </view>
 
     <!-- 列表内容 -->
-    <scroll-view class="sheet-content {{!isSheetExpanded ? 'hidden' : ''}}" scroll-y enable-back-to-top bindscrolltolower="onLoadMore">
+    <scroll-view class="sheet-content" scroll-y enable-back-to-top bindscrolltolower="onLoadMore">
       
       <!-- 列表头 -->
-      <view class="list-header" wx:if="{{isSheetExpanded}}">
+      <view class="list-header">
         <text class="list-title">{{currentCategory === '全部' ? '全部' : currentCategory}}</text>
         <view class="sort-btns">
           <view

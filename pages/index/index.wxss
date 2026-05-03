@@ -242,8 +242,8 @@
   position: fixed;
   left: 0;
   right: 0;
-  background: #ffffff; /* 现在这里是白色 */
-  border-radius: 48rpx 48rpx 0 0; /* 24px */
+  background: transparent; /* 弹窗容器透明 */
+  border-radius: 0;
   z-index: 120;
   display: flex;
   flex-direction: column;
@@ -261,9 +261,13 @@
   align-items: center;
   padding: 20rpx 0; /* 10px 0 */
   box-sizing: border-box;
-  background: #ffffff;
+  background: transparent; /* 透明背景，让内容可以透过显示 */
   border-radius: 48rpx 48rpx 0 0;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
 }
 
 .sheet-handle {
@@ -281,11 +285,15 @@
 
 .sheet-content {
   flex: 1;
-  height: 100%;
+  height: calc(100% + 100rpx); /* 增加高度确保覆盖底部 */
   width: 100%;
   opacity: 1;
   transition: opacity 0.2s;
   box-sizing: border-box;
+  padding-top: 0; /* 内容从顶部开始，可穿过拖拽区域 */
+  padding-bottom: 80rpx; /* 底部内边距，防止漏出地图 */
+  background: #ffffff; /* 内容区域有白色背景 */
+  border-radius: 48rpx 48rpx 0 0; /* 24px */
 }
 
 .sheet-content.hidden {
@@ -298,7 +306,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 48rpx; /* 24px */
-  margin-top: 12rpx; /* 6px */
+  margin-top: 64rpx; /* 32px - 避开拖拽区域，让标题不被遮挡 */
   margin-bottom: 48rpx; /* 24px */
 }
 

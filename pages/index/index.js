@@ -107,17 +107,22 @@ Page({
     const topPanelHeight = menuTop + headerRowHeight + categoryAreaHeight
     
     // 计算收起时的高度: 
-    // handle area高度(24rpx) = 24rpx
-    const minHeightRpx = 24
+    // 收起状态只显示拖拽区域和标题区域，增加余量确保安卓机型适配
+    const minHeightRpx = 180
     const minHeight = minHeightRpx * rpxToPx
     
-    // 计算最大高度：屏幕高度 - 顶部面板高度 - tabBar高度(50px) - 安全区域底部
+    // 计算最大高度：屏幕高度 - 顶部面板高度(不含分类菜单) - tabBar高度(50px) - 安全区域底部
+    // 保留部分顶部空间给分类菜单，避免遮挡
     const tabBarHeight = 50
-    const sysMaxHeight = sysInfo.windowHeight - topPanelHeight - tabBarHeight - (sysInfo.safeAreaBottom || 0)
+    const topReserve = 100 // 顶部预留空间，防止遮挡分类菜单
+    const sysMaxHeight = sysInfo.windowHeight - topPanelHeight + categoryAreaHeight - tabBarHeight - (sysInfo.safeAreaBottom || 0) - topReserve
     
     // 计算弹窗底部偏移（tabBar高度 + 安全区域底部 + handle区域高度）
     const handleHeight = 24 // 24px
     const sheetBottom = tabBarHeight + (sysInfo.safeAreaBottom || 0) + handleHeight
+    
+    // 计算半屏高度
+    const midHeight = sysInfo.windowHeight * 0.45
     
     this.setData({ 
       statusBarHeight: sysInfo.statusBarHeight || 44,
@@ -128,6 +133,7 @@ Page({
       topPanelHeight: topPanelHeight,
       sheetBottom: sheetBottom,
       sysMinHeight: minHeight,
+      sysMidHeight: midHeight,
       sysMaxHeight: sysMaxHeight,
       sheetHeight: minHeight, // 默认收起状态
       isSheetExpanded: false // 默认收起状态
