@@ -469,7 +469,7 @@ Page({
   onMapZoomIn() {
     const currentScale = this.data.mapScale
     if (currentScale < 20) {
-      const newScale = Math.min(currentScale + 2, 20)
+      const newScale = Math.min(currentScale + 1, 20)
       this.setData({ mapScale: newScale })
     }
   },
@@ -478,7 +478,7 @@ Page({
   onMapZoomOut() {
     const currentScale = this.data.mapScale
     if (currentScale > 3) {
-      const newScale = Math.max(currentScale - 2, 3)
+      const newScale = Math.max(currentScale - 1, 3)
       this.setData({ mapScale: newScale })
     }
   },
