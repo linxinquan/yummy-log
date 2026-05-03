@@ -110,7 +110,7 @@ Page({
     
     // 计算收起时的高度: 
     // 收起状态只显示拖拽区域
-    const minHeightRpx = 60
+    const minHeightRpx = 48
     const minHeight = minHeightRpx * rpxToPx
     
     // 计算最大高度：屏幕高度 - 顶部面板高度(不含分类菜单) - tabBar高度(50px) - 安全区域底部
