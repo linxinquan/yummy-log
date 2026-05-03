@@ -85,7 +85,7 @@
   </view>
 
   <!-- 假底部栏 (收起状态显示) -->
-  <view class="fake-bottom-bar" wx:if="{{showFakeBar}}" style="bottom: {{tabBarHeight + (safeAreaBottom || 0)}}px;">
+  <view class="fake-bottom-bar" wx:if="{{showFakeBar}}" style="bottom: {{60 + (safeAreaBottom || 0)}}px;">
     <view class="fake-handle"></view>
     <view class="fake-header">
       <text class="fake-title">{{currentCategory === '全部' ? '全部' : currentCategory}}</text>

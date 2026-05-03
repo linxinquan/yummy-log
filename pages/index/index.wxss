@@ -242,14 +242,13 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
   background: #ffffff;
   border-radius: 48rpx 48rpx 0 0;
-  z-index: 110;
+  z-index: 100;
   padding-top: 20rpx;
-  padding-bottom: calc(20rpx + 120rpx);
+  padding-bottom: 20rpx;
   box-sizing: border-box;
-  min-height: 120rpx;
+  height: 120rpx;
 }
 
 .fake-handle {
