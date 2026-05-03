@@ -58,8 +58,8 @@
     </scroll-view>
   </view>
 
-  <!-- 悬浮按钮组 -->
-  <view class="float-btns-group" style="bottom: {{showFakeBar ? (126 + (safeAreaBottom || 0)) : (sheetHeight + 16 + sheetBottom)}}px" wx:if="{{!isDragging}}">
+  <!-- 悬浮按钮组 (全屏时隐藏) -->
+  <view class="float-btns-group" style="bottom: {{showFakeBar ? (80 + (safeAreaBottom || 0)) : (sheetHeight + 16 + sheetBottom)}}px" wx:if="{{!isDragging && sheetHeight < sysMaxHeight - 10}}">
     <!-- 左侧：列表展开按钮 -->
     <view class="float-btn explore-float-btn" bindtap="onListBtnTap">
       <i class="mgc_list_check_3_line"></i>
@@ -87,14 +87,6 @@
   <!-- 假底部栏 (收起状态显示) -->
   <view class="fake-bottom-bar" wx:if="{{showFakeBar}}" style="bottom: {{50 + (safeAreaBottom || 0)}}px;">
     <view class="fake-handle"></view>
-    <view class="fake-header">
-      <text class="fake-title">{{currentCategory === '全部' ? '全部' : currentCategory}}</text>
-      <view class="fake-sort">
-        <text class="fake-sort-item {{sortType === 'distance' ? 'active' : ''}}" bindtap="onSortChange" data-sort="distance">距离</text>
-        <text class="fake-sort-divider">·</text>
-        <text class="fake-sort-item {{sortType === 'rating' ? 'active' : ''}}" bindtap="onSortChange" data-sort="rating">好评</text>
-      </view>
-    </view>
   </view>
 
   <!-- ── Bottom Sheet ── -->
