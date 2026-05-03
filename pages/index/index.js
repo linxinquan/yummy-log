@@ -107,10 +107,9 @@ Page({
     const headerRowHeight = menuHeight + 20 // nav-bar(含padding) + weather-row(含padding)
     const topPanelHeight = menuTop + headerRowHeight + categoryAreaHeight
     
-    // 计算收起时的高度: 
-    // 收起状态完全不显示弹窗
-    const minHeightRpx = 0
-    const minHeight = minHeightRpx * rpxToPx
+    // 计算收起时的高度:
+    // 收起状态只显示拖拽区域，使用屏幕高度百分比
+    const minHeight = sysInfo.windowHeight * 0.08
     
     // 计算最大高度：屏幕高度 - 顶部面板高度(不含分类菜单) - tabBar高度(50px) - 安全区域底部
     // 保留部分顶部空间给分类菜单，避免遮挡
