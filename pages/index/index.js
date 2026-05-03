@@ -109,8 +109,8 @@ Page({
     const topPanelHeight = menuTop + headerRowHeight + categoryAreaHeight
     
     // 计算收起时的高度: 
-    // 收起状态只显示拖拽区域和标题区域，增加余量确保安卓机型适配
-    const minHeightRpx = 180
+    // 收起状态只显示拖拽区域
+    const minHeightRpx = 60
     const minHeight = minHeightRpx * rpxToPx
     
     // 计算最大高度：屏幕高度 - 顶部面板高度(不含分类菜单) - tabBar高度(50px) - 安全区域底部
