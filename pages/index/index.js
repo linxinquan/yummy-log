@@ -62,7 +62,7 @@ Page({
       { name: '美食', icon: 'mgc_fork_spoon_line', color: '#E67E22' },
       { name: '景点', icon: 'mgc_map_line', color: '#27AE60' },
       { name: '酒店民宿', icon: 'mgc_store_line', color: '#3498DB' },
-      { name: '饮品甜点', icon: 'mgc_cup_line', color: '#9B59B6' },
+      { name: '饮品甜点', icon: 'mgc_drink_line', color: '#9B59B6' },
       { name: '自然户外', icon: 'mgc_tree_line', color: '#2ECC71' },
       { name: '文化艺术', icon: 'mgc_compass_line', color: '#F39C12' }
     ],
