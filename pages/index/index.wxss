@@ -246,7 +246,8 @@
   border-radius: 48rpx 48rpx 0 0;
   z-index: 110;
   padding-top: 20rpx;
-  padding-bottom: 20rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom) + 60rpx);
+  box-sizing: border-box;
 }
 
 .fake-handle {
