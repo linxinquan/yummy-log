@@ -6,68 +6,82 @@
  * 这里直接返回静态路径，不再运行时生成
  */
 
+// 细分分类 → 聚合分类的映射
+const SUB_TO_MAIN = {
+  '粤菜': '美食',
+  '川菜': '美食',
+  '湘菜': '美食',
+  '北京菜': '美食',
+  '东南亚餐': '美食',
+  '日韩料理': '美食',
+  '西餐': '美食',
+  '小吃': '美食',
+  '其他': '美食',
+  '海鲜': '美食',
+  '烧烤': '美食',
+  '牛肉': '美食',
+  '粉': '美食',
+  '粥': '美食',
+  '面食': '美食',
+  '糖水': '饮品甜点',
+  '景点': '景点',
+}
+
+// 聚合分类的图标配置
 const CAT_ICONS = {
-  '粤菜':      { emoji: '🥢', bg: '#E67E22' },
-  '川菜':      { emoji: '🌶️', bg: '#E67E22' },
-  '湘菜':      { emoji: '🔥', bg: '#E67E22' },
-  '北京菜':    { emoji: '🥟', bg: '#E67E22' },
-  '东南亚餐':  { emoji: '🍜', bg: '#E67E22' },
-  '日韩料理':  { emoji: '🍣', bg: '#E67E22' },
-  '西餐':      { emoji: '🥩', bg: '#E67E22' },
-  '小吃':      { emoji: '🍡', bg: '#E67E22' },
-  '其他':      { emoji: '🍽️', bg: '#7F8C8D' },
-  '海鲜':      { emoji: '🦐', bg: '#E67E22' },
-  '烧烤':      { emoji: '🍖', bg: '#E67E22' },
-  '牛肉':      { emoji: '🥩', bg: '#E67E22' },
-  '粉':        { emoji: '🍜', bg: '#E67E22' },
-  '粥':        { emoji: '🥣', bg: '#E67E22' },
-  '面食':      { emoji: '🍝', bg: '#E67E22' },
-  '糖水':      { emoji: '🍮', bg: '#9B59B6' },
+  '美食':      { emoji: '🥢', bg: '#E67E22' },
   '景点':      { emoji: '🌲', bg: '#27AE60' },
+  '酒店民宿':  { emoji: '🏨', bg: '#3498DB' },
+  '饮品甜点':  { emoji: '🍹', bg: '#9B59B6' },
+  '购物':      { emoji: '🛍️', bg: '#E91E63' },
+  '自然户外':  { emoji: '🌲', bg: '#2ECC71' },
+  '文化艺术':  { emoji: '🎨', bg: '#F39C12' },
+  '全部':      { emoji: '📍', bg: '#9B59B6' },
 }
 
 // 分类 → 标记PNG文件名的映射（静态路径，无需生成）
 const CAT_TO_FILE = {
-  '粤菜':      '/images/markers/marker_粤菜.png',
-  '川菜':      '/images/markers/marker_川菜.png',
-  '湘菜':      '/images/markers/marker_湘菜.png',
-  '北京菜':    '/images/markers/marker_北京菜.png',
-  '东南亚餐':  '/images/markers/marker_东南亚餐.png',
-  '日韩料理':  '/images/markers/marker_日韩料理.png',
-  '西餐':      '/images/markers/marker_西餐.png',
-  '小吃':      '/images/markers/marker_小吃.png',
-  '其他':      '/images/markers/marker_其他.png',
-  '海鲜':      '/images/markers/marker_海鲜.png',
-  '烧烤':      '/images/markers/marker_烧烤.png',
-  '牛肉':      '/images/markers/marker_牛肉.png',
-  '粉':        '/images/markers/marker_粉.png',
-  '粥':        '/images/markers/marker_粥.png',
-  '面食':      '/images/markers/marker_面食.png',
-  '糖水':      '/images/markers/marker_默认.png',
-  '景点':      '/images/markers/marker_景点.png',
+  '美食':      '/images/markers/marker_food.png',
+  '景点':      '/images/markers/marker_spot.png',
+  '酒店民宿':  '/images/markers/marker_hotel.png',
+  '饮品甜点':  '/images/markers/marker_drink.png',
+  '购物':      '/images/markers/marker_shopping.png',
+  '自然户外':  '/images/markers/marker_outdoor.png',
+  '文化艺术':  '/images/markers/marker_culture.png',
+  '全部':      '/images/markers/marker_default.png',
 }
 
 const ICON_SIZE = 28  // PNG实际尺寸
 
 /**
+ * 获取聚合分类（细分 → 聚合）
+ */
+function getMainCategory(category) {
+  return SUB_TO_MAIN[category] || category
+}
+
+/**
  * 同步获取某分类的图标路径
  */
 function getIconPath(category) {
-  return CAT_TO_FILE[category] || ''
+  // 强制所有分类使用景点图标
+  return '/images/markers/marker_spot.png'
 }
 
 /**
  * 获取某分类的主色调（callout边框用）
  */
 function getCategoryColor(category) {
-  return CAT_ICONS[category]?.bg || '#00D9C0'
+  const mainCat = getMainCategory(category)
+  return CAT_ICONS[mainCat]?.bg || '#00D9C0'
 }
 
 /**
  * 获取某分类的emoji
  */
 function getCategoryEmoji(category) {
-  return CAT_ICONS[category]?.emoji || '📍'
+  const mainCat = getMainCategory(category)
+  return CAT_ICONS[mainCat]?.emoji || '📍'
 }
 
 /**

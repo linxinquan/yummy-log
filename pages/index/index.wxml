@@ -8,11 +8,11 @@
     latitude="{{mapCenter.lat}}"
     longitude="{{mapCenter.lng}}"
     scale="{{mapScale}}"
-    show-location
     markers="{{allMarkers}}"
     bindmarkertap="onMarkerTap"
     enable-rotate
     enable-overlooking
+    show-location="{{false}}"
   ></map>
 
   <!-- ── Top Floating Area ── -->
@@ -42,20 +42,19 @@
     </view>
 
     <!-- 分类标签 (胶囊样式) -->
-    <scroll-view class="category-scroll" scroll-x enable-flex>
-      <view class="category-list">
-        <view
-          wx:for="{{exploreCategories}}"
-          wx:key="name"
-          class="cat-pill {{currentCategory === item.name ? 'active' : ''}}"
-          bindtap="onCategoryChange"
-          data-category="{{item.name}}"
-        >
-          <i class="{{item.icon}} cat-icon" style="color: {{currentCategory === item.name ? item.color : '#7D7F85'}}"></i>
-          <text class="cat-name" style="color: {{currentCategory === item.name ? item.color : '#7D7F85'}}">{{item.name}}</text>
-        </view>
+    <view class="category-scroll">
+      <view
+        wx:for="{{exploreCategories}}"
+        wx:key="name"
+        id="cat-{{item.name}}"
+        class="cat-pill {{currentCategory === item.name ? 'active' : ''}}"
+        bindtap="onCategoryChange"
+        data-category="{{item.name}}"
+      >
+        <i class="{{item.icon}} cat-icon" style="color: {{currentCategory === item.name ? item.color : '#7D7F85'}}"></i>
+        <text class="cat-name" style="color: {{currentCategory === item.name ? item.color : '#7D7F85'}}">{{item.name}}</text>
       </view>
-    </scroll-view>
+    </view>
   </view>
 
   <!-- 悬浮按钮组 (全屏时隐藏) -->
@@ -107,12 +106,12 @@
         <text class="list-title">{{currentCategory === '全部' ? '全部' : currentCategory}}</text>
         <view class="sort-btns">
           <view
-            class="sort-btn {{sortType === 'distance' ? 'active' : ''}}"
+            class="sort-btn {{sortType === 'distance' ? 'active-distance' : ''}}"
             bindtap="onSortChange"
             data-sort="distance"
           ><i class="mgc_location_line"></i> 距离</view>
           <view
-            class="sort-btn {{sortType === 'rating' ? 'active' : ''}}"
+            class="sort-btn {{sortType === 'rating' ? 'active-rating' : ''}}"
             bindtap="onSortChange"
             data-sort="rating"
           ><i class="mgc_star_line"></i> 好评</view>

@@ -51,7 +51,7 @@ Page({
       menuRightInset,
       secondaryTag: (spot.tags && spot.tags[0]) || spot.district || '热门地点',
       wantStatText: `${spot.wantCount || 4232} 人想去 · 883m`,
-      openTimeText: `营业时间：${spot.openHours || '全天'}`
+      openTimeText: `营业时间：${spot.openHours || '全天'} · ${spot.free ? '免费' : '收费'}`
     })
     wx.setNavigationBarTitle({ title: spot.name })
 

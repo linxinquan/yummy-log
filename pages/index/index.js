@@ -63,10 +63,12 @@ Page({
       { name: '景点', icon: 'mgc_map_line', color: '#27AE60' },
       { name: '酒店民宿', icon: 'mgc_store_line', color: '#3498DB' },
       { name: '饮品甜点', icon: 'mgc_drink_line', color: '#9B59B6' },
+      { name: '购物', icon: 'mgc_shopping_bag_line', color: '#E91E63' },
       { name: '自然户外', icon: 'mgc_tree_line', color: '#2ECC71' },
       { name: '文化艺术', icon: 'mgc_compass_line', color: '#F39C12' }
     ],
     currentCategory: '全部',
+    scrollToCategory: '',
     
     // 排序
     sortType: 'distance', // distance | rating
@@ -146,7 +148,8 @@ Page({
     this.loadUserData()
     
     markerIcons.ensureIcons(() => {
-      this.updateMarkers()
+      // 确保筛选后再更新标记
+      this.applyFilters()
     })
     
     app.whenLocationReady((loc) => {
@@ -207,7 +210,39 @@ Page({
       };
     })
     
-    const allItems = [...spots, ...foods]
+    // 添加假数据：文化艺术
+    const cultureData = [
+      { id: 901, name: '深圳美术馆', category: '文化艺术', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, tags: ['展览', '艺术'], image: '/images/covers/01.jpeg' },
+      { id: 902, name: '关山月美术馆', category: '文化艺术', type: 'culture', lat: 22.541, lng: 114.038, rating: 4.6, tags: ['国画', '收藏'], image: '/images/covers/02.jpeg' },
+      { id: 903, name: '深圳音乐厅', category: '文化艺术', type: 'culture', lat: 22.544, lng: 114.042, rating: 4.7, tags: ['演出', '音乐'], image: '/images/covers/03.jpeg' },
+      { id: 904, name: '何香凝美术馆', category: '文化艺术', type: 'culture', lat: 22.532, lng: 113.986, rating: 4.4, tags: ['美术', '展览'], image: '/images/covers/04.jpeg' },
+    ]
+    
+    // 添加假数据：自然户外
+    const outdoorData = [
+      { id: 911, name: '梧桐山国家森林公园', category: '自然户外', type: 'outdoor', lat: 22.624, lng: 114.198, rating: 4.8, tags: ['登山', '观景'], image: '/images/covers/05.jpeg' },
+      { id: 912, name: '塘朗山郊野公园', category: '自然户外', type: 'outdoor', lat: 22.542, lng: 113.958, rating: 4.5, tags: ['徒步', '骑行'], image: '/images/covers/06.jpeg' },
+      { id: 913, name: '深圳湾公园', category: '自然户外', type: 'outdoor', lat: 22.498, lng: 113.914, rating: 4.7, tags: ['滨海', '跑步'], image: '/images/covers/07.jpeg' },
+      { id: 914, name: '梅林水库', category: '自然户外', type: 'outdoor', lat: 22.568, lng: 114.032, rating: 4.6, tags: ['水库', '徒步'], image: '/images/covers/08.jpeg' },
+    ]
+    
+    // 添加假数据：购物
+    const shoppingData = [
+      { id: 921, name: '华润万象城', category: '购物', type: 'shopping', lat: 22.541, lng: 114.063, rating: 4.8, tags: ['高端', '奢侈品'], image: '/images/covers/09.jpeg' },
+      { id: 922, name: '海岸城', category: '购物', type: 'shopping', lat: 22.489, lng: 113.921, rating: 4.6, tags: ['餐饮', '娱乐'], image: '/images/covers/10.jpeg' },
+      { id: 923, name: '东门老街', category: '购物', type: 'shopping', lat: 22.543, lng: 114.078, rating: 4.5, tags: ['老街', '小吃'], image: '/images/covers/11.jpeg' },
+      { id: 924, name: '益田假日广场', category: '购物', type: 'shopping', lat: 22.535, lng: 113.988, rating: 4.7, tags: ['品牌', '餐饮'], image: '/images/covers/12.jpeg' },
+    ]
+    
+    // 添加假数据：酒店民宿
+    const hotelData = [
+      { id: 931, name: '深圳华侨城洲际大酒店', category: '酒店民宿', type: 'hotel', lat: 22.538, lng: 113.989, rating: 4.8, tags: ['五星', '豪华'], image: '/images/covers/13.jpeg', price: 1280 },
+      { id: 932, name: '深圳湾安达仕酒店', category: '酒店民宿', type: 'hotel', lat: 22.501, lng: 113.912, rating: 4.9, tags: ['海景', '高端'], image: '/images/covers/14.jpeg', price: 1580 },
+      { id: 933, name: '深圳柏悦酒店', category: '酒店民宿', type: 'hotel', lat: 22.542, lng: 114.061, rating: 4.7, tags: ['商务', '舒适'], image: '/images/covers/15.jpeg', price: 980 },
+      { id: 934, name: '深圳大鹏古城民宿', category: '酒店民宿', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: '/images/covers/16.jpeg', price: 380 },
+    ]
+    
+    const allItems = [...spots, ...foods, ...cultureData, ...outdoorData, ...shoppingData, ...hotelData]
     this.setData({ allItems })
     this.applyFilters()
   },
@@ -264,11 +299,18 @@ Page({
       filtered = filtered.filter(i => i.type === 'spot')
     } else if (currentCategory === '美食') {
       filtered = filtered.filter(i => i.type === 'food')
-    } else if (currentCategory === '饮品') {
+    } else if (currentCategory === '饮品甜点') {
       filtered = filtered.filter(i => i.type === 'food' && (i.category === '饮品' || i.category === '咖啡' || i.tags?.includes('糖水')))
-    } else if (currentCategory === '购物' || currentCategory === '住宿') {
-      filtered = [] // 暂无数据
+    } else if (currentCategory === '购物') {
+      filtered = filtered.filter(i => i.type === 'shopping')
+    } else if (currentCategory === '酒店民宿') {
+      filtered = filtered.filter(i => i.type === 'hotel')
+    } else if (currentCategory === '自然户外') {
+      filtered = filtered.filter(i => i.type === 'outdoor')
+    } else if (currentCategory === '文化艺术') {
+      filtered = filtered.filter(i => i.type === 'culture')
     }
+    // '全部' 时不筛选，显示所有数据
     
     // 距离计算与排序
     const centerLat = mapCenter?.lat || 22.4846
@@ -305,52 +347,55 @@ Page({
       return
     }
 
-    const mapScale = this.data.mapScale
-    const useSmallDot = mapScale < 12 // 缩放级别小于12时使用小圆点
-
     const markers = items.map(item => {
-      if (item.type === 'spot') {
-        return {
-          id: item.id,
-          latitude: item.lat,
-          longitude: item.lng,
-          iconPath: useSmallDot ? '/images/markers/dot_spot.png' : '/images/markers/marker_景点.png',
-          width: useSmallDot ? 12 : 28,
-          height: useSmallDot ? 12 : 28,
-          callout: useSmallDot ? {} : {
-            content: `🌲 ${item.name}\n★ ${item.rating}  ${item.free ? '免费' : '收费'}`,
-            color: '#1A1A2E',
-            fontSize: 12,
-            borderRadius: 10,
-            padding: 8,
-            display: 'BYCLICK',
-            bgColor: '#ffffff',
-            borderColor: '#27AE60',
-            borderWidth: 1.5
-          }
-        }
-      } else {
-        const catColor = markerIcons.getCategoryColor(item.category) || '#E6A817'
-        const catEmoji = markerIcons.getCategoryEmoji(item.category)
-        const iconPath = useSmallDot ? '/images/markers/dot_food.png' : (markerIcons.getIconPath(item.category) || '/images/markers/marker_默认.png')
-        return {
-          id: item.id,
-          latitude: item.lat,
-          longitude: item.lng,
-          iconPath: iconPath,
-          width: useSmallDot ? 12 : 28,
-          height: useSmallDot ? 12 : 28,
-          callout: useSmallDot ? {} : {
-            content: `${catEmoji} ${item.name}\n★ ${item.rating || '暂无'}  ¥${item.price || '--'}/人`,
-            color: '#1A1A2E',
-            fontSize: 12,
-            borderRadius: 10,
-            padding: 8,
-            display: 'BYCLICK',
-            bgColor: '#ffffff',
-            borderColor: catColor,
-            borderWidth: 1.5
-          }
+      const isSpot = item.type === 'spot'
+      let markerCategory
+      switch(item.type) {
+        case 'spot':
+          markerCategory = '景点'
+          break
+        case 'food':
+          markerCategory = '美食'
+          break
+        case 'culture':
+          markerCategory = '文化艺术'
+          break
+        case 'outdoor':
+          markerCategory = '自然户外'
+          break
+        case 'shopping':
+          markerCategory = '购物'
+          break
+        case 'hotel':
+          markerCategory = '酒店民宿'
+          break
+        default:
+          markerCategory = '美食'
+      }
+      
+      const catColor = markerIcons.getCategoryColor(markerCategory)
+      const catEmoji = markerIcons.getCategoryEmoji(markerCategory)
+      const markerIconPath = markerIcons.getIconPath(markerCategory)
+
+      return {
+        id: item.id,
+        latitude: item.lat,
+        longitude: item.lng,
+        iconPath: markerIconPath,
+        width: 28,
+        height: 28,
+        callout: {
+          content: isSpot 
+            ? `${catEmoji} ${item.name}\n★ ${item.rating}  ${item.free ? '免费' : '收费'}`
+            : `${catEmoji} ${item.name}\n★ ${item.rating || '暂无'}  ¥${item.price || '--'}/人`,
+          color: '#1A1A2E',
+          fontSize: 12,
+          borderRadius: 10,
+          padding: 8,
+          display: 'BYCLICK',
+          bgColor: '#ffffff',
+          borderColor: catColor,
+          borderWidth: 1.5
         }
       }
     })
@@ -409,7 +454,15 @@ Page({
   // 分类切换
   onCategoryChange(e) {
     const category = e.currentTarget.dataset.category
-    this.setData({ currentCategory: category, currentPage: 1 })
+    this.setData({ 
+      currentCategory: category, 
+      currentPage: 1,
+      scrollToCategory: '' // 先清空触发重新滚动
+    })
+    // 异步设置滚动目标，确保scroll-view重新渲染
+    setTimeout(() => {
+      this.setData({ scrollToCategory: 'cat-' + category })
+    }, 10)
     this.applyFilters()
   },
 

@@ -126,28 +126,30 @@
 
 /* ─── Category Pills ─────────────────────────── */
 .category-scroll {
-  width: 100%;
-  margin-top: 24rpx; /* 12px */
-  padding-left: var(--space-md);
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0 48rpx;
+  margin-top: 24rpx;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
-.category-list {
-  display: flex;
-  gap: 16rpx; /* 8px */
-  padding-right: var(--space-md);
+.category-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .cat-pill {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8rpx; /* 4px */
-  padding: 12rpx 24rpx; /* 6px 12px */
+  gap: 8rpx;
+  padding: 12rpx 24rpx;
   border-radius: 999rpx;
   background: #ffffff;
   flex-shrink: 0;
   transition: all 0.3s;
+  margin-right: 16rpx;
 }
 
 .cat-icon {
@@ -336,12 +338,20 @@
   color: #C2C2C2;
 }
 
-.sort-btn.active {
-  color: #E5675F; /* 选中变成珊瑚红 */
+.sort-btn.active-distance {
+  color: #E5675F; /* 距离选中变成珊瑚红 */
 }
 
-.sort-btn.active i {
+.sort-btn.active-distance i {
   color: #E5675F;
+}
+
+.sort-btn.active-rating {
+  color: #EE8733; /* 好评选中变成橙色 */
+}
+
+.sort-btn.active-rating i {
+  color: #EE8733;
 }
 
 /* ─── Empty State ────────────────────────────── */
