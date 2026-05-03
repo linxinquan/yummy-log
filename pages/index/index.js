@@ -46,6 +46,8 @@ Page({
     sheetHeight: 300,
     isDragging: false,
     showFakeBar: true, // 是否显示假的底部栏
+    tabBarHeight: 50, // tabBar高度
+    safeAreaBottom: 0, // 安全区域底部高度
 
     // 地图配置
     mapCenter: {
