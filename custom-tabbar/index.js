@@ -37,20 +37,28 @@ Component({
     ]
   },
   attached() {
-    const pages = getCurrentPages()
-    const currentPage = pages[pages.length - 1]
-    const route = "/" + currentPage.route
-    const list = this.data.list
-    for (let i = 0; i < list.length; i++) {
-      if (list[i].pagePath === route) {
-        this.setData({
-          selected: i
-        })
-        break
-      }
+    this.updateSelected()
+  },
+  pageLifetimes: {
+    show() {
+      this.updateSelected()
     }
   },
   methods: {
+    updateSelected() {
+      const pages = getCurrentPages()
+      const currentPage = pages[pages.length - 1]
+      const route = "/" + currentPage.route
+      const list = this.data.list
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].pagePath === route) {
+          this.setData({
+            selected: i
+          })
+          break
+        }
+      }
+    },
     switchTab(e) {
       const data = e.currentTarget.dataset
       const url = data.path
