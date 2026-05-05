@@ -61,11 +61,11 @@ Page({
       { name: '全部', icon: 'mgc_grid_line', color: '#9B59B6' },
       { name: '美食', icon: 'mgc_fork_spoon_line', color: '#E67E22' },
       { name: '景点', icon: 'mgc_map_line', color: '#27AE60' },
-      { name: '酒店民宿', icon: 'mgc_store_line', color: '#3498DB' },
-      { name: '饮品甜点', icon: 'mgc_drink_line', color: '#9B59B6' },
+      { name: '酒店', icon: 'mgc_store_line', color: '#3498DB' },
+      { name: '饮品', icon: 'mgc_drink_line', color: '#9B59B6' },
       { name: '购物', icon: 'mgc_shopping_bag_line', color: '#E91E63' },
       { name: '自然户外', icon: 'mgc_tree_line', color: '#2ECC71' },
-      { name: '文化艺术', icon: 'mgc_compass_line', color: '#F39C12' }
+      { name: '文化展馆', icon: 'mgc_compass_line', color: '#F39C12' }
     ],
     currentCategory: '全部',
     scrollToCategory: '',
@@ -210,12 +210,12 @@ Page({
       };
     })
     
-    // 添加假数据：文化艺术
+    // 添加假数据：文化展馆
     const cultureData = [
-      { id: 901, name: '深圳美术馆', category: '文化艺术', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, tags: ['展览', '艺术'], image: '/images/covers/01.jpeg' },
-      { id: 902, name: '关山月美术馆', category: '文化艺术', type: 'culture', lat: 22.541, lng: 114.038, rating: 4.6, tags: ['国画', '收藏'], image: '/images/covers/02.jpeg' },
-      { id: 903, name: '深圳音乐厅', category: '文化艺术', type: 'culture', lat: 22.544, lng: 114.042, rating: 4.7, tags: ['演出', '音乐'], image: '/images/covers/03.jpeg' },
-      { id: 904, name: '何香凝美术馆', category: '文化艺术', type: 'culture', lat: 22.532, lng: 113.986, rating: 4.4, tags: ['美术', '展览'], image: '/images/covers/04.jpeg' },
+      { id: 901, name: '深圳美术馆', category: '文化展馆', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, tags: ['展览', '艺术'], image: '/images/covers/01.jpeg' },
+      { id: 902, name: '关山月美术馆', category: '文化展馆', type: 'culture', lat: 22.541, lng: 114.038, rating: 4.6, tags: ['国画', '收藏'], image: '/images/covers/02.jpeg' },
+      { id: 903, name: '深圳音乐厅', category: '文化展馆', type: 'culture', lat: 22.544, lng: 114.042, rating: 4.7, tags: ['演出', '音乐'], image: '/images/covers/03.jpeg' },
+      { id: 904, name: '何香凝美术馆', category: '文化展馆', type: 'culture', lat: 22.532, lng: 113.986, rating: 4.4, tags: ['美术', '展览'], image: '/images/covers/04.jpeg' },
     ]
     
     // 添加假数据：自然户外
@@ -234,12 +234,12 @@ Page({
       { id: 924, name: '益田假日广场', category: '购物', type: 'shopping', lat: 22.535, lng: 113.988, rating: 4.7, tags: ['品牌', '餐饮'], image: '/images/covers/12.jpeg' },
     ]
     
-    // 添加假数据：酒店民宿
+    // 添加假数据：酒店
     const hotelData = [
-      { id: 931, name: '深圳华侨城洲际大酒店', category: '酒店民宿', type: 'hotel', lat: 22.538, lng: 113.989, rating: 4.8, tags: ['五星', '豪华'], image: '/images/covers/13.jpeg', price: 1280 },
-      { id: 932, name: '深圳湾安达仕酒店', category: '酒店民宿', type: 'hotel', lat: 22.501, lng: 113.912, rating: 4.9, tags: ['海景', '高端'], image: '/images/covers/14.jpeg', price: 1580 },
-      { id: 933, name: '深圳柏悦酒店', category: '酒店民宿', type: 'hotel', lat: 22.542, lng: 114.061, rating: 4.7, tags: ['商务', '舒适'], image: '/images/covers/15.jpeg', price: 980 },
-      { id: 934, name: '深圳大鹏古城民宿', category: '酒店民宿', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: '/images/covers/16.jpeg', price: 380 },
+      { id: 931, name: '深圳华侨城洲际大酒店', category: '酒店', type: 'hotel', lat: 22.538, lng: 113.989, rating: 4.8, tags: ['五星', '豪华'], image: '/images/covers/13.jpeg', price: 1280 },
+      { id: 932, name: '深圳湾安达仕酒店', category: '酒店', type: 'hotel', lat: 22.501, lng: 113.912, rating: 4.9, tags: ['海景', '高端'], image: '/images/covers/14.jpeg', price: 1580 },
+      { id: 933, name: '深圳柏悦酒店', category: '酒店', type: 'hotel', lat: 22.542, lng: 114.061, rating: 4.7, tags: ['商务', '舒适'], image: '/images/covers/15.jpeg', price: 980 },
+      { id: 934, name: '深圳大鹏古城民宿', category: '酒店', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: '/images/covers/16.jpeg', price: 380 },
     ]
     
     const allItems = [...spots, ...foods, ...cultureData, ...outdoorData, ...shoppingData, ...hotelData]
@@ -299,15 +299,15 @@ Page({
       filtered = filtered.filter(i => i.type === 'spot')
     } else if (currentCategory === '美食') {
       filtered = filtered.filter(i => i.type === 'food')
-    } else if (currentCategory === '饮品甜点') {
+    } else if (currentCategory === '饮品') {
       filtered = filtered.filter(i => i.type === 'food' && (i.category === '饮品' || i.category === '咖啡' || i.tags?.includes('糖水')))
     } else if (currentCategory === '购物') {
       filtered = filtered.filter(i => i.type === 'shopping')
-    } else if (currentCategory === '酒店民宿') {
+    } else if (currentCategory === '酒店') {
       filtered = filtered.filter(i => i.type === 'hotel')
     } else if (currentCategory === '自然户外') {
       filtered = filtered.filter(i => i.type === 'outdoor')
-    } else if (currentCategory === '文化艺术') {
+    } else if (currentCategory === '文化展馆') {
       filtered = filtered.filter(i => i.type === 'culture')
     }
     // '全部' 时不筛选，显示所有数据
@@ -358,7 +358,7 @@ Page({
           markerCategory = '美食'
           break
         case 'culture':
-          markerCategory = '文化艺术'
+          markerCategory = '文化展馆'
           break
         case 'outdoor':
           markerCategory = '自然户外'
@@ -367,7 +367,7 @@ Page({
           markerCategory = '购物'
           break
         case 'hotel':
-          markerCategory = '酒店民宿'
+          markerCategory = '酒店'
           break
         default:
           markerCategory = '美食'

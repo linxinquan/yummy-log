@@ -23,7 +23,7 @@ const SUB_TO_MAIN = {
   '粉': '美食',
   '粥': '美食',
   '面食': '美食',
-  '糖水': '饮品甜点',
+  '糖水': '饮品',
   '景点': '景点',
 }
 
@@ -31,11 +31,11 @@ const SUB_TO_MAIN = {
 const CAT_ICONS = {
   '美食':      { emoji: '🥢', bg: '#E67E22' },
   '景点':      { emoji: '🌲', bg: '#27AE60' },
-  '酒店民宿':  { emoji: '🏨', bg: '#3498DB' },
-  '饮品甜点':  { emoji: '🍹', bg: '#9B59B6' },
+  '酒店':      { emoji: '🏨', bg: '#3498DB' },
+  '饮品':      { emoji: '🍹', bg: '#9B59B6' },
   '购物':      { emoji: '🛍️', bg: '#E91E63' },
   '自然户外':  { emoji: '🌲', bg: '#2ECC71' },
-  '文化艺术':  { emoji: '🎨', bg: '#F39C12' },
+  '文化展馆':  { emoji: '🎨', bg: '#F39C12' },
   '全部':      { emoji: '📍', bg: '#9B59B6' },
 }
 
@@ -43,11 +43,11 @@ const CAT_ICONS = {
 const CAT_TO_FILE = {
   '美食':      '/images/markers/marker_food.png',
   '景点':      '/images/markers/marker_spot.png',
-  '酒店民宿':  '/images/markers/marker_hotel.png',
-  '饮品甜点':  '/images/markers/marker_drink.png',
+  '酒店':      '/images/markers/marker_hotel.png',
+  '饮品':      '/images/markers/marker_drink.png',
   '购物':      '/images/markers/marker_shopping.png',
   '自然户外':  '/images/markers/marker_outdoor.png',
-  '文化艺术':  '/images/markers/marker_culture.png',
+  '文化展馆':  '/images/markers/marker_culture.png',
   '全部':      '/images/markers/marker_default.png',
 }
 
