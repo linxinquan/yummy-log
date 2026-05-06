@@ -1,13 +1,10 @@
 <!-- 觅食图 - 我的攻略页面 -->
 <view class="container">
 
-  <!-- 自定义导航栏（大标题样式） -->
-  <view class="picker-header">
-    <text class="picker-title">我的攻略</text>
-    <view class="picker-right">
-      <text class="manage-btn" bindtap="onManageGuides" wx:if="{{guideCount > 0}}">管理</text>
-      <i class="mgc_close_line picker-close" bindtap="navigateBack"></i>
-    </view>
+  <!-- 大标题（与 district-guide 一致） -->
+  <view class="header">
+    <view class="district-title">我的攻略</view>
+    <text class="manage-btn" bindtap="onManageGuides" wx:if="{{guideCount > 0}}">管理</text>
   </view>
 
   <!-- 攻略列表 -->

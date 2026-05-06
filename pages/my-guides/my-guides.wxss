@@ -1,46 +1,38 @@
 /* 觅食图 - 我的攻略页面样式 */
 
-/* ── 容器 ── */
+.page {
+  background: #FFFFFF;
+}
+
 .container {
   width: 100%;
   min-height: 100vh;
   background: #FFFFFF;
-  display: flex;
-  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* ── 大标题导航栏（与探索页面城市选择弹窗一致） ── */
-.picker-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24rpx 48rpx;
-  padding-top: calc(24rpx + env(safe-area-inset-top));
+/* ── 大标题（与 district-guide 一致） ── */
+.header {
+  padding: 48rpx;
   background: #FFFFFF;
-}
-
-.picker-title {
-  font-size: 48rpx;
-  font-weight: 600;
-  color: #000000;
-}
-
-.picker-right {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 24rpx;
+}
+
+.district-title {
+  font-family: 'PingFang SC';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 48rpx;
+  line-height: 100%;
+  color: #000000;
 }
 
 .manage-btn {
   font-family: 'PingFang SC';
   font-size: 28rpx;
   color: #555555;
-}
-
-.picker-close {
-  font-size: 48rpx;
-  color: #7D7F85;
-  padding: 16rpx;
 }
 
 /* ── 攻略列表 ── */
