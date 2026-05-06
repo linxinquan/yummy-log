@@ -1,13 +1,8 @@
 <view class="container">
-  <!-- 自定义导航栏 -->
-  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
-    <view class="nav-content">
-      <view class="back-btn" bindtap="onBack">
-        <i class="mgc_left_line"></i>
-      </view>
-      <text class="nav-title">我的收藏</text>
-      <view class="nav-placeholder"></view>
-    </view>
+  <!-- 自定义导航栏（大标题样式） -->
+  <view class="picker-header">
+    <text class="picker-title">我的收藏</text>
+    <i class="mgc_close_line picker-close" bindtap="onBack"></i>
   </view>
 
   <!-- 空状态 -->

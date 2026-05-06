@@ -2,50 +2,31 @@
 
 .container {
   min-height: 100vh;
-  background: #F6F6F6;
+  background: #FFFFFF;
   display: flex;
   flex-direction: column;
 }
 
-/* ── 自定义导航栏 ── */
-.nav-bar {
-  background: #FFFFFF;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
-}
-
-.nav-content {
+/* ── 大标题导航栏（与探索页面城市选择弹窗一致） ── */
+.picker-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 88rpx;
-  padding: 0 32rpx;
+  padding: 24rpx 48rpx;
+  padding-top: calc(24rpx + env(safe-area-inset-top));
+  background: #FFFFFF;
 }
 
-.back-btn {
-  width: 64rpx;
-  height: 64rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.back-btn i {
-  font-size: 40rpx;
-  color: #262626;
-}
-
-.nav-title {
-  font-family: 'PingFang SC';
+.picker-title {
+  font-size: 48rpx;
   font-weight: 600;
-  font-size: 34rpx;
-  color: #262626;
+  color: #000000;
 }
 
-.nav-placeholder {
-  width: 64rpx;
+.picker-close {
+  font-size: 48rpx;
+  color: #7D7F85;
+  padding: 16rpx;
 }
 
 /* ── 空状态 ── */
@@ -88,6 +69,7 @@
 .list-container {
   flex: 1;
   padding: 24rpx 32rpx;
+  background: #F6F6F6;
 }
 
 /* ── 收藏项 ── */

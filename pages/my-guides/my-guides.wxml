@@ -1,16 +1,12 @@
 <!-- 觅食图 - 我的攻略页面 -->
 <view class="container">
 
-  <!-- 自定义导航栏 -->
-  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
-    <view class="nav-content">
-      <view class="nav-left" bindtap="navigateBack">
-        <i class="mgc_left_line"></i>
-      </view>
-      <text class="nav-title">我的攻略</text>
-      <view class="nav-right">
-        <text class="manage-btn" bindtap="onManageGuides" wx:if="{{guideCount > 0}}">管理</text>
-      </view>
+  <!-- 自定义导航栏（大标题样式） -->
+  <view class="picker-header">
+    <text class="picker-title">我的攻略</text>
+    <view class="picker-right">
+      <text class="manage-btn" bindtap="onManageGuides" wx:if="{{guideCount > 0}}">管理</text>
+      <i class="mgc_close_line picker-close" bindtap="navigateBack"></i>
     </view>
   </view>
 
