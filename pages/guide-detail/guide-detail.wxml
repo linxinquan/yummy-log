@@ -1,152 +1,203 @@
 <view class="container" wx:if="{{guide}}">
-  <!-- ── 顶部图片区 ── -->
-  <view class="hero-wrap">
-    <image class="hero-img" src="{{guide.coverImage || '/images/app-logo.jpg'}}" mode="aspectFill" />
-    
-    <!-- 自定义导航栏按钮 -->
-    <view class="top-bar" style="top: {{menuTop}}px; height: {{menuHeight}}px;">
-      <view class="icon-btn back-btn" bindtap="onBack">
+  <!-- ── 顶部导航栏 ── -->
+  <view class="nav-bar" style="top: {{menuTop}}px; height: {{menuHeight + 16}}px;">
+    <view class="nav-content">
+      <view class="nav-left" bindtap="onBack">
         <i class="mgc_left_line back-icon"></i>
       </view>
-      <view class="icon-btn share-btn" bindtap="onShareTap">
-        <i class="mgc_share_forward_line share-icon"></i>
-      </view>
-    </view>
-
-    <!-- 底部统计 -->
-    <view class="hero-stats">
-      <text class="stats-text">{{routeStats}}</text>
-    </view>
-    
-    <!-- 底部圆角遮罩 -->
-    <view class="hero-overlay"></view>
-  </view>
-
-  <!-- ── 内容区 ── -->
-  <view class="content-wrap">
-    
-    <!-- 基本信息 -->
-    <view class="main-info">
-      <view class="info-header">
-        <view class="info-left">
-          <view class="tags-row">
-            <view class="tag-badge"><text>{{guide.duration}}</text></view>
-            <view class="tag-badge"><text>{{guide.shopCount || guide.shops.length || 0}} 个地点</text></view>
-            <view class="tag-badge" wx:for="{{guide.tags}}" wx:key="*this"><text>{{item}}</text></view>
-          </view>
-          <text class="spot-title">{{guide.title}}</text>
+      <view class="nav-title">{{guide.title}}</view>
+      <view class="nav-right">
+        <view class="nav-btn" bindtap="onTip">
+          <i class="mgc_lightbulb_line tip-icon"></i>
         </view>
-        <!-- 收藏图标 -->
-        <view class="collect-btn" bindtap="onCollect">
+        <view class="nav-btn" bindtap="onToggleMode">
+          <i class="mgc_list_line list-icon" wx:if="{{mode === 'map'}}"></i>
+          <i class="mgc_map_pin_line map-icon" wx:else></i>
+        </view>
+        <view class="nav-btn" bindtap="onCollect">
           <i class="{{isCollected ? 'mgc_heart_fill' : 'mgc_heart_line'}} collect-icon" style="{{isCollected ? 'color: #DC6962;' : ''}}"></i>
         </view>
       </view>
-      
-      <text class="open-time">作者：{{guide.author || '匿名作者'}} · {{guide.likes || 0}} 人喜欢</text>
-      
-      <text class="spot-desc" wx:if="{{guide.desc}}">{{guide.desc}}</text>
     </view>
-    
-    <!-- 分割线 -->
-    <view class="divider"></view>
-    
-    <!-- 路线地图 -->
-    <view class="map-section">
-      <view class="section-header">
-        <text class="section-title">路线地图</text>
-        <text class="more-btn" bindtap="onViewRoute">查看路线</text>
-      </view>
-      <view class="map-card" bindtap="onViewRoute">
-        <map
-          class="mini-map"
-          latitude="{{mapCenter.lat}}"
-          longitude="{{mapCenter.lng}}"
-          scale="14"
-          markers="{{mapMarkers}}"
-          polyline="{{polyline}}"
-          enable-zoom="{{false}}"
-          enable-scroll="{{false}}"
-          enable-rotate="{{false}}"
-          enable-overlooking="{{false}}"
-        ></map>
-        <view class="map-legend">
-          <view class="legend-item">
-            <view class="legend-dot start"></view>
-            <text>起点</text>
-          </view>
-          <view class="legend-item">
-            <view class="legend-dot end"></view>
-            <text>终点</text>
-          </view>
-          <view class="legend-item">
-            <view class="legend-line"></view>
-            <text>路线</text>
-          </view>
-        </view>
-      </view>
-    </view>
-    
-    <!-- 行程安排 -->
-    <view class="route-section">
-      <view class="section-header">
-        <text class="section-title">行程安排</text>
-        <text class="more-btn" bindtap="onAddRoute">加入想去</text>
-      </view>
-      
-      <view class="route-list">
-        <view 
-          class="route-item" 
-          wx:for="{{routeItems}}" 
-          wx:key="index"
-          bindtap="onItemTap"
-          data-item="{{item}}"
-        >
-          <view class="route-num">{{index + 1}}</view>
-          <view class="route-info">
-            <text class="route-name">{{item.name}}</text>
-            <text class="route-desc">{{item.desc || item.category}}</text>
-            <view class="route-meta">
-              <text class="route-time">{{item.time || '约1小时'}}</text>
-              <text class="route-dist" wx:if="{{item.distance}}">{{item.distance}}</text>
-            </view>
-          </view>
-          <view class="route-arrow">
-            <i class="mgc_right_line"></i>
-          </view>
-        </view>
-      </view>
-    </view>
-    
-    <!-- 路线统计 -->
-    <view class="stats-section">
-      <view class="stat-item">
-        <text class="stat-value">{{totalDistance}}</text>
-        <text class="stat-label">总距离</text>
-      </view>
-      <view class="stat-divider"></view>
-      <view class="stat-item">
-        <text class="stat-value">{{totalTime}}</text>
-        <text class="stat-label">预计时间</text>
-      </view>
-      <view class="stat-divider"></view>
-      <view class="stat-item">
-        <text class="stat-value">{{guide.shopCount || guide.shops.length || 0}}</text>
-        <text class="stat-label">途经地点</text>
-      </view>
-    </view>
-    
   </view>
 
-  <!-- ── 底部操作栏 ── -->
-  <view class="bottom-action-bar">
-    <view class="action-bg"></view>
-    <view class="action-content">
-      <view class="nav-btn" bindtap="onShareTap">
-        <text>分享</text>
-      </view>
-      <view class="want-btn" bindtap="onAddRoute">
-        <text>开始导航</text>
+  <!-- ── 地图模式 ── -->
+  <view class="map-mode" wx:if="{{mode === 'map'}}">
+    <view class="map-container">
+      <map
+        class="main-map"
+        latitude="{{mapCenter.lat}}"
+        longitude="{{mapCenter.lng}}"
+        scale="14"
+        markers="{{mapMarkers}}"
+        polyline="{{polyline}}"
+        enable-zoom="{{true}}"
+        enable-scroll="{{true}}"
+        enable-rotate="{{false}}"
+        enable-overlooking="{{false}}"
+      ></map>
+    </view>
+    
+    <!-- 底部日期标签 -->
+    <view class="date-tabs-bottom">
+      <view 
+        class="date-tab" 
+        wx:for="{{dateTabs}}" 
+        wx:key="index"
+        bindtap="onDateTab"
+        data-index="{{index}}"
+        style="{{currentDay === index ? 'background: #FF6B35; color: #FFFFFF;' : ''}}"
+      >
+        {{item}}
       </view>
     </view>
+    
+    <!-- 当天行程列表 -->
+    <view class="day-itinerary">
+      <view class="day-header">
+        <text class="day-title">{{currentDayName}}</text>
+        <view class="edit-btn" bindtap="onEditRoute">
+          <i class="mgc_edit_2_line"></i>
+          <text>编辑路线</text>
+        </view>
+      </view>
+      <view class="route-detail">
+        <text class="route-text">{{currentRouteText}}</text>
+      </view>
+      <view class="spot-list">
+        <view 
+          class="spot-card" 
+          wx:for="{{currentDaySpots}}" 
+          wx:key="index"
+          bindtap="onSpotTap"
+          data-spot="{{item}}"
+        >
+          <image class="spot-img" src="{{item.image}}" mode="aspectFill" />
+          <view class="spot-info">
+            <text class="spot-name">{{item.name}}</text>
+            <text class="spot-desc">{{item.desc}}</text>
+          </view>
+          <view class="spot-tag">{{item.tag}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ── 列表模式 ── -->
+  <view class="list-mode" wx:else>
+    <!-- 日期标签 -->
+    <scroll-view class="date-tabs-scroll" scroll-x>
+      <view class="date-tabs">
+        <view 
+          class="date-tab" 
+          wx:for="{{dateTabs}}" 
+          wx:key="index"
+          bindtap="onDateTab"
+          data-index="{{index}}"
+          style="{{currentDay === index ? 'background: #FF6B35; color: #FFFFFF;' : ''}}"
+        >
+          {{item}}
+        </view>
+      </view>
+    </scroll-view>
+    
+    <!-- 总览页面 -->
+    <view class="overview-page" wx:if="{{currentDay === 0}}">
+      <!-- 行程总览 -->
+      <view class="section">
+        <text class="section-title">行程总览</text>
+        <view class="day-cards">
+          <view 
+            class="day-card" 
+            wx:for="{{daySummaries}}" 
+            wx:key="index"
+            bindtap="onDayCard"
+            data-day="{{index + 1}}"
+          >
+            <view class="day-header">
+              <text class="day-num">第{{index + 1}}天</text>
+              <text class="day-location" wx:if="{{item.location}}">{{item.location}}</text>
+            </view>
+            <text class="day-route">{{item.route}}</text>
+            <image class="day-img" src="{{item.image}}" mode="aspectFill" />
+          </view>
+        </view>
+      </view>
+      
+      <!-- 今日行程 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-title">第1天</text>
+          <view class="edit-btn" bindtap="onEditRoute">
+            <i class="mgc_edit_2_line"></i>
+            <text>编辑路线</text>
+          </view>
+        </view>
+        <text class="route-text">{{daySummaries[0].route}}</text>
+        <view class="spot-list">
+          <view 
+            class="spot-card" 
+            wx:for="{{currentDaySpots}}" 
+            wx:key="index"
+            bindtap="onSpotTap"
+            data-spot="{{item}}"
+          >
+            <image class="spot-img" src="{{item.image}}" mode="aspectFill" />
+            <view class="spot-info">
+              <text class="spot-name">{{item.name}}</text>
+              <text class="spot-desc">{{item.desc}}</text>
+            </view>
+            <view class="spot-tag">{{item.tag}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 日期详情页面 -->
+    <view class="day-detail-page" wx:else>
+      <view class="day-header-large">
+        <text class="day-title">{{currentDayName}}</text>
+        <view class="edit-btn" bindtap="onEditRoute">
+          <i class="mgc_edit_2_line"></i>
+          <text>编辑路线</text>
+        </view>
+      </view>
+      <text class="route-text">{{currentRouteText}}</text>
+      
+      <view class="route-timeline">
+        <view 
+          class="timeline-item" 
+          wx:for="{{currentDaySpots}}" 
+          wx:key="index"
+          bindtap="onSpotTap"
+          data-spot="{{item}}"
+        >
+          <view class="timeline-node">
+            <view class="node-dot"></view>
+            <view class="node-line" wx:if="{{index < currentDaySpots.length - 1}}"></view>
+          </view>
+          <view class="timeline-content">
+            <view class="timeline-card">
+              <image class="timeline-img" src="{{item.image}}" mode="aspectFill" />
+              <view class="timeline-info">
+                <text class="timeline-name">{{item.name}}</text>
+                <text class="timeline-desc">{{item.desc}}</text>
+              </view>
+              <view class="timeline-tag">{{item.tag}}</view>
+            </view>
+            <view class="timeline-meta" wx:if="{{item.distance}}">
+              <text>{{item.distance}}</text>
+              <text class="time-text">{{item.time}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ── 底部浮动按钮 ── -->
+  <view class="float-btn" bindtap="onStartNav">
+    <i class="mgc_navigation_line"></i>
+    <text>开始导航</text>
   </view>
 </view>
