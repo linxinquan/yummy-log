@@ -76,19 +76,23 @@ Page({
       { id: 934, name: '深圳大鹏古城民宿', category: '酒店', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', price: 380 },
     ]
 
-    // 合并所有数据
-    const allFoodsExtended = [...allFoods, ...shoppingData, ...hotelData]
-    const allSpotsExtended = [...allSpots, ...cultureData, ...outdoorData]
+    // 合并所有商业类数据（美食、饮品、购物、酒店）
+    const businessCategoryData = [...allFoods, ...shoppingData, ...hotelData]
+    // 合并所有景点类数据（景点、文化展馆、自然户外）
+    const attractionCategoryData = [...allSpots, ...cultureData, ...outdoorData]
 
-    // 筛选已收藏的美食
-    const foodList = collectedFoodIds
+    // 筛选已收藏的商业类（美食、饮品、购物、酒店）
+    const businessCategoryList = collectedFoodIds
       .map(id => {
-        const food = allFoodsExtended.find(f => String(f.id) === String(id))
-        if (food) {
+        const item = businessCategoryData.find(f => String(f.id) === String(id))
+        if (item) {
+          // 限制标签数量最多2个（与探索页面一致）
+          const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2);
           return {
-            ...food,
-            displayImage: food.logo || food.image || food.thumb,
-            displayCategory: food.category || '美食',
+            ...item,
+            tags: filteredTags,
+            displayImage: item.logo || item.image || item.thumb,
+            displayCategory: item.category || '美食',
             type: 'food'
           }
         }
@@ -96,15 +100,17 @@ Page({
       })
       .filter(Boolean)
 
-    // 筛选已收藏的景点
-    const spotList = collectedSpotIds
+    // 筛选已收藏的景点类（景点、文化展馆、自然户外）
+    const attractionCategoryList = collectedSpotIds
       .map(id => {
-        const spot = allSpotsExtended.find(s => String(s.id) === String(id))
-        if (spot) {
+        const item = attractionCategoryData.find(s => String(s.id) === String(id))
+        if (item) {
+          // 限制标签数量最多2个（与探索页面一致）
+          const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2);
           return {
-            ...spot,
-            displayImage: spot.image || spot.logo || spot.thumb,
-            displayCategory: spot.category || '景点',
+            ...item,
+            displayImage: item.image || item.logo || item.thumb,
+            displayCategory: item.category || '景点',
             type: 'spot'
           }
         }
@@ -113,7 +119,7 @@ Page({
       .filter(Boolean)
 
     // 合并列表
-    const allList = [...foodList, ...spotList]
+    const allList = [...businessCategoryList, ...attractionCategoryList]
 
     this.setData({
       allList,

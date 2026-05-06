@@ -1,56 +1,93 @@
 <view class="container" wx:if="{{guide}}">
-  <!-- 自定义导航栏 -->
-  <view class="top-bar" style="top: {{menuTop}}px; height: {{menuHeight}}px;">
-    <view class="icon-btn back-btn" bindtap="onBack">
-      <i class="mgc_left_line back-icon"></i>
+  <!-- ── 顶部图片区 ── -->
+  <view class="hero-wrap">
+    <image class="hero-img" src="{{guide.coverImage || '/images/app-logo.jpg'}}" mode="aspectFill" />
+    
+    <!-- 自定义导航栏按钮 -->
+    <view class="top-bar" style="top: {{menuTop}}px; height: {{menuHeight}}px;">
+      <view class="icon-btn back-btn" bindtap="onBack">
+        <i class="mgc_left_line back-icon"></i>
+      </view>
+      <view class="icon-btn share-btn" bindtap="onShareTap">
+        <i class="mgc_share_forward_line share-icon"></i>
+      </view>
     </view>
-    <view class="icon-btn share-btn" bindtap="onShareTap">
-      <i class="mgc_share_forward_line share-icon"></i>
+
+    <!-- 底部统计 & 头像 -->
+    <view class="hero-stats">
+      <text class="stats-text">{{wantStatText}}</text>
+      <view class="avatar-group">
+        <image class="avatar" wx:for="{{displayAvatars}}" wx:key="*this" src="{{item}}" mode="aspectFill" />
+      </view>
     </view>
+    
+    <!-- 底部圆角遮罩 -->
+    <view class="hero-overlay"></view>
   </view>
 
-  <image class="hero" src="{{guide.coverImage || '/images/app-logo.jpg'}}" mode="aspectFill"></image>
-
-  <view class="content">
-    <view class="hero-card">
-      <text class="title">{{guide.title}}</text>
-      <text class="author">{{guide.author || '匿名作者'}}</text>
-      <view class="meta-row">
-        <text class="meta-pill">{{guide.shopCount || guide.shops.length || 0}} 家店铺</text>
-        <text wx:for="{{guide.tags}}" wx:key="*this" class="meta-pill light">{{item}}</text>
-      </view>
-      <text class="desc" wx:if="{{guide.desc}}">{{guide.desc}}</text>
-    </view>
-
-    <view class="section" wx:if="{{matchedShops.length > 0}}">
-      <text class="section-title">可直接打开的店铺</text>
-      <view
-        wx:for="{{matchedShops}}"
-        wx:key="id"
-        class="shop-card"
-        bindtap="onShopTap"
-        data-shop="{{item}}"
-      >
-        <image class="shop-cover" src="{{item.logo || item.image || item.thumb || '/images/app-logo.jpg'}}" mode="aspectFill"></image>
-        <view class="shop-info">
-          <text class="shop-name">{{item.name}}</text>
-          <text class="shop-meta">{{item.category || '未分类'}}{{item.price ? ' · ¥' + item.price + '/人' : ''}}</text>
-          <text class="shop-address">{{item.address || '暂无地址'}}</text>
+  <!-- ── 内容区 ── -->
+  <view class="content-wrap">
+    
+    <!-- 基本信息 -->
+    <view class="main-info">
+      <view class="info-header">
+        <view class="info-left">
+          <view class="tags-row">
+            <view class="tag-badge"><text>{{guide.shopCount || guide.shops.length || 0}} 家店铺</text></view>
+            <view class="tag-badge" wx:for="{{guide.tags}}" wx:key="*this"><text>{{item}}</text></view>
+          </view>
+          <text class="spot-title">{{guide.title}}</text>
+        </view>
+        <!-- 收藏图标 -->
+        <view class="collect-btn" bindtap="onCollect">
+          <i class="{{isCollected ? 'mgc_heart_fill' : 'mgc_heart_line'}} collect-icon" style="{{isCollected ? 'color: #DC6962;' : ''}}"></i>
         </view>
       </view>
+      
+      <text class="open-time">作者：{{guide.author || '匿名作者'}}</text>
+      
+      <text class="spot-desc" wx:if="{{guide.desc}}">{{guide.desc}}</text>
     </view>
-
-    <view class="section" wx:if="{{guide.shops && guide.shops.length > 0}}">
-      <text class="section-title">攻略提到的店铺</text>
-      <view class="name-list">
-        <text wx:for="{{guide.shops}}" wx:key="*this" class="name-pill">{{item}}</text>
+    
+    <!-- 分割线 -->
+    <view class="divider"></view>
+    
+    <!-- 店铺列表 -->
+    <view class="nearby-section" wx:if="{{matchedShops.length > 0}}">
+      <view class="section-header">
+        <text class="section-title">攻略提到的店铺</text>
+        <text class="more-btn" bindtap="onFindFood">更多</text>
       </view>
+      <scroll-view class="nearby-scroll" scroll-x enable-flex>
+        <view class="nearby-list">
+          <view
+            class="nearby-card"
+            wx:for="{{matchedShops}}"
+            wx:key="id"
+            bindtap="onShopTap"
+            data-shop="{{item}}"
+          >
+            <image class="nearby-img" src="{{item.logo || item.image || item.thumb}}" mode="aspectFill" />
+            <view class="nearby-info">
+              <text class="nearby-name">{{item.name}}</text>
+              <text class="nearby-meta">{{item.category || '未分类'}}{{item.price ? ' · ¥' + item.price + '/人' : ''}}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
     </view>
+    
+  </view>
 
-    <view class="section" wx:if="{{unmatchedShopNames.length > 0}}">
-      <text class="section-title">尚未收录</text>
-      <view class="name-list">
-        <text wx:for="{{unmatchedShopNames}}" wx:key="*this" class="name-pill warn">{{item}}</text>
+  <!-- ── 底部操作栏 ── -->
+  <view class="bottom-action-bar">
+    <view class="action-bg"></view>
+    <view class="action-content">
+      <view class="nav-btn" bindtap="onShareTap">
+        <text>分享</text>
+      </view>
+      <view class="want-btn" bindtap="onWant">
+        <text>{{isLiked ? '已添加到想去' : '添加到想去'}}</text>
       </view>
     </view>
   </view>
