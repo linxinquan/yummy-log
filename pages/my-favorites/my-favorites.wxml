@@ -18,35 +18,52 @@
     wx:if="{{!showEmpty}}"
   >
     <view 
-      class="collect-item" 
+      class="card-item" 
       wx:for="{{allList}}" 
       wx:key="id"
       bindtap="onItemTap"
       data-item="{{item}}"
     >
-      <image 
-        class="item-cover" 
-        src="{{item.displayImage}}" 
-        mode="aspectFill"
-        binderror="onImageError"
-        data-index="{{index}}"
-      />
-      <view class="item-info">
-        <view class="item-header">
-          <text class="item-name">{{item.name}}</text>
-          <view class="item-type-badge {{item.type}}">
-            <text>{{item.type === 'spot' ? '景点' : '美食'}}</text>
+      <!-- 左侧：封面图 -->
+      <view class="card-img-wrap">
+        <image 
+          class="card-img" 
+          src="{{item.displayImage}}" 
+          mode="aspectFill"
+          binderror="onImageError"
+          data-index="{{index}}"
+        />
+        <!-- 左上角分类徽章 -->
+        <view class="card-cat-badge">{{item.displayCategory}}</view>
+      </view>
+
+      <!-- 中间：信息区 -->
+      <view class="card-info">
+        <view class="card-info-inner">
+          <view class="card-name">{{item.name}}</view>
+          <!-- 评分与标签 -->
+          <view class="card-rating">
+            <view class="rating-star">
+              <text>{{item.rating || '4.0'}}</text>
+            </view>
+            <text class="spot-tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
           </view>
         </view>
-        <text class="item-category">{{item.displayCategory}}</text>
-        <view class="item-meta" wx:if="{{item.rating}}">
-          <text class="rating">★ {{item.rating}}</text>
-          <text class="price" wx:if="{{item.price}}">¥{{item.price}}/人</text>
-          <text class="free-tag" wx:if="{{item.free === true || item.free === 'true'}}">免费</text>
+        <!-- 底部：距离及统计 -->
+        <view class="card-footer">
+          <text class="card-desc">{{item.displayWantCount || '1024'}} 人想去</text>
         </view>
       </view>
-      <view class="remove-btn" catchtap="onRemoveCollect" data-item="{{item}}">
-        <i class="mgc_heart_fill"></i>
+
+      <!-- 右侧：取消想去按钮 -->
+      <view class="shop-action-icons">
+        <view
+          class="icon-btn want-icon liked"
+          catchtap="onRemoveCollect"
+          data-item="{{item}}"
+        >
+          <i class="mgc_check_2_fill icon-btn-text"></i>
+        </view>
       </view>
     </view>
 
