@@ -538,6 +538,17 @@ Page({
 
   // 想去/取消想去
   onToggleLike(e) {
+    // 检查登录状态
+    const userInfo = util.loadData('userInfo', null)
+    if (!userInfo) {
+      wx.showToast({
+        title: '请先登录',
+        icon: 'none',
+        duration: 1500
+      })
+      return
+    }
+    
     const shopId = e.currentTarget.dataset.shopid
     const type = e.currentTarget.dataset.type || 'food' // 获取当前项类型 (food / spot)
     const isLiked = util.toggleLike(shopId, type)
