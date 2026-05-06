@@ -2,45 +2,19 @@ const app = getApp()
 const shopData = require('../../utils/shopData')
 const util = require('../../utils/util')
 
-function normalizeName(value) {
-  return String(value || '')
-    .replace(/\s+/g, '')
-    .replace(/[（(][^）)]*[）)]/g, '')
-    .replace(/[·•]/g, '')
-    .replace(/店$/g, '')
-    .toLowerCase()
-}
-
-function buildAllFoodItems() {
-  const userAddedShops = util.loadData('userAddedShops', [])
-  return [...(shopData.shops || []), ...(shopData.foods || []), ...userAddedShops]
-}
-
-function matchShop(name, allItems) {
-  const aliasMap = shopData.shopNameMap || {}
-  const aliasTarget = aliasMap[name]
-  if (aliasTarget) {
-    return allItems.find(item => item.name === aliasTarget) || null
-  }
-
-  const normalized = normalizeName(name)
-  return allItems.find(item => {
-    const itemName = normalizeName(item.name)
-    return itemName === normalized || itemName.includes(normalized) || normalized.includes(itemName)
-  }) || null
-}
-
 Page({
   data: {
     guide: null,
-    matchedShops: [],
-    unmatchedShopNames: [],
     menuTop: 0,
     menuHeight: 32,
-    isLiked: false,
     isCollected: false,
-    displayAvatars: [],
-    wantStatText: '',
+    routeItems: [],
+    mapCenter: { lat: 22.5431, lng: 114.0579 }, // 默认深圳
+    mapMarkers: [],
+    polyline: [],
+    routeStats: '',
+    totalDistance: '5.2 km',
+    totalTime: '2.5 小时'
   },
 
   onLoad(options) {
@@ -58,42 +32,107 @@ Page({
     const guide = JSON.parse(decodeURIComponent(options.guide))
     const tags = Array.isArray(guide.tags) ? guide.tags : (guide.tag ? [guide.tag] : [])
     const shopNames = Array.isArray(guide.shops) ? guide.shops : []
-    const allItems = buildAllFoodItems()
-    const matchedShops = []
-    const unmatchedShopNames = []
+    
+    const isCollected = util.loadData('userCollectedGuides', []).some(id => String(id) === String(guide.id))
 
-    shopNames.forEach(name => {
-      const shop = matchShop(name, allItems)
-      if (shop) {
-        matchedShops.push(shop)
-      } else {
-        unmatchedShopNames.push(name)
+    const routeItems = shopNames.map((name, index) => {
+      const distance = index > 0 ? `${(Math.random() * 2 + 0.5).toFixed(1)} km` : ''
+      const time = `${(Math.random() * 1.5 + 0.5).toFixed(1)} 小时`
+      return {
+        name,
+        desc: this.getCategoryByShopName(name),
+        time,
+        distance
       }
     })
 
-    const isLiked = util.loadData('userWantGuides', []).some(id => String(id) === String(guide.id))
-    const isCollected = util.loadData('userCollectedGuides', []).some(id => String(id) === String(guide.id))
+    const markers = this.generateMarkers(routeItems)
+    const polyline = this.generatePolyline(markers)
+    const center = this.calculateCenter(markers)
 
-    const displayAvatars = [
-      ...matchedShops.map(item => item.logo || item.image || item.thumb).filter(Boolean),
-      guide.coverImage || '/images/app-logo.jpg'
-    ].slice(0, 6)
+    const totalDist = (Math.random() * 5 + 3).toFixed(1)
+    const totalT = Math.ceil(totalDist * 0.5)
 
     this.setData({
       guide: {
         ...guide,
-        tags,
-        shops: shopNames
+        tags
       },
-      matchedShops,
-      unmatchedShopNames,
       menuTop,
       menuHeight,
-      isLiked,
       isCollected,
-      displayAvatars,
-      wantStatText: `${shopNames.length} 家店铺 · ${guide.author || '匿名'} 发布`
+      routeItems,
+      mapMarkers: markers,
+      polyline,
+      mapCenter: center,
+      routeStats: `${guide.duration} · ${guide.shopCount || shopNames.length} 个地点 · ${guide.author || '匿名'}发布`,
+      totalDistance: `${totalDist} km`,
+      totalTime: `${totalT} 小时`
     })
+  },
+
+  getCategoryByShopName(name) {
+    const categoryMap = {
+      '羊肉泡馍': '美食 · 西北菜',
+      '灌汤包': '美食 · 面点',
+      '小炒泡馍': '美食 · 西北菜',
+      '甑糕': '美食 · 甜点',
+      '胡辣汤': '美食 · 小吃',
+      '咖啡': '饮品 · 咖啡',
+      '书店': '文化 · 阅读',
+      '公园': '景点 · 公园',
+      '海鲜': '美食 · 海鲜',
+      '夜市': '美食 · 小吃',
+      '老街': '景点 · 古迹',
+      '栈道': '景点 · 徒步'
+    }
+    for (const [key, value] of Object.entries(categoryMap)) {
+      if (name.includes(key)) return value
+    }
+    return '未分类'
+  },
+
+  generateMarkers(items) {
+    const baseLat = 22.5431
+    const baseLng = 114.0579
+    return items.map((item, index) => ({
+      id: index,
+      latitude: baseLat + (Math.random() - 0.5) * 0.05,
+      longitude: baseLng + (Math.random() - 0.5) * 0.05 + (index * 0.015),
+      iconPath: index === 0 
+        ? '/images/markers/marker_start.png' 
+        : index === items.length - 1
+          ? '/images/markers/marker_end.png'
+          : '/images/markers/marker_food.png',
+      width: 48,
+      height: 48,
+      label: {
+        content: String(index + 1),
+        fontSize: 12,
+        color: '#FFFFFF',
+        fontWeight: 'bold'
+      }
+    }))
+  },
+
+  generatePolyline(markers) {
+    if (markers.length < 2) return []
+    return [{
+      points: markers.map(m => ({ latitude: m.latitude, longitude: m.longitude })),
+      color: '#47BFFE',
+      width: 3,
+      dottedLine: false
+    }]
+  },
+
+  calculateCenter(markers) {
+    if (markers.length === 0) return { lat: 22.5431, lng: 114.0579 }
+    const lats = markers.map(m => m.latitude)
+    const lngs = markers.map(m => m.longitude)
+    return {
+      lat: (Math.min(...lats) + Math.max(...lats)) / 2,
+      lng: (Math.min(...lngs) + Math.max(...lngs)) / 2
+    }
   },
 
   onBack() {
@@ -104,7 +143,6 @@ Page({
     wx.showToast({ title: '请点击右上角分享', icon: 'none' })
   },
 
-  // 收藏/取消收藏
   onCollect() {
     const { guide } = this.data
     if (!guide) return
@@ -129,49 +167,55 @@ Page({
     })
   },
 
-  // 想去/取消想去
-  onWant() {
+  onViewRoute() {
+    const { guide } = this.data
+    const routeData = {
+      shops: guide.shops || [],
+      title: guide.title,
+      duration: guide.duration
+    }
+    wx.navigateTo({
+      url: `/pages/route/route?routeData=${encodeURIComponent(JSON.stringify(routeData))}`
+    })
+  },
+
+  onAddRoute() {
     const { guide } = this.data
     if (!guide) return
     
     let wants = util.loadData('userWantGuides', [])
     const index = wants.findIndex(id => String(id) === String(guide.id))
-    let isLiked = false
+    let isAdded = false
     
     if (index > -1) {
       wants.splice(index, 1)
     } else {
       wants.push(guide.id)
-      isLiked = true
+      isAdded = true
     }
     wx.setStorageSync('userWantGuides', wants)
     
-    this.setData({ isLiked })
     wx.showToast({
-      title: isLiked ? '已添加到想去' : '已移出想去',
+      title: isAdded ? '已加入想去' : '已移除',
       icon: 'none',
       duration: 1200
     })
   },
 
-  // 跳转到店铺详情
-  onShopTap(e) {
-    const shop = e.currentTarget.dataset.shop
-    if (!shop) return
-    wx.navigateTo({
-      url: `/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(shop))}`
+  onItemTap(e) {
+    const item = e.currentTarget.dataset.item
+    if (!item) return
+    
+    wx.showToast({
+      title: `查看：${item.name}`,
+      icon: 'none'
     })
-  },
-
-  // 更多：跳回首页
-  onFindFood() {
-    wx.switchTab({ url: '/pages/index/index' })
   },
 
   onShareAppMessage() {
     const { guide } = this.data
     return {
-      title: guide ? `${guide.title} · 攻略详情` : '攻略详情',
+      title: guide ? `${guide.title} · 旅行路线` : '旅行路线',
       path: guide ? `/pages/guide-detail/guide-detail?guide=${encodeURIComponent(JSON.stringify(guide))}` : '/pages/index/index'
     }
   }

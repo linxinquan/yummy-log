@@ -13,12 +13,9 @@
       </view>
     </view>
 
-    <!-- 底部统计 & 头像 -->
+    <!-- 底部统计 -->
     <view class="hero-stats">
-      <text class="stats-text">{{wantStatText}}</text>
-      <view class="avatar-group">
-        <image class="avatar" wx:for="{{displayAvatars}}" wx:key="*this" src="{{item}}" mode="aspectFill" />
-      </view>
+      <text class="stats-text">{{routeStats}}</text>
     </view>
     
     <!-- 底部圆角遮罩 -->
@@ -33,7 +30,8 @@
       <view class="info-header">
         <view class="info-left">
           <view class="tags-row">
-            <view class="tag-badge"><text>{{guide.shopCount || guide.shops.length || 0}} 家店铺</text></view>
+            <view class="tag-badge"><text>{{guide.duration}}</text></view>
+            <view class="tag-badge"><text>{{guide.shopCount || guide.shops.length || 0}} 个地点</text></view>
             <view class="tag-badge" wx:for="{{guide.tags}}" wx:key="*this"><text>{{item}}</text></view>
           </view>
           <text class="spot-title">{{guide.title}}</text>
@@ -44,7 +42,7 @@
         </view>
       </view>
       
-      <text class="open-time">作者：{{guide.author || '匿名作者'}}</text>
+      <text class="open-time">作者：{{guide.author || '匿名作者'}} · {{guide.likes || 0}} 人喜欢</text>
       
       <text class="spot-desc" wx:if="{{guide.desc}}">{{guide.desc}}</text>
     </view>
@@ -52,29 +50,89 @@
     <!-- 分割线 -->
     <view class="divider"></view>
     
-    <!-- 店铺列表 -->
-    <view class="nearby-section" wx:if="{{matchedShops.length > 0}}">
+    <!-- 路线地图 -->
+    <view class="map-section">
       <view class="section-header">
-        <text class="section-title">攻略提到的店铺</text>
-        <text class="more-btn" bindtap="onFindFood">更多</text>
+        <text class="section-title">路线地图</text>
+        <text class="more-btn" bindtap="onViewRoute">查看路线</text>
       </view>
-      <scroll-view class="nearby-scroll" scroll-x enable-flex>
-        <view class="nearby-list">
-          <view
-            class="nearby-card"
-            wx:for="{{matchedShops}}"
-            wx:key="id"
-            bindtap="onShopTap"
-            data-shop="{{item}}"
-          >
-            <image class="nearby-img" src="{{item.logo || item.image || item.thumb}}" mode="aspectFill" />
-            <view class="nearby-info">
-              <text class="nearby-name">{{item.name}}</text>
-              <text class="nearby-meta">{{item.category || '未分类'}}{{item.price ? ' · ¥' + item.price + '/人' : ''}}</text>
-            </view>
+      <view class="map-card" bindtap="onViewRoute">
+        <map
+          class="mini-map"
+          latitude="{{mapCenter.lat}}"
+          longitude="{{mapCenter.lng}}"
+          scale="14"
+          markers="{{mapMarkers}}"
+          polyline="{{polyline}}"
+          enable-zoom="{{false}}"
+          enable-scroll="{{false}}"
+          enable-rotate="{{false}}"
+          enable-overlooking="{{false}}"
+        ></map>
+        <view class="map-legend">
+          <view class="legend-item">
+            <view class="legend-dot start"></view>
+            <text>起点</text>
+          </view>
+          <view class="legend-item">
+            <view class="legend-dot end"></view>
+            <text>终点</text>
+          </view>
+          <view class="legend-item">
+            <view class="legend-line"></view>
+            <text>路线</text>
           </view>
         </view>
-      </scroll-view>
+      </view>
+    </view>
+    
+    <!-- 行程安排 -->
+    <view class="route-section">
+      <view class="section-header">
+        <text class="section-title">行程安排</text>
+        <text class="more-btn" bindtap="onAddRoute">加入想去</text>
+      </view>
+      
+      <view class="route-list">
+        <view 
+          class="route-item" 
+          wx:for="{{routeItems}}" 
+          wx:key="index"
+          bindtap="onItemTap"
+          data-item="{{item}}"
+        >
+          <view class="route-num">{{index + 1}}</view>
+          <view class="route-info">
+            <text class="route-name">{{item.name}}</text>
+            <text class="route-desc">{{item.desc || item.category}}</text>
+            <view class="route-meta">
+              <text class="route-time">{{item.time || '约1小时'}}</text>
+              <text class="route-dist" wx:if="{{item.distance}}">{{item.distance}}</text>
+            </view>
+          </view>
+          <view class="route-arrow">
+            <i class="mgc_right_line"></i>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 路线统计 -->
+    <view class="stats-section">
+      <view class="stat-item">
+        <text class="stat-value">{{totalDistance}}</text>
+        <text class="stat-label">总距离</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value">{{totalTime}}</text>
+        <text class="stat-label">预计时间</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value">{{guide.shopCount || guide.shops.length || 0}}</text>
+        <text class="stat-label">途经地点</text>
+      </view>
     </view>
     
   </view>
@@ -86,8 +144,8 @@
       <view class="nav-btn" bindtap="onShareTap">
         <text>分享</text>
       </view>
-      <view class="want-btn" bindtap="onWant">
-        <text>{{isLiked ? '已添加到想去' : '添加到想去'}}</text>
+      <view class="want-btn" bindtap="onAddRoute">
+        <text>开始导航</text>
       </view>
     </view>
   </view>
