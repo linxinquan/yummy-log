@@ -220,18 +220,18 @@ Page({
     
     // 添加假数据：自然户外
     const outdoorData = [
-      { id: 911, name: '梧桐山国家森林公园', category: '自然户外', type: 'outdoor', lat: 22.624, lng: 114.198, rating: 4.8, tags: ['登山', '观景'], image: '/images/covers/05.jpeg' },
-      { id: 912, name: '塘朗山郊野公园', category: '自然户外', type: 'outdoor', lat: 22.542, lng: 113.958, rating: 4.5, tags: ['徒步', '骑行'], image: '/images/covers/06.jpeg' },
-      { id: 913, name: '深圳湾公园', category: '自然户外', type: 'outdoor', lat: 22.498, lng: 113.914, rating: 4.7, tags: ['滨海', '跑步'], image: '/images/covers/07.jpeg' },
-      { id: 914, name: '梅林水库', category: '自然户外', type: 'outdoor', lat: 22.568, lng: 114.032, rating: 4.6, tags: ['水库', '徒步'], image: '/images/covers/08.jpeg' },
+      { id: 911, name: '梧桐山国家森林公园', category: '自然户外', type: 'outdoor', lat: 22.624, lng: 114.198, rating: 4.8, tags: ['登山', '观景'], image: '/images/covers/09.jpeg' },
+      { id: 912, name: '塘朗山郊野公园', category: '自然户外', type: 'outdoor', lat: 22.542, lng: 113.958, rating: 4.5, tags: ['徒步', '骑行'], image: '/images/covers/10.jpeg' },
+      { id: 913, name: '深圳湾公园', category: '自然户外', type: 'outdoor', lat: 22.498, lng: 113.914, rating: 4.7, tags: ['滨海', '跑步'], image: '/images/covers/11.jpeg' },
+      { id: 914, name: '梅林水库', category: '自然户外', type: 'outdoor', lat: 22.568, lng: 114.032, rating: 4.6, tags: ['水库', '徒步'], image: '/images/covers/12.jpeg' },
     ]
     
     // 添加假数据：购物
     const shoppingData = [
-      { id: 921, name: '华润万象城', category: '购物', type: 'shopping', lat: 22.541, lng: 114.063, rating: 4.8, tags: ['高端', '奢侈品'], image: '/images/covers/09.jpeg' },
-      { id: 922, name: '海岸城', category: '购物', type: 'shopping', lat: 22.489, lng: 113.921, rating: 4.6, tags: ['餐饮', '娱乐'], image: '/images/covers/10.jpeg' },
-      { id: 923, name: '东门老街', category: '购物', type: 'shopping', lat: 22.543, lng: 114.078, rating: 4.5, tags: ['老街', '小吃'], image: '/images/covers/11.jpeg' },
-      { id: 924, name: '益田假日广场', category: '购物', type: 'shopping', lat: 22.535, lng: 113.988, rating: 4.7, tags: ['品牌', '餐饮'], image: '/images/covers/12.jpeg' },
+      { id: 921, name: '华润万象城', category: '购物', type: 'shopping', lat: 22.541, lng: 114.063, rating: 4.8, tags: ['高端', '奢侈品'], image: '/images/covers/05.jpeg' },
+      { id: 922, name: '海岸城', category: '购物', type: 'shopping', lat: 22.489, lng: 113.921, rating: 4.6, tags: ['餐饮', '娱乐'], image: '/images/covers/06.jpeg' },
+      { id: 923, name: '东门老街', category: '购物', type: 'shopping', lat: 22.543, lng: 114.078, rating: 4.5, tags: ['老街', '小吃'], image: '/images/covers/07.jpeg' },
+      { id: 924, name: '益田假日广场', category: '购物', type: 'shopping', lat: 22.535, lng: 113.988, rating: 4.7, tags: ['品牌', '餐饮'], image: '/images/covers/08.jpeg' },
     ]
     
     // 添加假数据：酒店
