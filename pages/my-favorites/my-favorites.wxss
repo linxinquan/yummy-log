@@ -65,7 +65,7 @@
 .list-container {
   flex: 1;
   padding-top: 24rpx;
-  background: #F6F6F6;
+  background: #FFFFFF;
 }
 
 /* ── 卡片项（与探索页面弹窗列表一致） ── */

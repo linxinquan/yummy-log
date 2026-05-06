@@ -36,12 +36,12 @@ Page({
     })
   },
 
-  // 加载想去数据
+  // 加载收藏数据
   loadData() {
-    // 加载想去的美食ID
-    const wantFoodIds = util.loadData('userWantFoods', [])
-    // 加载想去的景点ID
-    const wantSpotIds = util.loadData('userWantSpots', [])
+    // 加载收藏的美食ID
+    const collectedFoodIds = util.loadData('userCollectedFoods', [])
+    // 加载收藏的景点ID
+    const collectedSpotIds = util.loadData('userCollectedSpots', [])
 
     // 构建所有美食数据
     const userAddedShops = util.loadData('userAddedShops', [])
@@ -80,8 +80,8 @@ Page({
     const allFoodsExtended = [...allFoods, ...shoppingData, ...hotelData]
     const allSpotsExtended = [...allSpots, ...cultureData, ...outdoorData]
 
-    // 筛选想去的美食
-    const foodList = wantFoodIds
+    // 筛选已收藏的美食
+    const foodList = collectedFoodIds
       .map(id => {
         const food = allFoodsExtended.find(f => String(f.id) === String(id))
         if (food) {
@@ -96,8 +96,8 @@ Page({
       })
       .filter(Boolean)
 
-    // 筛选想去的景点
-    const spotList = wantSpotIds
+    // 筛选已收藏的景点
+    const spotList = collectedSpotIds
       .map(id => {
         const spot = allSpotsExtended.find(s => String(s.id) === String(id))
         if (spot) {
@@ -118,7 +118,7 @@ Page({
     this.setData({
       allList,
       showEmpty: allList.length === 0,
-      emptyText: '还没有想去的地方哦～\n去探索页添加喜欢的地方吧'
+      emptyText: '还没有收藏哦～\n去探索页发现喜欢的美食和景点吧'
     })
   },
 
@@ -141,19 +141,19 @@ Page({
     }
   },
 
-  // 取消想去
+  // 取消收藏
   onRemoveCollect(e) {
     const item = e.currentTarget.dataset.item
     if (!item) return
 
-    const key = item.type === 'spot' ? 'userWantSpots' : 'userWantFoods'
-    let wants = util.loadData(key, [])
+    const key = item.type === 'spot' ? 'userCollectedSpots' : 'userCollectedFoods'
+    let collects = util.loadData(key, [])
     
-    wants = wants.filter(id => String(id) !== String(item.id))
-    util.saveData(key, wants)
+    collects = collects.filter(id => String(id) !== String(item.id))
+    util.saveData(key, collects)
 
     wx.showToast({
-      title: '已取消想去',
+      title: '已取消收藏',
       icon: 'none',
       duration: 1000
     })
