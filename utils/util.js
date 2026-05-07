@@ -506,6 +506,29 @@ function isLiked(id, type = 'food') {
 }
 
 // ============================================================
+// 收藏功能（支持美食和景点）
+// ============================================================
+
+function toggleCollect(id, type = 'food') {
+  const key = type === 'food' ? 'userCollectedFoods' : 'userCollectedSpots'
+  const list = loadData(key, [])
+  const strId = String(id)
+  const idx = list.findIndex(v => String(v) === strId)
+  if (idx > -1) {
+    list.splice(idx, 1)
+  } else {
+    list.push(strId)
+  }
+  saveData(key, list)
+  return list.includes(strId)
+}
+
+function isCollected(id, type = 'food') {
+  const key = type === 'food' ? 'userCollectedFoods' : 'userCollectedSpots'
+  return loadData(key, []).some(v => String(v) === String(id))
+}
+
+// ============================================================
 // 路线规划（统一支持美食和景点）
 // ============================================================
 
@@ -607,6 +630,8 @@ module.exports = {
   getUserShops,
   toggleLike,
   isLiked,
+  toggleCollect,
+  isCollected,
   getWantSpots,
   toggleSpotLike,
   isSpotLiked,

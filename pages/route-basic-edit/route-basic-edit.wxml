@@ -1,0 +1,40 @@
+<view class="page" wx:if="{{route}}">
+  <view class="form-card">
+    <view class="field-block">
+      <view class="field-head">
+        <text class="field-label">路线名称</text>
+        <text class="field-count">{{title.length}} / {{maxTitleLength}}</text>
+      </view>
+      <input
+        class="field-input"
+        placeholder="请输入路线名称"
+        maxlength="{{maxTitleLength}}"
+        value="{{title}}"
+        bindinput="onTitleInput"
+      />
+    </view>
+
+    <view class="field-block">
+      <text class="field-label">天数</text>
+      <view class="stepper">
+        <view class="step-btn" bindtap="onMinusDay">-</view>
+        <text class="step-value">{{dayCount}} 天</text>
+        <view class="step-btn primary" bindtap="onPlusDay">+</view>
+      </view>
+    </view>
+
+    <view class="field-block">
+      <text class="field-label">城市</text>
+      <input
+        class="field-input"
+        placeholder="请输入城市"
+        value="{{city}}"
+        bindinput="onCityInput"
+      />
+    </view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="save-btn" bindtap="onSave">保存</view>
+  </view>
+</view>

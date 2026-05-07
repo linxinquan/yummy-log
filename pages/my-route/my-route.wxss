@@ -1,0 +1,54 @@
+@import "../guide-detail/guide-detail.wxss";
+
+.mode-switch[hidden] {
+  display: none;
+}
+
+.sort-tip {
+  padding-left: 48rpx;
+  padding-right: 48rpx;
+}
+
+.place-swipe-cell {
+  position: relative;
+  margin: 0 48rpx;
+  overflow: hidden;
+}
+
+.place-delete-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 144rpx;
+  height: 100%;
+  border-radius: 24rpx;
+  background: #ff6b6b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.place-delete-btn i {
+  font-size: 40rpx;
+  color: #FFFFFF;
+}
+
+.place-row {
+  position: relative;
+  margin: 0;
+  transition: transform 0.18s ease;
+  background: #ffffff;
+}
+
+.place-handle i {
+  color: #47BFFE;
+  font-size: 36rpx;
+}
+
+.bottom-btn.secondary {
+  flex: 1;
+}
+
+.bottom-btn.primary {
+  flex: 1;
+}

@@ -14,7 +14,9 @@
     "pages/checkin/checkin",
     "pages/collection/collection",
     "pages/my-favorites/my-favorites",
-    "pages/my-guides/my-guides"
+    "pages/my-guides/my-guides",
+    "pages/my-route/my-route",
+    "pages/route-basic-edit/route-basic-edit"
   ],
   "lazyCodeLoading": "requiredComponents",
   "window": {

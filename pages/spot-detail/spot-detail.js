@@ -106,18 +106,7 @@ Page({
     const { spot } = this.data
     if (!spot) return
     
-    // 这里使用一个新的缓存key，例如 userCollectedSpots
-    let collects = util.loadData('userCollectedSpots', [])
-    const index = collects.findIndex(id => String(id) === String(spot.id))
-    let isCollected = false
-    
-    if (index > -1) {
-      collects.splice(index, 1)
-    } else {
-      collects.push(spot.id)
-      isCollected = true
-    }
-    wx.setStorageSync('userCollectedSpots', collects)
+    const isCollected = util.toggleCollect(spot.id, 'spot')
     
     this.setData({ isCollected })
     wx.showToast({

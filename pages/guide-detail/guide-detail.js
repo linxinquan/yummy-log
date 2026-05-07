@@ -1,20 +1,226 @@
-const app = getApp()
 const util = require('../../utils/util')
+
+const DEFAULT_COVERS = [
+  '/images/covers/01.jpeg',
+  '/images/covers/02.jpeg',
+  '/images/covers/03.jpeg',
+  '/images/covers/04.jpeg',
+  '/images/covers/05.jpeg',
+  '/images/covers/06.jpeg',
+  '/images/covers/07.jpeg',
+  '/images/covers/08.jpeg',
+  '/images/covers/09.jpeg',
+  '/images/covers/10.jpeg',
+  '/images/covers/11.jpeg',
+  '/images/covers/12.jpeg'
+]
+
+const TRANSPORT_TEMPLATES = [
+  { mode: '自行车', distance: '2.0km', time: '8min' },
+  { mode: '步行', distance: '182m', time: '1min' },
+  { mode: '步行', distance: '600m', time: '4min' },
+  { mode: '打车', distance: '3.8km', time: '12min' },
+  { mode: '地铁', distance: '5.2km', time: '18min' }
+]
+
+const CITY_PRESETS = [
+  { match: /西安|长安/, name: '西安市', lat: 34.3416, lng: 108.9398 },
+  { match: /广州/, name: '广州市', lat: 23.1291, lng: 113.2644 },
+  { match: /汕头/, name: '汕头市', lat: 23.3541, lng: 116.6819 },
+  { match: /湛江/, name: '湛江市', lat: 21.2707, lng: 110.3594 },
+  { match: /佛山/, name: '佛山市', lat: 23.0218, lng: 113.1219 },
+  { match: /珠海/, name: '珠海市', lat: 22.2707, lng: 113.5767 },
+  { match: /深圳|南山|福田|罗湖|宝安|龙岗|盐田|龙华|光明|坪山|大鹏/, name: '深圳市', lat: 22.5431, lng: 114.0579 }
+]
+
+function parseDayCount(duration) {
+  const matched = String(duration || '').match(/(\d+)/)
+  if (!matched) return 1
+  return Math.max(parseInt(matched[1], 10) || 1, 1)
+}
+
+function buildDayLabel(dayNumber) {
+  const labels = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
+  if (dayNumber <= 10) return `第${labels[dayNumber - 1]}天`
+  return `第${dayNumber}天`
+}
+
+function buildTabs(dayCount) {
+  const tabs = [{ key: 'overview', label: '行程总览' }]
+  for (let i = 0; i < dayCount; i += 1) {
+    tabs.push({ key: `day-${i}`, label: buildDayLabel(i + 1) })
+  }
+  return tabs
+}
+
+function buildCoverPool(guide) {
+  return [...new Set([guide.coverImage].concat(DEFAULT_COVERS).filter(Boolean))]
+}
+
+function getCityInfo(guide) {
+  const source = [guide.title || '', (guide.tags || []).join(' ')].join(' ')
+  for (let i = 0; i < CITY_PRESETS.length; i += 1) {
+    if (CITY_PRESETS[i].match.test(source)) {
+      return CITY_PRESETS[i]
+    }
+  }
+  return { name: '深圳市', lat: 22.5431, lng: 114.0579 }
+}
+
+function inferTag(name) {
+  if (/博物馆|展馆|美术馆/.test(name)) return '文化展馆'
+  if (/演出|剧场|音乐会/.test(name)) return '演出'
+  if (/商场|购物中心|步行街/.test(name)) return '购物'
+  if (/店|馆|面|饭|咖啡|茶|酒|餐|小吃|甜品|火锅|奶茶|烧烤|糖水|包|饼|馍/.test(name)) return '美食'
+  return '景点'
+}
+
+function buildTravelText(index) {
+  const template = TRANSPORT_TEMPLATES[index % TRANSPORT_TEMPLATES.length]
+  return `${template.mode} | ${template.distance} · ${template.time}`
+}
+
+function syncDaySections(daySections) {
+  return daySections.map((day, dayIndex) => ({
+    id: day.id || `day-${dayIndex}`,
+    title: buildDayLabel(dayIndex + 1),
+    countText: `${day.items.length} 个地点`,
+    items: (day.items || []).map((item, itemIndex) => ({
+      id: item.id || `day-${dayIndex}-item-${itemIndex}`,
+      name: item.name || '待补充地点',
+      tag: item.tag || '景点',
+      image: item.image || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length],
+      travelText: item.travelText || buildTravelText(dayIndex + itemIndex),
+      type: item.type || (item.tag === '美食' ? 'food' : 'spot')
+    }))
+  }))
+}
+
+function buildSummaryText(guide, daySections) {
+  const dayCount = daySections.length
+  const nightCount = Math.max(dayCount - 1, 0)
+  const placeCount = daySections.reduce((sum, day) => sum + day.items.length, 0)
+  return `${dayCount} 天 ${nightCount} 晚 · ${placeCount} 个地点`
+}
+
+function buildXianSections(covers) {
+  return syncDaySections([
+    {
+      id: 'day-0',
+      items: [
+        { name: '西安城墙永宁门城楼', tag: '景点', image: covers[0], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
+        { name: '西安钟楼', tag: '景点', image: covers[1], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
+        { name: '西安鼓楼', tag: '景点', image: covers[2], travelText: '步行 | 182m · 1min', type: 'spot' },
+        { name: '回民街', tag: '景点', image: covers[3], travelText: '步行 | 600m · 4min', type: 'spot' }
+      ]
+    },
+    {
+      id: 'day-1',
+      items: [
+        { name: '秦始皇兵马俑博物馆', tag: '文化展馆', image: covers[4], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
+        { name: '华清宫', tag: '景点', image: covers[5], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
+        { name: '长恨歌演出', tag: '景点', image: covers[6], travelText: '步行 | 182m · 1min', type: 'spot' }
+      ]
+    },
+    {
+      id: 'day-2',
+      items: [
+        { name: '大雁塔', tag: '景点', image: covers[7], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
+        { name: '陕西历史博物馆', tag: '文化展馆', image: covers[8], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
+        { name: '大唐不夜城', tag: '景点', image: covers[9], travelText: '步行 | 182m · 1min', type: 'spot' }
+      ]
+    }
+  ])
+}
+
+function buildGenericSections(guide, covers) {
+  const dayCount = parseDayCount(guide.duration)
+  const sourceNames = (guide.shops && guide.shops.length ? guide.shops.slice() : [
+    '城市地标',
+    '人气街区',
+    '本地老店',
+    '热门打卡点',
+    '城市展馆',
+    '夜游路线'
+  ]).filter(Boolean)
+
+  const targetCount = Math.max(sourceNames.length, Math.max(dayCount * 3, guide.shopCount || 0))
+  while (sourceNames.length < targetCount) {
+    sourceNames.push(`${guide.tags && guide.tags[0] ? guide.tags[0] : '城市'}精选地点${sourceNames.length + 1}`)
+  }
+
+  const sections = []
+  let cursor = 0
+  for (let dayIndex = 0; dayIndex < dayCount; dayIndex += 1) {
+    const remainingNames = sourceNames.length - cursor
+    const remainingDays = dayCount - dayIndex
+    const takeCount = Math.max(remainingDays === 1 ? remainingNames : Math.ceil(remainingNames / remainingDays), 1)
+    const items = sourceNames.slice(cursor, cursor + takeCount).map((name, itemIndex) => {
+      const tag = inferTag(name)
+      return {
+        id: `day-${dayIndex}-item-${itemIndex}`,
+        name,
+        tag,
+        image: covers[(cursor + itemIndex) % covers.length],
+        travelText: buildTravelText(cursor + itemIndex),
+        type: tag === '美食' ? 'food' : 'spot'
+      }
+    })
+    sections.push({ id: `day-${dayIndex}`, items })
+    cursor += takeCount
+  }
+
+  return syncDaySections(sections)
+}
+
+function buildDaySections(guide) {
+  const covers = buildCoverPool(guide)
+  const content = [guide.title || '', (guide.tags || []).join(' '), (guide.desc || '')].join(' ')
+  if (/西安|长安/.test(content)) {
+    return buildXianSections(covers)
+  }
+  return buildGenericSections(guide, covers)
+}
+
+function buildLegacyRouteData(daySections) {
+  const daySummaries = daySections.map((day, index) => ({
+    location: '',
+    route: (day.items || []).map(item => item.name).join(' --- '),
+    image: (day.items && day.items[0] && day.items[0].image) || DEFAULT_COVERS[index % DEFAULT_COVERS.length]
+  }))
+
+  const dayDetails = daySections.map(day => (day.items || []).map(item => ({
+    name: item.name,
+    desc: item.travelText,
+    tag: item.tag,
+    image: item.image,
+    type: item.type
+  })))
+
+  return { daySummaries, dayDetails }
+}
 
 Page({
   data: {
     guide: null,
     menuTop: 0,
     menuHeight: 32,
-    isCollected: false,
-    mode: 'list', // 'map' or 'list'
-    currentDay: 0, // 0=总览
-    dateTabs: ['总览', '第1天', '第2天', '第3天', '第4天'],
-    daySummaries: [],
-    allDaySpots: [],
+    modeSwitchTop: 110,
+    viewMode: 'list',
+    currentTab: 0,
+    currentMapDay: -1,
+    cityText: '深圳市',
+    summaryText: '',
+    daySections: [],
+    tabs: [],
     mapCenter: { lat: 22.5431, lng: 114.0579 },
     mapMarkers: [],
-    polyline: []
+    polyline: [],
+    isEditing: false,
+    dragging: false,
+    dragDay: -1,
+    dragIndex: -1,
+    dragTouchStartY: 0
   },
 
   onLoad(options) {
@@ -22,6 +228,7 @@ Page({
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
     const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
     const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
+    const modeSwitchTop = menuTop + menuHeight + 24
 
     if (!options.guide) {
       wx.showToast({ title: '攻略不存在', icon: 'none' })
@@ -30,234 +237,149 @@ Page({
     }
 
     const guide = JSON.parse(decodeURIComponent(options.guide))
-    const isCollected = util.loadData('userCollectedGuides', []).some(id => String(id) === String(guide.id))
-
-    const daySummaries = this.generateDaySummaries(guide)
-    const allDaySpots = this.generateAllDaySpots(guide)
-    const markers = this.generateMarkers(allDaySpots)
-    const polyline = this.generatePolyline(markers)
-    const center = this.calculateCenter(markers)
+    const cityInfo = getCityInfo(guide)
+    const daySections = buildDaySections(guide)
 
     this.setData({
       guide,
+      cityText: cityInfo.name,
+      cityInfo,
       menuTop,
       menuHeight,
-      isCollected,
-      daySummaries,
-      allDaySpots,
-      mapMarkers: markers,
-      polyline,
-      mapCenter: center
+      modeSwitchTop,
+      daySections,
+      tabs: buildTabs(daySections.length),
+      summaryText: buildSummaryText(guide, daySections)
     })
+
+    this.updateMapData(daySections, cityInfo, -1)
   },
 
-  generateDaySummaries(guide) {
-    const covers = [
-      '/images/covers/01.jpeg',
-      '/images/covers/02.jpeg', 
-      '/images/covers/03.jpeg',
-      '/images/covers/04.jpeg'
-    ]
-    
-    return [
-      {
-        location: '西安市',
-        route: '钟楼 --- 马洪小炒泡馍馆 --- 西安碑林博物馆 --- 西安城墙永宁门城楼(南入口)-西安书院门步行街',
-        image: covers[0]
-      },
-      {
-        location: '',
-        route: '小南门便民早市 --- 小雁塔-西安博物院 --- 陕西历史博物馆-秦椒香biangbiang面陕菜馆-大雁塔北广场 --- 赳赳大秦',
-        image: covers[1]
-      },
-      {
-        location: '',
-        route: '秦始皇帝陵博物院丽山园 --- 秦始皇帝兵马俑博物馆 --- 华清宫 --- 长恨歌演出',
-        image: covers[2]
-      },
-      {
-        location: '西安市',
-        route: '赛格国际购物中心',
-        image: covers[3]
-      }
-    ]
-  },
+  updateMapData(daySections, cityInfo, mapDayIndex) {
+    const sections = typeof mapDayIndex === 'number' && mapDayIndex >= 0
+      ? [daySections[mapDayIndex]].filter(Boolean)
+      : daySections
 
-  generateAllDaySpots(guide) {
-    const covers = [
-      '/images/covers/01.jpeg',
-      '/images/covers/02.jpeg', 
-      '/images/covers/03.jpeg',
-      '/images/covers/04.jpeg',
-      '/images/covers/01.jpeg',
-      '/images/covers/02.jpeg',
-      '/images/covers/03.jpeg',
-      '/images/covers/04.jpeg'
-    ]
+    const flattened = []
+    sections.forEach((day, dayIndex) => {
+      ;(day.items || []).forEach((item, itemIndex) => {
+        flattened.push({
+          ...item,
+          dayIndex,
+          itemIndex
+        })
+      })
+    })
 
-    return [
-      [
-        { name: '钟楼', desc: '西安标志性建筑，明代古城楼典范', tag: '景点', image: covers[0], distance: '', time: '' },
-        { name: '马洪小炒泡馍馆', desc: '本地老字号，正宗小炒泡馍', tag: '美食', image: covers[1], distance: '2.9km', time: '14分钟' },
-        { name: '西安碑林博物馆', desc: '收藏历代碑石最多的博物馆', tag: '景点', image: covers[2], distance: '1.2km', time: '8分钟' },
-        { name: '西安城墙永宁门城楼', desc: '明城墙正南门，历史悠久', tag: '景点', image: covers[3], distance: '1.5km', time: '10分钟' }
-      ],
-      [
-        { name: '小南门便民早市', desc: '本地人气早市，烟火气十足', tag: '美食', image: covers[0], distance: '', time: '' },
-        { name: '小雁塔-西安博物院', desc: '唐代佛塔，文物丰富', tag: '景点', image: covers[1], distance: '3.2km', time: '20分钟' },
-        { name: '陕西历史博物馆', desc: '陕西文物精华汇集地', tag: '景点', image: covers[2], distance: '1.8km', time: '12分钟' },
-        { name: '大雁塔北广场', desc: '亚洲最大音乐喷泉广场', tag: '景点', image: covers[3], distance: '2.5km', time: '15分钟' }
-      ],
-      [
-        { name: '秦始皇帝陵博物院丽山园', desc: '国家5A景区，兵马俑震撼壮观', tag: '景点', image: covers[4], distance: '', time: '' },
-        { name: '秦始皇帝兵马俑博物馆', desc: '世界第八大奇迹，地下军团', tag: '景点', image: covers[5], distance: '13.6km', time: '35分钟' },
-        { name: '华清宫', desc: '皇家园林，温泉胜地', tag: '景点', image: covers[6], distance: '1.5km', time: '21分钟' },
-        { name: '长恨歌演出', desc: '大型实景历史舞剧', tag: '演出', image: covers[7], distance: '2.3km', time: '18分钟' }
-      ],
-      [
-        { name: '赛格国际购物中心', desc: '西安最大购物中心，室内瀑布', tag: '购物', image: covers[0], distance: '', time: '' }
-      ]
-    ]
-  },
-
-  generateMarkers(allDaySpots) {
-    const baseLat = 22.5431
-    const baseLng = 114.0579
-    const allSpots = allDaySpots.flat()
-    
-    return allSpots.map((spot, index) => ({
+    const markers = flattened.map((item, index) => ({
       id: index,
-      latitude: baseLat + (Math.random() - 0.5) * 0.08,
-      longitude: baseLng + (Math.random() - 0.5) * 0.08 + (index * 0.01),
-      iconPath: index === 0 
-        ? '/images/markers/marker_start.png' 
-        : index === allSpots.length - 1
+      latitude: cityInfo.lat + ((item.dayIndex * 0.018) - 0.018) + (item.itemIndex * 0.0035),
+      longitude: cityInfo.lng + ((item.itemIndex * 0.016) - 0.016) + (item.dayIndex * 0.004),
+      iconPath: index === 0
+        ? '/images/markers/marker_start.png'
+        : index === flattened.length - 1
           ? '/images/markers/marker_end.png'
           : '/images/markers/marker_food.png',
-      width: 56,
-      height: 56,
+      width: 32,
+      height: 32,
       label: {
         content: String(index + 1),
-        fontSize: 14,
+        fontSize: 10,
         color: '#FFFFFF',
-        fontWeight: 'bold'
-      },
-      callout: {
-        content: spot.name,
-        fontSize: 12,
-        borderRadius: 8,
-        bgColor: '#FFFFFF',
-        padding: 8
+        fontWeight: 'bold',
+        anchorY: -42
       }
     }))
-  },
 
-  generatePolyline(markers) {
-    if (markers.length < 2) return []
-    return [{
-      points: markers.map(m => ({ latitude: m.latitude, longitude: m.longitude })),
-      color: '#FF6B35',
+    const polyline = markers.length > 1 ? [{
+      points: markers.map(marker => ({ latitude: marker.latitude, longitude: marker.longitude })),
+      color: '#47BFFE',
       width: 4,
-      dottedLine: false
-    }]
-  },
+      dottedLine: false,
+      borderColor: '#FFFFFF',
+      borderWidth: 1
+    }] : []
 
-  calculateCenter(markers) {
-    if (markers.length === 0) return { lat: 22.5431, lng: 114.0579 }
-    const lats = markers.map(m => m.latitude)
-    const lngs = markers.map(m => m.longitude)
-    return {
-      lat: (Math.min(...lats) + Math.max(...lats)) / 2,
-      lng: (Math.min(...lngs) + Math.max(...lngs)) / 2
-    }
+    this.setData({
+      mapCenter: { lat: cityInfo.lat, lng: cityInfo.lng },
+      mapMarkers: markers,
+      polyline,
+      currentMapDay: typeof mapDayIndex === 'number' ? mapDayIndex : -1
+    })
   },
 
   onBack() {
     wx.navigateBack()
   },
 
-  onTip() {
-    wx.showToast({ title: '暂无提示', icon: 'none' })
+  onShareTap() {
+    wx.showToast({ title: '请点击右上角分享', icon: 'none' })
   },
 
-  onToggleMode() {
-    this.setData({
-      mode: this.data.mode === 'list' ? 'map' : 'list'
-    })
-  },
-
-  onCollect() {
-    const { guide } = this.data
-    if (!guide) return
-    
-    let collects = util.loadData('userCollectedGuides', [])
-    const index = collects.findIndex(id => String(id) === String(guide.id))
-    let isCollected = false
-    
-    if (index > -1) {
-      collects.splice(index, 1)
-    } else {
-      collects.push(guide.id)
-      isCollected = true
+  onSwitchMode(e) {
+    const mode = e.currentTarget.dataset.mode
+    if (mode === this.data.viewMode) return
+    this.setData({ viewMode: mode })
+    if (mode === 'map') {
+      const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : -1
+      this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
     }
-    wx.setStorageSync('userCollectedGuides', collects)
-    
-    this.setData({ isCollected })
-    wx.showToast({
-      title: isCollected ? '已收藏' : '已取消收藏',
-      icon: 'none',
-      duration: 1200
-    })
   },
 
-  onDateTab(e) {
-    const index = e.currentTarget.dataset.index
-    this.setData({ currentDay: index })
+  onOpenMapMode() {
+    this.setData({ viewMode: 'map' })
+    const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : -1
+    this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
   },
 
-  onDayCard(e) {
-    const day = e.currentTarget.dataset.day
-    this.setData({ currentDay: day })
-  },
-
-  onSpotTap(e) {
-    const spot = e.currentTarget.dataset.spot
-    if (!spot) return
-    wx.showToast({ title: `查看：${spot.name}`, icon: 'none' })
-  },
-
-  onEditRoute() {
-    wx.showToast({ title: '编辑路线功能开发中', icon: 'none' })
-  },
-
-  onStartNav() {
-    const { guide } = this.data
-    const routeData = {
-      shops: guide.shops || [],
+  onAddToMyRoute() {
+    const { guide, daySections, summaryText } = this.data
+    const { daySummaries, dayDetails } = buildLegacyRouteData(daySections)
+    const routeCard = {
+      id: guide.id,
       title: guide.title,
-      duration: guide.duration
+      subtitle: summaryText,
+      image: guide.coverImage || daySummaries[0]?.image || DEFAULT_COVERS[0],
+      author: guide.author || '匿名',
+      city: this.data.cityText,
+      guideId: guide.id,
+      daySections,
+      daySummaries,
+      dayDetails,
+      createdAt: Date.now()
     }
-    wx.navigateTo({
-      url: `/pages/route/route?routeData=${encodeURIComponent(JSON.stringify(routeData))}`
+
+    const savedRoutes = util.loadData('savedRoutes', [])
+    const exists = savedRoutes.find(item => String(item.id) === String(routeCard.id))
+    if (exists) {
+      wx.showToast({ title: '已在我的路线中', icon: 'none' })
+      return
+    }
+
+    savedRoutes.push(routeCard)
+    wx.setStorageSync('savedRoutes', savedRoutes)
+    wx.showToast({ title: '已添加到我的路线', icon: 'success' })
+  },
+
+  onSelectMapDay(e) {
+    const index = parseInt(e.currentTarget.dataset.index, 10)
+    this.updateMapData(this.data.daySections, this.data.cityInfo, index)
+  },
+
+  onTabTap(e) {
+    const index = parseInt(e.currentTarget.dataset.index, 10)
+    const selector = index === 0 ? '#guide-top-anchor' : `#day-section-${index - 1}`
+    this.setData({ currentTab: index })
+
+    if (this.data.viewMode === 'map') {
+      this.updateMapData(this.data.daySections, this.data.cityInfo, index - 1)
+      return
+    }
+
+    wx.pageScrollTo({
+      selector,
+      duration: 280
     })
-  },
-
-  get currentDayName() {
-    return this.data.dateTabs[this.data.currentDay]
-  },
-
-  get currentDaySpots() {
-    if (this.data.currentDay === 0) {
-      return this.data.allDaySpots[0] || []
-    }
-    return this.data.allDaySpots[this.data.currentDay - 1] || []
-  },
-
-  get currentRouteText() {
-    if (this.data.currentDay === 0) {
-      return this.data.daySummaries[0]?.route || ''
-    }
-    return this.data.daySummaries[this.data.currentDay - 1]?.route || ''
   },
 
   onShareAppMessage() {

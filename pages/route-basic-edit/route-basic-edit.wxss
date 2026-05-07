@@ -1,0 +1,102 @@
+.page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  padding: 32rpx 24rpx calc(160rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.form-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 12rpx 24rpx;
+}
+
+.field-block {
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.field-block:last-child {
+  border-bottom: none;
+}
+
+.field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.field-label {
+  color: #000000;
+  font-size: 28rpx;
+  font-weight: 500;
+  line-height: 40rpx;
+}
+
+.field-count {
+  color: #999999;
+  font-size: 22rpx;
+  line-height: 32rpx;
+}
+
+.field-input {
+  height: 88rpx;
+  margin-top: 20rpx;
+  border-radius: 18rpx;
+  background: #f7f8fa;
+  padding: 0 24rpx;
+  color: #000000;
+  font-size: 30rpx;
+  box-sizing: border-box;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  margin-top: 20rpx;
+}
+
+.step-btn {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 18rpx;
+  background: #f4f6f8;
+  color: #000000;
+  font-size: 40rpx;
+  line-height: 72rpx;
+  text-align: center;
+}
+
+.step-btn.primary {
+  background: #47bffe;
+  color: #ffffff;
+}
+
+.step-value {
+  min-width: 140rpx;
+  color: #000000;
+  font-size: 30rpx;
+  line-height: 42rpx;
+}
+
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.save-btn {
+  height: 96rpx;
+  border-radius: 24rpx;
+  background: #47bffe;
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 96rpx;
+  text-align: center;
+}

@@ -178,7 +178,7 @@
                 data-shopid="{{item.id}}"
                 data-type="{{item.type}}"
               >
-                <i class="{{item.isLiked ? 'mgc_check_2_fill' : 'mgc_add_line'}} icon-btn-text"></i>
+                <i class="{{item.isLiked ? 'mgc_check_2_fill' : 'mgc_plus_fill'}} icon-btn-text"></i>
               </view>
             </view>
           </view>

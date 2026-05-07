@@ -172,17 +172,7 @@ Page({
     const { spot } = this.data
     if (!spot) return
     
-    let collects = util.loadData('userCollectedFoods', [])
-    const index = collects.findIndex(id => String(id) === String(spot.id))
-    let isCollected = false
-    
-    if (index > -1) {
-      collects.splice(index, 1)
-    } else {
-      collects.push(spot.id)
-      isCollected = true
-    }
-    wx.setStorageSync('userCollectedFoods', collects)
+    const isCollected = util.toggleCollect(spot.id, 'food')
     
     this.setData({ isCollected })
     wx.showToast({

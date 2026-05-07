@@ -550,14 +550,13 @@ Page({
     }
     
     const shopId = e.currentTarget.dataset.shopid
-    const type = e.currentTarget.dataset.type || 'food' // 获取当前项类型 (food / spot)
+    const type = e.currentTarget.dataset.type || 'food'
     const isLiked = util.toggleLike(shopId, type)
     
-    // 重新从本地存储加载最新状态
     this.loadUserData()
     
     wx.showToast({
-      title: isLiked ? '已添加到想去' : '已取消',
+      title: isLiked ? '已添加到想去' : '已移出想去',
       icon: 'none',
       duration: 1000
     })

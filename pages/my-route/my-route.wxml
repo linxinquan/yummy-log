@@ -1,4 +1,4 @@
-<view class="page" wx:if="{{guide}}">
+<view class="page" wx:if="{{route}}">
   <view class="hero-wrap {{viewMode === 'map' ? 'hero-wrap-map' : ''}}">
     <map
       class="hero-map"
@@ -24,7 +24,7 @@
     </view>
   </view>
 
-  <view class="mode-switch" style="top: {{modeSwitchTop}}px;" wx:if="{{guide}}">
+  <view class="mode-switch" style="top: {{modeSwitchTop}}px;" wx:if="{{route && !isEditing}}">
     <view class="mode-chip {{viewMode === 'list' ? 'active' : ''}}" bindtap="onSwitchMode" data-mode="list">
       <i class="mgc_list_check_line"></i>
       <text>列表</text>
@@ -36,9 +36,9 @@
   </view>
 
   <block wx:if="{{viewMode === 'list'}}">
-    <view class="detail-sheet" id="guide-top-anchor">
+    <view class="detail-sheet" id="route-top-anchor">
       <view class="sheet-header">
-        <text class="guide-title">{{guide.title}}</text>
+        <text class="guide-title">{{route.title}}</text>
         <view class="guide-meta-row">
           <text class="guide-meta">{{summaryText}}</text>
           <text class="guide-city">{{cityText}}</text>
@@ -58,10 +58,18 @@
           >
             <text>{{tab.label}}</text>
           </view>
+          <view class="tab-item add-item" bindtap="onAddDay" wx:if="{{isEditing}}">
+            <i class="mgc_add_line"></i>
+            <text>新增</text>
+          </view>
         </view>
       </scroll-view>
 
       <view class="section-divider"></view>
+
+      <view class="sort-tip" wx:if="{{isEditing}}">
+        <text>长按地点卡片并上下拖动，可调整当天顺序</text>
+      </view>
 
       <view
         class="day-section"
@@ -69,7 +77,7 @@
         wx:key="id"
         wx:for-item="day"
         wx:for-index="dayIndex"
-        id="day-section-{{dayIndex}}"
+        id="route-day-section-{{dayIndex}}"
       >
         <view class="day-header">
           <text class="day-title">{{day.title}}</text>
@@ -78,23 +86,55 @@
 
         <view class="place-list" wx:if="{{day.items.length}}">
           <view
-            class="place-row {{isEditing && dragging && dragDay === dayIndex && dragIndex === placeIndex ? 'dragging' : ''}}"
+            class="place-swipe-cell"
             wx:for="{{day.items}}"
             wx:key="id"
             wx:for-item="place"
             wx:for-index="placeIndex"
           >
-            <view class="place-cover-wrap">
-              <view class="place-cover-shadow"></view>
-              <image class="place-cover" src="{{place.image}}" mode="aspectFill"></image>
+            <view
+              class="place-delete-btn"
+              wx:if="{{isEditing}}"
+              bindtap="onDeletePlace"
+              data-day-index="{{dayIndex}}"
+              data-index="{{placeIndex}}"
+            >
+              <i class="mgc_delete_2_line"></i>
             </view>
-            <view class="place-main">
-              <view class="place-tag">{{place.tag}}</view>
-              <text class="place-name">{{place.name}}</text>
-              <text class="place-travel">{{place.travelText}}</text>
-            </view>
-            <view class="place-arrow">
-              <i class="mgc_right_small_fill"></i>
+            <view
+              class="place-row {{isEditing && dragging && dragDay === dayIndex && dragIndex === placeIndex ? 'dragging' : ''}}"
+              style="transform: translateX({{isEditing ? (place.swipeOffset || 0) : 0}}px);"
+              data-day-index="{{dayIndex}}"
+              data-index="{{placeIndex}}"
+              bindtouchstart="onSwipeStart"
+              bindtouchmove="onSwipeMove"
+              bindtouchend="onSwipeEnd"
+            >
+              <view class="place-cover-wrap">
+                <view class="place-cover-shadow"></view>
+                <image class="place-cover" src="{{place.image}}" mode="aspectFill"></image>
+              </view>
+              <view class="place-main">
+                <view class="place-tag">{{place.tag}}</view>
+                <text class="place-name">{{place.name}}</text>
+                <text class="place-travel">{{place.travelText}}</text>
+              </view>
+              <view class="place-arrow" wx:if="{{!isEditing}}">
+                <i class="mgc_right_small_fill"></i>
+              </view>
+              <view
+                class="place-handle"
+                wx:if="{{isEditing}}"
+                data-day-index="{{dayIndex}}"
+                data-index="{{placeIndex}}"
+                catchtouchstart="onHandleTouchStart"
+                bindlongpress="onDragStart"
+                catchtouchmove="onDragMove"
+                bindtouchend="onDragEnd"
+                catchtap="noop"
+              >
+                <i class="mgc_dot_grid_line"></i>
+              </view>
             </view>
           </view>
         </view>
@@ -107,14 +147,22 @@
       </view>
     </view>
 
-    <view class="bottom-bar">
-      <view class="bottom-btn secondary" bindtap="onOpenMapMode">
-        <i class="mgc_world_2_line"></i>
-        <text>地图</text>
+    <view class="bottom-bar" wx:if="{{isEditing}}">
+      <view class="bottom-btn secondary" bindtap="onCancelEdit">
+        <text>取消</text>
       </view>
-      <view class="bottom-btn primary" bindtap="onAddToMyRoute">
-        <i class="mgc_copy_2_line"></i>
-        <text>添加到我的路线</text>
+      <view class="bottom-btn primary" bindtap="onSave">
+        <text>保存</text>
+      </view>
+    </view>
+    <view class="bottom-bar" wx:else>
+      <view class="bottom-btn secondary" bindtap="onEditMeta">
+        <i class="mgc_edit_3_line"></i>
+        <text>编辑</text>
+      </view>
+      <view class="bottom-btn primary" bindtap="onStartRouteEdit">
+        <i class="mgc_route_line"></i>
+        <text>修改路线</text>
       </view>
     </view>
   </block>
@@ -122,7 +170,7 @@
   <block wx:else>
     <view class="map-panel">
       <view class="map-card">
-        <text class="map-title">{{guide.title}}</text>
+        <text class="map-title">{{route.title}}</text>
         <view class="map-meta-row">
           <text class="map-meta">{{summaryText}}</text>
           <text class="map-city">{{cityText}}</text>

@@ -35,83 +35,107 @@
       <i class="empty-icon {{tab === 'want' ? 'mgc_heart_line' : (tab === 'plan' ? 'mgc_map_line' : 'mgc_location_line')}}"></i>
     </view>
     <text class="empty-title">{{titles[tab]}}</text>
-    <text class="empty-hint">{{tab === 'want' ? '正在开发中，敬请期待...' : (tab === 'plan' ? '去探索页收藏心仪的美食和景点吧' : '还没标记任何到访记录')}}</text>
-    <view class="empty-btn" bindtap="onGoHome" wx:if="{{tab !== 'want'}}">去探索</view>
+    <text class="empty-hint">{{tab === 'want' ? '去探索页收藏心仪的美食和景点吧' : (tab === 'plan' ? '去攻略详情页复制路线到这里吧' : '还没标记任何到访记录')}}</text>
+    <view class="empty-btn" bindtap="onGoHome" wx:if="{{tab !== 'visited'}}">去探索</view>
   </view>
 
   <!-- ── 有数据时 ── -->
   <block wx:else>
 
-    <!-- 规划路线横幅 -->
-    <view class="route-banner" bindtap="onPlanRoute">
-      <view class="banner-icon-wrap">
-        <i class="mgc_map_line banner-icon"></i>
-      </view>
-      <view class="banner-info">
-        <text class="banner-title">规划最优路线</text>
-        <text class="banner-sub">{{items.length}}个地点 · 长按拖拽调整顺序</text>
-      </view>
-      <view class="banner-arrow-wrap">
-        <i class="mgc_right_line banner-arrow"></i>
-      </view>
-    </view>
-
-    <!-- 提示：长按拖拽 -->
-    <view class="sort-tip" wx:if="{{items.length > 1}}">
-      <i class="mgc_coin_line tip-icon"></i>
-      <text class="tip-text">长按拖拽卡片可自定义出行顺序</text>
-    </view>
-
-    <!-- 可拖拽列表（普通滚动列表 + 长按拖拽） -->
-    <scroll-view class="item-list" scroll-y>
+    <!-- 路线tab的路线卡片 -->
+    <scroll-view wx:if="{{tab === 'plan'}}" class="route-card-list" scroll-y>
       <block wx:for="{{items}}" wx:key="id">
         <view
-          class="item-card {{dragging && dragIndex === index ? 'dragging' : ''}}"
-          data-index="{{index}}"
-          bindtap="onItemTap"
-          data-item="{{item}}"
-          bindlongpress="onDragStart"
+          class="route-card"
+          bindtap="onRouteCardTap"
+          data-route="{{item}}"
         >
-          <!-- 拖拽手柄 -->
-          <view class="drag-handle" catchtap="onDragStart" data-index="{{index}}">
-            <i class="mgc_dots_line"></i>
+          <view class="route-info">
+            <text class="route-title">{{item.title}}</text>
+            <text class="route-subtitle">{{item.subtitle}}</text>
           </view>
-
-          <!-- 序号 -->
-          <view class="item-num">
-            <text>{{index + 1}}</text>
-          </view>
-
-          <!-- 图片 -->
           <image
-            class="item-img"
-            src="{{item.logo || item.image || item.thumb}}"
+            class="route-image"
+            src="{{item.image}}"
             mode="aspectFill"
-            wx:if="{{item.logo || item.image || item.thumb}}"
           />
-          <view class="item-img placeholder" wx:else>
-            <i class="{{item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price ? 'mgc_tree_line' : 'mgc_fork_spoon_line'}}"></i>
-          </view>
-
-          <!-- 信息 -->
-          <view class="item-info">
-            <text class="item-name">{{item.name}}</text>
-            <text class="item-meta">{{item.category || item.district || ''}}{{item.rating || item.score ? ' · ★ ' + (item.rating || item.score) : ''}}</text>
-            <text class="item-address" wx:if="{{item.address || item.district}}">{{item.district || item.address}}</text>
-          </view>
-
-          <!-- 操作 -->
-          <view class="item-actions">
-            <view class="navi-btn" catchtap="onNavigate" data-item="{{item}}">
-              <i class="mgc_send_plane_line"></i>
-            </view>
-            <view class="remove-btn" catchtap="onRemove" data-id="{{item.id}}">
-              <i class="mgc_close_line"></i>
-            </view>
-          </view>
         </view>
       </block>
     </scroll-view>
+
+    <!-- 其他tab的普通列表 -->
+    <block wx:else>
+      <!-- 规划路线横幅 -->
+      <view class="route-banner" bindtap="onPlanRoute">
+        <view class="banner-icon-wrap">
+          <i class="mgc_map_line banner-icon"></i>
+        </view>
+        <view class="banner-info">
+          <text class="banner-title">规划最优路线</text>
+          <text class="banner-sub">{{items.length}}个地点 · 长按拖拽调整顺序</text>
+        </view>
+        <view class="banner-arrow-wrap">
+          <i class="mgc_right_line banner-arrow"></i>
+        </view>
+      </view>
+
+      <!-- 提示：长按拖拽 -->
+      <view class="sort-tip" wx:if="{{items.length > 1}}">
+        <i class="mgc_coin_line tip-icon"></i>
+        <text class="tip-text">长按拖拽卡片可自定义出行顺序</text>
+      </view>
+
+      <!-- 可拖拽列表（普通滚动列表 + 长按拖拽） -->
+      <scroll-view class="item-list" scroll-y>
+        <block wx:for="{{items}}" wx:key="id">
+          <view
+            class="item-card {{dragging && dragIndex === index ? 'dragging' : ''}}"
+            data-index="{{index}}"
+            bindtap="onItemTap"
+            data-item="{{item}}"
+            bindlongpress="onDragStart"
+          >
+            <!-- 拖拽手柄 -->
+            <view class="drag-handle" catchtap="onDragStart" data-index="{{index}}">
+              <i class="mgc_dots_line"></i>
+            </view>
+
+            <!-- 序号 -->
+            <view class="item-num">
+              <text>{{index + 1}}</text>
+            </view>
+
+            <!-- 图片 -->
+            <image
+              class="item-img"
+              src="{{item.logo || item.image || item.thumb}}"
+              mode="aspectFill"
+              wx:if="{{item.logo || item.image || item.thumb}}"
+            />
+            <view class="item-img placeholder" wx:else>
+              <i class="{{item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price ? 'mgc_tree_line' : 'mgc_fork_spoon_line'}}"></i>
+            </view>
+
+            <!-- 信息 -->
+            <view class="item-info">
+              <text class="item-name">{{item.name}}</text>
+              <text class="item-meta">{{item.category || item.district || ''}}{{item.rating || item.score ? ' · ★ ' + (item.rating || item.score) : ''}}</text>
+              <text class="item-address" wx:if="{{item.address || item.district}}">{{item.district || item.address}}</text>
+            </view>
+
+            <!-- 操作 -->
+            <view class="item-actions">
+              <view class="navi-btn" catchtap="onNavigate" data-item="{{item}}">
+                <i class="mgc_send_plane_line"></i>
+              </view>
+              <view class="remove-btn" catchtap="onRemove" data-id="{{item.id}}">
+                <i class="mgc_close_line"></i>
+              </view>
+            </view>
+          </view>
+        </block>
+      </scroll-view>
+    </block>
   </block>
 
   <!-- 底部安全区 -->

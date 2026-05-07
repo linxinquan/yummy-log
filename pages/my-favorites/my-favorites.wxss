@@ -13,6 +13,7 @@
 /* ── 大标题（与 district-guide 一致） ── */
 .header {
   padding: 48rpx; 
+  background: #FFFFFF;
 }
 
 .district-title {
@@ -213,39 +214,32 @@
 }
 
 .icon-btn {
-  width: 32rpx;
-  height: 32rpx;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
+  background: #F6F6F6;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: all 0.3s;
 }
 
 .want-icon {
-  width: 32rpx;
-  height: 32rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #F6F6F6;
+}
+
+.icon-btn.liked {
+  background: #E8F5E8;
 }
 
 .icon-btn-text {
   font-size: 32rpx;
-  color: transparent;
-  background: linear-gradient(180deg, #C5D3E3 0%, #D8E1EC 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.icon-btn.liked {
-  background: linear-gradient(180deg, rgba(197, 211, 227, 0.1) 0%, rgba(216, 225, 236, 0.1) 100%);
+  color: #999999;
 }
 
 .icon-btn.liked .icon-btn-text {
-  color: #47BFFE;
-  background: none;
-  -webkit-background-clip: unset;
-  -webkit-text-fill-color: initial;
+  color: #27AE60;
 }
 
 /* ── 底部安全区 ── */

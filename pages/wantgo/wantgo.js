@@ -82,9 +82,6 @@ Page({
     let items = []
 
     if (tab === 'want') {
-      // 想去页面暂为空白，后续开发
-      this.setData({ items: [], empty: true })
-    } else if (tab === 'plan') {
       const foodIds = util.loadData('userWantFoods', [])
       const spotIds = util.loadData('userWantSpots', [])
       
@@ -100,7 +97,7 @@ Page({
       
       items = [...foodItems, ...spotItems].map(item => {
         const baseWant = item.wantCount || 1024
-        const actualWant = baseWant + 1 // 既然在想去列表里，那就是想去状态，人数+1
+        const actualWant = baseWant + 1
         let displayWantCount = actualWant
         if (actualWant >= 10000) {
           displayWantCount = (actualWant / 10000).toFixed(1).replace('.0', '') + 'w'
@@ -110,6 +107,9 @@ Page({
         return { ...item, displayWantCount }
       })
       this.setData({ items, empty: items.length === 0 })
+    } else if (tab === 'plan') {
+      const savedRoutes = util.loadData('savedRoutes', [])
+      this.setData({ items: savedRoutes, empty: savedRoutes.length === 0 })
     } else {
       // 足迹
       const ids = util.loadData('userCheckedIn', [])
@@ -132,6 +132,13 @@ Page({
       })
       this.setData({ items, empty: items.length === 0 })
     }
+  },
+
+  // ─── 点击路线卡片 ─────────────────────────────
+  onRouteCardTap(e) {
+    const route = e.currentTarget.dataset.route
+    const routeStr = encodeURIComponent(JSON.stringify(route))
+    wx.navigateTo({ url: `/pages/my-route/my-route?route=${routeStr}` })
   },
 
   // ─── 点击项目 ─────────────────────────────
