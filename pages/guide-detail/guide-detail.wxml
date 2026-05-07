@@ -19,9 +19,6 @@
     <view class="top-icon" bindtap="onBack">
       <i class="mgc_left_line"></i>
     </view>
-    <view class="top-icon" bindtap="onShareTap">
-      <i class="mgc_share_forward_line"></i>
-    </view>
   </view>
 
   <view class="mode-switch" style="top: {{modeSwitchTop}}px;" wx:if="{{guide}}">
@@ -36,75 +33,84 @@
   </view>
 
   <block wx:if="{{viewMode === 'list'}}">
-    <view class="detail-sheet" id="guide-top-anchor">
-      <view class="sheet-header">
-        <text class="guide-title">{{guide.title}}</text>
-        <view class="guide-meta-row">
-          <text class="guide-meta">{{summaryText}}</text>
-          <text class="guide-city">{{cityText}}</text>
-        </view>
-      </view>
+    <view class="detail-sheet">
+      <scroll-view class="detail-scroll" scroll-y scroll-into-view="{{sheetScrollTarget}}" show-scrollbar="{{false}}">
+        <view class="detail-scroll-inner">
+          <view class="sheet-header" id="guide-scroll-top">
+            <text class="guide-title">{{guide.title}}</text>
+            <view class="guide-meta-row">
+              <text class="guide-meta">{{summaryText}}</text>
+              <text class="guide-city">{{cityText}}</text>
+            </view>
+          </view>
 
-      <scroll-view class="tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
-        <view class="tab-row">
-          <view
-            wx:for="{{tabs}}"
-            wx:key="key"
-            wx:for-item="tab"
-            wx:for-index="tabIndex"
-            class="tab-item {{currentTab === tabIndex ? 'active' : ''}}"
-            bindtap="onTabTap"
-            data-index="{{tabIndex}}"
-          >
-            <text>{{tab.label}}</text>
+          <view class="tab-sticky-wrap">
+            <scroll-view class="tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
+              <view class="tab-row">
+                <view
+                  wx:for="{{tabs}}"
+                  wx:key="key"
+                  wx:for-item="tab"
+                  wx:for-index="tabIndex"
+                  class="tab-item {{currentTab === tabIndex ? 'active' : ''}}"
+                  bindtap="onTabTap"
+                  data-index="{{tabIndex}}"
+                >
+                  <text>{{tab.label}}</text>
+                </view>
+              </view>
+            </scroll-view>
+
+            <view class="section-divider"></view>
+          </view>
+
+          <view class="sheet-content">
+            <view
+              class="day-section"
+              wx:for="{{daySections}}"
+              wx:key="id"
+              wx:for-item="day"
+              wx:for-index="dayIndex"
+              id="day-section-{{dayIndex}}"
+            >
+              <view class="day-anchor" id="day-anchor-{{dayIndex}}"></view>
+              <view class="day-header">
+                <text class="day-title">{{day.title}}</text>
+                <text class="day-count">{{day.countText}}</text>
+              </view>
+
+              <view class="place-list" wx:if="{{day.items.length}}">
+                <view
+                  class="place-row {{isEditing && dragging && dragDay === dayIndex && dragIndex === placeIndex ? 'dragging' : ''}}"
+                  wx:for="{{day.items}}"
+                  wx:key="id"
+                  wx:for-item="place"
+                  wx:for-index="placeIndex"
+                >
+                  <view class="place-cover-wrap">
+                    <view class="place-cover-shadow"></view>
+                    <image class="place-cover" src="{{place.image}}" mode="aspectFill"></image>
+                  </view>
+                  <view class="place-main">
+                    <view class="place-tag">{{place.tag}}</view>
+                    <text class="place-name">{{place.name}}</text>
+                    <text class="place-travel">{{place.travelText}}</text>
+                  </view>
+                  <view class="place-arrow">
+                    <i class="mgc_right_small_fill"></i>
+                  </view>
+                </view>
+              </view>
+
+              <view class="empty-day" wx:else>
+                <text>这一天还没有地点，点击上方新增后可继续补充</text>
+              </view>
+
+              <view class="day-separator" wx:if="{{dayIndex < daySections.length - 1}}"></view>
+            </view>
           </view>
         </view>
       </scroll-view>
-
-      <view class="section-divider"></view>
-
-      <view
-        class="day-section"
-        wx:for="{{daySections}}"
-        wx:key="id"
-        wx:for-item="day"
-        wx:for-index="dayIndex"
-        id="day-section-{{dayIndex}}"
-      >
-        <view class="day-header">
-          <text class="day-title">{{day.title}}</text>
-          <text class="day-count">{{day.countText}}</text>
-        </view>
-
-        <view class="place-list" wx:if="{{day.items.length}}">
-          <view
-            class="place-row {{isEditing && dragging && dragDay === dayIndex && dragIndex === placeIndex ? 'dragging' : ''}}"
-            wx:for="{{day.items}}"
-            wx:key="id"
-            wx:for-item="place"
-            wx:for-index="placeIndex"
-          >
-            <view class="place-cover-wrap">
-              <view class="place-cover-shadow"></view>
-              <image class="place-cover" src="{{place.image}}" mode="aspectFill"></image>
-            </view>
-            <view class="place-main">
-              <view class="place-tag">{{place.tag}}</view>
-              <text class="place-name">{{place.name}}</text>
-              <text class="place-travel">{{place.travelText}}</text>
-            </view>
-            <view class="place-arrow">
-              <i class="mgc_right_small_fill"></i>
-            </view>
-          </view>
-        </view>
-
-        <view class="empty-day" wx:else>
-          <text>这一天还没有地点，点击上方新增后可继续补充</text>
-        </view>
-
-        <view class="day-separator" wx:if="{{dayIndex < daySections.length - 1}}"></view>
-      </view>
     </view>
 
     <view class="bottom-bar">

@@ -1,14 +1,29 @@
 .page {
   min-height: 100vh;
-  background: #f7f8fa;
-  padding: 32rpx 24rpx calc(160rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  padding: 0 24rpx calc(160rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
+}
+
+.header {
+  padding: 48rpx 48rpx 32rpx;
+  background: #ffffff;
+}
+
+.page-title {
+  font-family: 'PingFang SC';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 48rpx;
+  line-height: 100%;
+  color: #000000;
 }
 
 .form-card {
   background: #ffffff;
   border-radius: 24rpx;
   padding: 12rpx 24rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.04);
 }
 
 .field-block {
@@ -50,6 +65,33 @@
   box-sizing: border-box;
 }
 
+.field-picker {
+  height: 88rpx;
+  margin-top: 20rpx;
+  border-radius: 18rpx;
+  background: #f7f8fa;
+  padding: 0 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.field-picker-text {
+  color: #000000;
+  font-size: 30rpx;
+  line-height: 42rpx;
+}
+
+.field-picker-text.placeholder {
+  color: #b7b7b7;
+}
+
+.field-picker i {
+  font-size: 36rpx;
+  color: #b7b7b7;
+}
+
 .stepper {
   display: flex;
   align-items: center;
@@ -61,16 +103,16 @@
   width: 72rpx;
   height: 72rpx;
   border-radius: 18rpx;
-  background: #f4f6f8;
-  color: #000000;
+  background: #47bffe;
+  color: #ffffff;
   font-size: 40rpx;
   line-height: 72rpx;
   text-align: center;
 }
 
-.step-btn.primary {
-  background: #47bffe;
-  color: #ffffff;
+.step-btn.disabled {
+  background: #e8edf2;
+  color: #b7b7b7;
 }
 
 .step-value {
@@ -85,18 +127,133 @@
   left: 0;
   right: 0;
   bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
   padding: 16rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
   background: #ffffff;
   box-sizing: border-box;
 }
 
-.save-btn {
+.bottom-btn {
   height: 96rpx;
   border-radius: 24rpx;
-  background: #47bffe;
-  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 32rpx;
   font-weight: 500;
-  line-height: 96rpx;
+}
+
+.bottom-btn.secondary {
+  width: 192rpx;
+  border: 2rpx solid #e7e7e7;
+  background: #ffffff;
+  color: #060606;
+}
+
+.bottom-btn.primary {
+  flex: 1;
+  background: #47bffe;
+  color: #ffffff;
+}
+
+.location-picker-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 1000;
+  pointer-events: none;
+  transition: background 0.3s;
+}
+
+.location-picker-mask.show {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.location-picker-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  border-radius: 48rpx 48rpx 0 0;
+  max-height: 78vh;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+}
+
+.location-picker-mask.show .location-picker-panel {
+  transform: translateY(0);
+}
+
+.picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 40rpx 48rpx 40rpx;
+}
+
+.picker-title {
+  color: #000000;
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 32rpx;
+}
+
+.picker-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #09244B;
+  font-size: 48rpx;
+}
+
+.picker-content {
+  padding: 0 48rpx 0;
+  height: 960rpx;
+  box-sizing: border-box;
+}
+
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28rpx;
+}
+
+.city-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 24rpx;
+  padding: 64rpx 36rpx;
+  min-height: 300rpx;
+  box-sizing: border-box;
+}
+
+.city-cover-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #ffffff;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.city-cover {
+  width: 100%;
+  height: 100%;
+}
+
+.city-card-name {
+  margin-top: 48rpx;
+  color: #060606;
   text-align: center;
+  font-size: 32rpx;
+  font-weight: 400;
+  line-height: 32rpx;
 }

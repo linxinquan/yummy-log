@@ -4,25 +4,34 @@
   display: none;
 }
 
-.sort-tip {
-  padding-left: 48rpx;
-  padding-right: 48rpx;
-}
-
 .place-swipe-cell {
   position: relative;
-  margin: 0 48rpx;
   overflow: hidden;
+}
+
+.place-swipe-cell.drag-active-cell {
+  overflow: visible;
+  z-index: 30;
+}
+
+.place-list {
+  margin: 0 48rpx;
+}
+
+.day-anchor {
+  position: relative;
+  top: -132rpx;
+  height: 0;
 }
 
 .place-delete-btn {
   position: absolute;
   top: 0;
+  bottom: 64rpx;
   right: 0;
   width: 144rpx;
-  height: 100%;
   border-radius: 24rpx;
-  background: #ff6b6b;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -30,7 +39,7 @@
 
 .place-delete-btn i {
   font-size: 40rpx;
-  color: #FFFFFF;
+  color: #ff4d4f;
 }
 
 .place-row {
@@ -38,6 +47,7 @@
   margin: 0;
   transition: transform 0.18s ease;
   background: #ffffff;
+  border-radius: 24rpx;
 }
 
 .place-handle i {
@@ -45,10 +55,197 @@
   font-size: 36rpx;
 }
 
-.bottom-btn.secondary {
-  flex: 1;
+.place-row.dragging {
+  box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.12);
+  transition: none;
 }
 
-.bottom-btn.primary {
+.add-place-entry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  height: 88rpx;
+  margin-bottom: 48rpx;
+  border-radius: 24rpx;
+  background: #f4f6f8;
+  color: #47BFFE;
+  font-size: 28rpx;
+}
+
+.add-place-entry i {
+  font-size: 32rpx;
+}
+
+.add-place-entry-empty {
+  margin: 0;
+}
+
+.empty-day {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.bottom-btn i {
+  font-size: 40rpx;
+}
+
+.place-picker-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 90;
+  pointer-events: none;
+  transition: background 0.3s;
+}
+
+.place-picker-mask.show {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.place-picker-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 72vh;
+  background: #ffffff;
+  border-radius: 48rpx 48rpx 0 0;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+}
+
+.place-picker-mask.show .place-picker-panel {
+  transform: translateY(0);
+}
+
+.picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 40rpx 48rpx 24rpx;
+}
+
+.picker-title {
+  color: #000000;
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 32rpx;
+}
+
+.picker-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #09244b;
+  font-size: 48rpx;
+}
+
+.picker-tabs {
+  display: flex;
+  gap: 16rpx;
+  padding: 0 48rpx 24rpx;
+}
+
+.picker-tab {
+  min-width: 112rpx;
+  height: 56rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  background: #f4f6f8;
+  color: #868686;
+  font-size: 24rpx;
+  line-height: 56rpx;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.picker-tab.active {
+  background: #47bffe;
+  color: #ffffff;
+}
+
+.place-picker-scroll {
+  height: calc(72vh - 160rpx);
+  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.picker-place-item {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.picker-place-image {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 24rpx;
+  background: #f4f6f8;
+  flex-shrink: 0;
+}
+
+.picker-place-main {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.picker-place-tag {
+  align-self: flex-start;
+  padding: 6rpx 10rpx;
+  border-radius: 8rpx;
+  background: #fdf8e3;
+  color: #ee8733;
+  font-size: 20rpx;
+  line-height: 20rpx;
+}
+
+.picker-place-name {
+  color: #000000;
+  font-size: 30rpx;
+  line-height: 42rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picker-place-meta {
+  color: #868686;
+  font-size: 24rpx;
+  line-height: 24rpx;
+}
+
+.picker-place-add {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 20rpx;
+  background: #f4f6f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #47bffe;
+  flex-shrink: 0;
+}
+
+.picker-place-add i {
+  font-size: 36rpx;
+}
+
+.picker-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 240rpx;
+  color: #999999;
+  font-size: 26rpx;
 }

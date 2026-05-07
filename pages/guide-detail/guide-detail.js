@@ -1,4 +1,6 @@
 const util = require('../../utils/util')
+const { shops, shopNameMap } = require('../../utils/shopData')
+const { spotData } = require('../../utils/spotData')
 
 const DEFAULT_COVERS = [
   '/images/covers/01.jpeg',
@@ -15,14 +17,6 @@ const DEFAULT_COVERS = [
   '/images/covers/12.jpeg'
 ]
 
-const TRANSPORT_TEMPLATES = [
-  { mode: '自行车', distance: '2.0km', time: '8min' },
-  { mode: '步行', distance: '182m', time: '1min' },
-  { mode: '步行', distance: '600m', time: '4min' },
-  { mode: '打车', distance: '3.8km', time: '12min' },
-  { mode: '地铁', distance: '5.2km', time: '18min' }
-]
-
 const CITY_PRESETS = [
   { match: /西安|长安/, name: '西安市', lat: 34.3416, lng: 108.9398 },
   { match: /广州/, name: '广州市', lat: 23.1291, lng: 113.2644 },
@@ -32,6 +26,19 @@ const CITY_PRESETS = [
   { match: /珠海/, name: '珠海市', lat: 22.2707, lng: 113.5767 },
   { match: /深圳|南山|福田|罗湖|宝安|龙岗|盐田|龙华|光明|坪山|大鹏/, name: '深圳市', lat: 22.5431, lng: 114.0579 }
 ]
+
+const XIAN_POI_MAP = {
+  '西安城墙永宁门城楼': { lat: 34.2476, lng: 108.9461, type: 'spot' },
+  '西安钟楼': { lat: 34.259, lng: 108.9488, type: 'spot' },
+  '西安鼓楼': { lat: 34.2597, lng: 108.9434, type: 'spot' },
+  '回民街': { lat: 34.2622, lng: 108.9426, type: 'spot' },
+  '秦始皇兵马俑博物馆': { lat: 34.3849, lng: 109.2786, type: 'spot' },
+  '华清宫': { lat: 34.3639, lng: 109.2139, type: 'spot' },
+  '长恨歌演出': { lat: 34.3622, lng: 109.2147, type: 'spot' },
+  '大雁塔': { lat: 34.2236, lng: 108.9631, type: 'spot' },
+  '陕西历史博物馆': { lat: 34.2241, lng: 108.9537, type: 'spot' },
+  '大唐不夜城': { lat: 34.2174, lng: 108.968, type: 'spot' }
+}
 
 function parseDayCount(duration) {
   const matched = String(duration || '').match(/(\d+)/)
@@ -51,6 +58,76 @@ function buildTabs(dayCount) {
     tabs.push({ key: `day-${i}`, label: buildDayLabel(i + 1) })
   }
   return tabs
+}
+
+function normalizeName(name) {
+  return String(name || '')
+    .replace(/\s+/g, '')
+    .replace(/[()（）·,，.。]/g, '')
+    .toLowerCase()
+}
+
+function formatTravelDuration(minutes) {
+  const safeMinutes = Math.max(1, Math.round(minutes))
+  if (safeMinutes < 60) return `${safeMinutes}min`
+  const hours = Math.floor(safeMinutes / 60)
+  const mins = safeMinutes % 60
+  return mins ? `${hours}h ${mins}min` : `${hours}h`
+}
+
+function buildTravelMeta(distance) {
+  const safeDistance = Math.max(Math.round(distance || 0), 1)
+  let mode = 'walk'
+  let label = '步行'
+  let minutesPerKm = 12
+
+  if (safeDistance >= 10000) {
+    mode = 'drive'
+    label = '打车'
+    minutesPerKm = 3
+  } else if (safeDistance >= 3500) {
+    mode = 'transit'
+    label = '地铁'
+    minutesPerKm = 5
+  } else if (safeDistance >= 900) {
+    mode = 'bike'
+    label = '自行车'
+    minutesPerKm = 4
+  }
+
+  const duration = formatTravelDuration((safeDistance / 1000) * minutesPerKm)
+  return `${label} | ${util.formatDistance(safeDistance)} · ${duration}`
+}
+
+function buildSyntheticLatLng(cityInfo, dayIndex, itemIndex) {
+  return {
+    lat: cityInfo.lat + ((dayIndex * 0.018) - 0.018) + (itemIndex * 0.0035),
+    lng: cityInfo.lng + ((itemIndex * 0.016) - 0.016) + (dayIndex * 0.004)
+  }
+}
+
+function findMatchedPlace(name) {
+  const normalized = normalizeName(name)
+  if (!normalized) return null
+
+  const matchedShop = shops.find(item => normalizeName(item.name) === normalized)
+  if (matchedShop) return matchedShop
+
+  const aliasTarget = Object.keys(shopNameMap).find(alias => {
+    const normalizedAlias = normalizeName(alias)
+    return normalized.includes(normalizedAlias) || normalizedAlias.includes(normalized)
+  })
+  if (aliasTarget) {
+    const shopName = shopNameMap[aliasTarget]
+    const aliasShop = shops.find(item => item.name === shopName)
+    if (aliasShop) return aliasShop
+  }
+
+  const matchedSpot = (spotData || []).find(item => normalizeName(item.name) === normalized)
+  if (matchedSpot) return matchedSpot
+
+  const xianPoi = Object.keys(XIAN_POI_MAP).find(key => normalizeName(key) === normalized)
+  return xianPoi ? XIAN_POI_MAP[xianPoi] : null
 }
 
 function buildCoverPool(guide) {
@@ -75,25 +152,45 @@ function inferTag(name) {
   return '景点'
 }
 
-function buildTravelText(index) {
-  const template = TRANSPORT_TEMPLATES[index % TRANSPORT_TEMPLATES.length]
-  return `${template.mode} | ${template.distance} · ${template.time}`
-}
+function syncDaySections(daySections, cityInfo) {
+  const fallbackCity = cityInfo || { lat: 22.5431, lng: 114.0579 }
+  return (daySections || []).map((day, dayIndex) => {
+    const rawItems = (day.items || []).map((item, itemIndex) => {
+      const matched = findMatchedPlace(item.name)
+      const synthetic = buildSyntheticLatLng(fallbackCity, dayIndex, itemIndex)
+      const lat = item.lat || item.latitude || (matched && matched.lat) || synthetic.lat
+      const lng = item.lng || item.longitude || (matched && matched.lng) || synthetic.lng
+      const tag = item.tag || inferTag(item.name)
+      return {
+        ...item,
+        id: item.id || `day-${dayIndex}-item-${itemIndex}`,
+        name: item.name || '待补充地点',
+        tag,
+        image: item.image || matched?.image || matched?.logo || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length],
+        type: item.type || matched?.type || (tag === '美食' ? 'food' : 'spot'),
+        lat,
+        lng,
+        distanceFromPrev: item.distanceFromPrev || 0
+      }
+    })
 
-function syncDaySections(daySections) {
-  return daySections.map((day, dayIndex) => ({
-    id: day.id || `day-${dayIndex}`,
-    title: buildDayLabel(dayIndex + 1),
-    countText: `${day.items.length} 个地点`,
-    items: (day.items || []).map((item, itemIndex) => ({
-      id: item.id || `day-${dayIndex}-item-${itemIndex}`,
-      name: item.name || '待补充地点',
-      tag: item.tag || '景点',
-      image: item.image || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length],
-      travelText: item.travelText || buildTravelText(dayIndex + itemIndex),
-      type: item.type || (item.tag === '美食' ? 'food' : 'spot')
-    }))
-  }))
+    const plannedItems = util.planRoute(
+      rawItems.map(item => ({ ...item })),
+      { lat: fallbackCity.lat, lng: fallbackCity.lng },
+      true
+    )
+
+    return {
+      id: day.id || `day-${dayIndex}`,
+      title: buildDayLabel(dayIndex + 1),
+      countText: `${plannedItems.length} 个地点`,
+      items: plannedItems.map((item, itemIndex) => ({
+        ...item,
+        travelText: buildTravelMeta(item.distanceFromPrev || 0),
+        image: item.image || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length]
+      }))
+    }
+  })
 }
 
 function buildSummaryText(guide, daySections) {
@@ -104,33 +201,33 @@ function buildSummaryText(guide, daySections) {
 }
 
 function buildXianSections(covers) {
-  return syncDaySections([
+  return [
     {
       id: 'day-0',
       items: [
-        { name: '西安城墙永宁门城楼', tag: '景点', image: covers[0], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
-        { name: '西安钟楼', tag: '景点', image: covers[1], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
-        { name: '西安鼓楼', tag: '景点', image: covers[2], travelText: '步行 | 182m · 1min', type: 'spot' },
-        { name: '回民街', tag: '景点', image: covers[3], travelText: '步行 | 600m · 4min', type: 'spot' }
+        { name: '西安城墙永宁门城楼', tag: '景点', image: covers[0], type: 'spot' },
+        { name: '西安钟楼', tag: '景点', image: covers[1], type: 'spot' },
+        { name: '西安鼓楼', tag: '景点', image: covers[2], type: 'spot' },
+        { name: '回民街', tag: '景点', image: covers[3], type: 'spot' }
       ]
     },
     {
       id: 'day-1',
       items: [
-        { name: '秦始皇兵马俑博物馆', tag: '文化展馆', image: covers[4], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
-        { name: '华清宫', tag: '景点', image: covers[5], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
-        { name: '长恨歌演出', tag: '景点', image: covers[6], travelText: '步行 | 182m · 1min', type: 'spot' }
+        { name: '秦始皇兵马俑博物馆', tag: '文化展馆', image: covers[4], type: 'spot' },
+        { name: '华清宫', tag: '景点', image: covers[5], type: 'spot' },
+        { name: '长恨歌演出', tag: '景点', image: covers[6], type: 'spot' }
       ]
     },
     {
       id: 'day-2',
       items: [
-        { name: '大雁塔', tag: '景点', image: covers[7], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
-        { name: '陕西历史博物馆', tag: '文化展馆', image: covers[8], travelText: '自行车 | 2.0km · 8min', type: 'spot' },
-        { name: '大唐不夜城', tag: '景点', image: covers[9], travelText: '步行 | 182m · 1min', type: 'spot' }
+        { name: '大雁塔', tag: '景点', image: covers[7], type: 'spot' },
+        { name: '陕西历史博物馆', tag: '文化展馆', image: covers[8], type: 'spot' },
+        { name: '大唐不夜城', tag: '景点', image: covers[9], type: 'spot' }
       ]
     }
-  ])
+  ]
 }
 
 function buildGenericSections(guide, covers) {
@@ -162,7 +259,6 @@ function buildGenericSections(guide, covers) {
         name,
         tag,
         image: covers[(cursor + itemIndex) % covers.length],
-        travelText: buildTravelText(cursor + itemIndex),
         type: tag === '美食' ? 'food' : 'spot'
       }
     })
@@ -170,16 +266,16 @@ function buildGenericSections(guide, covers) {
     cursor += takeCount
   }
 
-  return syncDaySections(sections)
+  return sections
 }
 
-function buildDaySections(guide) {
+function buildDaySections(guide, cityInfo) {
   const covers = buildCoverPool(guide)
   const content = [guide.title || '', (guide.tags || []).join(' '), (guide.desc || '')].join(' ')
   if (/西安|长安/.test(content)) {
-    return buildXianSections(covers)
+    return syncDaySections(buildXianSections(covers), cityInfo)
   }
-  return buildGenericSections(guide, covers)
+  return syncDaySections(buildGenericSections(guide, covers), cityInfo)
 }
 
 function buildLegacyRouteData(daySections) {
@@ -192,9 +288,12 @@ function buildLegacyRouteData(daySections) {
   const dayDetails = daySections.map(day => (day.items || []).map(item => ({
     name: item.name,
     desc: item.travelText,
+    travelText: item.travelText,
     tag: item.tag,
     image: item.image,
-    type: item.type
+    type: item.type,
+    lat: item.lat,
+    lng: item.lng
   })))
 
   return { daySummaries, dayDetails }
@@ -206,9 +305,11 @@ Page({
     menuTop: 0,
     menuHeight: 32,
     modeSwitchTop: 110,
+    tabStickyTop: 150,
     viewMode: 'list',
     currentTab: 0,
     currentMapDay: -1,
+    sheetScrollTarget: '',
     cityText: '深圳市',
     summaryText: '',
     daySections: [],
@@ -228,7 +329,8 @@ Page({
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
     const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
     const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
-    const modeSwitchTop = menuTop + menuHeight + 24
+    const modeSwitchTop = menuTop
+    const tabStickyTop = menuTop + menuHeight + 24
 
     if (!options.guide) {
       wx.showToast({ title: '攻略不存在', icon: 'none' })
@@ -238,7 +340,7 @@ Page({
 
     const guide = JSON.parse(decodeURIComponent(options.guide))
     const cityInfo = getCityInfo(guide)
-    const daySections = buildDaySections(guide)
+    const daySections = buildDaySections(guide, cityInfo)
 
     this.setData({
       guide,
@@ -247,6 +349,7 @@ Page({
       menuTop,
       menuHeight,
       modeSwitchTop,
+      tabStickyTop,
       daySections,
       tabs: buildTabs(daySections.length),
       summaryText: buildSummaryText(guide, daySections)
@@ -273,8 +376,8 @@ Page({
 
     const markers = flattened.map((item, index) => ({
       id: index,
-      latitude: cityInfo.lat + ((item.dayIndex * 0.018) - 0.018) + (item.itemIndex * 0.0035),
-      longitude: cityInfo.lng + ((item.itemIndex * 0.016) - 0.016) + (item.dayIndex * 0.004),
+      latitude: item.lat,
+      longitude: item.lng,
       iconPath: index === 0
         ? '/images/markers/marker_start.png'
         : index === flattened.length - 1
@@ -368,18 +471,12 @@ Page({
 
   onTabTap(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10)
-    const selector = index === 0 ? '#guide-top-anchor' : `#day-section-${index - 1}`
-    this.setData({ currentTab: index })
+    const sheetScrollTarget = index === 0 ? 'guide-scroll-top' : `day-anchor-${index - 1}`
+    this.setData({ currentTab: index, sheetScrollTarget })
 
     if (this.data.viewMode === 'map') {
       this.updateMapData(this.data.daySections, this.data.cityInfo, index - 1)
-      return
     }
-
-    wx.pageScrollTo({
-      selector,
-      duration: 280
-    })
   },
 
   onShareAppMessage() {

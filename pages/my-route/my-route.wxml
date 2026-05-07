@@ -19,9 +19,6 @@
     <view class="top-icon" bindtap="onBack">
       <i class="mgc_left_line"></i>
     </view>
-    <view class="top-icon" bindtap="onShareTap">
-      <i class="mgc_share_forward_line"></i>
-    </view>
   </view>
 
   <view class="mode-switch" style="top: {{modeSwitchTop}}px;" wx:if="{{route && !isEditing}}">
@@ -36,115 +33,125 @@
   </view>
 
   <block wx:if="{{viewMode === 'list'}}">
-    <view class="detail-sheet" id="route-top-anchor">
-      <view class="sheet-header">
-        <text class="guide-title">{{route.title}}</text>
-        <view class="guide-meta-row">
-          <text class="guide-meta">{{summaryText}}</text>
-          <text class="guide-city">{{cityText}}</text>
-        </view>
-      </view>
-
-      <scroll-view class="tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
-        <view class="tab-row">
-          <view
-            wx:for="{{tabs}}"
-            wx:key="key"
-            wx:for-item="tab"
-            wx:for-index="tabIndex"
-            class="tab-item {{currentTab === tabIndex ? 'active' : ''}}"
-            bindtap="onTabTap"
-            data-index="{{tabIndex}}"
-          >
-            <text>{{tab.label}}</text>
+    <view class="detail-sheet">
+      <scroll-view class="detail-scroll" scroll-y scroll-into-view="{{sheetScrollTarget}}" show-scrollbar="{{false}}">
+        <view class="detail-scroll-inner">
+          <view class="sheet-header" id="route-scroll-top">
+            <text class="guide-title">{{route.title}}</text>
+            <view class="guide-meta-row">
+              <text class="guide-meta">{{summaryText}}</text>
+              <text class="guide-city">{{cityText}}</text>
+            </view>
           </view>
-          <view class="tab-item add-item" bindtap="onAddDay" wx:if="{{isEditing}}">
-            <i class="mgc_add_line"></i>
-            <text>新增</text>
+
+          <view class="tab-sticky-wrap">
+            <scroll-view class="tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
+              <view class="tab-row">
+                <view
+                  wx:for="{{tabs}}"
+                  wx:key="key"
+                  wx:for-item="tab"
+                  wx:for-index="tabIndex"
+                  class="tab-item {{currentTab === tabIndex ? 'active' : ''}}"
+                  bindtap="onTabTap"
+                  data-index="{{tabIndex}}"
+                >
+                  <text>{{tab.label}}</text>
+                </view>
+                <view class="tab-item add-item" bindtap="onAddDay" wx:if="{{isEditing}}">
+                  <i class="mgc_add_line"></i>
+                  <text>新增</text>
+                </view>
+              </view>
+            </scroll-view>
+
+            <view class="section-divider"></view>
+          </view>
+
+          <view class="sheet-content">
+            <view
+              class="day-section"
+              wx:for="{{daySections}}"
+              wx:key="id"
+              wx:for-item="day"
+              wx:for-index="dayIndex"
+              id="route-day-section-{{dayIndex}}"
+            >
+              <view class="day-anchor" id="route-day-anchor-{{dayIndex}}"></view>
+              <view class="day-header">
+                <text class="day-title">{{day.title}}</text>
+                <text class="day-count">{{day.countText}}</text>
+              </view>
+
+              <view class="place-list" wx:if="{{day.items.length}}">
+                <view
+                  class="place-swipe-cell {{isEditing && dragging && dragDay === dayIndex && dragIndex === placeIndex ? 'drag-active-cell' : ''}}"
+                  wx:for="{{day.items}}"
+                  wx:key="id"
+                  wx:for-item="place"
+                  wx:for-index="placeIndex"
+                >
+                  <view
+                    class="place-delete-btn"
+                    wx:if="{{isEditing}}"
+                    bindtap="onDeletePlace"
+                    data-day-index="{{dayIndex}}"
+                    data-index="{{placeIndex}}"
+                  >
+                    <i class="mgc_delete_2_line"></i>
+                  </view>
+                  <view
+                    class="place-row {{isEditing && dragging && dragDay === dayIndex && dragIndex === placeIndex ? 'dragging' : ''}}"
+                    style="transform: translateX({{isEditing ? (place.swipeOffset || 0) : 0}}px) translateY({{isEditing && dragging && dragDay === dayIndex && dragIndex === placeIndex ? dragOffsetY : 0}}px); z-index: {{isEditing && dragging && dragDay === dayIndex && dragIndex === placeIndex ? 20 : 1}};"
+                    data-day-index="{{dayIndex}}"
+                    data-index="{{placeIndex}}"
+                    bindtouchstart="onSwipeStart"
+                    bindtouchmove="onSwipeMove"
+                    bindtouchend="onSwipeEnd"
+                    bindlongpress="onDragStart"
+                  >
+                    <view class="place-cover-wrap">
+                      <view class="place-cover-shadow"></view>
+                      <image class="place-cover" src="{{place.image}}" mode="aspectFill"></image>
+                    </view>
+                    <view class="place-main">
+                      <view class="place-tag">{{place.tag}}</view>
+                      <text class="place-name">{{place.name}}</text>
+                      <text class="place-travel">{{place.travelText}}</text>
+                    </view>
+                    <view class="place-arrow" wx:if="{{!isEditing}}">
+                      <i class="mgc_right_small_fill"></i>
+                    </view>
+                    <view
+                      class="place-handle"
+                      wx:if="{{isEditing}}"
+                      data-day-index="{{dayIndex}}"
+                      data-index="{{placeIndex}}"
+                      catchtouchstart="onHandleTouchStart"
+                      catchtap="noop"
+                    >
+                      <i class="mgc_dot_grid_line"></i>
+                    </view>
+                  </view>
+                </view>
+                <view class="add-place-entry" wx:if="{{isEditing}}" bindtap="onOpenPlacePicker" data-day-index="{{dayIndex}}">
+                  <i class="mgc_add_line"></i>
+                  <text>新增地点</text>
+                </view>
+              </view>
+
+              <view class="empty-day" wx:else>
+                <view class="add-place-entry add-place-entry-empty" wx:if="{{isEditing}}" bindtap="onOpenPlacePicker" data-day-index="{{dayIndex}}">
+                  <i class="mgc_add_line"></i>
+                  <text>新增地点</text>
+                </view>
+              </view>
+
+              <view class="day-separator" wx:if="{{dayIndex < daySections.length - 1}}"></view>
+            </view>
           </view>
         </view>
       </scroll-view>
-
-      <view class="section-divider"></view>
-
-      <view class="sort-tip" wx:if="{{isEditing}}">
-        <text>长按地点卡片并上下拖动，可调整当天顺序</text>
-      </view>
-
-      <view
-        class="day-section"
-        wx:for="{{daySections}}"
-        wx:key="id"
-        wx:for-item="day"
-        wx:for-index="dayIndex"
-        id="route-day-section-{{dayIndex}}"
-      >
-        <view class="day-header">
-          <text class="day-title">{{day.title}}</text>
-          <text class="day-count">{{day.countText}}</text>
-        </view>
-
-        <view class="place-list" wx:if="{{day.items.length}}">
-          <view
-            class="place-swipe-cell"
-            wx:for="{{day.items}}"
-            wx:key="id"
-            wx:for-item="place"
-            wx:for-index="placeIndex"
-          >
-            <view
-              class="place-delete-btn"
-              wx:if="{{isEditing}}"
-              bindtap="onDeletePlace"
-              data-day-index="{{dayIndex}}"
-              data-index="{{placeIndex}}"
-            >
-              <i class="mgc_delete_2_line"></i>
-            </view>
-            <view
-              class="place-row {{isEditing && dragging && dragDay === dayIndex && dragIndex === placeIndex ? 'dragging' : ''}}"
-              style="transform: translateX({{isEditing ? (place.swipeOffset || 0) : 0}}px);"
-              data-day-index="{{dayIndex}}"
-              data-index="{{placeIndex}}"
-              bindtouchstart="onSwipeStart"
-              bindtouchmove="onSwipeMove"
-              bindtouchend="onSwipeEnd"
-            >
-              <view class="place-cover-wrap">
-                <view class="place-cover-shadow"></view>
-                <image class="place-cover" src="{{place.image}}" mode="aspectFill"></image>
-              </view>
-              <view class="place-main">
-                <view class="place-tag">{{place.tag}}</view>
-                <text class="place-name">{{place.name}}</text>
-                <text class="place-travel">{{place.travelText}}</text>
-              </view>
-              <view class="place-arrow" wx:if="{{!isEditing}}">
-                <i class="mgc_right_small_fill"></i>
-              </view>
-              <view
-                class="place-handle"
-                wx:if="{{isEditing}}"
-                data-day-index="{{dayIndex}}"
-                data-index="{{placeIndex}}"
-                catchtouchstart="onHandleTouchStart"
-                bindlongpress="onDragStart"
-                catchtouchmove="onDragMove"
-                bindtouchend="onDragEnd"
-                catchtap="noop"
-              >
-                <i class="mgc_dot_grid_line"></i>
-              </view>
-            </view>
-          </view>
-        </view>
-
-        <view class="empty-day" wx:else>
-          <text>这一天还没有地点，点击上方新增后可继续补充</text>
-        </view>
-
-        <view class="day-separator" wx:if="{{dayIndex < daySections.length - 1}}"></view>
-      </view>
     </view>
 
     <view class="bottom-bar" wx:if="{{isEditing}}">
@@ -152,17 +159,17 @@
         <text>取消</text>
       </view>
       <view class="bottom-btn primary" bindtap="onSave">
-        <text>保存</text>
+        <text>确认修改</text>
       </view>
     </view>
     <view class="bottom-bar" wx:else>
       <view class="bottom-btn secondary" bindtap="onEditMeta">
-        <i class="mgc_edit_3_line"></i>
+        <i class="mgc_pencil_3_line"></i>
         <text>编辑</text>
       </view>
       <view class="bottom-btn primary" bindtap="onStartRouteEdit">
         <i class="mgc_route_line"></i>
-        <text>修改路线</text>
+        <text>调整路线</text>
       </view>
     </view>
   </block>
@@ -194,4 +201,42 @@
       </view>
     </view>
   </block>
+
+  <view class="place-picker-mask {{placePickerVisible ? 'show' : ''}}" bindtap="onClosePlacePicker">
+    <view class="place-picker-panel" catchtap="preventBubble">
+      <view class="picker-header">
+        <text class="picker-title">添加地点</text>
+        <i class="mgc_close_line picker-close" bindtap="onClosePlacePicker"></i>
+      </view>
+      <view class="picker-tabs">
+        <view class="picker-tab {{placePickerTab === 'all' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="all">全部</view>
+        <view class="picker-tab {{placePickerTab === 'want' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="want">想去</view>
+        <view class="picker-tab {{placePickerTab === 'collect' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="collect">收藏</view>
+      </view>
+      <scroll-view class="place-picker-scroll" scroll-y show-scrollbar="{{false}}">
+        <block wx:if="{{placePickerTab === 'all' ? placePickerItems.length : (placePickerTab === 'want' ? placePickerWantItems.length : placePickerCollectItems.length)}}">
+          <view
+            class="picker-place-item"
+            wx:for="{{placePickerTab === 'all' ? placePickerItems : (placePickerTab === 'want' ? placePickerWantItems : placePickerCollectItems)}}"
+            wx:key="sourceKey"
+            bindtap="onAddPlaceToDay"
+            data-item="{{item}}"
+          >
+            <image class="picker-place-image" src="{{item.image}}" mode="aspectFill"></image>
+            <view class="picker-place-main">
+              <view class="picker-place-tag">{{item.tag}}</view>
+              <text class="picker-place-name">{{item.name}}</text>
+              <text class="picker-place-meta">{{item.sourceType === 'want' ? '来自想去' : item.sourceType === 'collect' ? '来自收藏' : '已加入来源列表'}}</text>
+            </view>
+            <view class="picker-place-add">
+              <i class="mgc_add_line"></i>
+            </view>
+          </view>
+        </block>
+        <view class="picker-empty" wx:else>
+          <text>还没有可添加的地点</text>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
 </view>
