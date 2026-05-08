@@ -65,6 +65,36 @@
           </view>
 
           <view class="sheet-content">
+            <view class="overview-anchor" id="guide-overview-anchor"></view>
+            <view class="overview-section">
+              <text class="overview-title">概览</text>
+              <view class="overview-list">
+                <view
+                  class="overview-card"
+                  wx:for="{{daySections}}"
+                  wx:key="id"
+                  wx:for-item="day"
+                  wx:for-index="dayIndex"
+                >
+                  <text class="overview-card-day">{{day.title}}</text>
+                  <view
+                    class="overview-place-row"
+                    wx:for="{{day.items}}"
+                    wx:key="id"
+                    wx:for-item="place"
+                    wx:for-index="placeIndex"
+                  >
+                    <view class="overview-place-main">
+                      <text class="overview-place-index">{{placeIndex + 1}}.</text>
+                      <text class="overview-place-name">{{place.name}}</text>
+                    </view>
+                    <view class="overview-place-tag">{{place.tag}}</view>
+                  </view>
+                </view>
+              </view>
+            </view>
+            <view class="day-separator overview-separator"></view>
+
             <view
               class="day-section"
               wx:for="{{daySections}}"
@@ -97,7 +127,7 @@
                     <text class="place-travel">{{place.travelText}}</text>
                   </view>
                   <view class="place-arrow">
-                    <i class="mgc_right_small_fill"></i>
+                    <i class="mgc_right_line"></i>
                   </view>
                 </view>
               </view>
@@ -114,42 +144,31 @@
     </view>
 
     <view class="bottom-bar">
-      <view class="bottom-btn secondary" bindtap="onOpenMapMode">
-        <i class="mgc_world_2_line"></i>
-        <text>地图</text>
+      <view class="bottom-btn secondary" bindtap="onSaveRoute">
+        <i class="mgc_finger_love_line"></i>
+        <text>保存</text>
       </view>
-      <view class="bottom-btn primary" bindtap="onAddToMyRoute">
-        <i class="mgc_copy_2_line"></i>
-        <text>添加到我的路线</text>
+      <view class="bottom-btn primary" bindtap="onViewRoute">
+        <i class="mgc_route_line"></i>
+        <text>查看路线</text>
       </view>
     </view>
   </block>
 
   <block wx:else>
     <view class="map-panel">
-      <view class="map-card">
-        <text class="map-title">{{guide.title}}</text>
-        <view class="map-meta-row">
-          <text class="map-meta">{{summaryText}}</text>
-          <text class="map-city">{{cityText}}</text>
-        </view>
-        <scroll-view class="map-chip-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
-          <view class="map-chip-row">
-            <view class="map-chip {{currentMapDay === -1 ? 'active' : ''}}" bindtap="onSelectMapDay" data-index="-1">全部路线</view>
-            <view
-              wx:for="{{daySections}}"
-              wx:key="id"
-              wx:for-item="day"
-              wx:for-index="dayIndex"
-              class="map-chip {{currentMapDay === dayIndex ? 'active' : ''}}"
-              bindtap="onSelectMapDay"
-              data-index="{{dayIndex}}"
-            >
-              {{day.title}}
-            </view>
-          </view>
-        </scroll-view>
-      </view>
+      <route-map-preview-card
+        place="{{mapPreviewPlace}}"
+        day-tabs="{{daySections}}"
+        current-day="{{currentMapDay}}"
+        current-index="{{mapPreviewIndex}}"
+        total-count="{{mapPreviewPlaces.length}}"
+        disable-prev="{{mapPreviewIndex === 0}}"
+        disable-next="{{mapPreviewIndex === mapPreviewPlaces.length - 1}}"
+        binddaychange="onSelectMapPreviewDay"
+        bindprev="onPreviewPrev"
+        bindnext="onPreviewNext"
+      />
     </view>
   </block>
 </view>

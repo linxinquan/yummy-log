@@ -1,3 +1,6 @@
 {
-  "navigationStyle": "custom"
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "route-map-preview-card": "/components/route-map-preview-card/index"
+  }
 }

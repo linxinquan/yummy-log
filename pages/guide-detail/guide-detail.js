@@ -60,6 +60,40 @@ function buildTabs(dayCount) {
   return tabs
 }
 
+function flattenDaySections(daySections) {
+  const places = []
+  ;(daySections || []).forEach((day, dayIndex) => {
+    ;(day.items || []).forEach((item, itemIndex) => {
+      places.push({
+        ...item,
+        dayIndex,
+        itemIndex
+      })
+    })
+  })
+  return places
+}
+
+function getPreviewIndexByDay(daySections, dayIndex) {
+  if (dayIndex <= 0) return 0
+  let count = 0
+  for (let i = 0; i < dayIndex; i += 1) {
+    count += ((daySections[i] || {}).items || []).length
+  }
+  return count
+}
+
+function getDayIndexByPreview(daySections, previewIndex) {
+  let cursor = 0
+  for (let dayIndex = 0; dayIndex < daySections.length; dayIndex += 1) {
+    const items = (daySections[dayIndex] || {}).items || []
+    const nextCursor = cursor + items.length
+    if (previewIndex < nextCursor) return dayIndex
+    cursor = nextCursor
+  }
+  return Math.max(daySections.length - 1, 0)
+}
+
 function normalizeName(name) {
   return String(name || '')
     .replace(/\s+/g, '')
@@ -314,6 +348,9 @@ Page({
     summaryText: '',
     daySections: [],
     tabs: [],
+    mapPreviewPlaces: [],
+    mapPreviewPlace: null,
+    mapPreviewIndex: 0,
     mapCenter: { lat: 22.5431, lng: 114.0579 },
     mapMarkers: [],
     polyline: [],
@@ -355,7 +392,8 @@ Page({
       summaryText: buildSummaryText(guide, daySections)
     })
 
-    this.updateMapData(daySections, cityInfo, -1)
+    this.updateMapData(daySections, cityInfo, 0)
+    this.refreshMapPreview(daySections, 0)
   },
 
   updateMapData(daySections, cityInfo, mapDayIndex) {
@@ -411,6 +449,22 @@ Page({
     })
   },
 
+  refreshMapPreview(daySections, previewIndex = 0) {
+    const places = flattenDaySections(daySections)
+    const safeIndex = places.length ? Math.max(0, Math.min(previewIndex, places.length - 1)) : 0
+    const currentPlace = places[safeIndex] || null
+    const nextData = {
+      mapPreviewPlaces: places,
+      mapPreviewPlace: currentPlace,
+      mapPreviewIndex: safeIndex,
+      currentMapDay: currentPlace ? currentPlace.dayIndex : 0
+    }
+    if (currentPlace && currentPlace.lat && currentPlace.lng) {
+      nextData.mapCenter = { lat: currentPlace.lat, lng: currentPlace.lng }
+    }
+    this.setData(nextData)
+  },
+
   onBack() {
     wx.navigateBack()
   },
@@ -424,18 +478,20 @@ Page({
     if (mode === this.data.viewMode) return
     this.setData({ viewMode: mode })
     if (mode === 'map') {
-      const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : -1
+      const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : 0
       this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
+      this.refreshMapPreview(this.data.daySections, getPreviewIndexByDay(this.data.daySections, Math.max(mapDayIndex, 0)))
     }
   },
 
   onOpenMapMode() {
     this.setData({ viewMode: 'map' })
-    const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : -1
+    const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : 0
     this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
+    this.refreshMapPreview(this.data.daySections, getPreviewIndexByDay(this.data.daySections, Math.max(mapDayIndex, 0)))
   },
 
-  onAddToMyRoute() {
+  onSaveRoute() {
     const { guide, daySections, summaryText } = this.data
     const { daySummaries, dayDetails } = buildLegacyRouteData(daySections)
     const routeCard = {
@@ -455,13 +511,17 @@ Page({
     const savedRoutes = util.loadData('savedRoutes', [])
     const exists = savedRoutes.find(item => String(item.id) === String(routeCard.id))
     if (exists) {
-      wx.showToast({ title: '已在我的路线中', icon: 'none' })
+      wx.showToast({ title: '已保存过', icon: 'none' })
       return
     }
 
     savedRoutes.push(routeCard)
     wx.setStorageSync('savedRoutes', savedRoutes)
-    wx.showToast({ title: '已添加到我的路线', icon: 'success' })
+    wx.showToast({ title: '已保存到路线', icon: 'success' })
+  },
+
+  onViewRoute() {
+    this.onOpenMapMode()
   },
 
   onSelectMapDay(e) {
@@ -469,14 +529,42 @@ Page({
     this.updateMapData(this.data.daySections, this.data.cityInfo, index)
   },
 
+  onSelectMapPreviewDay(e) {
+    const index = parseInt(
+      (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
+      10
+    )
+    const previewIndex = getPreviewIndexByDay(this.data.daySections, index)
+    this.updateMapData(this.data.daySections, this.data.cityInfo, index)
+    this.refreshMapPreview(this.data.daySections, previewIndex)
+  },
+
   onTabTap(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10)
-    const sheetScrollTarget = index === 0 ? 'guide-scroll-top' : `day-anchor-${index - 1}`
+    const sheetScrollTarget = index === 0 ? 'guide-overview-anchor' : `day-anchor-${index - 1}`
     this.setData({ currentTab: index, sheetScrollTarget })
 
     if (this.data.viewMode === 'map') {
-      this.updateMapData(this.data.daySections, this.data.cityInfo, index - 1)
+      const nextMapDay = Math.max(index - 1, 0)
+      this.updateMapData(this.data.daySections, this.data.cityInfo, nextMapDay)
+      this.refreshMapPreview(this.data.daySections, getPreviewIndexByDay(this.data.daySections, nextMapDay))
     }
+  },
+
+  onPreviewPrev() {
+    if (this.data.mapPreviewIndex <= 0) return
+    const nextIndex = this.data.mapPreviewIndex - 1
+    const nextDayIndex = getDayIndexByPreview(this.data.daySections, nextIndex)
+    this.updateMapData(this.data.daySections, this.data.cityInfo, nextDayIndex)
+    this.refreshMapPreview(this.data.daySections, nextIndex)
+  },
+
+  onPreviewNext() {
+    if (this.data.mapPreviewIndex >= this.data.mapPreviewPlaces.length - 1) return
+    const nextIndex = this.data.mapPreviewIndex + 1
+    const nextDayIndex = getDayIndexByPreview(this.data.daySections, nextIndex)
+    this.updateMapData(this.data.daySections, this.data.cityInfo, nextDayIndex)
+    this.refreshMapPreview(this.data.daySections, nextIndex)
   },
 
   onShareAppMessage() {

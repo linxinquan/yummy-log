@@ -1,0 +1,45 @@
+<view class="map-card route-map-preview-card" wx:if="{{place}}">
+  <view class="nav-card-header">
+    <view>
+      <text class="nav-card-sub">{{currentIndex + 1}} / {{totalCount}}</text>
+    </view>
+    <text class="nav-card-remain">剩余 {{totalCount - currentIndex - 1}} 站</text>
+  </view>
+
+  <scroll-view class="tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}" wx:if="{{dayTabs.length > 0}}">
+    <view class="tab-row">
+      <view
+        wx:for="{{dayTabs}}"
+        wx:key="id"
+        wx:for-item="day"
+        wx:for-index="dayIndex"
+        class="tab-item {{currentDay === dayIndex ? 'active' : ''}}"
+        bindtap="onDayTap"
+        data-index="{{dayIndex}}"
+      >
+        {{day.title || day.label}}
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="nav-destination">
+    <view class="nav-cover-wrap">
+      <view class="nav-cover-shadow"></view>
+      <image class="nav-cover" src="{{place.image || place.coverImage}}" mode="aspectFill"></image>
+    </view>
+    <view class="nav-destination-main">
+      <view class="nav-tag">{{place.tag || place.tagText}}</view>
+      <text class="nav-destination-name">{{place.name}}</text>
+      <text class="nav-destination-meta">{{place.travelText}}</text>
+    </view>
+  </view>
+
+  <view class="nav-btns-row">
+    <view class="nav-btn secondary {{disablePrev ? 'disabled' : ''}}" bindtap="onPrevTap">
+      <text>上一个</text>
+    </view>
+    <view class="nav-btn primary {{disableNext ? 'disabled' : ''}}" bindtap="onNextTap">
+      <text>下一个</text>
+    </view>
+  </view>
+</view>

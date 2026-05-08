@@ -3,6 +3,103 @@ const app = getApp()
 const shopData = require('../../utils/shopData')
 const util = require('../../utils/util')
 
+const MODE_CONFIG = {
+  walk: { label: '步行', speed: 12, icon: 'mgc_walk_line' },
+  transit: { label: '地铁', speed: 5, icon: 'mgc_train_2_line' },
+  ride: { label: '骑行', speed: 4, icon: 'mgc_riding_line' },
+  bus: { label: '公交', speed: 6, icon: 'mgc_bus_line' },
+  drive: { label: '驾车', speed: 3, icon: 'mgc_car_3_line' }
+}
+
+const DEFAULT_COVERS = [
+  '/images/covers/01.jpeg',
+  '/images/covers/02.jpeg',
+  '/images/covers/03.jpeg',
+  '/images/covers/04.jpeg',
+  '/images/covers/05.jpeg',
+  '/images/covers/06.jpeg',
+  '/images/covers/07.jpeg',
+  '/images/covers/08.jpeg',
+  '/images/covers/09.jpeg',
+  '/images/covers/10.jpeg',
+  '/images/covers/11.jpeg',
+  '/images/covers/12.jpeg'
+]
+
+const CITY_PRESETS = [
+  { match: /西安|长安/, name: '西安市', lat: 34.3416, lng: 108.9398 },
+  { match: /广州/, name: '广州市', lat: 23.1291, lng: 113.2644 },
+  { match: /汕头/, name: '汕头市', lat: 23.3541, lng: 116.6819 },
+  { match: /湛江/, name: '湛江市', lat: 21.2707, lng: 110.3594 },
+  { match: /佛山/, name: '佛山市', lat: 23.0218, lng: 113.1219 },
+  { match: /珠海/, name: '珠海市', lat: 22.2707, lng: 113.5767 },
+  { match: /深圳|南山|福田|罗湖|宝安|龙岗|盐田|龙华|光明|坪山|大鹏/, name: '深圳市', lat: 22.5431, lng: 114.0579 }
+]
+
+function isSpotItem(item) {
+  return item.type === 'spot' || item.category === '景点' || item.category === '公园' || !item.price
+}
+
+function getCoverImage(item) {
+  return item.logo || item.image || item.thumb || '/images/covers/01.jpeg'
+}
+
+function getModeLabel(mode) {
+  return (MODE_CONFIG[mode] || MODE_CONFIG.drive).label
+}
+
+function formatDurationShort(minutes) {
+  const safeMinutes = Math.max(1, Math.round(minutes || 0))
+  if (safeMinutes < 60) return `${safeMinutes}min`
+  const hours = Math.floor(safeMinutes / 60)
+  const mins = safeMinutes % 60
+  return mins ? `${hours}h${mins}min` : `${hours}h`
+}
+
+function estimateRouteDuration(meters, mode = 'drive') {
+  const config = MODE_CONFIG[mode] || MODE_CONFIG.drive
+  return formatDurationShort((Math.max(0, meters || 0) / 1000) * config.speed)
+}
+
+function getItemTagText(item) {
+  if (isSpotItem(item)) {
+    if ((item.category || '').includes('展馆') || (item.name || '').includes('博物馆')) {
+      return '文化展馆'
+    }
+    return '景点'
+  }
+  return '美食'
+}
+
+function getItemMetaText(item) {
+  const parts = []
+  if (item.category) parts.push(item.category)
+  if (item.price) parts.push(`¥${item.price}/人`)
+  if (item.rating || item.score) parts.push(`★${item.rating || item.score}`)
+  return parts.join(' · ')
+}
+
+function decorateSelectableItems(items) {
+  return (items || []).map(item => ({
+    ...item,
+    coverImage: getCoverImage(item),
+    tagText: getItemTagText(item),
+    metaText: getItemMetaText(item)
+  }))
+}
+
+function decorateRouteItems(items, mode) {
+  return decorateSelectableItems(items).map(item => {
+    const distance = item.distanceFromPrev || 0
+    return {
+      ...item,
+      distanceStr: util.formatDistance(distance),
+      timeStr: estimateRouteDuration(distance, mode),
+      travelText: `${getModeLabel(mode)} | ${util.formatDistance(distance)} · ${estimateRouteDuration(distance, mode)}`
+    }
+  })
+}
+
 function buildFoodItems() {
   const userShops = util.loadData('userAddedShops', [])
   return [...(shopData.shops || []), ...(shopData.foods || []), ...userShops]
@@ -11,6 +108,104 @@ function buildFoodItems() {
 
 function buildSpotItems() {
   return util.getSpotData().map(item => ({ ...item, type: 'spot' }))
+}
+
+function buildDayLabel(dayNumber) {
+  const labels = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
+  if (dayNumber <= 10) return `第${labels[dayNumber - 1]}天`
+  return `第${dayNumber}天`
+}
+
+function buildTabs(dayCount) {
+  const tabs = [{ key: 'overview', label: '行程总览' }]
+  for (let i = 0; i < dayCount; i += 1) {
+    tabs.push({ key: `day-${i}`, label: buildDayLabel(i + 1) })
+  }
+  return tabs
+}
+
+function buildSummaryText(daySections) {
+  const dayCount = daySections.length
+  const nightCount = Math.max(dayCount - 1, 0)
+  const placeCount = daySections.reduce((sum, day) => sum + (day.items || []).length, 0)
+  return `${dayCount} 天 ${nightCount} 晚 · ${placeCount} 个地点`
+}
+
+function getCityInfo(text) {
+  const source = String(text || '')
+  for (let i = 0; i < CITY_PRESETS.length; i += 1) {
+    if (CITY_PRESETS[i].match.test(source)) {
+      return CITY_PRESETS[i]
+    }
+  }
+  return { name: '深圳市', lat: 22.5431, lng: 114.0579 }
+}
+
+function buildPreviewDaySections(routeShops) {
+  const items = (routeShops || []).map((item, index) => ({
+    ...item,
+    id: item.id || `preview-place-${index}`,
+    coverImage: item.coverImage || getCoverImage(item),
+    tagText: item.tagText || getItemTagText(item)
+  }))
+
+  return [{
+    id: 'preview-day-0',
+    title: buildDayLabel(1),
+    countText: `${items.length} 个地点`,
+    items
+  }]
+}
+
+function buildPreviewTitle(cityText, routeType) {
+  const cityName = String(cityText || '').replace(/市$/, '')
+  if (cityName) {
+    if (routeType === 'spot') return `${cityName}景点路线`
+    if (routeType === 'food') return `${cityName}美食路线`
+    return `${cityName}智能路线`
+  }
+  return '智能生成路线'
+}
+
+function buildLegacyRouteData(daySections) {
+  const daySummaries = (daySections || []).map((day, index) => ({
+    location: '',
+    route: (day.items || []).map(item => item.name).join(' --- '),
+    image: (day.items && day.items[0] && (day.items[0].coverImage || day.items[0].image)) || DEFAULT_COVERS[index % DEFAULT_COVERS.length]
+  }))
+
+  const dayDetails = (daySections || []).map(day => (day.items || []).map(item => ({
+    name: item.name,
+    desc: item.travelText,
+    travelText: item.travelText,
+    tag: item.tagText || item.tag,
+    image: item.coverImage || item.image || getCoverImage(item),
+    type: item.type || (isSpotItem(item) ? 'spot' : 'food'),
+    lat: item.lat || item.latitude,
+    lng: item.lng || item.longitude
+  })))
+
+  return { daySummaries, dayDetails }
+}
+
+function getPreviewIndexByDay(routeDaySections, dayIndex) {
+  if (!routeDaySections || dayIndex < 0 || dayIndex >= routeDaySections.length) return 0
+  let offset = 0
+  for (let i = 0; i < dayIndex; i += 1) {
+    offset += (routeDaySections[i].items || []).length
+  }
+  return offset
+}
+
+function getDayIndexByPreview(routeDaySections, previewIndex) {
+  if (!routeDaySections || !routeDaySections.length) return -1
+  let offset = 0
+  for (let i = 0; i < routeDaySections.length; i += 1) {
+    const count = (routeDaySections[i].items || []).length
+    if (previewIndex < offset + count) return i
+    offset += count
+  }
+  return routeDaySections.length - 1
 }
 
 function getLikeType(item, routeType) {
@@ -27,14 +222,8 @@ Page({
     markers: [],
     polyline: [],
 
-    // 起点
-    startPoints: shopData.startPoints,
-    currentStart: { name: '海上世界', lat: 22.4798, lng: 113.9125 },
-    startExpanded: false,
-
-    // 终点（默认返回起点）
-    currentEnd: { name: '返回海上世界', lat: 22.4798, lng: 113.9125 },
-    endExpanded: false,
+    // 起点默认使用当前位置
+    currentStart: { name: '当前位置', lat: 22.5431, lng: 114.0579, type: 'current' },
 
     // 出行方式
     travelMode: 'drive',
@@ -44,6 +233,21 @@ Page({
 
     // 编辑模式
     isEditing: false,
+    viewMode: 'list',
+    modeSwitchTop: 44,
+    routeDaySections: [],
+    tabs: [],
+    currentTab: 0,
+    currentMapDay: -1,
+    sheetScrollTarget: '',
+    routeTitle: '智能生成路线',
+    summaryText: '',
+    cityText: '深圳市',
+    previewRouteId: '',
+    reorderSheetVisible: false,
+    routeShopsBackup: [],
+    mapPreviewShop: null,
+    mapPreviewIndex: 0,
 
     // ★ 所有想去店铺候选池
     allLikedShops: [],
@@ -66,17 +270,33 @@ Page({
     isNavComplete: false,
     currentNavIndex: 0,
     currentNavShop: null,
-    visitedCount: 0
+    visitedCount: 0,
+    menuTop: 44,
+    menuHeight: 32,
+    routeModes: ['walk', 'transit', 'ride', 'bus', 'drive'].map(key => ({
+      key,
+      label: MODE_CONFIG[key].label,
+      icon: MODE_CONFIG[key].icon
+    }))
   },
 
   onLoad(options) {
     // 接收 type=food/spot 和 ids=1,2,3 参数
     const { type, ids } = options
     const routeType = type === 'spot' ? 'spot' : type === 'plan' ? 'mixed' : 'food'
+    const sysInfo = wx.getSystemInfoSync()
+    const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
+    const modeSwitchTop = menuTop
+
     this.setData({
       routeType,
       isMixedRoute: routeType === 'mixed',
-      presetIds: ids ? ids.split(',') : null
+      presetIds: ids ? ids.split(',') : null,
+      menuTop,
+      menuHeight,
+      modeSwitchTop
     })
     this.getCurrentLocation()
     this.loadRoute()
@@ -146,13 +366,14 @@ Page({
       .filter(Boolean)
 
     if (rawItems.length === 0) {
-      this.setData({ allLikedShops: [], routeShops: [], selectedCount: 0 })
+      this.setData({ allLikedShops: [], routeShops: [], selectedCount: 0, isAllSelected: false })
+      this.refreshPreviewRoute([])
       return
     }
 
     // 支持景点(lat/lng)和美食(latitude/longitude)两种格式
     if (selectMode === 'all') {
-      const allLikedShops = rawItems.map(s => ({ ...s, selected: true, orderNum: '' }))
+      const allLikedShops = decorateSelectableItems(rawItems.map(s => ({ ...s, selected: true, orderNum: '' })))
       const routeShops = this._planAndAnnotate(rawItems, presetIds ? true : false)
       routeShops.forEach((s, i) => {
         const hit = allLikedShops.find(a => a.id === s.id)
@@ -164,15 +385,16 @@ Page({
         selectedCount: rawItems.length,
         isAllSelected: true
       })
+      this.refreshPreviewRoute(routeShops)
     } else {
       const prev = this.data.allLikedShops
       const prevMap = {}
       prev.forEach(s => prevMap[s.id] = s)
 
-      const allLikedShops = rawItems.map(s => {
+      const allLikedShops = decorateSelectableItems(rawItems.map(s => {
         const old = prevMap[s.id]
         return { ...s, selected: old ? old.selected : true, orderNum: old ? old.orderNum : '' }
-      })
+      }))
 
       const selectedShops = allLikedShops.filter(s => s.selected)
       const routeShops = this._planAndAnnotate(selectedShops)
@@ -188,9 +410,32 @@ Page({
         selectedCount: selectedShops.length,
         isAllSelected: selectedShops.length === allLikedShops.length
       })
+      this.refreshPreviewRoute(routeShops)
     }
 
     this.updateMap()
+  },
+
+  refreshPreviewRoute(routeShops) {
+    const citySource = [
+      this.data.currentStart && this.data.currentStart.name,
+      ...(routeShops || []).map(item => item.city || item.address || item.name)
+    ].filter(Boolean).join(' ')
+    const cityInfo = getCityInfo(citySource)
+    const routeDaySections = routeShops.length ? buildPreviewDaySections(routeShops) : []
+    const tabs = routeDaySections.length ? buildTabs(routeDaySections.length) : []
+    this.setData({
+      routeDaySections,
+      tabs,
+      currentTab: 0,
+      currentMapDay: routeDaySections.length ? 0 : -1,
+      sheetScrollTarget: '',
+      summaryText: routeDaySections.length ? buildSummaryText(routeDaySections) : '',
+      cityText: cityInfo.name,
+      routeTitle: buildPreviewTitle(cityInfo.name, this.data.routeType),
+      mapPreviewShop: routeShops && routeShops.length ? routeShops[0] : null,
+      mapPreviewIndex: 0
+    })
   },
 
   // ─── 贪心排序并注入距离 ───────────────────────
@@ -210,23 +455,18 @@ Page({
 
     this.setData({
       totalDistance: util.formatDistance(totalDist),
-      totalTime: util.estimateTime(totalDist, this.data.travelMode)
+      totalTime: estimateRouteDuration(totalDist, this.data.travelMode)
     })
 
-    return routeShops
+    return decorateRouteItems(routeShops, this.data.travelMode)
   },
 
   // ─── 更新地图 markers + polyline ─────────────
   updateMap() {
-    const { routeShops, currentStart, currentEnd } = this.data
+    const { routeShops, currentStart } = this.data
     let startPoint = currentStart
     if (currentStart.type === 'current') {
       startPoint = app.globalData.location || { lat: 22.4846, lng: 113.9046 }
-    }
-    // 终点：如果 type === 'return' 则终点 = 起点
-    let endPoint = currentEnd
-    if (currentEnd.type === 'return') {
-      endPoint = { ...startPoint, name: '返回' + startPoint.name }
     }
 
     const markers = routeShops.map((shop, index) => ({
@@ -275,32 +515,10 @@ Page({
       }
     })
 
-    // 终点加红色标记（仅当终点与起点不同）
-    if (Math.abs(endPoint.lat - startPoint.lat) > 0.00001 || Math.abs(endPoint.lng - startPoint.lng) > 0.00001) {
-      markers.push({
-        id: 8888,
-        latitude: endPoint.lat,
-        longitude: endPoint.lng,
-        width: 28,
-        height: 28,
-        label: {
-          content: '终',
-          color: '#ffffff',
-          fontSize: 12,
-          borderRadius: 10,
-          bgColor: '#FF5722',
-          padding: 4,
-          anchorX: 0,
-          anchorY: -32
-        }
-      })
-    }
-
-    // 路线折线：起点 → 各店铺 → 终点
+    // 路线折线：当前位置/起点 → 各地点
     const points = [
       { latitude: startPoint.lat, longitude: startPoint.lng },
-      ...routeShops.map(shop => ({ latitude: shop.lat || shop.latitude, longitude: shop.lng || shop.longitude })),
-      { latitude: endPoint.lat, longitude: endPoint.lng }
+      ...routeShops.map(shop => ({ latitude: shop.lat || shop.latitude, longitude: shop.lng || shop.longitude }))
     ]
 
     const polyline = [{
@@ -329,20 +547,16 @@ Page({
 
   // ─── 地图适配所有标记 ─────────────────────────
   onFitRoute() {
-    const { routeShops, currentStart, currentEnd } = this.data
+    const { routeShops, currentStart } = this.data
     if (routeShops.length === 0) return
 
     let startPoint = currentStart
     if (currentStart.type === 'current') {
       startPoint = app.globalData.location || { lat: 22.4846, lng: 113.9046 }
     }
-    let endPoint = currentEnd
-    if (currentEnd.type === 'return') {
-      endPoint = startPoint
-    }
 
-    const lats = [startPoint.lat, endPoint.lat, ...routeShops.map(s => s.lat || s.latitude)]
-    const lngs = [startPoint.lng, endPoint.lng, ...routeShops.map(s => s.lng || s.longitude)]
+    const lats = [startPoint.lat, ...routeShops.map(s => s.lat || s.latitude)]
+    const lngs = [startPoint.lng, ...routeShops.map(s => s.lng || s.longitude)]
     const minLat = Math.min(...lats), maxLat = Math.max(...lats)
     const minLng = Math.min(...lngs), maxLng = Math.max(...lngs)
     const centerLat = (minLat + maxLat) / 2
@@ -395,6 +609,7 @@ Page({
     })
 
     this.setData({ allLikedShops: updated, routeShops })
+    this.refreshPreviewRoute(routeShops)
     this.updateMap()
   },
 
@@ -415,164 +630,24 @@ Page({
         if (hit) hit.orderNum = i + 1
       })
       this.setData({ allLikedShops: withOrder, routeShops })
+      this.refreshPreviewRoute(routeShops)
     } else {
       this.setData({ routeShops: [], totalDistance: '0m', totalTime: '0分钟' })
+      this.refreshPreviewRoute([])
     }
 
     this.updateMap()
   },
 
-  // ─── 起点选择 ─────────────────────────────────
-  onToggleStart() {
-    this.setData({ startExpanded: !this.data.startExpanded })
-  },
-
-  onSelectStart(e) {
-    const start = e.currentTarget.dataset.start
-    if (start.type === 'current') {
-      wx.showLoading({ title: '定位中...' })
-      wx.getLocation({
-        type: 'gcj02',
-        isHighAccuracy: true,
-        success: (res) => {
-          wx.hideLoading()
-          const loc = { lat: res.latitude, lng: res.longitude }
-          app.globalData.location = loc
-          this.setData({
-            currentStart: { ...start, lat: loc.lat, lng: loc.lng },
-            startExpanded: false
-          })
-          this.loadRoute()
-        },
-        fail: () => {
-          wx.hideLoading()
-          const fallback = app.globalData.location || app.globalData.centerLocation
-          this.setData({
-            currentStart: { ...start, lat: fallback.lat, lng: fallback.lng },
-            startExpanded: false
-          })
-          this.loadRoute()
-          wx.showToast({ title: '使用上次位置', icon: 'none' })
-        }
-      })
-      } else {
-      this.setData({ currentStart: start, startExpanded: false })
-      // 如果终点是"返回起点"，同步更新
-      if (this.data.currentEnd.type === 'return') {
-        const newEnd = { ...start, name: '返回' + start.name, type: 'return' }
-        this.setData({ currentEnd: newEnd })
-      }
-      this.loadRoute()
-    }
-  },
-
-  onChooseStartOnMap() {
-    wx.chooseLocation({
-      success: (res) => {
-        if (res.name || res.address) {
-          const customStart = {
-            name: res.name || '自定义位置',
-            lat: res.latitude,
-            lng: res.longitude,
-            type: 'custom'
-          }
-          this.setData({ currentStart: customStart, startExpanded: false })
-          this.loadRoute()
-          wx.showToast({ title: '起点已设置', icon: 'success' })
-        }
-      },
-      fail: () => {
-        wx.showToast({ title: '请选择有效位置', icon: 'none' })
-      }
-    })
-  },
-
-  // ─── 终点选择 ─────────────────────────────────
-  onToggleEnd() {
-    this.setData({ endExpanded: !this.data.endExpanded })
-  },
-
-  onSelectEnd(e) {
-    const endtype = e.currentTarget.dataset.endtype
-    const end = e.currentTarget.dataset.end
-
-    // 返回起点
-    if (endtype === 'return') {
-      const { currentStart } = this.data
-      this.setData({
-        currentEnd: { name: '返回' + currentStart.name, lat: currentStart.lat, lng: currentStart.lng, type: 'return' },
-        endExpanded: false
-      })
-      this.updateMap()
-      wx.showToast({ title: '终点已设置为起点', icon: 'success' })
-      return
-    }
-
-    if (!end) return
-
-    if (end.type === 'current') {
-      // 获取当前位置作为终点
-      wx.showLoading({ title: '定位中...' })
-      wx.getLocation({
-        type: 'gcj02',
-        isHighAccuracy: true,
-        success: (res) => {
-          wx.hideLoading()
-          const loc = { lat: res.latitude, lng: res.longitude }
-          app.globalData.location = loc
-          this.setData({
-            currentEnd: { ...end, lat: loc.lat, lng: loc.lng },
-            endExpanded: false
-          })
-          this.updateMap()
-          wx.showToast({ title: '终点已设置', icon: 'success' })
-        },
-        fail: () => {
-          wx.hideLoading()
-          const fallback = app.globalData.location || app.globalData.centerLocation
-          this.setData({
-            currentEnd: { ...end, lat: fallback.lat, lng: fallback.lng },
-            endExpanded: false
-          })
-          this.updateMap()
-          wx.showToast({ title: '使用上次位置', icon: 'none' })
-        }
-      })
-    } else {
-      this.setData({ currentEnd: end, endExpanded: false })
-      this.updateMap()
-      wx.showToast({ title: '终点已设置', icon: 'success' })
-    }
-  },
-
-  onChooseEndOnMap() {
-    wx.chooseLocation({
-      success: (res) => {
-        if (res.name || res.address) {
-          const customEnd = {
-            name: res.name || '自定义位置',
-            lat: res.latitude,
-            lng: res.longitude,
-            type: 'custom'
-          }
-          this.setData({ currentEnd: customEnd, endExpanded: false })
-          this.updateMap()
-          wx.showToast({ title: '终点已设置', icon: 'success' })
-        }
-      },
-      fail: () => {
-        wx.showToast({ title: '请选择有效位置', icon: 'none' })
-      }
-    })
-  },
-
   // ─── 出行方式 ─────────────────────────────────
   onSelectMode(e) {
     const mode = e.currentTarget.dataset.mode
-    this.setData({ travelMode: mode })
+    const routeShops = decorateRouteItems(this.data.routeShops, mode)
+    this.setData({ travelMode: mode, routeShops })
+    this.refreshPreviewRoute(routeShops)
     let totalDist = 0
-    this.data.routeShops.forEach(s => { totalDist += s.distanceFromPrev || 0 })
-    this.setData({ totalTime: util.estimateTime(totalDist, mode) })
+    routeShops.forEach(s => { totalDist += s.distanceFromPrev || 0 })
+    this.setData({ totalTime: estimateRouteDuration(totalDist, mode) })
   },
 
   // ─── ⚡ 重新贪心优化 ─────────────────────────
@@ -583,7 +658,8 @@ Page({
         ? this.data.allLikedShops
         : this.data.allLikedShops.filter(s => s.selected)
       const routeShops = this._planAndAnnotate(shops)
-      this.setData({ routeShops, isEditing: false })
+      this.setData({ routeShops, isEditing: false, reorderSheetVisible: false })
+      this.refreshPreviewRoute(routeShops)
       this.updateMap()
       wx.hideLoading()
       wx.showToast({ title: '路线已优化', icon: 'success' })
@@ -599,12 +675,61 @@ Page({
     }
   },
 
+  onOpenReorderSheet() {
+    this.setData({ reorderSheetVisible: true })
+  },
+
+  onCloseReorderSheet() {
+    this.setData({ reorderSheetVisible: false })
+  },
+
+  onChooseSmartReorder() {
+    this.onOptimizeRoute()
+  },
+
+  onChooseManualReorder() {
+    this.setData({
+      reorderSheetVisible: false,
+      isEditing: true,
+      viewMode: 'list',
+      currentTab: this.data.routeDaySections.length ? 1 : 0,
+      sheetScrollTarget: this.data.routeDaySections.length ? 'route-day-anchor-0' : '',
+      routeShopsBackup: JSON.parse(JSON.stringify(this.data.routeShops))
+    })
+  },
+
+  onCancelEdit() {
+    const routeShops = JSON.parse(JSON.stringify(this.data.routeShopsBackup || []))
+    this.setData({
+      isEditing: false,
+      routeShops,
+      routeShopsBackup: [],
+      currentTab: 0,
+      sheetScrollTarget: ''
+    })
+    this.refreshPreviewRoute(routeShops)
+    this.updateMap()
+  },
+
+  onConfirmEdit() {
+    this.setData({
+      isEditing: false,
+      routeShopsBackup: [],
+      currentTab: 0,
+      sheetScrollTarget: ''
+    })
+    this.refreshPreviewRoute(this.data.routeShops)
+    this.updateMap()
+    wx.showToast({ title: '顺序已保存', icon: 'success' })
+  },
+
   onMoveUp(e) {
     const index = e.currentTarget.dataset.index
     if (index <= 0) return
     const shops = [...this.data.routeShops]
     ;[shops[index], shops[index - 1]] = [shops[index - 1], shops[index]]
     this.setData({ routeShops: shops })
+    this.refreshPreviewRoute(shops)
     this.updateMap()
   },
 
@@ -614,6 +739,7 @@ Page({
     const shops = [...this.data.routeShops]
     ;[shops[index], shops[index + 1]] = [shops[index + 1], shops[index]]
     this.setData({ routeShops: shops })
+    this.refreshPreviewRoute(shops)
     this.updateMap()
   },
 
@@ -711,21 +837,13 @@ Page({
   },
 
   onExitNav() {
-    wx.showModal({
-      title: '退出导览',
-      content: '确定退出导览模式吗？',
-      success: (res) => {
-        if (res.confirm) {
-          this.setData({
-            isNavigating: false,
-            isNavComplete: false,
-            currentNavIndex: 0,
-            currentNavShop: null
-          })
-          this.updateMap()
-        }
-      }
+    this.setData({
+      isNavigating: false,
+      isNavComplete: false,
+      currentNavIndex: 0,
+      currentNavShop: null
     })
+    this.updateMap()
   },
 
   onNavigateToShop(e) {
@@ -776,6 +894,109 @@ Page({
 
   onBackToHome() {
     wx.switchTab({ url: '/pages/index/index' })
+  },
+
+  onSwitchMode(e) {
+    const mode = e.currentTarget.dataset.mode
+    if (mode === this.data.viewMode) return
+    this.setData({ viewMode: mode })
+    if (mode === 'map') {
+      this.updateMap()
+    }
+  },
+
+  onTabTap(e) {
+    const index = parseInt(e.currentTarget.dataset.index, 10)
+    const sheetScrollTarget = index === 0 ? 'route-overview-anchor' : `route-day-anchor-${index - 1}`
+    this.setData({ currentTab: index, sheetScrollTarget })
+  },
+
+  onOpenPlaceDetail(e) {
+    if (this.data.isEditing) return
+    const item = e.currentTarget.dataset.item
+    if (!item) return
+    const isSpot = item.type === 'spot' || isSpotItem(item)
+    if (isSpot) {
+      wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${item.id}` })
+      return
+    }
+    const shopStr = encodeURIComponent(JSON.stringify(item))
+    wx.navigateTo({ url: `/pages/shop-detail/shop-detail?shopData=${shopStr}&id=${item.id}` })
+  },
+
+  onSaveToMyRoute() {
+    const { routeDaySections, summaryText, cityText, routeType, previewRouteId } = this.data
+    if (!routeDaySections.length) return
+
+    const routeId = previewRouteId || `ai-${Date.now()}`
+    const { daySummaries, dayDetails } = buildLegacyRouteData(routeDaySections)
+    const savedRoute = {
+      id: routeId,
+      title: buildPreviewTitle(cityText, routeType),
+      subtitle: summaryText,
+      image: daySummaries[0]?.image || DEFAULT_COVERS[0],
+      author: 'AI规划',
+      city: cityText,
+      sourceType: 'ai',
+      daySections: routeDaySections,
+      daySummaries,
+      dayDetails,
+      createdAt: Date.now()
+    }
+
+    const savedRoutes = util.loadData('savedRoutes', [])
+    const index = savedRoutes.findIndex(item => String(item.id) === String(routeId))
+    if (index >= 0) {
+      savedRoutes[index] = savedRoute
+    } else {
+      savedRoutes.push(savedRoute)
+    }
+    wx.setStorageSync('savedRoutes', savedRoutes)
+    this.setData({ previewRouteId: routeId })
+    wx.showToast({ title: '已保存到路线', icon: 'success' })
+    const routeStr = encodeURIComponent(JSON.stringify(savedRoute))
+    setTimeout(() => {
+      wx.navigateTo({ url: `/pages/my-route/my-route?route=${routeStr}` })
+    }, 280)
+  },
+
+  onViewRoute() {
+    this.setData({ viewMode: 'map' })
+    this.updateMap()
+  },
+
+  focusPreviewByIndex(index) {
+    const { routeShops, routeDaySections } = this.data
+    if (!routeShops.length) return
+    const safeIndex = Math.max(0, Math.min(index, routeShops.length - 1))
+    const target = routeShops[safeIndex]
+    this.setData({
+      mapPreviewIndex: safeIndex,
+      mapPreviewShop: target,
+      currentMapDay: getDayIndexByPreview(routeDaySections, safeIndex),
+      mapCenter: {
+        lat: target.lat || target.latitude,
+        lng: target.lng || target.longitude
+      }
+    })
+  },
+
+  onSelectMapPreviewDay(e) {
+    const dayIndex = parseInt(
+      (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
+      10
+    )
+    this.focusPreviewByIndex(getPreviewIndexByDay(this.data.routeDaySections, dayIndex))
+  },
+
+  onPreviewPrev() {
+    if (this.data.mapPreviewIndex <= 0) return
+    this.focusPreviewByIndex(this.data.mapPreviewIndex - 1)
+  },
+
+  onPreviewNext() {
+    if (this.data.mapPreviewIndex >= this.data.routeShops.length - 1) return
+    this.focusPreviewByIndex(this.data.mapPreviewIndex + 1)
   },
 
   onBack() {

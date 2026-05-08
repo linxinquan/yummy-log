@@ -238,6 +238,36 @@ function buildLegacyRouteData(daySections) {
   return { daySummaries, dayDetails }
 }
 
+function flattenDaySections(daySections) {
+  const flattened = []
+  ;(daySections || []).forEach((day, dayIndex) => {
+    ;(day.items || []).forEach((item, itemIndex) => {
+      flattened.push({ ...item, dayIndex, itemIndex })
+    })
+  })
+  return flattened
+}
+
+function getPreviewIndexByDay(daySections, dayIndex) {
+  if (!daySections || dayIndex < 0 || dayIndex >= daySections.length) return 0
+  let offset = 0
+  for (let i = 0; i < dayIndex; i += 1) {
+    offset += (daySections[i].items || []).length
+  }
+  return offset
+}
+
+function getDayIndexByPreview(daySections, previewIndex) {
+  if (!daySections || !daySections.length) return -1
+  let offset = 0
+  for (let i = 0; i < daySections.length; i += 1) {
+    const count = (daySections[i].items || []).length
+    if (previewIndex < offset + count) return i
+    offset += count
+  }
+  return daySections.length - 1
+}
+
 function buildSummaryText(daySections) {
   const dayCount = daySections.length
   const nightCount = Math.max(dayCount - 1, 0)
@@ -383,6 +413,9 @@ Page({
     mapCenter: { lat: 22.5431, lng: 114.0579 },
     mapMarkers: [],
     polyline: [],
+    mapPreviewPlaces: [],
+    mapPreviewPlace: null,
+    mapPreviewIndex: 0,
     isEditing: false,
     dragging: false,
     dragDay: -1,
@@ -465,7 +498,10 @@ Page({
       dragOffsetY: 0,
       swipeDay: -1,
       swipeIndex: -1,
-      swipeStartOffset: 0
+      swipeStartOffset: 0,
+      mapPreviewPlaces: flattenDaySections(daySections),
+      mapPreviewPlace: flattenDaySections(daySections)[0] || null,
+      mapPreviewIndex: 0
     })
 
     this.updateMapData(daySections, cityInfo, -1)
@@ -513,16 +549,7 @@ Page({
   },
 
   updateMapData(daySections, cityInfo, mapDayIndex) {
-    const sections = typeof mapDayIndex === 'number' && mapDayIndex >= 0
-      ? [daySections[mapDayIndex]].filter(Boolean)
-      : daySections
-
-    const flattened = []
-    sections.forEach((day, dayIndex) => {
-      ;(day.items || []).forEach((item, itemIndex) => {
-        flattened.push({ ...item, dayIndex, itemIndex })
-      })
-    })
+    const flattened = flattenDaySections(daySections)
 
     const markers = flattened.map((item, index) => ({
       id: index,
@@ -561,6 +588,22 @@ Page({
     })
   },
 
+  refreshMapPreview(daySections, previewIndex = 0) {
+    const places = flattenDaySections(daySections)
+    const safeIndex = places.length ? Math.max(0, Math.min(previewIndex, places.length - 1)) : 0
+    const currentPlace = places[safeIndex] || null
+    const nextData = {
+      mapPreviewPlaces: places,
+      mapPreviewPlace: currentPlace,
+      mapPreviewIndex: safeIndex,
+      currentMapDay: currentPlace ? currentPlace.dayIndex : -1
+    }
+    if (currentPlace && currentPlace.lat && currentPlace.lng) {
+      nextData.mapCenter = { lat: currentPlace.lat, lng: currentPlace.lng }
+    }
+    this.setData(nextData)
+  },
+
   onBack() {
     wx.navigateBack()
   },
@@ -575,16 +618,18 @@ Page({
     if (mode === this.data.viewMode) return
     this.setData({ viewMode: mode })
     if (mode === 'map') {
-      const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : -1
+      const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : 0
       this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
+      this.refreshMapPreview(this.data.daySections, getPreviewIndexByDay(this.data.daySections, Math.max(mapDayIndex, 0)))
     }
   },
 
   onOpenMapMode() {
     if (this.data.isEditing) return
     this.setData({ viewMode: 'map' })
-    const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : -1
+    const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : 0
     this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
+    this.refreshMapPreview(this.data.daySections, getPreviewIndexByDay(this.data.daySections, Math.max(mapDayIndex, 0)))
   },
 
   onSelectMapDay(e) {
@@ -592,9 +637,19 @@ Page({
     this.updateMapData(this.data.daySections, this.data.cityInfo, index)
   },
 
+  onSelectMapPreviewDay(e) {
+    const index = parseInt(
+      (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
+      10
+    )
+    const previewIndex = getPreviewIndexByDay(this.data.daySections, index)
+    this.updateMapData(this.data.daySections, this.data.cityInfo, index)
+    this.refreshMapPreview(this.data.daySections, previewIndex)
+  },
+
   onTabTap(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10)
-    const sheetScrollTarget = index === 0 ? 'route-scroll-top' : `route-day-anchor-${index - 1}`
+    const sheetScrollTarget = index === 0 ? 'route-overview-anchor' : `route-day-anchor-${index - 1}`
     this.setData({ currentTab: index, sheetScrollTarget })
 
     if (this.data.viewMode === 'map') {
@@ -602,10 +657,46 @@ Page({
     }
   },
 
+  onViewRoute() {
+    this.onOpenMapMode()
+  },
+
+  onPreviewPrev() {
+    if (this.data.mapPreviewIndex <= 0) return
+    const nextIndex = this.data.mapPreviewIndex - 1
+    const nextDayIndex = getDayIndexByPreview(this.data.daySections, nextIndex)
+    this.updateMapData(this.data.daySections, this.data.cityInfo, nextDayIndex)
+    this.refreshMapPreview(this.data.daySections, nextIndex)
+  },
+
+  onPreviewNext() {
+    if (this.data.mapPreviewIndex >= this.data.mapPreviewPlaces.length - 1) return
+    const nextIndex = this.data.mapPreviewIndex + 1
+    const nextDayIndex = getDayIndexByPreview(this.data.daySections, nextIndex)
+    this.updateMapData(this.data.daySections, this.data.cityInfo, nextDayIndex)
+    this.refreshMapPreview(this.data.daySections, nextIndex)
+  },
+
   onEditMeta() {
     const routeForEdit = this.buildUpdatedRoute(this.data.daySections)
     wx.navigateTo({
       url: `/pages/route-basic-edit/route-basic-edit?route=${encodeURIComponent(JSON.stringify(routeForEdit))}`
+    })
+  },
+
+  onStartNavigation() {
+    const firstDayWithPlace = (this.data.daySections || []).find(day => (day.items || []).length)
+    const firstPlace = firstDayWithPlace && firstDayWithPlace.items && firstDayWithPlace.items[0]
+    if (!firstPlace || !firstPlace.lat || !firstPlace.lng) {
+      wx.showToast({ title: '暂无可导航地点', icon: 'none' })
+      return
+    }
+
+    util.openNavigation({
+      lat: firstPlace.lat,
+      lng: firstPlace.lng,
+      name: firstPlace.name,
+      address: this.data.cityText || firstPlace.name
     })
   },
 
@@ -616,6 +707,7 @@ Page({
       isEditing: true,
       viewMode: 'list',
       dragging: false,
+      currentTab: Math.min(daySections.length, 1),
       dragDay: -1,
       dragIndex: -1,
       dragTouchStartY: 0,
@@ -623,7 +715,7 @@ Page({
       swipeDay: -1,
       swipeIndex: -1,
       swipeStartOffset: 0,
-      sheetScrollTarget: '',
+      sheetScrollTarget: daySections.length ? 'route-day-anchor-0' : '',
       daySections,
       originalDaySections: JSON.parse(JSON.stringify(stripEditState(daySections))),
       placePickerVisible: false,
@@ -648,10 +740,12 @@ Page({
       tabs: buildTabs(restored.length),
       summaryText: buildSummaryText(restored),
       sheetScrollTarget: '',
+      currentTab: 0,
       placePickerVisible: false,
       placePickerDayIndex: -1
     })
     this.updateMapData(restored, this.data.cityInfo, this.data.currentMapDay)
+    this.refreshMapPreview(restored, this.data.mapPreviewIndex)
   },
 
   onSave() {
@@ -685,6 +779,7 @@ Page({
       placePickerDayIndex: -1
     })
     this.updateMapData(savedSections, this.data.cityInfo, nextMapDay)
+    this.refreshMapPreview(savedSections, this.data.mapPreviewIndex)
   },
 
   onAddDay() {

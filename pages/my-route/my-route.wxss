@@ -91,6 +91,28 @@
   font-size: 40rpx;
 }
 
+.route-bottom-bar {
+  gap: 16rpx;
+}
+
+.route-icon-btn {
+  width: 96rpx !important;
+  flex: none !important;
+  padding: 0;
+}
+
+.route-adjust-btn {
+  width: 188rpx !important;
+  flex: none !important;
+  gap: 8rpx;
+}
+
+.route-nav-btn {
+  flex: 1;
+  min-width: 0;
+  gap: 10rpx;
+}
+
 .place-picker-mask {
   position: fixed;
   inset: 0;

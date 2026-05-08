@@ -52,6 +52,7 @@
                   wx:key="key"
                   wx:for-item="tab"
                   wx:for-index="tabIndex"
+                  wx:if="{{!(isEditing && tabIndex === 0)}}"
                   class="tab-item {{currentTab === tabIndex ? 'active' : ''}}"
                   bindtap="onTabTap"
                   data-index="{{tabIndex}}"
@@ -69,6 +70,36 @@
           </view>
 
           <view class="sheet-content">
+            <view class="overview-anchor" id="route-overview-anchor" wx:if="{{!isEditing}}"></view>
+            <view class="overview-section" wx:if="{{!isEditing}}">
+              <text class="overview-title">概览</text>
+              <view class="overview-list">
+                <view
+                  class="overview-card"
+                  wx:for="{{daySections}}"
+                  wx:key="id"
+                  wx:for-item="day"
+                  wx:for-index="dayIndex"
+                >
+                  <text class="overview-card-day">{{day.title}}</text>
+                  <view
+                    class="overview-place-row"
+                    wx:for="{{day.items}}"
+                    wx:key="id"
+                    wx:for-item="place"
+                    wx:for-index="placeIndex"
+                  >
+                    <view class="overview-place-main">
+                      <text class="overview-place-index">{{placeIndex + 1}}.</text>
+                      <text class="overview-place-name">{{place.name}}</text>
+                    </view>
+                    <view class="overview-place-tag">{{place.tag}}</view>
+                  </view>
+                </view>
+              </view>
+            </view>
+            <view class="day-separator overview-separator" wx:if="{{!isEditing}}"></view>
+
             <view
               class="day-section"
               wx:for="{{daySections}}"
@@ -120,7 +151,7 @@
                       <text class="place-travel">{{place.travelText}}</text>
                     </view>
                     <view class="place-arrow" wx:if="{{!isEditing}}">
-                      <i class="mgc_right_small_fill"></i>
+                      <i class="mgc_right_line"></i>
                     </view>
                     <view
                       class="place-handle"
@@ -162,43 +193,35 @@
         <text>确认修改</text>
       </view>
     </view>
-    <view class="bottom-bar" wx:else>
-      <view class="bottom-btn secondary" bindtap="onEditMeta">
+    <view class="bottom-bar route-bottom-bar" wx:else>
+      <view class="bottom-btn secondary route-icon-btn" bindtap="onEditMeta">
         <i class="mgc_pencil_3_line"></i>
-        <text>编辑</text>
       </view>
-      <view class="bottom-btn primary" bindtap="onStartRouteEdit">
+      <view class="bottom-btn secondary route-adjust-btn" bindtap="onStartRouteEdit">
+        <i class="mgc_ai_line"></i>
+        <text>重排</text>
+      </view>
+      <view class="bottom-btn primary route-nav-btn" bindtap="onViewRoute">
         <i class="mgc_route_line"></i>
-        <text>调整路线</text>
+        <text>查看路线</text>
       </view>
     </view>
   </block>
 
   <block wx:else>
     <view class="map-panel">
-      <view class="map-card">
-        <text class="map-title">{{route.title}}</text>
-        <view class="map-meta-row">
-          <text class="map-meta">{{summaryText}}</text>
-          <text class="map-city">{{cityText}}</text>
-        </view>
-        <scroll-view class="map-chip-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
-          <view class="map-chip-row">
-            <view class="map-chip {{currentMapDay === -1 ? 'active' : ''}}" bindtap="onSelectMapDay" data-index="-1">全部路线</view>
-            <view
-              wx:for="{{daySections}}"
-              wx:key="id"
-              wx:for-item="day"
-              wx:for-index="dayIndex"
-              class="map-chip {{currentMapDay === dayIndex ? 'active' : ''}}"
-              bindtap="onSelectMapDay"
-              data-index="{{dayIndex}}"
-            >
-              {{day.title}}
-            </view>
-          </view>
-        </scroll-view>
-      </view>
+      <route-map-preview-card
+        place="{{mapPreviewPlace}}"
+        day-tabs="{{daySections}}"
+        current-day="{{currentMapDay}}"
+        current-index="{{mapPreviewIndex}}"
+        total-count="{{mapPreviewPlaces.length}}"
+        disable-prev="{{mapPreviewIndex === 0}}"
+        disable-next="{{mapPreviewIndex === mapPreviewPlaces.length - 1}}"
+        binddaychange="onSelectMapPreviewDay"
+        bindprev="onPreviewPrev"
+        bindnext="onPreviewNext"
+      />
     </view>
   </block>
 
