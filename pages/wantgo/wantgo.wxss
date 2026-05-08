@@ -1,9 +1,8 @@
 /* 觅食图 V1 - 想去清单页样式 */
 .container {
   position: relative;
-  height: 100vh;
+  min-height: 100vh;
   background: #ffffff;
-  overflow: hidden;
 }
 
 .tab-bar {
@@ -97,7 +96,6 @@
 
 .route-card-list,
 .want-list {
-  height: 100vh;
   box-sizing: border-box;
   padding-right: 48rpx;
   padding-left: 48rpx;

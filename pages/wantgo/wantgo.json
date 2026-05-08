@@ -1,6 +1,8 @@
 {
   "usingComponents": {
-    "custom-tabbar": "/custom-tabbar/index"
+    "custom-tabbar": "/custom-tabbar/index",
+    "travel-meta-line": "/components/travel-meta-line/index",
+    "transport-info-sheet": "/components/transport-info-sheet/index"
   },
   "navigationBarTitleText": "想去清单",
   "navigationBarBackgroundColor": "#ffffff",

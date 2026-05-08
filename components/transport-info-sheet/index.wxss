@@ -1,0 +1,160 @@
+.transport-sheet-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.28s ease;
+}
+
+.transport-sheet-mask.show {
+  background: rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+}
+
+.transport-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 211;
+  padding: 16rpx 48rpx calc(24rpx + env(safe-area-inset-bottom));
+  border-radius: 32rpx 32rpx 0 0;
+  background: #ffffff;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.transport-sheet.show {
+  transform: translateY(0);
+}
+
+.transport-sheet-handle {
+  width: 72rpx;
+  height: 8rpx;
+  margin: 0 auto 20rpx;
+  border-radius: 999rpx;
+  background: #d9d9d9;
+}
+
+.transport-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.transport-sheet-title {
+  color: #000000;
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 32rpx;
+}
+
+.transport-sheet-close {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #f6f6f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #868686;
+}
+
+.transport-sheet-close i {
+  font-size: 28rpx;
+}
+
+.transport-option-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.transport-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #f2f2f2;
+}
+
+.transport-option.active {
+  color: #47bffe;
+}
+
+.transport-option-main,
+.transport-option-side {
+  display: flex;
+  align-items: center;
+}
+
+.transport-option-main {
+  gap: 16rpx;
+  min-width: 0;
+  flex: 1;
+}
+
+.transport-option-side {
+  gap: 16rpx;
+  flex-shrink: 0;
+}
+
+.transport-option-icon,
+.transport-option-check {
+  flex-shrink: 0;
+}
+
+.transport-option-icon {
+  color: #868686;
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+.transport-option-check {
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+.transport-option-label {
+  color: #000000;
+  font-size: 28rpx;
+  line-height: 28rpx;
+}
+
+.transport-option.active .transport-option-label,
+.transport-option.active .transport-option-time,
+.transport-option-check.active {
+  color: #47bffe;
+}
+
+.transport-option-time {
+  color: #868686;
+  font-size: 24rpx;
+  line-height: 24rpx;
+}
+
+.transport-option-check {
+  color: #c2c2c2;
+}
+
+.transport-sheet-footer {
+  padding-top: 24rpx;
+}
+
+.transport-confirm-btn {
+  height: 88rpx;
+  border-radius: 24rpx;
+  background: #47bffe;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transport-confirm-btn text {
+  font-size: 28rpx;
+  font-weight: 500;
+  line-height: 28rpx;
+}

@@ -2,14 +2,7 @@
 const app = getApp()
 const shopData = require('../../utils/shopData')
 const util = require('../../utils/util')
-
-const MODE_CONFIG = {
-  walk: { label: '步行', speed: 12, icon: 'mgc_walk_line' },
-  transit: { label: '地铁', speed: 5, icon: 'mgc_train_2_line' },
-  ride: { label: '骑行', speed: 4, icon: 'mgc_riding_line' },
-  bus: { label: '公交', speed: 6, icon: 'mgc_bus_line' },
-  drive: { label: '驾车', speed: 3, icon: 'mgc_car_3_line' }
-}
+const { MODE_CONFIG, applyTravelMeta, buildTravelOptions, formatDurationShort } = require('../../utils/travel')
 
 const DEFAULT_COVERS = [
   '/images/covers/01.jpeg',
@@ -48,17 +41,9 @@ function getModeLabel(mode) {
   return (MODE_CONFIG[mode] || MODE_CONFIG.drive).label
 }
 
-function formatDurationShort(minutes) {
-  const safeMinutes = Math.max(1, Math.round(minutes || 0))
-  if (safeMinutes < 60) return `${safeMinutes}min`
-  const hours = Math.floor(safeMinutes / 60)
-  const mins = safeMinutes % 60
-  return mins ? `${hours}h${mins}min` : `${hours}h`
-}
-
 function estimateRouteDuration(meters, mode = 'drive') {
   const config = MODE_CONFIG[mode] || MODE_CONFIG.drive
-  return formatDurationShort((Math.max(0, meters || 0) / 1000) * config.speed)
+  return formatDurationShort((Math.max(0, meters || 0) / 1000) * config.minutesPerKm)
 }
 
 function getItemTagText(item) {
@@ -91,11 +76,14 @@ function decorateSelectableItems(items) {
 function decorateRouteItems(items, mode) {
   return decorateSelectableItems(items).map(item => {
     const distance = item.distanceFromPrev || 0
-    return {
+    const nextItem = applyTravelMeta({
       ...item,
       distanceStr: util.formatDistance(distance),
-      timeStr: estimateRouteDuration(distance, mode),
-      travelText: `${getModeLabel(mode)} | ${util.formatDistance(distance)} · ${estimateRouteDuration(distance, mode)}`
+      timeStr: estimateRouteDuration(distance, mode)
+    }, mode || item.travelMode)
+    return {
+      ...nextItem,
+      timeStr: nextItem.travelMeta ? nextItem.travelMeta.timeText : estimateRouteDuration(distance, mode)
     }
   })
 }
@@ -248,6 +236,10 @@ Page({
     routeShopsBackup: [],
     mapPreviewShop: null,
     mapPreviewIndex: 0,
+    transportSheetVisible: false,
+    transportOptions: [],
+    pendingTransportMode: 'walk',
+    transportTargetIndex: -1,
 
     // ★ 所有想去店铺候选池
     allLikedShops: [],
@@ -648,6 +640,61 @@ Page({
     let totalDist = 0
     routeShops.forEach(s => { totalDist += s.distanceFromPrev || 0 })
     this.setData({ totalTime: estimateRouteDuration(totalDist, mode) })
+  },
+
+  openTransportSheet(index) {
+    const item = (this.data.routeShops || [])[index]
+    if (!item) return
+    this.setData({
+      transportSheetVisible: true,
+      transportOptions: buildTravelOptions(item.distanceFromPrev || 0),
+      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'walk',
+      transportTargetIndex: index
+    })
+  },
+
+  onOpenPlaceTransportSheet(e) {
+    this.openTransportSheet(parseInt(e.currentTarget.dataset.index, 10))
+  },
+
+  onOpenMapTransportSheet() {
+    this.openTransportSheet(this.data.mapPreviewIndex)
+  },
+
+  onOpenNavTransportSheet() {
+    this.openTransportSheet(this.data.currentNavIndex)
+  },
+
+  onCloseTransportSheet() {
+    this.setData({ transportSheetVisible: false, transportTargetIndex: -1 })
+  },
+
+  onSelectTransportMode(e) {
+    const mode = e.detail && e.detail.mode
+    if (!mode) return
+    this.setData({ pendingTransportMode: mode })
+  },
+
+  onConfirmTransportMode() {
+    const { transportTargetIndex, pendingTransportMode, routeShops, currentNavIndex, isNavigating } = this.data
+    if (transportTargetIndex < 0 || !routeShops[transportTargetIndex]) return
+
+    const nextRouteShops = (routeShops || []).map((item, index) => (
+      index === transportTargetIndex ? applyTravelMeta(item, pendingTransportMode) : item
+    ))
+    const nextData = {
+      routeShops: nextRouteShops,
+      transportSheetVisible: false,
+      transportTargetIndex: -1
+    }
+    if (isNavigating && currentNavIndex === transportTargetIndex) {
+      nextData.currentNavShop = nextRouteShops[transportTargetIndex]
+    }
+    this.setData(nextData)
+    this.refreshPreviewRoute(nextRouteShops)
+    if (this.data.viewMode === 'map' || isNavigating) {
+      this.focusPreviewByIndex(this.data.mapPreviewIndex)
+    }
   },
 
   // ─── ⚡ 重新贪心优化 ─────────────────────────

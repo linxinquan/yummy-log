@@ -1,6 +1,7 @@
 const util = require('../../utils/util')
 const { shops, shopNameMap } = require('../../utils/shopData')
 const { spotData } = require('../../utils/spotData')
+const { applyTravelMeta, buildTravelOptions } = require('../../utils/travel')
 
 const DEFAULT_COVERS = [
   '/images/covers/01.jpeg',
@@ -101,38 +102,6 @@ function normalizeName(name) {
     .toLowerCase()
 }
 
-function formatTravelDuration(minutes) {
-  const safeMinutes = Math.max(1, Math.round(minutes))
-  if (safeMinutes < 60) return `${safeMinutes}min`
-  const hours = Math.floor(safeMinutes / 60)
-  const mins = safeMinutes % 60
-  return mins ? `${hours}h ${mins}min` : `${hours}h`
-}
-
-function buildTravelMeta(distance) {
-  const safeDistance = Math.max(Math.round(distance || 0), 1)
-  let mode = 'walk'
-  let label = '步行'
-  let minutesPerKm = 12
-
-  if (safeDistance >= 10000) {
-    mode = 'drive'
-    label = '打车'
-    minutesPerKm = 3
-  } else if (safeDistance >= 3500) {
-    mode = 'transit'
-    label = '地铁'
-    minutesPerKm = 5
-  } else if (safeDistance >= 900) {
-    mode = 'bike'
-    label = '自行车'
-    minutesPerKm = 4
-  }
-
-  const duration = formatTravelDuration((safeDistance / 1000) * minutesPerKm)
-  return `${label} | ${util.formatDistance(safeDistance)} · ${duration}`
-}
-
 function buildSyntheticLatLng(cityInfo, dayIndex, itemIndex) {
   return {
     lat: cityInfo.lat + ((dayIndex * 0.018) - 0.018) + (itemIndex * 0.0035),
@@ -218,11 +187,13 @@ function syncDaySections(daySections, cityInfo) {
       id: day.id || `day-${dayIndex}`,
       title: buildDayLabel(dayIndex + 1),
       countText: `${plannedItems.length} 个地点`,
-      items: plannedItems.map((item, itemIndex) => ({
-        ...item,
-        travelText: buildTravelMeta(item.distanceFromPrev || 0),
-        image: item.image || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length]
-      }))
+      items: plannedItems.map((item, itemIndex) => {
+        const nextItem = applyTravelMeta(item, item.travelMode)
+        return {
+          ...nextItem,
+          image: nextItem.image || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length]
+        }
+      })
     }
   })
 }
@@ -358,7 +329,11 @@ Page({
     dragging: false,
     dragDay: -1,
     dragIndex: -1,
-    dragTouchStartY: 0
+    dragTouchStartY: 0,
+    transportSheetVisible: false,
+    transportOptions: [],
+    pendingTransportMode: 'walk',
+    transportTarget: null
   },
 
   onLoad(options) {
@@ -565,6 +540,61 @@ Page({
     const nextDayIndex = getDayIndexByPreview(this.data.daySections, nextIndex)
     this.updateMapData(this.data.daySections, this.data.cityInfo, nextDayIndex)
     this.refreshMapPreview(this.data.daySections, nextIndex)
+  },
+
+  openTransportSheet(dayIndex, itemIndex, previewIndex) {
+    const day = (this.data.daySections || [])[dayIndex]
+    const item = ((day || {}).items || [])[itemIndex]
+    if (!item) return
+    this.setData({
+      transportSheetVisible: true,
+      transportOptions: buildTravelOptions(item.distanceFromPrev || 0),
+      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'walk',
+      transportTarget: { dayIndex, itemIndex, previewIndex }
+    })
+  },
+
+  onOpenPlaceTransportSheet(e) {
+    const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10)
+    const itemIndex = parseInt(e.currentTarget.dataset.index, 10)
+    this.openTransportSheet(dayIndex, itemIndex, getPreviewIndexByDay(this.data.daySections, dayIndex) + itemIndex)
+  },
+
+  onOpenMapTransportSheet() {
+    const currentPlace = this.data.mapPreviewPlace
+    if (!currentPlace) return
+    this.openTransportSheet(currentPlace.dayIndex, currentPlace.itemIndex, this.data.mapPreviewIndex)
+  },
+
+  onCloseTransportSheet() {
+    this.setData({ transportSheetVisible: false, transportTarget: null })
+  },
+
+  onSelectTransportMode(e) {
+    const mode = e.detail && e.detail.mode
+    if (!mode) return
+    this.setData({ pendingTransportMode: mode })
+  },
+
+  onConfirmTransportMode() {
+    const { transportTarget, pendingTransportMode, daySections } = this.data
+    if (!transportTarget) return
+    const nextSections = (daySections || []).map((day, dayIndex) => ({
+      ...day,
+      items: (day.items || []).map((item, itemIndex) => {
+        if (dayIndex !== transportTarget.dayIndex || itemIndex !== transportTarget.itemIndex) {
+          return item
+        }
+        return applyTravelMeta(item, pendingTransportMode)
+      })
+    }))
+
+    this.setData({
+      daySections: nextSections,
+      transportSheetVisible: false,
+      transportTarget: null
+    })
+    this.refreshMapPreview(nextSections, transportTarget.previewIndex)
   },
 
   onShareAppMessage() {

@@ -2,9 +2,52 @@
 const app = getApp()
 const util = require('../../utils/util')
 const shopData = require('../../utils/shopData')
+const { applyTravelMeta, buildTravelOptions } = require('../../utils/travel')
 
 // 每项高度(px) = 卡片高度120rpx + gap 16rpx 换算
 const ITEM_H = 60 // px，每项高度用于计算排序
+const DEFAULT_COVER = '/images/covers/01.jpeg'
+
+function isSpotItem(item) {
+  return item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price
+}
+
+function inferTagText(item) {
+  if (isSpotItem(item)) {
+    if ((item.category || '').includes('展馆') || (item.name || '').includes('博物馆')) {
+      return '文化展馆'
+    }
+    return '景点'
+  }
+  return '美食'
+}
+
+function buildSyntheticLatLng(basePoint, index) {
+  const seed = index + 1
+  return {
+    lat: Number((basePoint.lat + seed * 0.0023).toFixed(6)),
+    lng: Number((basePoint.lng + seed * 0.0021).toFixed(6))
+  }
+}
+
+function buildPreviewItems(items) {
+  const basePoint = app.globalData.location || app.globalData.centerLocation || { lat: 22.4846, lng: 113.9046 }
+  const prepared = (items || []).map((item, index) => {
+    const lat = item.lat || item.latitude
+    const lng = item.lng || item.longitude
+    const fallback = buildSyntheticLatLng(basePoint, index)
+    return {
+      ...item,
+      lat: lat || fallback.lat,
+      lng: lng || fallback.lng,
+      coverImage: item.logo || item.image || item.thumb || DEFAULT_COVER,
+      tagText: inferTagText(item)
+    }
+  })
+
+  const routeItems = util.planRoute(prepared.map(item => ({ ...item })), basePoint, true)
+  return routeItems.map(item => applyTravelMeta(item, item.travelMode))
+}
 
 Page({
   data: {
@@ -27,6 +70,10 @@ Page({
     dragging: false,
     dragIndex: -1,
     dragY: 0,
+    transportSheetVisible: false,
+    transportOptions: [],
+    pendingTransportMode: 'walk',
+    transportTargetIndex: -1
   },
 
   onLoad(options) {
@@ -43,13 +90,15 @@ Page({
     
     // 顶部内容预留的高度（留出一些下边距）
     const contentTop = menuTop + menuHeight + 12
+    const listTop = contentTop + 25
     
     this.setData({ 
       tab, 
       menuTop,
       menuHeight,
       menuRightInset,
-      contentTop 
+      contentTop,
+      listTop
     })
   },
 
@@ -95,17 +144,7 @@ Page({
       const foodItems = foodIds.map(id => allFoodItems.find(s => String(s.id) === String(id))).filter(Boolean)
       const spotItems = spotIds.map(id => spots.find(s => String(s.id) === String(id))).filter(Boolean)
       
-      items = [...foodItems, ...spotItems].map(item => {
-        const baseWant = item.wantCount || 1024
-        const actualWant = baseWant + 1
-        let displayWantCount = actualWant
-        if (actualWant >= 10000) {
-          displayWantCount = (actualWant / 10000).toFixed(1).replace('.0', '') + 'w'
-        } else if (actualWant >= 1000) {
-          displayWantCount = (actualWant / 1000).toFixed(1).replace('.0', '') + 'k'
-        }
-        return { ...item, displayWantCount }
-      })
+      items = buildPreviewItems([...foodItems, ...spotItems])
       this.setData({ items, empty: items.length === 0 })
     } else if (tab === 'plan') {
       const savedRoutes = util.loadData('savedRoutes', [])
@@ -120,16 +159,7 @@ Page({
       const allItems = [...shops, ...foods, ...userShops, ...spots]
       
       // 统一用字符串比较
-      items = ids.map(id => allItems.find(s => String(s.id) === String(id))).filter(Boolean).map(item => {
-        const baseWant = item.wantCount || 1024
-        let displayWantCount = baseWant
-        if (baseWant >= 10000) {
-          displayWantCount = (baseWant / 10000).toFixed(1).replace('.0', '') + 'w'
-        } else if (baseWant >= 1000) {
-          displayWantCount = (baseWant / 1000).toFixed(1).replace('.0', '') + 'k'
-        }
-        return { ...item, displayWantCount }
-      })
+      items = buildPreviewItems(ids.map(id => allItems.find(s => String(s.id) === String(id))).filter(Boolean))
       this.setData({ items, empty: items.length === 0 })
     }
   },
@@ -146,7 +176,7 @@ Page({
     const item = e.currentTarget.dataset.item
     
     // 判断是否为景点：根据 category 是否包含'景点'、'公园'等，或者是否存在特定的字段
-    const isSpot = item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price
+    const isSpot = isSpotItem(item)
     
     if (isSpot) {
       wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${item.id}` })
@@ -154,6 +184,41 @@ Page({
       const shopStr = encodeURIComponent(JSON.stringify(item))
       wx.navigateTo({ url: `/pages/shop-detail/shop-detail?shopData=${shopStr}&id=${item.id}` })
     }
+  },
+
+  onOpenTransportSheet(e) {
+    const index = parseInt(e.currentTarget.dataset.index, 10)
+    const item = (this.data.items || [])[index]
+    if (!item) return
+    this.setData({
+      transportSheetVisible: true,
+      transportOptions: buildTravelOptions(item.distanceFromPrev || 0),
+      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'walk',
+      transportTargetIndex: index
+    })
+  },
+
+  onCloseTransportSheet() {
+    this.setData({ transportSheetVisible: false, transportTargetIndex: -1 })
+  },
+
+  onSelectTransportMode(e) {
+    const mode = e.detail && e.detail.mode
+    if (!mode) return
+    this.setData({ pendingTransportMode: mode })
+  },
+
+  onConfirmTransportMode() {
+    const { transportTargetIndex, pendingTransportMode, items } = this.data
+    if (transportTargetIndex < 0 || !items[transportTargetIndex]) return
+    const nextItems = (items || []).map((item, index) => (
+      index === transportTargetIndex ? applyTravelMeta(item, pendingTransportMode) : item
+    ))
+    this.setData({
+      items: nextItems,
+      transportSheetVisible: false,
+      transportTargetIndex: -1
+    })
   },
 
   // ─── 拖拽开始（长按）────────────────────────────
@@ -219,7 +284,7 @@ Page({
     const item = items.find(i => i.id === id)
     if (!item) return
 
-    const isSpot = item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price
+    const isSpot = isSpotItem(item)
     const type = isSpot ? 'spot' : 'food'
     util.toggleLike(id, type)
     this._loadData()
@@ -228,7 +293,7 @@ Page({
 
   // ─── 规划路线 ─────────────────────────────
   onPlanRoute() {
-    const { items, tab } = this.data
+    const { items } = this.data
     if (items.length === 0) {
       wx.showToast({ title: '清单为空', icon: 'none' })
       return

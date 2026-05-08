@@ -24,7 +24,7 @@
   </view>
 
   <block wx:else>
-    <scroll-view wx:if="{{tab === 'plan'}}" class="route-card-list" scroll-y style="padding-top: {{listTop}}px;">
+    <view wx:if="{{tab === 'plan'}}" class="route-card-list" style="padding-top: {{listTop}}px;">
       <block wx:for="{{items}}" wx:key="id">
         <view class="route-card" bindtap="onRouteCardTap" data-route="{{item}}">
           <view class="route-info">
@@ -34,9 +34,9 @@
           <image class="route-image" src="{{item.image}}" mode="aspectFill" />
         </view>
       </block>
-    </scroll-view>
+    </view>
 
-    <scroll-view wx:else class="want-list {{tab === 'want' ? 'has-plan-button' : ''}}" scroll-y style="padding-top: {{listTop}}px;">
+    <view wx:else class="want-list {{tab === 'want' ? 'has-plan-button' : ''}}" style="padding-top: {{listTop}}px;">
       <block wx:for="{{items}}" wx:key="id">
         <view class="place-row" bindtap="onItemTap" data-item="{{item}}">
           <view class="place-cover-wrap">
@@ -46,14 +46,18 @@
           <view class="place-main">
             <view class="place-tag">{{item.tagText}}</view>
             <text class="place-name">{{item.name}}</text>
-            <text class="place-travel">{{item.travelText}}</text>
+            <travel-meta-line
+              travel-meta="{{item.travelMeta}}"
+              bindtapmeta="onOpenTransportSheet"
+              data-index="{{index}}"
+            ></travel-meta-line>
           </view>
           <view class="place-arrow">
             <i class="mgc_right_line"></i>
           </view>
         </view>
       </block>
-    </scroll-view>
+    </view>
   </block>
 
   <view wx:if="{{tab === 'want' && !empty}}" class="plan-route-fixed">
@@ -66,4 +70,13 @@
   </view>
 
   <custom-tabbar></custom-tabbar>
+
+  <transport-info-sheet
+    visible="{{transportSheetVisible}}"
+    options="{{transportOptions}}"
+    selected-mode="{{pendingTransportMode}}"
+    bindclose="onCloseTransportSheet"
+    bindselect="onSelectTransportMode"
+    bindconfirm="onConfirmTransportMode"
+  ></transport-info-sheet>
 </view>

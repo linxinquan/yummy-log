@@ -124,7 +124,12 @@
                   <view class="place-main">
                     <view class="place-tag">{{place.tag}}</view>
                     <text class="place-name">{{place.name}}</text>
-                    <text class="place-travel">{{place.travelText}}</text>
+                    <travel-meta-line
+                      travel-meta="{{place.travelMeta}}"
+                      bindtapmeta="onOpenPlaceTransportSheet"
+                      data-day-index="{{dayIndex}}"
+                      data-index="{{placeIndex}}"
+                    ></travel-meta-line>
                   </view>
                   <view class="place-arrow">
                     <i class="mgc_right_line"></i>
@@ -168,7 +173,17 @@
         binddaychange="onSelectMapPreviewDay"
         bindprev="onPreviewPrev"
         bindnext="onPreviewNext"
+        bindtapmeta="onOpenMapTransportSheet"
       />
     </view>
   </block>
+
+  <transport-info-sheet
+    visible="{{transportSheetVisible}}"
+    options="{{transportOptions}}"
+    selected-mode="{{pendingTransportMode}}"
+    bindclose="onCloseTransportSheet"
+    bindselect="onSelectTransportMode"
+    bindconfirm="onConfirmTransportMode"
+  ></transport-info-sheet>
 </view>

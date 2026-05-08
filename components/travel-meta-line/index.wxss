@@ -1,0 +1,30 @@
+.travel-meta-line {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8rpx;
+}
+
+.travel-meta-icon {
+  flex-shrink: 0;
+  color: #868686;
+  font-size: 24rpx;
+  line-height: 24rpx;
+}
+
+.travel-meta-arrow {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  color: #868686;
+}
+
+.travel-meta-text {
+  min-width: 0;
+  color: #868686;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

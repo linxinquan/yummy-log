@@ -36,6 +36,10 @@ Component({
       this.triggerEvent('daychange', { index })
     },
 
+    onTapMeta() {
+      this.triggerEvent('tapmeta')
+    },
+
     onPrevTap() {
       if (this.data.disablePrev) return
       this.triggerEvent('prev')
