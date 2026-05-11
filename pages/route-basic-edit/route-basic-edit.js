@@ -1,6 +1,11 @@
 const util = require('../../utils/util')
 const shopData = require('../../utils/shopData')
 const { spotData } = require('../../utils/spotData')
+const {
+  applyTravelMeta,
+  getGlobalTransportPreferences,
+  saveGlobalTransportPreferences
+} = require('../../utils/travel')
 
 const DEFAULT_COVERS = [
   '/images/covers/01.jpeg',
@@ -41,6 +46,15 @@ const GUANGDONG_CITIES = [
   { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445, bgColor: '#E2DEE0' }
 ]
 
+const DAY_OPTIONS = Array.from({ length: 30 }, (_, index) => index + 1)
+
+const TRANSPORT_PREFERENCE_OPTIONS = [
+  { key: 'walk', label: '步行' },
+  { key: 'ride', label: '骑行' },
+  { key: 'transit', label: '公共交通' },
+  { key: 'drive', label: '驾车' }
+]
+
 function buildCityCoverPool() {
   const foodCovers = [...(shopData.shops || []), ...(shopData.foods || [])]
     .map(item => item.logo || item.image || item.thumb)
@@ -57,6 +71,35 @@ function buildCityOptions() {
     ...city,
     coverImage: coverPool[index % coverPool.length] || DEFAULT_COVERS[index % DEFAULT_COVERS.length]
   }))
+}
+
+function pickRandomItem(list) {
+  if (!list || !list.length) return ''
+  const randomIndex = Math.floor(Math.random() * list.length)
+  return list[randomIndex]
+}
+
+function resolveRouteCoverImage(route, daySections) {
+  if (route && route.coverImage) return route.coverImage
+
+  const routeItemCovers = (daySections || []).reduce((result, day) => {
+    ;(day.items || []).forEach(item => {
+      const cover = item.image || item.coverImage || item.logo || item.thumb
+      if (cover) result.push(cover)
+    })
+    return result
+  }, [])
+
+  const summaryCovers = ((route && route.daySummaries) || [])
+    .map(item => item && item.image)
+    .filter(Boolean)
+
+  const routeImage = route && route.image && !DEFAULT_COVERS.includes(route.image)
+    ? [route.image]
+    : []
+
+  const coverPool = [...routeItemCovers, ...summaryCovers, ...routeImage, ...buildCityCoverPool()]
+  return pickRandomItem(coverPool) || DEFAULT_COVERS[0]
 }
 
 function stripEditState(daySections) {
@@ -110,20 +153,62 @@ function buildSummaryText(daySections) {
   return `${dayCount} 天 ${nightCount} 晚 · ${placeCount} 个地点`
 }
 
+function getTransportLabel(mode) {
+  const matched = TRANSPORT_PREFERENCE_OPTIONS.find(item => item.key === mode)
+  return matched ? matched.label : ''
+}
+
+function buildTransportPreferenceSummary(preferences) {
+  if (!preferences) return ''
+  return [
+    getTransportLabel(preferences.shortDistanceMode),
+    getTransportLabel(preferences.longDistanceMode)
+  ].filter(Boolean).join('、')
+}
+
+function inferTransportPreferences() {
+  return getGlobalTransportPreferences()
+}
+
+function applyTransportPreferences(daySections, preferences) {
+  return stripEditState(daySections).map(day => ({
+    ...day,
+    items: (day.items || []).map(item => {
+      const distance = Number(item.distanceFromPrev || (item.travelMeta && item.travelMeta.distance) || 0)
+      const preferredMode = distance < 1000 ? preferences.shortDistanceMode : preferences.longDistanceMode
+      return applyTravelMeta(item, preferredMode)
+    })
+  }))
+}
+
 Page({
   data: {
     route: null,
+    coverImage: '',
     title: '',
     city: '',
     dayCount: 1,
     maxTitleLength: 25,
-    statusBarHeight: 20,
     showCityPicker: false,
-    cityOptions: []
+    showDayPicker: false,
+    showTransportPicker: false,
+    cityOptions: [],
+    dayOptions: DAY_OPTIONS,
+    dayPickerIndex: 0,
+    transportOptions: TRANSPORT_PREFERENCE_OPTIONS,
+    draftDayCount: 1,
+    transportPreferences: {
+      shortDistanceMode: 'walk',
+      longDistanceMode: 'ride'
+    },
+    draftTransportPreferences: {
+      shortDistanceMode: 'walk',
+      longDistanceMode: 'ride'
+    },
+    transportPreferenceText: ''
   },
 
   onLoad(options) {
-    const sysInfo = wx.getSystemInfoSync()
     if (!options.route) {
       wx.showToast({ title: '路线不存在', icon: 'none' })
       setTimeout(() => wx.navigateBack({ delta: 1 }), 1200)
@@ -132,22 +217,24 @@ Page({
 
     const route = JSON.parse(decodeURIComponent(options.route))
     const daySections = stripEditState(route.daySections || [])
+    const transportPreferences = inferTransportPreferences()
     this.setData({
       route,
+      coverImage: resolveRouteCoverImage(route, daySections),
       title: route.title || '',
       city: route.city || route.cityText || '',
       dayCount: Math.max(daySections.length || route.dayCount || 1, 1),
-      statusBarHeight: sysInfo.statusBarHeight || 20,
-      cityOptions: buildCityOptions()
+      draftDayCount: Math.max(daySections.length || route.dayCount || 1, 1),
+      dayPickerIndex: Math.max(Math.max(daySections.length || route.dayCount || 1, 1) - 1, 0),
+      cityOptions: buildCityOptions(),
+      transportPreferences,
+      draftTransportPreferences: { ...transportPreferences },
+      transportPreferenceText: buildTransportPreferenceSummary(transportPreferences)
     })
   },
 
   onTitleInput(e) {
     this.setData({ title: e.detail.value })
-  },
-
-  onCityInput(e) {
-    this.setData({ city: e.detail.value })
   },
 
   onOpenCityPicker() {
@@ -167,19 +254,121 @@ Page({
     })
   },
 
+  onChooseCover() {
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album'],
+      success: (res) => {
+        const tempFilePath = (res.tempFilePaths || [])[0]
+        if (!tempFilePath) return
+        wx.saveFile({
+          tempFilePath,
+          success: ({ savedFilePath }) => {
+            this.setData({ coverImage: savedFilePath || tempFilePath })
+          },
+          fail: () => {
+            this.setData({ coverImage: tempFilePath })
+          }
+        })
+      }
+    })
+  },
+
+  onOpenDayPicker() {
+    this.setData({
+      showDayPicker: true,
+      draftDayCount: this.data.dayCount,
+      dayPickerIndex: Math.max((this.data.dayCount || 1) - 1, 0)
+    })
+  },
+
+  onCloseDayPicker() {
+    this.setData({ showDayPicker: false })
+  },
+
+  onDayPickerChange(e) {
+    const value = e.detail && e.detail.value
+    const pickerIndex = Array.isArray(value) ? parseInt(value[0], 10) : parseInt(value, 10)
+    if (Number.isNaN(pickerIndex)) return
+    const nextDayCount = this.data.dayOptions[pickerIndex]
+    if (!nextDayCount) return
+    this.setData({
+      dayPickerIndex: pickerIndex,
+      draftDayCount: nextDayCount
+    })
+  },
+
+  onConfirmDayPicker() {
+    this.setData({
+      dayCount: this.data.draftDayCount,
+      showDayPicker: false
+    })
+  },
+
+  onOpenTransportPicker() {
+    this.setData({
+      showTransportPicker: true,
+      draftTransportPreferences: { ...this.data.transportPreferences }
+    })
+  },
+
+  onCloseTransportPicker() {
+    this.setData({ showTransportPicker: false })
+  },
+
+  onSelectTransportPreference(e) {
+    const type = e.currentTarget.dataset.type
+    const mode = e.currentTarget.dataset.mode
+    if (!type || !mode) return
+    this.setData({
+      draftTransportPreferences: {
+        ...this.data.draftTransportPreferences,
+        [type]: mode
+      }
+    })
+  },
+
+  onConfirmTransportPicker() {
+    const transportPreferences = { ...this.data.draftTransportPreferences }
+    saveGlobalTransportPreferences(transportPreferences)
+    this.setData({
+      transportPreferences,
+      transportPreferenceText: buildTransportPreferenceSummary(transportPreferences),
+      showTransportPicker: false
+    })
+  },
+
   onCancel() {
     wx.navigateBack({ delta: 1 })
   },
 
+  onDeleteRoute() {
+    const routeId = this.data.route && this.data.route.id
+    wx.showModal({
+      title: '删除路线',
+      content: '删除后无法恢复，确认删除吗？',
+      success: (res) => {
+        if (!res.confirm) return
+        if (routeId !== undefined && routeId !== null) {
+          const savedRoutes = util.loadData('savedRoutes', [])
+          const nextRoutes = savedRoutes.filter(item => String(item.id) !== String(routeId))
+          wx.setStorageSync('savedRoutes', nextRoutes)
+        }
+        wx.showToast({ title: '已删除', icon: 'success' })
+        setTimeout(() => {
+          wx.navigateBack({
+            delta: 2,
+            fail: () => {
+              wx.switchTab({ url: '/pages/wantgo/wantgo' })
+            }
+          })
+        }, 300)
+      }
+    })
+  },
+
   preventBubble() {
-  },
-
-  onMinusDay() {
-    this.setData({ dayCount: Math.max(1, this.data.dayCount - 1) })
-  },
-
-  onPlusDay() {
-    this.setData({ dayCount: Math.min(15, this.data.dayCount + 1) })
   },
 
   onSave() {
@@ -197,7 +386,9 @@ Page({
     }
 
     const baseRoute = this.data.route || {}
-    const nextSections = alignDaySections(baseRoute.daySections || [], this.data.dayCount)
+    const transportPreferences = saveGlobalTransportPreferences(this.data.transportPreferences)
+    const alignedSections = alignDaySections(baseRoute.daySections || [], this.data.dayCount)
+    const nextSections = applyTransportPreferences(alignedSections, transportPreferences)
     const { daySummaries, dayDetails } = buildLegacyRouteData(nextSections)
     const updatedRoute = {
       ...baseRoute,
@@ -208,7 +399,10 @@ Page({
       daySummaries,
       dayDetails,
       subtitle: buildSummaryText(nextSections),
-      image: baseRoute.image || daySummaries[0]?.image || DEFAULT_COVERS[0],
+      image: this.data.coverImage || baseRoute.image || daySummaries[0]?.image || DEFAULT_COVERS[0],
+      coverImage: this.data.coverImage || baseRoute.coverImage || '',
+      transportPreferences: { ...transportPreferences },
+      transportPreferenceText: buildTransportPreferenceSummary(transportPreferences),
       updatedAt: Date.now()
     }
 

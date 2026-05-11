@@ -1,10 +1,11 @@
 <view class="page" wx:if="{{guide}}">
   <view class="hero-wrap {{viewMode === 'map' ? 'hero-wrap-map' : ''}}">
     <map
+      id="guideDetailMap"
       class="hero-map"
       latitude="{{mapCenter.lat}}"
       longitude="{{mapCenter.lng}}"
-      scale="12"
+      scale="{{mapScale}}"
       markers="{{mapMarkers}}"
       polyline="{{polyline}}"
       enable-zoom="{{viewMode === 'map'}}"
@@ -117,22 +118,26 @@
                   wx:for-item="place"
                   wx:for-index="placeIndex"
                 >
-                  <view class="place-cover-wrap">
-                    <view class="place-cover-shadow"></view>
-                    <image class="place-cover" src="{{place.image}}" mode="aspectFill"></image>
-                  </view>
-                  <view class="place-main">
-                    <view class="place-tag">{{place.tag}}</view>
-                    <text class="place-name">{{place.name}}</text>
-                    <travel-meta-line
-                      travel-meta="{{place.travelMeta}}"
-                      bindtapmeta="onOpenPlaceTransportSheet"
-                      data-day-index="{{dayIndex}}"
-                      data-index="{{placeIndex}}"
-                    ></travel-meta-line>
-                  </view>
-                  <view class="place-arrow">
-                    <i class="mgc_right_line"></i>
+                  <image class="place-cover" src="{{place.image}}" mode="aspectFill"></image>
+                  <view class="place-info-row">
+                    <view class="place-main">
+                      <view class="place-head">
+                        <view class="place-tag">
+                          <text class="place-tag-text">{{place.tag}}</text>
+                        </view>
+                        <text class="place-name">{{place.name}}</text>
+                      </view>
+                      <travel-meta-line
+                        class="place-meta-line"
+                        travel-meta="{{place.travelMeta}}"
+                        bindtapmeta="onOpenPlaceTransportSheet"
+                        data-day-index="{{dayIndex}}"
+                        data-index="{{placeIndex}}"
+                      ></travel-meta-line>
+                    </view>
+                    <view class="place-arrow">
+                      <i class="mgc_right_line"></i>
+                    </view>
                   </view>
                 </view>
               </view>
@@ -151,7 +156,7 @@
     <view class="bottom-bar">
       <view class="bottom-btn secondary" bindtap="onSaveRoute">
         <i class="mgc_finger_love_line"></i>
-        <text>保存</text>
+        <text>保存路线</text>
       </view>
       <view class="bottom-btn primary" bindtap="onViewRoute">
         <i class="mgc_route_line"></i>
@@ -162,19 +167,85 @@
 
   <block wx:else>
     <view class="map-panel">
-      <route-map-preview-card
-        place="{{mapPreviewPlace}}"
-        day-tabs="{{daySections}}"
-        current-day="{{currentMapDay}}"
-        current-index="{{mapPreviewIndex}}"
-        total-count="{{mapPreviewPlaces.length}}"
-        disable-prev="{{mapPreviewIndex === 0}}"
-        disable-next="{{mapPreviewIndex === mapPreviewPlaces.length - 1}}"
-        binddaychange="onSelectMapPreviewDay"
-        bindprev="onPreviewPrev"
-        bindnext="onPreviewNext"
-        bindtapmeta="onOpenMapTransportSheet"
-      />
+      <view class="map-panel-actions" wx:if="{{mapPreviewPlace}}">
+        <view class="map-floating-icon" bindtap="onSwitchMode" data-mode="list">
+          <i class="mgc_left_line"></i>
+        </view>
+        <view class="map-floating-icon" bindtap="onFitRoute">
+          <i class="mgc_fullscreen_line"></i>
+        </view>
+      </view>
+      <view class="map-card route-map-preview-card" wx:if="{{mapPreviewPlace}}">
+        <view class="preview-tabs-panel">
+          <view class="preview-tab-row">
+            <view
+              wx:for="{{previewTabs}}"
+              wx:key="index"
+              class="preview-tab-item {{((currentMapDay < 0 && item.index === 0) || currentMapDay === item.index) ? 'active' : ''}}"
+              bindtap="onSelectMapPreviewDay"
+              data-index="{{item.index}}"
+            >
+              {{item.label}}
+            </view>
+          </view>
+          <view class="preview-tab-divider"></view>
+        </view>
+
+        <view class="preview-card-stage">
+          <view class="preview-detail-card">
+            <view class="preview-side-inner">
+              <view class="preview-card-head">
+                <image class="preview-cover-image" src="{{mapPreviewPlace.image || mapPreviewPlace.coverImage}}" mode="aspectFill"></image>
+                <view class="preview-head-main">
+                  <text class="preview-name">{{mapPreviewPlace.name}}</text>
+                  <view class="preview-meta-row" wx:if="{{previewDisplayMeta.length > 0}}">
+                    <view
+                      wx:for="{{previewDisplayMeta}}"
+                      wx:key="index"
+                      wx:for-item="chip"
+                      class="preview-chip {{chip.type === 'score' ? 'score' : ''}}"
+                    >
+                      {{chip.text}}
+                    </view>
+                  </view>
+                </view>
+              </view>
+
+              <view class="preview-desc-row">
+                <text class="preview-desc-left">{{previewDescriptionText}}</text>
+                <text class="preview-desc-right">{{previewFeeText}}</text>
+              </view>
+            </view>
+
+            <view class="preview-btn-row">
+              <view
+                class="preview-btn {{previewDisablePrev ? 'disabled' : ''}}"
+                bindtap="onMapPreviewStep"
+                data-index="{{previewPrevIndex}}"
+              >
+                <text>上一站</text>
+              </view>
+              <view
+                class="preview-btn {{previewDisableNext ? 'disabled' : ''}}"
+                bindtap="onMapPreviewStep"
+                data-index="{{previewNextIndex}}"
+              >
+                <text>下一站</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view class="preview-footer">
+          <view class="preview-footer-side">
+            <text>{{previewStationText}}</text>
+          </view>
+          <travel-meta-line variant="compact" travel-meta="{{mapPreviewPlace.travelMeta}}" bindtapmeta="onOpenMapTransportSheet"></travel-meta-line>
+          <view class="preview-footer-side right">
+            <text>{{previewCountText}}</text>
+          </view>
+        </view>
+      </view>
     </view>
   </block>
 

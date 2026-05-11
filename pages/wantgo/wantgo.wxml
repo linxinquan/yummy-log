@@ -26,34 +26,58 @@
   <block wx:else>
     <view wx:if="{{tab === 'plan'}}" class="route-card-list" style="padding-top: {{listTop}}px;">
       <block wx:for="{{items}}" wx:key="id">
-        <view class="route-card" bindtap="onRouteCardTap" data-route="{{item}}">
-          <view class="route-info">
-            <text class="route-title">{{item.title}}</text>
-            <text class="route-subtitle">{{item.subtitle}}</text>
-          </view>
+        <view class="route-card route-card-theme-{{index % 4}}" bindtap="onRouteCardTap" data-route="{{item}}">
+          <text class="route-title">{{item.title}}</text>
           <image class="route-image" src="{{item.image}}" mode="aspectFill" />
+          <view class="route-footer">
+            <text class="route-subtitle">{{item.subtitle}}</text>
+            <i class="mgc_right_small_line route-arrow"></i>
+          </view>
         </view>
       </block>
     </view>
 
     <view wx:else class="want-list {{tab === 'want' ? 'has-plan-button' : ''}}" style="padding-top: {{listTop}}px;">
       <block wx:for="{{items}}" wx:key="id">
-        <view class="place-row" bindtap="onItemTap" data-item="{{item}}">
-          <view class="place-cover-wrap">
-            <view class="place-cover-shadow"></view>
+        <view class="place-swipe-item">
+          <view wx:if="{{tab === 'want'}}" class="place-delete-action" catchtap="onRemove" data-id="{{item.id}}">
+            <view class="place-delete-inner">
+              <i class="mgc_delete_2_line place-delete-icon"></i>
+              <text class="place-delete-text">删除</text>
+            </view>
+          </view>
+          <view
+            class="place-row"
+            bindtap="onItemTap"
+            bindtouchstart="onCardTouchStart"
+            bindtouchmove="onCardTouchMove"
+            bindtouchend="onCardTouchEnd"
+            bindtouchcancel="onCardTouchEnd"
+            data-item="{{item}}"
+            data-index="{{index}}"
+            style="transform: translateX({{item.swipeOffset || 0}}px);"
+          >
             <image class="place-cover" src="{{item.coverImage}}" mode="aspectFill"></image>
-          </view>
-          <view class="place-main">
-            <view class="place-tag">{{item.tagText}}</view>
-            <text class="place-name">{{item.name}}</text>
-            <travel-meta-line
-              travel-meta="{{item.travelMeta}}"
-              bindtapmeta="onOpenTransportSheet"
-              data-index="{{index}}"
-            ></travel-meta-line>
-          </view>
-          <view class="place-arrow">
-            <i class="mgc_right_line"></i>
+            <view class="place-info-row">
+              <view class="place-main">
+                <view class="place-head">
+                  <view class="place-tag">
+                    <text class="place-tag-text">{{item.tagText}}</text>
+                  </view>
+                  <text class="place-name">{{item.name}}</text>
+                </view>
+                <travel-meta-line
+                  class="place-meta-line"
+                  travel-meta="{{item.travelMeta}}"
+                  variant="compact"
+                  bindtapmeta="onOpenTransportSheet"
+                  data-index="{{index}}"
+                ></travel-meta-line>
+              </view>
+              <view class="place-arrow">
+                <i class="mgc_right_line"></i>
+              </view>
+            </view>
           </view>
         </view>
       </block>
@@ -64,7 +88,7 @@
     <view class="plan-route-btn" bindtap="onPlanRoute">
       <view class="plan-route-inner">
         <i class="mgc_ai_fill"></i>
-        <text>规划最优路线</text>
+        <text>智能规划路线</text>
       </view>
     </view>
   </view>
@@ -79,4 +103,23 @@
     bindselect="onSelectTransportMode"
     bindconfirm="onConfirmTransportMode"
   ></transport-info-sheet>
+
+  <view class="plan-day-mask {{planDaySheetVisible ? 'show' : ''}}" bindtap="onClosePlanDaySheet">
+    <view class="plan-day-sheet" catchtap="preventBubble">
+      <view class="plan-day-header">
+        <text class="plan-day-title">旅行天数</text>
+        <i class="mgc_close_line plan-day-close" bindtap="onClosePlanDaySheet"></i>
+      </view>
+      <view class="plan-day-body">
+        <picker-view class="plan-day-picker-view" indicator-style="height: 88rpx;" value="{{[selectedPlanDayIndex]}}" bindchange="onSelectPlanDay">
+          <picker-view-column>
+            <view wx:for="{{dayOptions}}" wx:key="*this" class="plan-day-picker-item">
+              {{item}} 天
+            </view>
+          </picker-view-column>
+        </picker-view>
+        <view class="plan-day-save" bindtap="onConfirmPlanRoute">保存</view>
+      </view>
+    </view>
+  </view>
 </view>

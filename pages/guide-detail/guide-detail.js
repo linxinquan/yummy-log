@@ -2,6 +2,7 @@ const util = require('../../utils/util')
 const { shops, shopNameMap } = require('../../utils/shopData')
 const { spotData } = require('../../utils/spotData')
 const { applyTravelMeta, buildTravelOptions } = require('../../utils/travel')
+const { buildMapPreviewViewData } = require('../../utils/map-preview')
 
 const DEFAULT_COVERS = [
   '/images/covers/01.jpeg',
@@ -171,6 +172,13 @@ function syncDaySections(daySections, cityInfo) {
         tag,
         image: item.image || matched?.image || matched?.logo || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length],
         type: item.type || matched?.type || (tag === '美食' ? 'food' : 'spot'),
+        rating: item.rating || matched?.rating || matched?.score || '',
+        tags: item.tags || matched?.tags || [],
+        desc: item.desc || matched?.desc || '',
+        hours: item.hours || matched?.hours || '',
+        openHours: item.openHours || matched?.openHours || '',
+        free: item.free !== undefined ? item.free : matched?.free,
+        price: item.price || matched?.price || '',
         lat,
         lng,
         distanceFromPrev: item.distanceFromPrev || 0
@@ -322,6 +330,17 @@ Page({
     mapPreviewPlaces: [],
     mapPreviewPlace: null,
     mapPreviewIndex: 0,
+    previewTabs: [],
+    previewDisplayMeta: [],
+    previewDescriptionText: '',
+    previewFeeText: '',
+    previewStationText: '',
+    previewCountText: '',
+    previewPrevIndex: -1,
+    previewNextIndex: -1,
+    previewDisablePrev: true,
+    previewDisableNext: true,
+    mapScale: 12,
     mapCenter: { lat: 22.5431, lng: 114.0579 },
     mapMarkers: [],
     polyline: [],
@@ -418,26 +437,77 @@ Page({
 
     this.setData({
       mapCenter: { lat: cityInfo.lat, lng: cityInfo.lng },
+      mapScale: 12,
       mapMarkers: markers,
       polyline,
       currentMapDay: typeof mapDayIndex === 'number' ? mapDayIndex : -1
     })
   },
 
-  refreshMapPreview(daySections, previewIndex = 0) {
+  onFitRoute() {
+    const effectiveDayIndex = this.data.currentMapDay >= 0
+      ? this.data.currentMapDay
+      : ((this.data.mapPreviewPlace && this.data.mapPreviewPlace.dayIndex) || 0)
+    const dayItems = ((((this.data.daySections || [])[effectiveDayIndex] || {}).items) || [])
+    const places = dayItems.length ? dayItems : (this.data.mapPreviewPlaces || [])
+    if (!places.length) return
+    const points = places
+      .map(item => ({
+        latitude: item.lat || item.latitude,
+        longitude: item.lng || item.longitude
+      }))
+      .filter(item => typeof item.latitude === 'number' && typeof item.longitude === 'number')
+    if (!points.length) return
+
+    if (points.length === 1) {
+      this.setData({
+        mapCenter: { lat: points[0].latitude, lng: points[0].longitude },
+        mapScale: 15
+      })
+      return
+    }
+
+    const sysInfo = wx.getSystemInfoSync()
+    const mapCtx = wx.createMapContext('guideDetailMap', this)
+    mapCtx.includePoints({
+      points,
+      padding: [96, 24, Math.round((sysInfo.windowHeight || 812) * 0.34), 24]
+    })
+  },
+
+  refreshMapPreview(daySections, previewIndex = 0, currentDayOverride) {
     const places = flattenDaySections(daySections)
     const safeIndex = places.length ? Math.max(0, Math.min(previewIndex, places.length - 1)) : 0
     const currentPlace = places[safeIndex] || null
+    const resolvedDayIndex = typeof currentDayOverride === 'number'
+      ? currentDayOverride
+      : (places.length ? getDayIndexByPreview(daySections, safeIndex) : -1)
+    const previewViewData = buildMapPreviewViewData(
+      daySections,
+      resolvedDayIndex,
+      safeIndex,
+      currentPlace,
+      places.length
+    )
     const nextData = {
       mapPreviewPlaces: places,
       mapPreviewPlace: currentPlace,
       mapPreviewIndex: safeIndex,
-      currentMapDay: currentPlace ? currentPlace.dayIndex : 0
+      currentMapDay: resolvedDayIndex,
+      ...previewViewData
     }
     if (currentPlace && currentPlace.lat && currentPlace.lng) {
       nextData.mapCenter = { lat: currentPlace.lat, lng: currentPlace.lng }
     }
     this.setData(nextData)
+  },
+
+  changeMapPreview(index) {
+    const nextIndex = parseInt(index, 10)
+    if (Number.isNaN(nextIndex)) return
+    const places = this.data.mapPreviewPlaces || []
+    if (!places.length || nextIndex < 0 || nextIndex >= places.length) return
+    this.refreshMapPreview(this.data.daySections, nextIndex)
   },
 
   onBack() {
@@ -453,17 +523,27 @@ Page({
     if (mode === this.data.viewMode) return
     this.setData({ viewMode: mode })
     if (mode === 'map') {
-      const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : 0
+      const mapDayIndex = this.data.currentTab > 0
+        ? this.data.currentTab - 1
+        : (this.data.daySections.length ? 0 : -1)
       this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
-      this.refreshMapPreview(this.data.daySections, getPreviewIndexByDay(this.data.daySections, Math.max(mapDayIndex, 0)))
+      this.refreshMapPreview(
+        this.data.daySections,
+        mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, mapDayIndex) : this.data.mapPreviewIndex
+      )
     }
   },
 
   onOpenMapMode() {
     this.setData({ viewMode: 'map' })
-    const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : 0
+    const mapDayIndex = this.data.currentTab > 0
+      ? this.data.currentTab - 1
+      : (this.data.daySections.length ? 0 : -1)
     this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
-    this.refreshMapPreview(this.data.daySections, getPreviewIndexByDay(this.data.daySections, Math.max(mapDayIndex, 0)))
+    this.refreshMapPreview(
+      this.data.daySections,
+      mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, mapDayIndex) : this.data.mapPreviewIndex
+    )
   },
 
   onSaveRoute() {
@@ -509,9 +589,12 @@ Page({
       (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
       10
     )
-    const previewIndex = getPreviewIndexByDay(this.data.daySections, index)
     this.updateMapData(this.data.daySections, this.data.cityInfo, index)
-    this.refreshMapPreview(this.data.daySections, previewIndex)
+    this.refreshMapPreview(
+      this.data.daySections,
+      index >= 0 ? getPreviewIndexByDay(this.data.daySections, index) : this.data.mapPreviewIndex,
+      index
+    )
   },
 
   onTabTap(e) {
@@ -520,26 +603,30 @@ Page({
     this.setData({ currentTab: index, sheetScrollTarget })
 
     if (this.data.viewMode === 'map') {
-      const nextMapDay = Math.max(index - 1, 0)
+      const nextMapDay = index > 0 ? index - 1 : (this.data.daySections.length ? 0 : -1)
       this.updateMapData(this.data.daySections, this.data.cityInfo, nextMapDay)
-      this.refreshMapPreview(this.data.daySections, getPreviewIndexByDay(this.data.daySections, nextMapDay))
+      this.refreshMapPreview(
+        this.data.daySections,
+        nextMapDay >= 0 ? getPreviewIndexByDay(this.data.daySections, nextMapDay) : this.data.mapPreviewIndex
+      )
     }
   },
 
-  onPreviewPrev() {
-    if (this.data.mapPreviewIndex <= 0) return
-    const nextIndex = this.data.mapPreviewIndex - 1
+  onChangeMapPreview(e) {
+    const nextIndex = parseInt(
+      (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
+      10
+    )
+    if (Number.isNaN(nextIndex)) return
     const nextDayIndex = getDayIndexByPreview(this.data.daySections, nextIndex)
     this.updateMapData(this.data.daySections, this.data.cityInfo, nextDayIndex)
-    this.refreshMapPreview(this.data.daySections, nextIndex)
+    this.refreshMapPreview(this.data.daySections, nextIndex, nextDayIndex)
   },
 
-  onPreviewNext() {
-    if (this.data.mapPreviewIndex >= this.data.mapPreviewPlaces.length - 1) return
-    const nextIndex = this.data.mapPreviewIndex + 1
-    const nextDayIndex = getDayIndexByPreview(this.data.daySections, nextIndex)
-    this.updateMapData(this.data.daySections, this.data.cityInfo, nextDayIndex)
-    this.refreshMapPreview(this.data.daySections, nextIndex)
+  onMapPreviewStep(e) {
+    const index = parseInt(e.currentTarget.dataset.index, 10)
+    if (Number.isNaN(index) || index < 0) return
+    this.onChangeMapPreview({ detail: { index } })
   },
 
   openTransportSheet(dayIndex, itemIndex, previewIndex) {

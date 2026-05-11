@@ -1,5 +1,11 @@
 const util = require('./util')
 
+const GLOBAL_TRANSPORT_PREFERENCES_KEY = 'globalTransportPreferences'
+const DEFAULT_TRANSPORT_PREFERENCES = {
+  shortDistanceMode: 'walk',
+  longDistanceMode: 'ride'
+}
+
 const MODE_CONFIG = {
   walk: { key: 'walk', label: '步行', shortLabel: '步', icon: 'mgc_walk_line', minutesPerKm: 12 },
   ride: { key: 'ride', label: '骑行', shortLabel: '骑', icon: 'mgc_riding_line', minutesPerKm: 4 },
@@ -18,13 +24,38 @@ function formatDurationShort(minutes) {
   return mins ? `${hours}h ${mins}min` : `${hours}h`
 }
 
+function normalizeTransportMode(mode) {
+  if (mode === 'bus' || mode === 'transit') return 'transit'
+  if (mode === 'walk' || mode === 'ride' || mode === 'drive') return mode
+  return ''
+}
+
+function getGlobalTransportPreferences() {
+  const stored = util.loadData(GLOBAL_TRANSPORT_PREFERENCES_KEY, {}) || {}
+  return {
+    shortDistanceMode: normalizeTransportMode(stored.shortDistanceMode) || DEFAULT_TRANSPORT_PREFERENCES.shortDistanceMode,
+    longDistanceMode: normalizeTransportMode(stored.longDistanceMode) || DEFAULT_TRANSPORT_PREFERENCES.longDistanceMode
+  }
+}
+
+function saveGlobalTransportPreferences(preferences) {
+  const nextPreferences = {
+    shortDistanceMode: normalizeTransportMode(preferences && preferences.shortDistanceMode) || DEFAULT_TRANSPORT_PREFERENCES.shortDistanceMode,
+    longDistanceMode: normalizeTransportMode(preferences && preferences.longDistanceMode) || DEFAULT_TRANSPORT_PREFERENCES.longDistanceMode
+  }
+  util.saveData(GLOBAL_TRANSPORT_PREFERENCES_KEY, nextPreferences)
+  return nextPreferences
+}
+
+function getPreferredTravelMode(distance, preferences = getGlobalTransportPreferences()) {
+  const safeDistance = Math.max(Math.round(distance || 0), 0)
+  return safeDistance < 1000
+    ? preferences.shortDistanceMode
+    : preferences.longDistanceMode
+}
+
 function inferDefaultMode(distance) {
-  const safeDistance = Math.max(Math.round(distance || 0), 1)
-  if (safeDistance >= 12000) return 'drive'
-  if (safeDistance >= 6000) return 'bus'
-  if (safeDistance >= 3500) return 'transit'
-  if (safeDistance >= 900) return 'ride'
-  return 'walk'
+  return getPreferredTravelMode(distance)
 }
 
 function buildTravelMeta(distance, mode) {
@@ -63,7 +94,12 @@ function applyTravelMeta(item, mode) {
 module.exports = {
   MODE_CONFIG,
   MODE_ORDER,
+  DEFAULT_TRANSPORT_PREFERENCES,
   formatDurationShort,
+  normalizeTransportMode,
+  getGlobalTransportPreferences,
+  saveGlobalTransportPreferences,
+  getPreferredTravelMode,
   inferDefaultMode,
   buildTravelMeta,
   buildTravelOptions,

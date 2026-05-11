@@ -7,6 +7,10 @@ Component({
     travelMeta: {
       type: Object,
       value: null
+    },
+    variant: {
+      type: String,
+      value: 'default'
     }
   },
 

@@ -3,6 +3,7 @@ const app = getApp()
 const shopData = require('../../utils/shopData')
 const util = require('../../utils/util')
 const { MODE_CONFIG, applyTravelMeta, buildTravelOptions, formatDurationShort } = require('../../utils/travel')
+const { buildMapPreviewViewData } = require('../../utils/map-preview')
 
 const DEFAULT_COVERS = [
   '/images/covers/01.jpeg',
@@ -129,30 +130,44 @@ function getCityInfo(text) {
   return { name: '深圳市', lat: 22.5431, lng: 114.0579 }
 }
 
-function buildPreviewDaySections(routeShops) {
+function buildPreviewDaySections(routeShops, preferredDayCount = 1) {
   const items = (routeShops || []).map((item, index) => ({
     ...item,
     id: item.id || `preview-place-${index}`,
     coverImage: item.coverImage || getCoverImage(item),
     tagText: item.tagText || getItemTagText(item)
   }))
+  if (!items.length) return []
 
-  return [{
-    id: 'preview-day-0',
-    title: buildDayLabel(1),
-    countText: `${items.length} 个地点`,
-    items
-  }]
+  const dayCount = Math.max(1, Math.min(parseInt(preferredDayCount, 10) || 1, items.length))
+  const sections = []
+  let startIndex = 0
+
+  for (let dayIndex = 0; dayIndex < dayCount; dayIndex += 1) {
+    const remainingItems = items.length - startIndex
+    const remainingDays = dayCount - dayIndex
+    const currentCount = Math.max(1, Math.ceil(remainingItems / remainingDays))
+    const dayItems = items.slice(startIndex, startIndex + currentCount)
+    sections.push({
+      id: `preview-day-${dayIndex}`,
+      title: buildDayLabel(dayIndex + 1),
+      countText: `${dayItems.length} 个地点`,
+      items: dayItems
+    })
+    startIndex += currentCount
+  }
+
+  return sections
 }
 
 function buildPreviewTitle(cityText, routeType) {
   const cityName = String(cityText || '').replace(/市$/, '')
   if (cityName) {
-    if (routeType === 'spot') return `${cityName}景点路线`
-    if (routeType === 'food') return `${cityName}美食路线`
-    return `${cityName}智能路线`
+    if (routeType === 'spot') return `${cityName}景点智能规划路线`
+    if (routeType === 'food') return `${cityName}美食智能规划路线`
+    return `${cityName}智能规划路线`
   }
-  return '智能生成路线'
+  return '智能规划路线'
 }
 
 function buildLegacyRouteData(daySections) {
@@ -214,7 +229,7 @@ Page({
     currentStart: { name: '当前位置', lat: 22.5431, lng: 114.0579, type: 'current' },
 
     // 出行方式
-    travelMode: 'drive',
+  travelMode: 'ride',
 
     // 当前定位
     currentLocation: null,
@@ -228,7 +243,7 @@ Page({
     currentTab: 0,
     currentMapDay: -1,
     sheetScrollTarget: '',
-    routeTitle: '智能生成路线',
+    routeTitle: '智能规划路线',
     summaryText: '',
     cityText: '深圳市',
     previewRouteId: '',
@@ -236,6 +251,16 @@ Page({
     routeShopsBackup: [],
     mapPreviewShop: null,
     mapPreviewIndex: 0,
+    previewTabs: [],
+    previewDisplayMeta: [],
+    previewDescriptionText: '',
+    previewFeeText: '',
+    previewStationText: '',
+    previewCountText: '',
+    previewPrevIndex: -1,
+    previewNextIndex: -1,
+    previewDisablePrev: true,
+    previewDisableNext: true,
     transportSheetVisible: false,
     transportOptions: [],
     pendingTransportMode: 'walk',
@@ -274,7 +299,7 @@ Page({
 
   onLoad(options) {
     // 接收 type=food/spot 和 ids=1,2,3 参数
-    const { type, ids } = options
+    const { type, ids, dayCount } = options
     const routeType = type === 'spot' ? 'spot' : type === 'plan' ? 'mixed' : 'food'
     const sysInfo = wx.getSystemInfoSync()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
@@ -286,6 +311,7 @@ Page({
       routeType,
       isMixedRoute: routeType === 'mixed',
       presetIds: ids ? ids.split(',') : null,
+      preferredDayCount: Math.max(1, parseInt(dayCount, 10) || 1),
       menuTop,
       menuHeight,
       modeSwitchTop
@@ -414,13 +440,13 @@ Page({
       ...(routeShops || []).map(item => item.city || item.address || item.name)
     ].filter(Boolean).join(' ')
     const cityInfo = getCityInfo(citySource)
-    const routeDaySections = routeShops.length ? buildPreviewDaySections(routeShops) : []
+    const routeDaySections = routeShops.length ? buildPreviewDaySections(routeShops, this.data.preferredDayCount) : []
     const tabs = routeDaySections.length ? buildTabs(routeDaySections.length) : []
     this.setData({
       routeDaySections,
       tabs,
       currentTab: 0,
-      currentMapDay: routeDaySections.length ? 0 : -1,
+      currentMapDay: -1,
       sheetScrollTarget: '',
       summaryText: routeDaySections.length ? buildSummaryText(routeDaySections) : '',
       cityText: cityInfo.name,
@@ -446,11 +472,22 @@ Page({
     routeShops.forEach(s => { totalDist += s.distanceFromPrev || 0 })
 
     this.setData({
-      totalDistance: util.formatDistance(totalDist),
-      totalTime: estimateRouteDuration(totalDist, this.data.travelMode)
+      totalDistance: util.formatDistance(totalDist)
     })
 
-    return decorateRouteItems(routeShops, this.data.travelMode)
+    const decoratedRouteShops = decorateRouteItems(routeShops)
+    let totalMinutes = 0
+    decoratedRouteShops.forEach(item => {
+      const modeKey = (item.travelMeta && item.travelMeta.mode) || item.travelMode
+      const modeConfig = MODE_CONFIG[modeKey] || MODE_CONFIG.ride
+      totalMinutes += (Math.max(0, item.distanceFromPrev || 0) / 1000) * modeConfig.minutesPerKm
+    })
+
+    this.setData({
+      totalTime: formatDurationShort(totalMinutes)
+    })
+
+    return decoratedRouteShops
   },
 
   // ─── 更新地图 markers + polyline ─────────────
@@ -539,33 +576,32 @@ Page({
 
   // ─── 地图适配所有标记 ─────────────────────────
   onFitRoute() {
-    const { routeShops, currentStart } = this.data
-    if (routeShops.length === 0) return
+    const effectiveDayIndex = this.data.currentMapDay >= 0 ? this.data.currentMapDay : 0
+    const currentDay = (this.data.routeDaySections || [])[effectiveDayIndex] || {}
+    const currentItems = (currentDay.items || []).length ? currentDay.items : (this.data.routeShops || [])
+    if (currentItems.length === 0) return
+    const points = currentItems
+      .map(item => ({
+        latitude: item.lat || item.latitude,
+        longitude: item.lng || item.longitude
+      }))
+      .filter(item => typeof item.latitude === 'number' && typeof item.longitude === 'number')
+    if (!points.length) return
 
-    let startPoint = currentStart
-    if (currentStart.type === 'current') {
-      startPoint = app.globalData.location || { lat: 22.4846, lng: 113.9046 }
+    if (points.length === 1) {
+      this.setData({
+        mapCenter: { lat: points[0].latitude, lng: points[0].longitude },
+        mapScale: 15
+      })
+      return
     }
 
-    const lats = [startPoint.lat, ...routeShops.map(s => s.lat || s.latitude)]
-    const lngs = [startPoint.lng, ...routeShops.map(s => s.lng || s.longitude)]
-    const minLat = Math.min(...lats), maxLat = Math.max(...lats)
-    const minLng = Math.min(...lngs), maxLng = Math.max(...lngs)
-    const centerLat = (minLat + maxLat) / 2
-    const centerLng = (minLng + maxLng) / 2
-
-    // 根据跨度估算缩放级别
-    const latSpan = maxLat - minLat
-    const lngSpan = maxLng - minLng
-    const span = Math.max(latSpan, lngSpan)
-    let scale = 14
-    if (span > 0.1) scale = 11
-    else if (span > 0.05) scale = 12
-    else if (span > 0.02) scale = 13
-    else if (span > 0.01) scale = 14
-    else scale = 15
-
-    this.setData({ mapCenter: { lat: centerLat, lng: centerLng }, mapScale: scale })
+    const sysInfo = wx.getSystemInfoSync()
+    const mapCtx = wx.createMapContext('routeMap', this)
+    mapCtx.includePoints({
+      points,
+      padding: [96, 24, Math.round((sysInfo.windowHeight || 812) * 0.34), 24]
+    })
   },
 
   onMapRegionChange() {
@@ -948,6 +984,11 @@ Page({
     if (mode === this.data.viewMode) return
     this.setData({ viewMode: mode })
     if (mode === 'map') {
+      const mapDayIndex = this.data.currentTab > 0
+        ? this.data.currentTab - 1
+        : (this.data.routeDaySections.length ? 0 : -1)
+      this.setData({ currentMapDay: mapDayIndex })
+      this.focusPreviewByIndex(mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.routeDaySections, mapDayIndex) : 0, mapDayIndex >= 0 ? mapDayIndex : undefined)
       this.updateMap()
     }
   },
@@ -956,6 +997,11 @@ Page({
     const index = parseInt(e.currentTarget.dataset.index, 10)
     const sheetScrollTarget = index === 0 ? 'route-overview-anchor' : `route-day-anchor-${index - 1}`
     this.setData({ currentTab: index, sheetScrollTarget })
+    if (this.data.viewMode === 'map') {
+      const mapDayIndex = index > 0 ? index - 1 : (this.data.routeDaySections.length ? 0 : -1)
+      this.setData({ currentMapDay: mapDayIndex })
+      this.focusPreviewByIndex(mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.routeDaySections, mapDayIndex) : 0, mapDayIndex >= 0 ? mapDayIndex : undefined)
+    }
   },
 
   onOpenPlaceDetail(e) {
@@ -1003,24 +1049,41 @@ Page({
     wx.showToast({ title: '已保存到路线', icon: 'success' })
     const routeStr = encodeURIComponent(JSON.stringify(savedRoute))
     setTimeout(() => {
-      wx.navigateTo({ url: `/pages/my-route/my-route?route=${routeStr}` })
+      wx.navigateTo({ url: `/pages/my-route/my-route?route=${routeStr}&returnTo=plan` })
     }, 280)
   },
 
   onViewRoute() {
-    this.setData({ viewMode: 'map' })
+    const mapDayIndex = this.data.currentTab > 0
+      ? this.data.currentTab - 1
+      : (this.data.routeDaySections.length ? 0 : -1)
+    this.setData({ viewMode: 'map', currentMapDay: mapDayIndex })
+    this.focusPreviewByIndex(mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.routeDaySections, mapDayIndex) : 0, mapDayIndex >= 0 ? mapDayIndex : undefined)
     this.updateMap()
   },
 
-  focusPreviewByIndex(index) {
+  focusPreviewByIndex(index, currentDayOverride) {
     const { routeShops, routeDaySections } = this.data
     if (!routeShops.length) return
-    const safeIndex = Math.max(0, Math.min(index, routeShops.length - 1))
+    const parsedIndex = parseInt(index, 10)
+    if (Number.isNaN(parsedIndex)) return
+    const safeIndex = Math.max(0, Math.min(parsedIndex, routeShops.length - 1))
     const target = routeShops[safeIndex]
+    const resolvedDayIndex = typeof currentDayOverride === 'number'
+      ? currentDayOverride
+      : getDayIndexByPreview(routeDaySections, safeIndex)
+    const previewViewData = buildMapPreviewViewData(
+      routeDaySections,
+      resolvedDayIndex,
+      safeIndex,
+      target,
+      routeShops.length
+    )
     this.setData({
       mapPreviewIndex: safeIndex,
       mapPreviewShop: target,
-      currentMapDay: getDayIndexByPreview(routeDaySections, safeIndex),
+      currentMapDay: resolvedDayIndex,
+      ...previewViewData,
       mapCenter: {
         lat: target.lat || target.latitude,
         lng: target.lng || target.longitude
@@ -1033,17 +1096,27 @@ Page({
       (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
       10
     )
-    this.focusPreviewByIndex(getPreviewIndexByDay(this.data.routeDaySections, dayIndex))
+    this.setData({ currentMapDay: dayIndex })
+    this.focusPreviewByIndex(
+      dayIndex >= 0 ? getPreviewIndexByDay(this.data.routeDaySections, dayIndex) : 0,
+      dayIndex
+    )
   },
 
-  onPreviewPrev() {
-    if (this.data.mapPreviewIndex <= 0) return
-    this.focusPreviewByIndex(this.data.mapPreviewIndex - 1)
+  onChangeMapPreview(e) {
+    const nextIndex = parseInt(
+      (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
+      10
+    )
+    if (Number.isNaN(nextIndex)) return
+    const nextDayIndex = getDayIndexByPreview(this.data.routeDaySections, nextIndex)
+    this.focusPreviewByIndex(nextIndex, nextDayIndex)
   },
 
-  onPreviewNext() {
-    if (this.data.mapPreviewIndex >= this.data.routeShops.length - 1) return
-    this.focusPreviewByIndex(this.data.mapPreviewIndex + 1)
+  onMapPreviewStep(e) {
+    const index = parseInt(e.currentTarget.dataset.index, 10)
+    if (Number.isNaN(index) || index < 0) return
+    this.onChangeMapPreview({ detail: { index } })
   },
 
   onBack() {

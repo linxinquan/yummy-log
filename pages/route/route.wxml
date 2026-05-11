@@ -119,26 +119,6 @@
             </view>
 
             <view class="sheet-content">
-              <view class="planner-panel" wx:if="{{allLikedShops.length > 0}}">
-                <view class="planner-card">
-                  <scroll-view class="planner-mode-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
-                    <view class="planner-mode-row">
-                      <view
-                        wx:for="{{routeModes}}"
-                        wx:key="key"
-                        class="planner-mode-chip {{travelMode === item.key ? 'active' : ''}}"
-                        bindtap="onSelectMode"
-                        data-mode="{{item.key}}"
-                      >
-                        <i class="{{item.icon}}"></i>
-                        <text>{{item.label}}</text>
-                      </view>
-                    </view>
-                  </scroll-view>
-                </view>
-
-              </view>
-
               <view class="section-card candidate-card" wx:if="{{selectMode === 'custom' && allLikedShops.length > 0}}">
                 <view class="candidate-header">
                   <view>
@@ -214,28 +194,32 @@
                       data-item="{{item}}"
                       data-index="{{index}}"
                     >
-                      <view class="place-cover-wrap">
-                        <view class="place-cover-shadow"></view>
-                        <image class="place-cover" src="{{item.coverImage}}" mode="aspectFill"></image>
-                      </view>
-                      <view class="place-main">
-                        <view class="place-tag">{{item.tagText}}</view>
-                        <text class="place-name">{{item.name}}</text>
-                        <travel-meta-line
-                          travel-meta="{{item.travelMeta}}"
-                          bindtapmeta="onOpenPlaceTransportSheet"
-                          data-index="{{index}}"
-                        ></travel-meta-line>
-                      </view>
-                      <view class="place-arrow" wx:if="{{!isEditing}}">
-                        <i class="mgc_right_line"></i>
-                      </view>
-                      <view class="route-sort-actions" wx:if="{{isEditing}}">
-                        <view class="sort-action {{index === 0 ? 'off' : ''}}" catchtap="onMoveUp" data-index="{{index}}">
-                          <i class="mgc_arrow_up_line"></i>
+                      <image class="place-cover" src="{{item.coverImage}}" mode="aspectFill"></image>
+                      <view class="place-info-row">
+                        <view class="place-main">
+                          <view class="place-head">
+                            <view class="place-tag">
+                              <text class="place-tag-text">{{item.tagText}}</text>
+                            </view>
+                            <text class="place-name">{{item.name}}</text>
+                          </view>
+                          <travel-meta-line
+                            class="place-meta-line"
+                            travel-meta="{{item.travelMeta}}"
+                            bindtapmeta="onOpenPlaceTransportSheet"
+                            data-index="{{index}}"
+                          ></travel-meta-line>
                         </view>
-                        <view class="sort-action {{index === routeShops.length - 1 ? 'off' : ''}}" catchtap="onMoveDown" data-index="{{index}}">
-                          <i class="mgc_arrow_down_line"></i>
+                        <view class="place-arrow" wx:if="{{!isEditing}}">
+                          <i class="mgc_right_line"></i>
+                        </view>
+                        <view class="route-sort-actions" wx:if="{{isEditing}}">
+                          <view class="sort-action {{index === 0 ? 'off' : ''}}" catchtap="onMoveUp" data-index="{{index}}">
+                            <i class="mgc_arrow_up_line"></i>
+                          </view>
+                          <view class="sort-action {{index === routeShops.length - 1 ? 'off' : ''}}" catchtap="onMoveDown" data-index="{{index}}">
+                            <i class="mgc_arrow_down_line"></i>
+                          </view>
                         </view>
                       </view>
                     </view>
@@ -290,19 +274,85 @@
 
     <block wx:else>
       <view class="map-panel">
-        <route-map-preview-card
-          place="{{mapPreviewShop}}"
-          day-tabs="{{routeDaySections}}"
-          current-day="{{currentMapDay}}"
-          current-index="{{mapPreviewIndex}}"
-          total-count="{{routeShops.length}}"
-          disable-prev="{{mapPreviewIndex === 0}}"
-          disable-next="{{mapPreviewIndex === routeShops.length - 1}}"
-          binddaychange="onSelectMapPreviewDay"
-          bindprev="onPreviewPrev"
-          bindnext="onPreviewNext"
-          bindtapmeta="onOpenMapTransportSheet"
-        />
+      <view class="map-panel-actions" wx:if="{{mapPreviewShop}}">
+        <view class="map-floating-icon" bindtap="onSwitchMode" data-mode="list">
+          <i class="mgc_left_line"></i>
+        </view>
+        <view class="map-floating-icon" bindtap="onFitRoute">
+          <i class="mgc_fullscreen_line"></i>
+        </view>
+      </view>
+        <view class="map-card route-map-preview-card" wx:if="{{mapPreviewShop}}">
+          <view class="preview-tabs-panel">
+            <view class="preview-tab-row">
+              <view
+                wx:for="{{previewTabs}}"
+                wx:key="index"
+                class="preview-tab-item {{((currentMapDay < 0 && item.index === 0) || currentMapDay === item.index) ? 'active' : ''}}"
+                bindtap="onSelectMapPreviewDay"
+                data-index="{{item.index}}"
+              >
+                {{item.label}}
+              </view>
+            </view>
+            <view class="preview-tab-divider"></view>
+          </view>
+
+          <view class="preview-card-stage">
+            <view class="preview-detail-card">
+              <view class="preview-side-inner">
+                <view class="preview-card-head">
+                  <image class="preview-cover-image" src="{{mapPreviewShop.image || mapPreviewShop.coverImage}}" mode="aspectFill"></image>
+                  <view class="preview-head-main">
+                    <text class="preview-name">{{mapPreviewShop.name}}</text>
+                    <view class="preview-meta-row" wx:if="{{previewDisplayMeta.length > 0}}">
+                      <view
+                        wx:for="{{previewDisplayMeta}}"
+                        wx:key="index"
+                        wx:for-item="chip"
+                        class="preview-chip {{chip.type === 'score' ? 'score' : ''}}"
+                      >
+                        {{chip.text}}
+                      </view>
+                    </view>
+                  </view>
+                </view>
+
+                <view class="preview-desc-row">
+                  <text class="preview-desc-left">{{previewDescriptionText}}</text>
+                  <text class="preview-desc-right">{{previewFeeText}}</text>
+                </view>
+              </view>
+
+              <view class="preview-btn-row">
+                <view
+                  class="preview-btn {{previewDisablePrev ? 'disabled' : ''}}"
+                  bindtap="onMapPreviewStep"
+                  data-index="{{previewPrevIndex}}"
+                >
+                  <text>上一站</text>
+                </view>
+                <view
+                  class="preview-btn {{previewDisableNext ? 'disabled' : ''}}"
+                  bindtap="onMapPreviewStep"
+                  data-index="{{previewNextIndex}}"
+                >
+                  <text>下一站</text>
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <view class="preview-footer">
+            <view class="preview-footer-side">
+              <text>{{previewStationText}}</text>
+            </view>
+            <travel-meta-line variant="compact" travel-meta="{{mapPreviewShop.travelMeta}}" bindtapmeta="onOpenMapTransportSheet"></travel-meta-line>
+            <view class="preview-footer-side right">
+              <text>{{previewCountText}}</text>
+            </view>
+          </view>
+        </view>
       </view>
     </block>
 

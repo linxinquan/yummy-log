@@ -7,6 +7,30 @@ const { applyTravelMeta, buildTravelOptions } = require('../../utils/travel')
 // 每项高度(px) = 卡片高度120rpx + gap 16rpx 换算
 const ITEM_H = 60 // px，每项高度用于计算排序
 const DEFAULT_COVER = '/images/covers/01.jpeg'
+const DAY_OPTIONS = Array.from({ length: 30 }, (_, index) => index + 1)
+const DELETE_ACTION_WIDTH_RPX = 144
+
+function withSwipeState(items) {
+  return (items || []).map(item => ({
+    ...item,
+    swipeOffset: 0
+  }))
+}
+
+function closeSwipeItems(items, keepIndex = -1) {
+  let changed = false
+  const nextItems = (items || []).map((item, index) => {
+    if (index !== keepIndex && item && item.swipeOffset) {
+      changed = true
+      return {
+        ...item,
+        swipeOffset: 0
+      }
+    }
+    return item
+  })
+  return { nextItems, changed }
+}
 
 function isSpotItem(item) {
   return item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price
@@ -73,7 +97,12 @@ Page({
     transportSheetVisible: false,
     transportOptions: [],
     pendingTransportMode: 'walk',
-    transportTargetIndex: -1
+    transportTargetIndex: -1,
+    planDaySheetVisible: false,
+    dayOptions: DAY_OPTIONS,
+    selectedPlanDayCount: 1,
+    selectedPlanDayIndex: 0,
+    deleteActionWidthPx: 72
   },
 
   onLoad(options) {
@@ -91,6 +120,7 @@ Page({
     // 顶部内容预留的高度（留出一些下边距）
     const contentTop = menuTop + menuHeight + 12
     const listTop = contentTop + 25
+    const deleteActionWidthPx = sysInfo.windowWidth * DELETE_ACTION_WIDTH_RPX / 750
     
     this.setData({ 
       tab, 
@@ -98,7 +128,8 @@ Page({
       menuHeight,
       menuRightInset,
       contentTop,
-      listTop
+      listTop,
+      deleteActionWidthPx
     })
   },
 
@@ -115,6 +146,11 @@ Page({
   },
 
   onShow() {
+    const pendingTab = wx.getStorageSync('pendingWantgoTab')
+    if (pendingTab) {
+      wx.removeStorageSync('pendingWantgoTab')
+      this.setData({ tab: pendingTab, items: [], empty: true })
+    }
     this._loadData()
   },
 
@@ -144,7 +180,7 @@ Page({
       const foodItems = foodIds.map(id => allFoodItems.find(s => String(s.id) === String(id))).filter(Boolean)
       const spotItems = spotIds.map(id => spots.find(s => String(s.id) === String(id))).filter(Boolean)
       
-      items = buildPreviewItems([...foodItems, ...spotItems])
+      items = withSwipeState(buildPreviewItems([...foodItems, ...spotItems]))
       this.setData({ items, empty: items.length === 0 })
     } else if (tab === 'plan') {
       const savedRoutes = util.loadData('savedRoutes', [])
@@ -159,7 +195,7 @@ Page({
       const allItems = [...shops, ...foods, ...userShops, ...spots]
       
       // 统一用字符串比较
-      items = buildPreviewItems(ids.map(id => allItems.find(s => String(s.id) === String(id))).filter(Boolean))
+      items = withSwipeState(buildPreviewItems(ids.map(id => allItems.find(s => String(s.id) === String(id))).filter(Boolean)))
       this.setData({ items, empty: items.length === 0 })
     }
   },
@@ -173,6 +209,23 @@ Page({
 
   // ─── 点击项目 ─────────────────────────────
   onItemTap(e) {
+    if (this.data.tab === 'want') {
+      const index = parseInt(e.currentTarget.dataset.index, 10)
+      const items = this.data.items || []
+      const tappedItem = items[index]
+      const hasOpenItem = items.some(item => item && item.swipeOffset)
+      if (Date.now() - (this._lastSwipeTime || 0) < 250) {
+        return
+      }
+      if (hasOpenItem) {
+        const { nextItems } = closeSwipeItems(items)
+        this.setData({ items: nextItems })
+        if (tappedItem && tappedItem.swipeOffset) {
+          return
+        }
+      }
+    }
+
     const item = e.currentTarget.dataset.item
     
     // 判断是否为景点：根据 category 是否包含'景点'、'公园'等，或者是否存在特定的字段
@@ -202,6 +255,96 @@ Page({
     this.setData({ transportSheetVisible: false, transportTargetIndex: -1 })
   },
 
+  onCardTouchStart(e) {
+    if (this.data.tab !== 'want') return
+    const index = parseInt(e.currentTarget.dataset.index, 10)
+    const touch = e.touches && e.touches[0]
+    if (Number.isNaN(index) || !touch) return
+
+    const items = this.data.items || []
+    const currentItem = items[index]
+    const { nextItems, changed } = closeSwipeItems(items, index)
+    if (changed) {
+      this.setData({ items: nextItems })
+    }
+
+    this._swipeGesture = {
+      index,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      startOffset: (currentItem && currentItem.swipeOffset) || 0,
+      isHorizontal: false,
+      locked: false,
+      moved: false
+    }
+  },
+
+  onCardTouchMove(e) {
+    if (this.data.tab !== 'want' || !this._swipeGesture) return
+    const touch = e.touches && e.touches[0]
+    if (!touch) return
+
+    const gesture = this._swipeGesture
+    const deltaX = touch.clientX - gesture.startX
+    const deltaY = touch.clientY - gesture.startY
+
+    if (!gesture.isHorizontal && !gesture.locked) {
+      if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        gesture.locked = true
+        return
+      }
+      gesture.isHorizontal = true
+    }
+
+    if (!gesture.isHorizontal) return
+
+    const items = [...(this.data.items || [])]
+    const currentItem = items[gesture.index]
+    if (!currentItem) return
+
+    let nextOffset = gesture.startOffset + deltaX
+    const minOffset = -this.data.deleteActionWidthPx
+    nextOffset = Math.max(minOffset, Math.min(0, nextOffset))
+
+    if (currentItem.swipeOffset === nextOffset) return
+    items[gesture.index] = {
+      ...currentItem,
+      swipeOffset: nextOffset
+    }
+    gesture.moved = true
+    this.setData({ items })
+  },
+
+  onCardTouchEnd() {
+    if (this.data.tab !== 'want' || !this._swipeGesture) return
+
+    const gesture = this._swipeGesture
+    const items = [...(this.data.items || [])]
+    const currentItem = items[gesture.index]
+    if (!currentItem) {
+      this._swipeGesture = null
+      return
+    }
+
+    const minOffset = -this.data.deleteActionWidthPx
+    const shouldOpen = Math.abs(currentItem.swipeOffset || 0) > this.data.deleteActionWidthPx / 2
+    const finalOffset = shouldOpen ? minOffset : 0
+
+    if (currentItem.swipeOffset !== finalOffset) {
+      items[gesture.index] = {
+        ...currentItem,
+        swipeOffset: finalOffset
+      }
+      this.setData({ items })
+    }
+
+    if (gesture.moved) {
+      this._lastSwipeTime = Date.now()
+    }
+    this._swipeGesture = null
+  },
+
   onSelectTransportMode(e) {
     const mode = e.detail && e.detail.mode
     if (!mode) return
@@ -218,6 +361,25 @@ Page({
       items: nextItems,
       transportSheetVisible: false,
       transportTargetIndex: -1
+    })
+  },
+
+  preventBubble() {
+  },
+
+  onClosePlanDaySheet() {
+    this.setData({ planDaySheetVisible: false })
+  },
+
+  onSelectPlanDay(e) {
+    const value = e.detail && e.detail.value
+    const pickerIndex = Array.isArray(value) ? parseInt(value[0], 10) : parseInt(value, 10)
+    if (Number.isNaN(pickerIndex)) return
+    const dayCount = this.data.dayOptions[pickerIndex]
+    if (!dayCount) return
+    this.setData({
+      selectedPlanDayIndex: pickerIndex,
+      selectedPlanDayCount: dayCount
     })
   },
 
@@ -278,7 +440,6 @@ Page({
 
   // ─── 移除想去 ─────────────────────────────
   onRemove(e) {
-    e.stopPropagation()
     const id = e.currentTarget.dataset.id
     const { items } = this.data
     const item = items.find(i => i.id === id)
@@ -298,10 +459,23 @@ Page({
       wx.showToast({ title: '清单为空', icon: 'none' })
       return
     }
+    this.setData({
+      planDaySheetVisible: true,
+      selectedPlanDayCount: Math.max(1, Math.min(this.data.selectedPlanDayCount || 1, 30)),
+      selectedPlanDayIndex: Math.max(Math.max(1, Math.min(this.data.selectedPlanDayCount || 1, 30)) - 1, 0)
+    })
+  },
+
+  onConfirmPlanRoute() {
+    const { items, selectedPlanDayCount } = this.data
+    if (items.length === 0) {
+      wx.showToast({ title: '清单为空', icon: 'none' })
+      return
+    }
     const ids = items.map(i => i.id).join(',')
-    // 如果是合并列表，传递 type 为 plan，在 route 页内可能需要额外处理。
-    // 目前 route 页是根据 ids 在全局里查找对应的点，所以传混合 ids 应该也可以。
-    wx.navigateTo({ url: `/pages/route/route?type=plan&ids=${ids}` })
+    const dayCount = Math.max(1, parseInt(selectedPlanDayCount, 10) || 1)
+    this.setData({ planDaySheetVisible: false })
+    wx.navigateTo({ url: `/pages/route/route?type=plan&ids=${ids}&dayCount=${dayCount}` })
   },
 
   onGoHome() {

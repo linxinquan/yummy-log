@@ -3,6 +3,7 @@ const shopDataModule = require('../../utils/shopData')
 const { shops, shopNameMap } = shopDataModule
 const { spotData } = require('../../utils/spotData')
 const { applyTravelMeta, buildTravelOptions } = require('../../utils/travel')
+const { buildMapPreviewViewData } = require('../../utils/map-preview')
 
 const DEFAULT_COVERS = [
   '/images/covers/01.jpeg',
@@ -153,6 +154,13 @@ function syncDaySections(daySections, cityInfo) {
         tag,
         image: item.image || matched?.image || matched?.logo || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length],
         type: item.type || matched?.type || (tag === '美食' ? 'food' : 'spot'),
+        rating: item.rating || matched?.rating || matched?.score || '',
+        tags: item.tags || matched?.tags || [],
+        desc: item.desc || matched?.desc || '',
+        hours: item.hours || matched?.hours || '',
+        openHours: item.openHours || matched?.openHours || '',
+        free: item.free !== undefined ? item.free : matched?.free,
+        price: item.price || matched?.price || '',
         lat: item.lat || item.latitude || matched?.lat || synthetic.lat,
         lng: item.lng || item.longitude || matched?.lng || synthetic.lng,
         swipeOffset: item.swipeOffset || 0
@@ -364,10 +372,33 @@ function buildAddedPlace(item) {
   }
 }
 
+function moveItemAcrossDays(daySections, fromDayIndex, fromItemIndex, toDayIndex, toItemIndex) {
+  const nextSections = (daySections || []).map(day => ({
+    ...day,
+    items: [...((day && day.items) || [])]
+  }))
+  const sourceDay = nextSections[fromDayIndex]
+  const targetDay = nextSections[toDayIndex]
+  if (!sourceDay || !targetDay || !sourceDay.items[fromItemIndex]) {
+    return nextSections
+  }
+
+  const [movedItem] = sourceDay.items.splice(fromItemIndex, 1)
+  let safeTargetIndex = Math.max(0, Math.min(parseInt(toItemIndex, 10) || 0, targetDay.items.length))
+
+  if (fromDayIndex === toDayIndex && safeTargetIndex > fromItemIndex) {
+    safeTargetIndex -= 1
+  }
+
+  targetDay.items.splice(safeTargetIndex, 0, movedItem)
+  return nextSections
+}
+
 Page({
   data: {
     route: null,
     routeId: '',
+    returnTo: '',
     menuTop: 0,
     menuHeight: 32,
     modeSwitchTop: 110,
@@ -388,6 +419,17 @@ Page({
     mapPreviewPlaces: [],
     mapPreviewPlace: null,
     mapPreviewIndex: 0,
+    previewTabs: [],
+    previewDisplayMeta: [],
+    previewDescriptionText: '',
+    previewFeeText: '',
+    previewStationText: '',
+    previewCountText: '',
+    previewPrevIndex: -1,
+    previewNextIndex: -1,
+    previewDisablePrev: true,
+    previewDisableNext: true,
+    mapScale: 12,
     isEditing: false,
     dragging: false,
     dragDay: -1,
@@ -433,7 +475,8 @@ Page({
       modeSwitchTop,
       tabStickyTop,
       editTabStickyTop,
-      routeId: String(route.id)
+      routeId: String(route.id),
+      returnTo: options.returnTo || ''
     })
     this.refreshPlacePickerItems()
     this.applyRoute(route)
@@ -446,7 +489,17 @@ Page({
     const latestRoute = savedRoutes.find(item => String(item.id) === String(routeId))
     if (latestRoute) {
       this.applyRoute(latestRoute)
+      return
     }
+    wx.showToast({ title: '路线不存在', icon: 'none' })
+    setTimeout(() => {
+      wx.navigateBack({
+        delta: 1,
+        fail: () => {
+          wx.switchTab({ url: '/pages/wantgo/wantgo' })
+        }
+      })
+    }, 300)
   },
 
   applyRoute(route) {
@@ -525,7 +578,10 @@ Page({
   },
 
   updateMapData(daySections, cityInfo, mapDayIndex) {
-    const flattened = flattenDaySections(daySections)
+    const sections = typeof mapDayIndex === 'number' && mapDayIndex >= 0
+      ? [daySections[mapDayIndex]].filter(Boolean)
+      : daySections
+    const flattened = flattenDaySections(sections)
 
     const markers = flattened.map((item, index) => ({
       id: index,
@@ -558,21 +614,64 @@ Page({
 
     this.setData({
       mapCenter: { lat: cityInfo.lat, lng: cityInfo.lng },
+      mapScale: 12,
       mapMarkers: markers,
       polyline,
       currentMapDay: typeof mapDayIndex === 'number' ? mapDayIndex : -1
     })
   },
 
-  refreshMapPreview(daySections, previewIndex = 0) {
+  onFitRoute() {
+    const effectiveDayIndex = this.data.currentMapDay >= 0
+      ? this.data.currentMapDay
+      : ((this.data.mapPreviewPlace && this.data.mapPreviewPlace.dayIndex) || 0)
+    const dayItems = ((((this.data.daySections || [])[effectiveDayIndex] || {}).items) || [])
+    const places = dayItems.length ? dayItems : (this.data.mapPreviewPlaces || [])
+    if (!places.length) return
+    const points = places
+      .map(item => ({
+        latitude: item.lat || item.latitude,
+        longitude: item.lng || item.longitude
+      }))
+      .filter(item => typeof item.latitude === 'number' && typeof item.longitude === 'number')
+    if (!points.length) return
+
+    if (points.length === 1) {
+      this.setData({
+        mapCenter: { lat: points[0].latitude, lng: points[0].longitude },
+        mapScale: 15
+      })
+      return
+    }
+
+    const sysInfo = wx.getSystemInfoSync()
+    const mapCtx = wx.createMapContext('myRouteMap', this)
+    mapCtx.includePoints({
+      points,
+      padding: [96, 24, Math.round((sysInfo.windowHeight || 812) * 0.34), 24]
+    })
+  },
+
+  refreshMapPreview(daySections, previewIndex = 0, currentDayOverride) {
     const places = flattenDaySections(daySections)
     const safeIndex = places.length ? Math.max(0, Math.min(previewIndex, places.length - 1)) : 0
     const currentPlace = places[safeIndex] || null
+    const resolvedDayIndex = typeof currentDayOverride === 'number'
+      ? currentDayOverride
+      : (places.length ? getDayIndexByPreview(daySections, safeIndex) : -1)
+    const previewViewData = buildMapPreviewViewData(
+      daySections,
+      resolvedDayIndex,
+      safeIndex,
+      currentPlace,
+      places.length
+    )
     const nextData = {
       mapPreviewPlaces: places,
       mapPreviewPlace: currentPlace,
       mapPreviewIndex: safeIndex,
-      currentMapDay: currentPlace ? currentPlace.dayIndex : -1
+      currentMapDay: resolvedDayIndex,
+      ...previewViewData
     }
     if (currentPlace && currentPlace.lat && currentPlace.lng) {
       nextData.mapCenter = { lat: currentPlace.lat, lng: currentPlace.lng }
@@ -580,7 +679,20 @@ Page({
     this.setData(nextData)
   },
 
+  changeMapPreview(index) {
+    const nextIndex = parseInt(index, 10)
+    if (Number.isNaN(nextIndex)) return
+    const places = this.data.mapPreviewPlaces || []
+    if (!places.length || nextIndex < 0 || nextIndex >= places.length) return
+    this.refreshMapPreview(this.data.daySections, nextIndex)
+  },
+
   onBack() {
+    if (this.data.returnTo === 'plan') {
+      wx.setStorageSync('pendingWantgoTab', 'plan')
+      wx.switchTab({ url: '/pages/wantgo/wantgo' })
+      return
+    }
     wx.navigateBack()
   },
 
@@ -594,18 +706,28 @@ Page({
     if (mode === this.data.viewMode) return
     this.setData({ viewMode: mode })
     if (mode === 'map') {
-      const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : 0
+      const mapDayIndex = this.data.currentTab > 0
+        ? this.data.currentTab - 1
+        : (this.data.daySections.length ? 0 : -1)
       this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
-      this.refreshMapPreview(this.data.daySections, getPreviewIndexByDay(this.data.daySections, Math.max(mapDayIndex, 0)))
+      this.refreshMapPreview(
+        this.data.daySections,
+        mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, mapDayIndex) : this.data.mapPreviewIndex
+      )
     }
   },
 
   onOpenMapMode() {
     if (this.data.isEditing) return
     this.setData({ viewMode: 'map' })
-    const mapDayIndex = this.data.currentTab > 0 ? this.data.currentTab - 1 : 0
+    const mapDayIndex = this.data.currentTab > 0
+      ? this.data.currentTab - 1
+      : (this.data.daySections.length ? 0 : -1)
     this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
-    this.refreshMapPreview(this.data.daySections, getPreviewIndexByDay(this.data.daySections, Math.max(mapDayIndex, 0)))
+    this.refreshMapPreview(
+      this.data.daySections,
+      mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, mapDayIndex) : this.data.mapPreviewIndex
+    )
   },
 
   onSelectMapDay(e) {
@@ -618,9 +740,12 @@ Page({
       (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
       10
     )
-    const previewIndex = getPreviewIndexByDay(this.data.daySections, index)
     this.updateMapData(this.data.daySections, this.data.cityInfo, index)
-    this.refreshMapPreview(this.data.daySections, previewIndex)
+    this.refreshMapPreview(
+      this.data.daySections,
+      index >= 0 ? getPreviewIndexByDay(this.data.daySections, index) : this.data.mapPreviewIndex,
+      index
+    )
   },
 
   onTabTap(e) {
@@ -629,7 +754,12 @@ Page({
     this.setData({ currentTab: index, sheetScrollTarget })
 
     if (this.data.viewMode === 'map') {
-      this.updateMapData(this.data.daySections, this.data.cityInfo, index - 1)
+      const nextMapDay = index > 0 ? index - 1 : (this.data.daySections.length ? 0 : -1)
+      this.updateMapData(this.data.daySections, this.data.cityInfo, nextMapDay)
+      this.refreshMapPreview(
+        this.data.daySections,
+        nextMapDay >= 0 ? getPreviewIndexByDay(this.data.daySections, nextMapDay) : this.data.mapPreviewIndex
+      )
     }
   },
 
@@ -637,20 +767,21 @@ Page({
     this.onOpenMapMode()
   },
 
-  onPreviewPrev() {
-    if (this.data.mapPreviewIndex <= 0) return
-    const nextIndex = this.data.mapPreviewIndex - 1
+  onChangeMapPreview(e) {
+    const nextIndex = parseInt(
+      (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
+      10
+    )
+    if (Number.isNaN(nextIndex)) return
     const nextDayIndex = getDayIndexByPreview(this.data.daySections, nextIndex)
     this.updateMapData(this.data.daySections, this.data.cityInfo, nextDayIndex)
-    this.refreshMapPreview(this.data.daySections, nextIndex)
+    this.refreshMapPreview(this.data.daySections, nextIndex, nextDayIndex)
   },
 
-  onPreviewNext() {
-    if (this.data.mapPreviewIndex >= this.data.mapPreviewPlaces.length - 1) return
-    const nextIndex = this.data.mapPreviewIndex + 1
-    const nextDayIndex = getDayIndexByPreview(this.data.daySections, nextIndex)
-    this.updateMapData(this.data.daySections, this.data.cityInfo, nextDayIndex)
-    this.refreshMapPreview(this.data.daySections, nextIndex)
+  onMapPreviewStep(e) {
+    const index = parseInt(e.currentTarget.dataset.index, 10)
+    if (Number.isNaN(index) || index < 0) return
+    this.onChangeMapPreview({ detail: { index } })
   },
 
   onEditMeta() {
@@ -840,6 +971,88 @@ Page({
     this.setData({ handleTouchStartY: touch.clientY || 0 })
   },
 
+  captureDragLayout(callback) {
+    const query = wx.createSelectorQuery().in(this)
+    query.selectAll('.day-section').fields({ rect: true, dataset: true })
+    query.selectAll('.place-swipe-cell').fields({ rect: true, dataset: true })
+    query.exec(res => {
+      const dayRects = (res && res[0]) || []
+      const placeRects = (res && res[1]) || []
+      const dayLayouts = (dayRects || []).map(rect => ({
+        dayIndex: parseInt(rect.dataset && rect.dataset.dayIndex, 10),
+        top: rect.top,
+        bottom: rect.bottom,
+        center: (rect.top + rect.bottom) / 2,
+        items: []
+      }))
+
+      ;(placeRects || []).forEach(rect => {
+        const dayIndex = parseInt(rect.dataset && rect.dataset.dayIndex, 10)
+        const placeIndex = parseInt(rect.dataset && rect.dataset.placeIndex, 10)
+        const targetDay = dayLayouts.find(item => item.dayIndex === dayIndex)
+        if (!targetDay) return
+        targetDay.items.push({
+          placeIndex,
+          top: rect.top,
+          bottom: rect.bottom,
+          center: (rect.top + rect.bottom) / 2
+        })
+      })
+
+      dayLayouts.forEach(day => {
+        day.items.sort((a, b) => a.placeIndex - b.placeIndex)
+      })
+
+      this._dragLayouts = dayLayouts.sort((a, b) => a.dayIndex - b.dayIndex)
+      if (typeof callback === 'function') callback()
+    })
+  },
+
+  resolveDragTarget(currentY) {
+    const layouts = this._dragLayouts || []
+    if (!layouts.length) {
+      return {
+        dayIndex: this.data.dragDay,
+        placeIndex: this.data.dragIndex
+      }
+    }
+
+    let targetDay = layouts.find(day => currentY >= day.top && currentY <= day.bottom)
+    if (!targetDay) {
+      targetDay = layouts.reduce((nearest, day) => {
+        if (!nearest) return day
+        return Math.abs(day.center - currentY) < Math.abs(nearest.center - currentY) ? day : nearest
+      }, null)
+    }
+
+    if (!targetDay) {
+      return {
+        dayIndex: this.data.dragDay,
+        placeIndex: this.data.dragIndex
+      }
+    }
+
+    const items = targetDay.items || []
+    if (!items.length) {
+      return { dayIndex: targetDay.dayIndex, placeIndex: 0 }
+    }
+
+    let targetIndex = items.length
+    for (let i = 0; i < items.length; i += 1) {
+      if (currentY < items[i].center) {
+        targetIndex = items[i].placeIndex
+        break
+      }
+    }
+
+    if (targetIndex === items.length) {
+      const lastItem = items[items.length - 1]
+      targetIndex = lastItem.placeIndex + 1
+    }
+
+    return { dayIndex: targetDay.dayIndex, placeIndex: targetIndex }
+  },
+
   refreshPlacePickerItems() {
     const pickerData = buildPlacePickerData()
     this.setData({
@@ -864,6 +1077,8 @@ Page({
       swipeDay: -1,
       swipeIndex: -1,
       daySections: this.resetSwipeOffsets(this.data.daySections)
+    }, () => {
+      this.captureDragLayout()
     })
     wx.vibrateShort()
   },
@@ -871,47 +1086,43 @@ Page({
   onDragMove(e) {
     if (!this.data.isEditing || !this.data.dragging) return
 
-    const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10)
-    if (dayIndex !== this.data.dragDay) return
-
-    const daySections = this.data.daySections.slice()
-    const currentItems = daySections[dayIndex] && daySections[dayIndex].items ? daySections[dayIndex].items.slice() : []
-    if (currentItems.length <= 1) return
-
     const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || {}
     const currentY = touch.clientY || 0
     const deltaY = currentY - this.data.dragTouchStartY
-    let step = 0
-    if (Math.abs(deltaY) >= DRAG_STEP) {
-      step = deltaY > 0 ? Math.floor(deltaY / DRAG_STEP) : Math.ceil(deltaY / DRAG_STEP)
-    }
-
-    if (!step) {
+    const target = this.resolveDragTarget(currentY)
+    if (!target || target.dayIndex < 0 || target.placeIndex < 0) {
       this.setData({ dragOffsetY: deltaY })
       return
     }
 
-    let targetIndex = this.data.dragIndex + step
-    targetIndex = Math.max(0, Math.min(currentItems.length - 1, targetIndex))
-    if (targetIndex === this.data.dragIndex) {
+    const fromDay = this.data.dragDay
+    const fromIndex = this.data.dragIndex
+    const effectiveTargetIndex = target.dayIndex === fromDay && target.placeIndex > fromIndex
+      ? target.placeIndex - 1
+      : target.placeIndex
+
+    if (target.dayIndex === fromDay && effectiveTargetIndex === fromIndex) {
       this.setData({ dragOffsetY: deltaY })
       return
     }
 
-    const movingItems = currentItems.slice()
-    const moved = movingItems.splice(this.data.dragIndex, 1)[0]
-    movingItems.splice(targetIndex, 0, moved)
-    daySections[dayIndex] = { ...daySections[dayIndex], items: movingItems }
-
-    const syncedSections = syncDaySections(daySections, this.data.cityInfo)
-    const consumedStep = targetIndex - this.data.dragIndex
-    const nextTouchStartY = this.data.dragTouchStartY + (consumedStep * DRAG_STEP)
+    const movedSections = moveItemAcrossDays(
+      this.data.daySections,
+      fromDay,
+      fromIndex,
+      target.dayIndex,
+      target.placeIndex
+    )
+    const syncedSections = syncDaySections(movedSections, this.data.cityInfo)
     this.setData({
       daySections: syncedSections,
-      dragIndex: targetIndex,
-      dragTouchStartY: nextTouchStartY,
-      dragOffsetY: currentY - nextTouchStartY,
+      dragDay: target.dayIndex,
+      dragIndex: effectiveTargetIndex,
+      dragTouchStartY: currentY,
+      dragOffsetY: 0,
       summaryText: buildSummaryText(syncedSections)
+    }, () => {
+      this.captureDragLayout()
     })
   },
 
@@ -925,6 +1136,7 @@ Page({
       dragOffsetY: 0,
       handleTouchStartY: 0
     })
+    this._dragLayouts = null
   },
 
   onSwipeStart(e) {

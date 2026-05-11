@@ -1,10 +1,11 @@
 <view class="page" wx:if="{{route}}">
   <view class="hero-wrap {{viewMode === 'map' ? 'hero-wrap-map' : ''}}">
     <map
+      id="myRouteMap"
       class="hero-map"
       latitude="{{mapCenter.lat}}"
       longitude="{{mapCenter.lng}}"
-      scale="12"
+      scale="{{mapScale}}"
       markers="{{mapMarkers}}"
       polyline="{{polyline}}"
       enable-zoom="{{viewMode === 'map'}}"
@@ -34,7 +35,7 @@
 
   <block wx:if="{{viewMode === 'list'}}">
     <view class="detail-sheet">
-      <scroll-view class="detail-scroll" scroll-y scroll-into-view="{{sheetScrollTarget}}" show-scrollbar="{{false}}">
+      <scroll-view class="detail-scroll" scroll-y="{{!dragging}}" scroll-into-view="{{sheetScrollTarget}}" show-scrollbar="{{false}}">
         <view class="detail-scroll-inner">
           <view class="sheet-header" id="route-scroll-top">
             <text class="guide-title">{{route.title}}</text>
@@ -61,7 +62,6 @@
                 </view>
                 <view class="tab-item add-item" bindtap="onAddDay" wx:if="{{isEditing}}">
                   <i class="mgc_add_line"></i>
-                  <text>新增</text>
                 </view>
               </view>
             </scroll-view>
@@ -107,6 +107,7 @@
               wx:for-item="day"
               wx:for-index="dayIndex"
               id="route-day-section-{{dayIndex}}"
+              data-day-index="{{dayIndex}}"
             >
               <view class="day-anchor" id="route-day-anchor-{{dayIndex}}"></view>
               <view class="day-header">
@@ -121,15 +122,20 @@
                   wx:key="id"
                   wx:for-item="place"
                   wx:for-index="placeIndex"
+                  data-day-index="{{dayIndex}}"
+                  data-place-index="{{placeIndex}}"
                 >
                   <view
                     class="place-delete-btn"
-                    wx:if="{{isEditing}}"
+                    wx:if="{{isEditing && (place.swipeOffset || 0) < 0 && !(dragging && dragDay === dayIndex && dragIndex === placeIndex)}}"
                     bindtap="onDeletePlace"
                     data-day-index="{{dayIndex}}"
                     data-index="{{placeIndex}}"
                   >
-                    <i class="mgc_delete_2_line"></i>
+                    <view class="place-delete-inner">
+                      <i class="mgc_delete_2_line place-delete-icon"></i>
+                      <text class="place-delete-text">删除</text>
+                    </view>
                   </view>
                   <view
                     class="place-row {{isEditing && dragging && dragDay === dayIndex && dragIndex === placeIndex ? 'dragging' : ''}}"
@@ -141,45 +147,49 @@
                     bindtouchend="onSwipeEnd"
                     bindlongpress="onDragStart"
                   >
-                    <view class="place-cover-wrap">
-                      <view class="place-cover-shadow"></view>
-                      <image class="place-cover" src="{{place.image}}" mode="aspectFill"></image>
-                    </view>
-                    <view class="place-main">
-                      <view class="place-tag">{{place.tag}}</view>
-                      <text class="place-name">{{place.name}}</text>
-                      <travel-meta-line
-                        travel-meta="{{place.travelMeta}}"
-                        bindtapmeta="onOpenPlaceTransportSheet"
+                    <image class="place-cover" src="{{place.image}}" mode="aspectFill"></image>
+                    <view class="place-info-row">
+                      <view class="place-main">
+                        <view class="place-head">
+                          <view class="place-tag">
+                            <text class="place-tag-text">{{place.tag}}</text>
+                          </view>
+                          <text class="place-name">{{place.name}}</text>
+                        </view>
+                        <travel-meta-line
+                          class="place-meta-line"
+                          travel-meta="{{place.travelMeta}}"
+                          bindtapmeta="onOpenPlaceTransportSheet"
+                          data-day-index="{{dayIndex}}"
+                          data-index="{{placeIndex}}"
+                        ></travel-meta-line>
+                      </view>
+                      <view class="place-arrow" wx:if="{{!isEditing}}">
+                        <i class="mgc_right_line"></i>
+                      </view>
+                      <view
+                        class="place-handle"
+                        wx:if="{{isEditing}}"
                         data-day-index="{{dayIndex}}"
                         data-index="{{placeIndex}}"
-                      ></travel-meta-line>
-                    </view>
-                    <view class="place-arrow" wx:if="{{!isEditing}}">
-                      <i class="mgc_right_line"></i>
-                    </view>
-                    <view
-                      class="place-handle"
-                      wx:if="{{isEditing}}"
-                      data-day-index="{{dayIndex}}"
-                      data-index="{{placeIndex}}"
-                      catchtouchstart="onHandleTouchStart"
-                      catchtap="noop"
-                    >
-                      <i class="mgc_dot_grid_line"></i>
+                        catchtouchstart="onHandleTouchStart"
+                        catchtap="noop"
+                      >
+                        <i class="mgc_dot_grid_line"></i>
+                      </view>
                     </view>
                   </view>
                 </view>
                 <view class="add-place-entry" wx:if="{{isEditing}}" bindtap="onOpenPlacePicker" data-day-index="{{dayIndex}}">
-                  <i class="mgc_add_line"></i>
-                  <text>新增地点</text>
+                  <i class="mgc_location_2_line"></i>
+                  <text>添加地点</text>
                 </view>
               </view>
 
               <view class="empty-day" wx:else>
                 <view class="add-place-entry add-place-entry-empty" wx:if="{{isEditing}}" bindtap="onOpenPlacePicker" data-day-index="{{dayIndex}}">
-                  <i class="mgc_add_line"></i>
-                  <text>新增地点</text>
+                  <i class="mgc_location_2_line"></i>
+                  <text>添加地点</text>
                 </view>
               </view>
 
@@ -215,19 +225,85 @@
 
   <block wx:else>
     <view class="map-panel">
-      <route-map-preview-card
-        place="{{mapPreviewPlace}}"
-        day-tabs="{{daySections}}"
-        current-day="{{currentMapDay}}"
-        current-index="{{mapPreviewIndex}}"
-        total-count="{{mapPreviewPlaces.length}}"
-        disable-prev="{{mapPreviewIndex === 0}}"
-        disable-next="{{mapPreviewIndex === mapPreviewPlaces.length - 1}}"
-        binddaychange="onSelectMapPreviewDay"
-        bindprev="onPreviewPrev"
-        bindnext="onPreviewNext"
-        bindtapmeta="onOpenMapTransportSheet"
-      />
+      <view class="map-panel-actions" wx:if="{{mapPreviewPlace}}">
+        <view class="map-floating-icon" bindtap="onSwitchMode" data-mode="list">
+          <i class="mgc_left_line"></i>
+        </view>
+        <view class="map-floating-icon" bindtap="onFitRoute">
+          <i class="mgc_fullscreen_line"></i>
+        </view>
+      </view>
+      <view class="map-card route-map-preview-card" wx:if="{{mapPreviewPlace}}">
+        <view class="preview-tabs-panel">
+          <view class="preview-tab-row">
+            <view
+              wx:for="{{previewTabs}}"
+              wx:key="index"
+              class="preview-tab-item {{((currentMapDay < 0 && item.index === 0) || currentMapDay === item.index) ? 'active' : ''}}"
+              bindtap="onSelectMapPreviewDay"
+              data-index="{{item.index}}"
+            >
+              {{item.label}}
+            </view>
+          </view>
+          <view class="preview-tab-divider"></view>
+        </view>
+
+        <view class="preview-card-stage">
+          <view class="preview-detail-card">
+            <view class="preview-side-inner">
+              <view class="preview-card-head">
+                <image class="preview-cover-image" src="{{mapPreviewPlace.image || mapPreviewPlace.coverImage}}" mode="aspectFill"></image>
+                <view class="preview-head-main">
+                  <text class="preview-name">{{mapPreviewPlace.name}}</text>
+                  <view class="preview-meta-row" wx:if="{{previewDisplayMeta.length > 0}}">
+                    <view
+                      wx:for="{{previewDisplayMeta}}"
+                      wx:key="index"
+                      wx:for-item="chip"
+                      class="preview-chip {{chip.type === 'score' ? 'score' : ''}}"
+                    >
+                      {{chip.text}}
+                    </view>
+                  </view>
+                </view>
+              </view>
+
+              <view class="preview-desc-row">
+                <text class="preview-desc-left">{{previewDescriptionText}}</text>
+                <text class="preview-desc-right">{{previewFeeText}}</text>
+              </view>
+            </view>
+
+            <view class="preview-btn-row">
+              <view
+                class="preview-btn {{previewDisablePrev ? 'disabled' : ''}}"
+                bindtap="onMapPreviewStep"
+                data-index="{{previewPrevIndex}}"
+              >
+                <text>上一站</text>
+              </view>
+              <view
+                class="preview-btn {{previewDisableNext ? 'disabled' : ''}}"
+                bindtap="onMapPreviewStep"
+                data-index="{{previewNextIndex}}"
+              >
+                <text>下一站</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view class="preview-footer">
+          <view class="preview-footer-side">
+            <text>{{previewStationText}}</text>
+          </view>
+          <travel-meta-line variant="compact" travel-meta="{{mapPreviewPlace.travelMeta}}" bindtapmeta="onOpenMapTransportSheet"></travel-meta-line>
+          <view class="preview-footer-side right">
+            <text>{{previewCountText}}</text>
+          </view>
+        </view>
+      </view>
     </view>
   </block>
 

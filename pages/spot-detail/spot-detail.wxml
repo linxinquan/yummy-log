@@ -39,10 +39,6 @@
           </view>
           <text class="spot-title">{{spot.name}}</text>
         </view>
-        <!-- 收藏图标 (设计稿在右侧) -->
-        <view class="collect-btn" bindtap="onCollect">
-          <i class="{{isCollected ? 'mgc_heart_fill' : 'mgc_heart_line'}} collect-icon" style="{{isCollected ? 'color: #DC6962;' : ''}}"></i>
-        </view>
       </view>
       
       <text class="open-time">{{openTimeText}}</text>
@@ -129,8 +125,8 @@
   <view class="bottom-action-bar">
     <view class="action-bg"></view>
     <view class="action-content">
-      <view class="nav-btn" bindtap="onNavigate">
-        <text>导航</text>
+      <view class="collect-action-btn" bindtap="onCollect">
+        <i class="{{isCollected ? 'mgc_heart_fill collected' : 'mgc_heart_line'}} collect-action-icon"></i>
       </view>
       <view class="want-btn" bindtap="onWant">
         <text>{{isLiked ? '已添加到想去' : '添加到想去'}}</text>

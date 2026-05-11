@@ -1,16 +1,34 @@
 <view class="page" wx:if="{{route}}">
-  <view class="header" style="padding-top: {{statusBarHeight + 24}}px;">
-    <view class="page-title">基础信息</view>
+  <view class="header">
+    <view class="district-title">基础信息</view>
   </view>
 
-  <view class="form-card">
-    <view class="field-block">
+  <view class="settings-panel">
+    <view class="setting-block">
+      <text class="setting-label">封面</text>
+      <view class="cover-row">
+        <image class="cover-preview" src="{{coverImage}}" mode="aspectFill"></image>
+        <view class="cover-upload" bindtap="onChooseCover">
+          <i class="mgc_add_line"></i>
+        </view>
+      </view>
+    </view>
+
+    <view class="setting-block">
+      <text class="setting-label">旅行城市</text>
+      <view class="setting-field picker-field" bindtap="onOpenCityPicker">
+        <text class="setting-value {{city ? '' : 'placeholder'}}">{{city || '请选择城市'}}</text>
+        <i class="mgc_right_small_line"></i>
+      </view>
+    </view>
+
+    <view class="setting-block">
       <view class="field-head">
-        <text class="field-label">路线名称</text>
+        <text class="setting-label">路线名称</text>
         <text class="field-count">{{title.length}} / {{maxTitleLength}}</text>
       </view>
       <input
-        class="field-input"
+        class="setting-field input-field"
         placeholder="请输入路线名称"
         maxlength="{{maxTitleLength}}"
         value="{{title}}"
@@ -18,25 +36,27 @@
       />
     </view>
 
-    <view class="field-block">
-      <text class="field-label">天数</text>
-      <view class="stepper">
-        <view class="step-btn {{dayCount <= 1 ? 'disabled' : ''}}" bindtap="onMinusDay">-</view>
-        <text class="step-value">{{dayCount}} 天</text>
-        <view class="step-btn {{dayCount >= 15 ? 'disabled' : ''}}" bindtap="onPlusDay">+</view>
+    <view class="setting-block">
+      <text class="setting-label">旅行天数</text>
+      <view class="setting-field picker-field" bindtap="onOpenDayPicker">
+        <text class="setting-value">{{dayCount}}</text>
+        <i class="mgc_right_small_line"></i>
       </view>
     </view>
 
-    <view class="field-block">
-      <text class="field-label">城市</text>
-      <view class="field-picker" bindtap="onOpenCityPicker">
-        <text class="field-picker-text {{city ? '' : 'placeholder'}}">{{city || '请选择城市'}}</text>
+    <view class="setting-block">
+      <text class="setting-label">交通偏好（全局）</text>
+      <view class="setting-field picker-field" bindtap="onOpenTransportPicker">
+        <text class="setting-value {{transportPreferenceText ? '' : 'placeholder'}}">{{transportPreferenceText || '请选择交通偏好'}}</text>
         <i class="mgc_right_small_line"></i>
       </view>
     </view>
   </view>
 
   <view class="bottom-bar">
+    <view class="icon-btn delete-btn" bindtap="onDeleteRoute">
+      <i class="mgc_delete_2_line"></i>
+    </view>
     <view class="bottom-btn secondary" bindtap="onCancel">取消</view>
     <view class="bottom-btn primary" bindtap="onSave">保存</view>
   </view>
@@ -64,6 +84,70 @@
           </view>
         </view>
       </scroll-view>
+    </view>
+  </view>
+
+  <view class="sheet-mask {{showDayPicker ? 'show' : ''}}" bindtap="onCloseDayPicker">
+    <view class="sheet-panel" catchtap="preventBubble">
+      <view class="sheet-header">
+        <text class="sheet-title">旅行天数</text>
+        <i class="mgc_close_line sheet-close" bindtap="onCloseDayPicker"></i>
+      </view>
+      <view class="sheet-body">
+        <picker-view class="day-picker-view" indicator-style="height: 88rpx;" value="{{[dayPickerIndex]}}" bindchange="onDayPickerChange">
+          <picker-view-column>
+            <view wx:for="{{dayOptions}}" wx:key="*this" class="day-picker-item">
+              {{item}} 天
+            </view>
+          </picker-view-column>
+        </picker-view>
+        <view class="sheet-confirm" bindtap="onConfirmDayPicker">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="sheet-mask {{showTransportPicker ? 'show' : ''}}" bindtap="onCloseTransportPicker">
+    <view class="sheet-panel transport-sheet" catchtap="preventBubble">
+      <view class="sheet-header">
+        <text class="sheet-title">交通偏好</text>
+        <i class="mgc_close_line sheet-close" bindtap="onCloseTransportPicker"></i>
+      </view>
+      <view class="sheet-body">
+        <view class="transport-group">
+          <text class="transport-group-title">距离小于 1 公里</text>
+          <view class="transport-option-row">
+            <view
+              wx:for="{{transportOptions}}"
+              wx:key="key"
+              class="transport-option {{draftTransportPreferences.shortDistanceMode === item.key ? 'active' : ''}}"
+              bindtap="onSelectTransportPreference"
+              data-type="shortDistanceMode"
+              data-mode="{{item.key}}"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </view>
+
+        <view class="transport-group">
+          <text class="transport-group-title">距离大于 1 公里</text>
+          <view class="transport-option-row">
+            <view
+              wx:for="{{transportOptions}}"
+              wx:key="key"
+              class="transport-option {{draftTransportPreferences.longDistanceMode === item.key ? 'active' : ''}}"
+              bindtap="onSelectTransportPreference"
+              data-type="longDistanceMode"
+              data-mode="{{item.key}}"
+            >
+              {{item.label}}
+            </view>
+          </view>
+        </view>
+
+        <view class="transport-hint">两种距离场景各选择 1 种，共 2 个偏好</view>
+        <view class="sheet-confirm" bindtap="onConfirmTransportPicker">确定</view>
+      </view>
     </view>
   </view>
 </view>

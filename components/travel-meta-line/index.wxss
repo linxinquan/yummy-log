@@ -5,9 +5,15 @@
   gap: 8rpx;
 }
 
+.travel-meta-line.compact {
+  gap: 8rpx;
+  height: 32rpx;
+  min-height: 32rpx;
+}
+
 .travel-meta-icon {
   flex-shrink: 0;
-  color: #868686;
+  color: #999999;
   font-size: 24rpx;
   line-height: 24rpx;
 }
@@ -16,15 +22,26 @@
   flex-shrink: 0;
   font-size: 24rpx;
   line-height: 24rpx;
-  color: #868686;
+  color: #CCCCCC;
 }
 
 .travel-meta-text {
   min-width: 0;
-  color: #868686;
+  color: #999999;
   font-size: 24rpx;
   line-height: 24rpx;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.travel-meta-line.compact .travel-meta-icon,
+.travel-meta-line.compact .travel-meta-arrow {
+  font-size: 32rpx; /* 16px */
+  line-height: 32rpx;
+}
+
+.travel-meta-line.compact .travel-meta-text {
+  font-size: 24rpx;
+  line-height: 24rpx;
 }
