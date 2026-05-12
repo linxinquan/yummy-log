@@ -1,0 +1,9 @@
+{
+  "name": "recognizePhoto",
+  "version": "1.0.0",
+  "description": "图片识别 AI 调用（Qwen 多模态）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
