@@ -1,9 +1,0 @@
-{
-  "name": "parseXiaohongshu",
-  "version": "1.0.0",
-  "description": "AI 解析小红书 URL，提取地点/店铺信息",
-  "main": "index.js",
-  "dependencies": {
-    "wx-server-sdk": "~2.6.3"
-  }
-}
