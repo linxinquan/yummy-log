@@ -1,4 +1,48 @@
-<include src="../sub/add-shop/add-shop.wxml" />
+<view class="container">
+  <view class="tab-bar" style="padding-top: {{menuTop}}px; height: {{menuHeight}}px; padding-right: {{menuRightInset}}px;">
+    <view class="tab-left">
+      <view class="tab-item active">
+        <text>{{greetingText}}</text>
+      </view>
+    </view>
+    <view class="tab-right"></view>
+  </view>
 
-<!-- 自定义TabBar -->
-<custom-tabbar></custom-tabbar>
+  <view class="create-content" style="padding-top: {{listTop}}px;">
+    <view class="weekday-row">
+      <text
+        wx:for="{{weekdayItems}}"
+        wx:key="index"
+        class="weekday-item {{item.isToday ? 'active' : ''}}"
+      >{{item.label}}</text>
+    </view>
+  </view>
+
+  <view class="action-section">
+    <view class="action-row">
+      <view class="action-col action-col-left">
+        <view class="parse-source-stack">
+          <image class="source-card-image wechat-card" src="/images/create/wechat-card.png" mode="aspectFill"></image>
+          <image class="source-card-image xhs-card" src="/images/create/xhs-card.png" mode="aspectFill"></image>
+        </view>
+        <view class="action-card parse-card" bindtap="onOpenLinkImport">
+          <view class="parse-glow parse-glow-red"></view>
+          <view class="parse-glow parse-glow-yellow"></view>
+          <i class="action-card-icon mgc_bling_fill"></i>
+        </view>
+        <text class="action-label">解析路线</text>
+      </view>
+
+      <view class="action-col action-col-right">
+        <view class="action-card create-route-card" bindtap="onCreateRoute">
+          <view class="create-glow create-glow-purple"></view>
+          <view class="create-glow create-glow-blue"></view>
+          <i class="action-card-icon mgc_add_fill"></i>
+        </view>
+        <text class="action-label">创建路线</text>
+      </view>
+    </view>
+  </view>
+
+  <custom-tabbar></custom-tabbar>
+</view>

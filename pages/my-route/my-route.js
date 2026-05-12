@@ -447,6 +447,7 @@ Page({
     placePickerTab: 'all',
     placePickerItems: [],
     placePickerDayIndex: -1,
+    autoEnterEdit: false,
     transportSheetVisible: false,
     transportOptions: [],
     pendingTransportMode: 'walk',
@@ -476,7 +477,8 @@ Page({
       tabStickyTop,
       editTabStickyTop,
       routeId: String(route.id),
-      returnTo: options.returnTo || ''
+      returnTo: options.returnTo || '',
+      autoEnterEdit: options.edit === '1'
     })
     this.refreshPlacePickerItems()
     this.applyRoute(route)
@@ -531,9 +533,17 @@ Page({
       mapPreviewPlaces: flattenDaySections(daySections),
       mapPreviewPlace: flattenDaySections(daySections)[0] || null,
       mapPreviewIndex: 0
+    }, () => {
+      this.updateMapData(daySections, cityInfo, -1)
+      if (this.data.autoEnterEdit) {
+        this.setData({ autoEnterEdit: false })
+        setTimeout(() => {
+          if (!this.data.isEditing) {
+            this.onStartRouteEdit()
+          }
+        }, 0)
+      }
     })
-
-    this.updateMapData(daySections, cityInfo, -1)
   },
 
   saveRouteToStorage(route, showToastTitle) {

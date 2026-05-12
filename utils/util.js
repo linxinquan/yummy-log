@@ -32,10 +32,10 @@ function formatDistance(meters) {
 /**
  * 估算出行时间
  * @param {number} meters - 距离（米）
- * @param {string} mode - 出行方式：drive/drive 或 transit/地铁
+ * @param {string} mode - 出行方式：drive/drive 或 transit/公共交通
  */
 function estimateTime(meters, mode = 'drive') {
-  // 驾车：3分钟/公里，地铁：5分钟/公里，步行：12分钟/公里
+  // 驾车：3分钟/公里，公共交通：5分钟/公里，步行：12分钟/公里
   let speed = 3
   if (mode === 'transit') speed = 5
   if (mode === 'walk') speed = 12

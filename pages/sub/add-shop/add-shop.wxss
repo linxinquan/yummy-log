@@ -64,14 +64,14 @@
 
 .cat-pill.active {
   background: var(--primary);
-  color: #ffffff;
+  color: #FFFFFF;
   
   box-shadow: var(--shadow-xs);
   border-color: var(--primary);
 }
 
 .cat-pill.active .cat-icon {
-  color: #ffffff;
+  color: #FFFFFF;
 }
 
 /* ─── Emoji Select ─────────────────────────── */
@@ -204,7 +204,7 @@
   width: 100%;
   height: 96rpx; /* lg size 48px */
   background: var(--primary);
-  color: #ffffff;
+  color: #FFFFFF;
   border-radius: var(--radius-full);
   font-size: 32rpx;
   

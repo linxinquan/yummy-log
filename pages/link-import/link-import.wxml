@@ -1,0 +1,33 @@
+<view class="link-import-page">
+  <view class="link-import-header">
+    <text class="link-import-title">解析路线</text>
+    <view class="link-import-close" bindtap="onBack">
+      <i class="mgc_close_line"></i>
+    </view>
+  </view>
+
+  <view class="link-import-body">
+    <view class="link-input-wrap">
+      <textarea
+        class="link-textarea"
+        value="{{guideLink}}"
+        placeholder="粘贴文本或链接"
+        placeholder-class="link-placeholder"
+        maxlength="-1"
+        auto-height
+        cursor-spacing="24"
+        bindinput="onLinkInput"
+      ></textarea>
+    </view>
+
+    <view class="link-hint-list">
+      <text class="link-hint">支持：公众号文章链接、小红书分享链接、纯文本内容</text>
+      <text class="link-hint">当前先提供录入入口，解析能力下一步接入</text>
+    </view>
+  </view>
+
+  <view class="link-import-footer">
+    <view class="link-secondary-btn" bindtap="onPasteLink">粘贴内容</view>
+    <view class="link-primary-btn" bindtap="onConfirmLink">确认</view>
+  </view>
+</view>

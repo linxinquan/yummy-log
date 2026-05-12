@@ -179,7 +179,7 @@
 }
 
 .complete-icon  { font-size: 120rpx; margin-bottom: var(--space-xl); }
-.complete-title { font-size: 44rpx;  color: #FFF; margin-bottom: var(--space-md); }
+.complete-title { font-size: 44rpx;  color: #FFFFFF; margin-bottom: var(--space-md); }
 .complete-sub   { font-size: 28rpx; color: rgba(255,255,255,.8); margin-bottom: 60rpx; }
 
 .complete-btn {
@@ -231,7 +231,7 @@
 .nav-badge {
   padding: 4rpx 14rpx;
   background: var(--primary);
-  color: #FFF;
+  color: #FFFFFF;
   border-radius: var(--radius-full);
   font-size: 20rpx;
   
@@ -256,7 +256,7 @@
   width: 48rpx;
   height: 48rpx;
   background: var(--primary);
-  color: #FFF;
+  color: #FFFFFF;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -345,7 +345,7 @@
 
 .nav-next-btn {
   background: var(--primary);
-  color: #FFF;
+  color: #FFFFFF;
   box-shadow: var(--shadow-sm);
 }
 
@@ -413,16 +413,16 @@
 
 .start-chip.active {
   background: var(--primary);
-  color: #FFF;
+  color: #FFFFFF;
   border-color: var(--primary);
   
   box-shadow: var(--shadow-xs);
 }
 
 .start-chip.map-chip {
-  background: #FFF8E1;
+  background: #FFFFFF8E1;
   border-color: #FFD54F;
-  color: #E65100;
+  color: #EE8733;
 }
 
 /* ─── 出行方式行 ─── */
@@ -449,16 +449,16 @@
 
 .mode-chip.active {
   background: var(--primary);
-  color: #FFF;
+  color: #FFFFFF;
   border-color: var(--primary);
   box-shadow: var(--shadow-xs);
 }
 
 .mode-chip.optimize {
   flex: 0.7;
-  background: #FFF3E0;
+  background: #FFFFFF3E0;
   border-color: #FFD54F;
-  color: #E65100;
+  color: #EE8733;
 }
 
 /* ═══════════════════════════════════════════════
@@ -526,7 +526,7 @@
   align-items: center;
   justify-content: center;
   font-size: 18rpx;
-  color: #FFF;
+  color: #FFFFFF;
   
   flex-shrink: 0;
 }
@@ -601,7 +601,7 @@
 .cand-check.on {
   background: var(--primary);
   border-color: var(--primary);
-  color: #FFF;
+  color: #FFFFFF;
 }
 
 .cand-logo {
@@ -646,7 +646,7 @@
 .cand-badge.show {
   opacity: 1;
   background: var(--primary);
-  color: #FFF;
+  color: #FFFFFF;
 }
 
 /* ═══════════════════════════════════════════════
@@ -689,7 +689,7 @@
 }
 
 .tl-item.editing .tl-shop-row {
-  background: #FFF9E6;
+  background: #FFFFFF9E6;
   border: 2rpx dashed var(--warning);
   border-radius: var(--radius-md);
 }
@@ -709,7 +709,7 @@
   width: 44rpx;
   height: 44rpx;
   background: var(--primary);
-  color: #FFF;
+  color: #FFFFFF;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -890,8 +890,8 @@
 }
 
 .sort-arrow.down {
-  background: #FFF3E0;
-  color: #E65100;
+  background: #FFFFFF3E0;
+  color: #EE8733;
 }
 
 .sort-arrow.off {
@@ -918,7 +918,7 @@
 .empty-btn {
   padding: 18rpx 56rpx;
   background: var(--primary);
-  color: #FFF;
+  color: #FFFFFF;
   border-radius: var(--radius-full);
   font-size: 28rpx;
   
@@ -964,7 +964,7 @@
   flex: 1;
   height: 88rpx;
   background: var(--primary);
-  color: #FFF;
+  color: #FFFFFF;
   border-radius: var(--radius-full);
   font-size: 30rpx;
   

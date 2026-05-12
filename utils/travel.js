@@ -9,7 +9,7 @@ const DEFAULT_TRANSPORT_PREFERENCES = {
 const MODE_CONFIG = {
   walk: { key: 'walk', label: '步行', shortLabel: '步', icon: 'mgc_walk_line', minutesPerKm: 12 },
   ride: { key: 'ride', label: '骑行', shortLabel: '骑', icon: 'mgc_riding_line', minutesPerKm: 4 },
-  transit: { key: 'transit', label: '地铁', shortLabel: '铁', icon: 'mgc_train_2_line', minutesPerKm: 5 },
+  transit: { key: 'transit', label: '公共交通', shortLabel: '公', icon: 'mgc_train_2_line', minutesPerKm: 5 },
   bus: { key: 'bus', label: '公交', shortLabel: '公', icon: 'mgc_bus_line', minutesPerKm: 6 },
   drive: { key: 'drive', label: '驾车', shortLabel: '车', icon: 'mgc_car_3_line', minutesPerKm: 3 }
 }

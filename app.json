@@ -10,6 +10,7 @@
     "pages/spot-detail/spot-detail",
     "pages/route/route",
     "pages/add-shop/add-shop",
+    "pages/link-import/link-import",
     "pages/webview/webview",
     "pages/checkin/checkin",
     "pages/collection/collection",

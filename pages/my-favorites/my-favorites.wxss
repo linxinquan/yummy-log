@@ -22,7 +22,7 @@
   font-weight: 500;
   font-size: 48rpx;
   line-height: 100%;
-  color: #000000;
+  color: #242529;
 }
 
 /* ── 空状态 ── */
@@ -44,7 +44,7 @@
 .empty-text {
   font-family: 'PingFang SC';
   font-size: 28rpx;
-  color: #999999;
+  color: #6E727A;
   text-align: center;
   line-height: 1.6;
   white-space: pre-line;
@@ -65,7 +65,7 @@
 .list-container {
   flex: 1;
 
-  background: #ffffff;
+  background: #FFFFFF;
 }
 
 /* ── 卡片项（与探索页面弹窗列表一致） ── */
@@ -91,7 +91,7 @@
   border-radius: 24rpx;
   overflow: hidden;
   position: relative;
-  background: #f0f0f0;
+  background: #F2F4F7;
 }
 
 .card-img {
@@ -110,7 +110,7 @@
   padding: 6rpx 8rpx;
   font-family: 'PingFang SC';
   font-size: 20rpx;
-  color: #ffffff;
+  color: #FFFFFF;
   line-height: 20rpx;
   backdrop-filter: blur(4px);
 }
@@ -139,7 +139,7 @@
   font-family: 'PingFang SC';
   font-weight: 500;
   font-size: 32rpx;
-  color: #262626;
+  color: #242529;
   line-height: 32rpx;
   white-space: nowrap;
   overflow: hidden;
@@ -174,12 +174,12 @@
 }
 
 .spot-tag {
-  background: #F6F6F6;
+  background: #F7F8FA;
   border-radius: 12rpx;
   padding: 8rpx 16rpx;
   font-family: 'PingFang SC';
   font-size: 24rpx;
-  color: #BABABA;
+  color: #A0A4AE;
   line-height: 24rpx;
   flex-shrink: 0;
   white-space: nowrap;
@@ -198,7 +198,7 @@
 .card-desc {
   font-family: 'PingFang SC';
   font-size: 28rpx;
-  color: #C2C2C2;
+  color: #A0A4AE;
   line-height: 28rpx;
   white-space: nowrap;
   overflow: hidden;
@@ -217,7 +217,7 @@
   width: 56rpx;
   height: 56rpx;
   border-radius: 16rpx;
-  background: #F6F6F6;
+  background: #F7F8FA;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -226,7 +226,7 @@
 }
 
 .want-icon {
-  background: #F6F6F6;
+  background: #F7F8FA;
 }
 
 .icon-btn.liked {
@@ -235,7 +235,7 @@
 
 .icon-btn-text {
   font-size: 32rpx;
-  color: #999999;
+  color: #6E727A;
 }
 
 .icon-btn.liked .icon-btn-text {

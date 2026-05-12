@@ -19,7 +19,7 @@ page {
   font-weight: 500;
   font-size: 48rpx;
   line-height: 100%;
-  color: #000000;
+  color: #242529;
 }
 
 .guide-list {
@@ -67,7 +67,7 @@ page {
   font-weight: 400;
   font-size: 28rpx;
   line-height: 44rpx;
-  color: #666666;
+  color: #6E727A;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -81,7 +81,7 @@ page {
   font-weight: 400;
   font-size: 24rpx;
   line-height: 100%;
-  color: #C2C2C2;
+  color: #A0A4AE;
   margin-top: 48rpx;
 }
 
@@ -107,7 +107,7 @@ page {
   font-weight: 500;
   font-size: 32rpx;
   line-height: 100%;
-  color: #060606;
+  color: #242529;
   display: block;
   margin-bottom: 24rpx;
 }
@@ -138,7 +138,7 @@ page {
   font-weight: 400;
   font-size: 24rpx;
   line-height: 100%;
-  color: #888888;
+  color: #6E727A;
 }
 
 .guide-likes {
@@ -146,7 +146,7 @@ page {
   font-weight: 400;
   font-size: 24rpx;
   line-height: 100%;
-  color: #C2C2C2;
+  color: #A0A4AE;
 }
 
 .no-more {
@@ -169,5 +169,5 @@ page {
   font-weight: 400;
   font-size: 24rpx;
   line-height: 100%;
-  color: #BABABA;
+  color: #A0A4AE;
 }

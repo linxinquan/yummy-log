@@ -144,7 +144,7 @@
 }
 
 .tag-badge {
-  background: #F6F6F6;
+  background: #F7F8FA;
   padding: 8rpx 16rpx;
   border-radius: 12rpx;
   display: flex;
@@ -153,20 +153,20 @@
 }
 
 .tag-badge text {
-  color: #BABABA;
+  color: #A0A4AE;
   font-size: 24rpx; /* 12px */
 }
 
 .spot-title {
   font-size: 48rpx; /* 24px */
   font-weight: 500;
-  color: #000000;
+  color: #242529;
   line-height: 48rpx;
 }
 
 .open-time {
   font-size: 24rpx; /* 12px */
-  color: #C2C2C2;
+  color: #A0A4AE;
   line-height: 24rpx; /* 12px */
   margin-top: 24rpx; /* 12px 距离上方标题 */
 }
@@ -177,7 +177,7 @@
   align-items: center;
   gap: 24rpx; /* 12px */
   align-self: stretch;
-  border: 2rpx solid #E7E7E7;
+  border: 2rpx solid #E5E7EB;
   border-radius: 24rpx; /* 12px */
   box-sizing: border-box;
   margin-top: 48rpx; /* 24px 距离上面的营业时间 */
@@ -193,14 +193,14 @@
 
 .phone-label {
   font-size: 24rpx;
-  color: #C1C1C1;
+  color: #A0A4AE;
   line-height: 24rpx;
 }
 
 .phone-text {
   font-size: 28rpx;
   font-weight: 500;
-  color: #000000;
+  color: #242529;
   line-height: 28rpx;
 }
 
@@ -217,7 +217,7 @@
   font-family: "PingFang SC";
   font-size: 24rpx; /* 12px */
   font-weight: 400;
-  color: #C1C1C1;
+  color: #A0A4AE;
   line-height: 100%; /* 12px */
 }
 
@@ -225,7 +225,7 @@
   font-family: "PingFang SC";
   font-size: 28rpx; /* 14px */
   font-weight: 500;
-  color: #000000;
+  color: #242529;
   line-height: 28rpx; /* 14px */
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -241,7 +241,7 @@
 
 .spot-desc {
   font-size: 32rpx; /* 16px */
-  color: #868686;
+  color: #6E727A;
   line-height: 48rpx; /* 24px */
   margin-top: 40rpx; /* 20px 距离上面的地址卡片 */
 }
@@ -249,7 +249,7 @@
 /* 分割线 */
 .divider {
   height: 2rpx; /* 1px */
-  background: #E8E8E8;
+  background: #F2F4F7;
   margin: 64rpx 48rpx 0;
 }
 
@@ -264,7 +264,7 @@
 .section-title {
   font-size: 34rpx; /* 17px */
   font-weight: 500;
-  color: #000000;
+  color: #242529;
 }
 
 .map-card {
@@ -272,7 +272,7 @@
   height: 240rpx; /* 120px */
   border-radius: 24rpx; /* 12px */
   overflow: hidden;
-  background: #F6F6F6;
+  background: #F7F8FA;
 }
 
 .mini-map {
@@ -297,7 +297,7 @@
 
 .more-btn {
   font-size: 28rpx; /* 14px */
-  color: #DC6962;
+  color: #FF5A5F;
 }
 
 .nearby-scroll {
@@ -332,7 +332,7 @@
   width: 280rpx; /* 140px */
   height: 280rpx; /* 140px */
   border-radius: 24rpx; /* 12px */
-  background: #F6F6F6;
+  background: #F7F8FA;
 }
 
 .nearby-info {
@@ -343,7 +343,7 @@
 
 .nearby-name {
   font-size: 32rpx; /* 16px */
-  color: #060606;
+  color: #242529;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -351,7 +351,7 @@
 
 .nearby-meta {
   font-size: 24rpx; /* 12px */
-  color: #C2C2C2;
+  color: #A0A4AE;
 }
 
 /* ── 底部操作栏 ── */
@@ -384,9 +384,8 @@
   width: 96rpx; /* 48px */
   height: 96rpx; /* 48px */
   flex-shrink: 0;
-  border: 2rpx solid #E7E7E7;
-  border-radius: 24rpx; /* 12px */
-  background: #FFFFFF;
+  border-radius: 999rpx;
+  background: #F2F4F7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -395,19 +394,19 @@
 
 .collect-action-icon {
   font-size: 48rpx; /* 24px */
-  color: #060606;
+  color: #242529;
   line-height: 1;
 }
 
 .collect-action-icon.collected {
-  color: #DC6962;
+  color: #FF5A5F;
 }
 
 .want-btn {
   flex: 1;
   height: 96rpx; /* 48px */
-  background: #47BFFE;
-  border-radius: 24rpx; /* 12px */
+  background: #242529;
+  border-radius: 999rpx;
   display: flex;
   align-items: center;
   justify-content: center;

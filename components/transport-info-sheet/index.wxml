@@ -1,6 +1,5 @@
 <view class="transport-sheet-mask {{visible ? 'show' : ''}}" bindtap="onMaskTap"></view>
 <view class="transport-sheet {{visible ? 'show' : ''}}" catchtap="preventBubble">
-  <view class="transport-sheet-handle"></view>
   <view class="transport-sheet-header">
     <text class="transport-sheet-title">交通信息</text>
     <view class="transport-sheet-close" bindtap="onClose">
@@ -21,8 +20,7 @@
         <text class="transport-option-label">{{item.label}}</text>
       </view>
       <view class="transport-option-side">
-        <text class="transport-option-time">{{item.distanceText}} · {{item.timeText}}</text>
-        <i class="transport-option-check {{selectedMode === item.mode ? 'mgc_check_line active' : 'mgc_round_line'}}"></i>
+        <text class="transport-option-time">{{item.distanceText}} {{item.timeText}}</text>
       </view>
     </view>
   </view>

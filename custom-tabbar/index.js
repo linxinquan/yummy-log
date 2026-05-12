@@ -63,6 +63,20 @@ Component({
       const data = e.currentTarget.dataset
       const url = data.path
       if (url) {
+        const addPagePath = '/pages/add-shop/add-shop'
+        const pages = getCurrentPages()
+        const currentPage = pages[pages.length - 1]
+        const currentRoute = currentPage ? `/${currentPage.route}` : ''
+
+        if (url === addPagePath) {
+          const fallbackPath = currentRoute && currentRoute !== addPagePath
+            ? currentRoute
+            : (wx.getStorageSync('tabbarLastNormalPath') || '/pages/index/index')
+          wx.setStorageSync('tabbarLastNormalPath', fallbackPath)
+        } else {
+          wx.setStorageSync('tabbarLastNormalPath', url)
+        }
+
         this.setData({
           selected: data.index
         })

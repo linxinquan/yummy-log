@@ -217,6 +217,37 @@ function getLikeType(item, routeType) {
   return item.type === 'spot' ? 'spot' : 'food'
 }
 
+function savePreviewRouteData(data) {
+  const { routeDaySections, summaryText, cityText, routeType, previewRouteId } = data
+  if (!routeDaySections || !routeDaySections.length) return null
+
+  const routeId = previewRouteId || `ai-${Date.now()}`
+  const { daySummaries, dayDetails } = buildLegacyRouteData(routeDaySections)
+  const savedRoute = {
+    id: routeId,
+    title: buildPreviewTitle(cityText, routeType),
+    subtitle: summaryText,
+    image: daySummaries[0]?.image || DEFAULT_COVERS[0],
+    author: 'AI规划',
+    city: cityText,
+    sourceType: 'ai',
+    daySections: routeDaySections,
+    daySummaries,
+    dayDetails,
+    createdAt: Date.now()
+  }
+
+  const savedRoutes = util.loadData('savedRoutes', [])
+  const index = savedRoutes.findIndex(item => String(item.id) === String(routeId))
+  if (index >= 0) {
+    savedRoutes[index] = savedRoute
+  } else {
+    savedRoutes.push(savedRoute)
+  }
+  wx.setStorageSync('savedRoutes', savedRoutes)
+  return savedRoute
+}
+
 Page({
   data: {
     // 地图
@@ -248,7 +279,9 @@ Page({
     cityText: '深圳市',
     previewRouteId: '',
     reorderSheetVisible: false,
+    pendingReorderMode: 'smart',
     routeShopsBackup: [],
+    routeDaySectionsBackup: [],
     mapPreviewShop: null,
     mapPreviewIndex: 0,
     previewTabs: [],
@@ -453,6 +486,13 @@ Page({
       routeTitle: buildPreviewTitle(cityInfo.name, this.data.routeType),
       mapPreviewShop: routeShops && routeShops.length ? routeShops[0] : null,
       mapPreviewIndex: 0
+    }, () => {
+      if (!this.data.isEditing) {
+        const savedRoute = savePreviewRouteData(this.data)
+        if (savedRoute) {
+          this.setData({ previewRouteId: savedRoute.id })
+        }
+      }
     })
   },
 
@@ -759,26 +799,37 @@ Page({
   },
 
   onOpenReorderSheet() {
-    this.setData({ reorderSheetVisible: true })
+    this.setData({
+      reorderSheetVisible: true,
+      pendingReorderMode: this.data.isEditing ? 'manual' : 'smart'
+    })
   },
 
   onCloseReorderSheet() {
     this.setData({ reorderSheetVisible: false })
   },
 
-  onChooseSmartReorder() {
-    this.onOptimizeRoute()
+  onSelectReorderMode(e) {
+    const { mode } = e.currentTarget.dataset
+    if (!mode) return
+    this.setData({ pendingReorderMode: mode })
   },
 
-  onChooseManualReorder() {
-    this.setData({
-      reorderSheetVisible: false,
-      isEditing: true,
-      viewMode: 'list',
-      currentTab: this.data.routeDaySections.length ? 1 : 0,
-      sheetScrollTarget: this.data.routeDaySections.length ? 'route-day-anchor-0' : '',
-      routeShopsBackup: JSON.parse(JSON.stringify(this.data.routeShops))
-    })
+  onConfirmReorderMode() {
+    if (this.data.pendingReorderMode === 'manual') {
+      const savedRoute = savePreviewRouteData(this.data)
+      if (!savedRoute) return
+      this.setData({
+        reorderSheetVisible: false,
+        previewRouteId: savedRoute.id
+      })
+      wx.navigateTo({
+        url: `/pages/my-route/my-route?route=${encodeURIComponent(JSON.stringify(savedRoute))}&edit=1`
+      })
+      return
+    }
+
+    this.onOptimizeRoute()
   },
 
   onCancelEdit() {
@@ -1018,39 +1069,10 @@ Page({
   },
 
   onSaveToMyRoute() {
-    const { routeDaySections, summaryText, cityText, routeType, previewRouteId } = this.data
-    if (!routeDaySections.length) return
-
-    const routeId = previewRouteId || `ai-${Date.now()}`
-    const { daySummaries, dayDetails } = buildLegacyRouteData(routeDaySections)
-    const savedRoute = {
-      id: routeId,
-      title: buildPreviewTitle(cityText, routeType),
-      subtitle: summaryText,
-      image: daySummaries[0]?.image || DEFAULT_COVERS[0],
-      author: 'AI规划',
-      city: cityText,
-      sourceType: 'ai',
-      daySections: routeDaySections,
-      daySummaries,
-      dayDetails,
-      createdAt: Date.now()
-    }
-
-    const savedRoutes = util.loadData('savedRoutes', [])
-    const index = savedRoutes.findIndex(item => String(item.id) === String(routeId))
-    if (index >= 0) {
-      savedRoutes[index] = savedRoute
-    } else {
-      savedRoutes.push(savedRoute)
-    }
-    wx.setStorageSync('savedRoutes', savedRoutes)
-    this.setData({ previewRouteId: routeId })
+    const savedRoute = savePreviewRouteData(this.data)
+    if (!savedRoute) return
+    this.setData({ previewRouteId: savedRoute.id })
     wx.showToast({ title: '已保存到路线', icon: 'success' })
-    const routeStr = encodeURIComponent(JSON.stringify(savedRoute))
-    setTimeout(() => {
-      wx.navigateTo({ url: `/pages/my-route/my-route?route=${routeStr}&returnTo=plan` })
-    }, 280)
   },
 
   onViewRoute() {

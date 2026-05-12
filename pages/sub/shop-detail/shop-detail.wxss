@@ -367,7 +367,7 @@
 
 .empty-record-btn {
   background: var(--primary);
-  color: #ffffff;
+  color: #FFFFFF;
   font-size: 28rpx;
   
   padding: var(--space-md) var(--space-xl);
@@ -412,32 +412,31 @@
 }
 
 .bottom-btn.want {
-  background: var(--background);
-  color: var(--primary-dark);
+  background: var(--surface-muted);
+  color: var(--text-primary);
 }
 
 .bottom-btn.want.active {
-  background: var(--primary);
-  color: #ffffff;
+  background: var(--dark-button);
+  color: #FFFFFF;
   box-shadow: var(--shadow-xs);
 }
 
 .bottom-btn.nav {
-  background: var(--primary);
-  color: #ffffff;
+  background: var(--dark-button);
+  color: #FFFFFF;
   box-shadow: var(--shadow-sm);
 }
 
 .bottom-btn.checkin {
-  background: var(--background);
-  color: var(--primary-dark);
-  border: 1.5rpx solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-primary);
+  border: none;
 }
 
 .bottom-btn.checkin.active {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: transparent;
+  background: var(--dark-button);
+  color: #FFFFFF;
   box-shadow: var(--shadow-xs);
 }
 
@@ -510,7 +509,7 @@
   width: calc(100% - 48rpx);
   height: 88rpx;
   background: var(--primary);
-  color: #ffffff;
+  color: #FFFFFF;
   border-radius: var(--radius-full);
   font-size: 30rpx;
   
@@ -564,21 +563,21 @@
 
 .action-btn.liked {
   background: var(--danger);
-  color: #ffffff;
+  color: #FFFFFF;
   border-color: transparent;
   box-shadow: var(--shadow-xs);
 }
 
 .action-btn.checked {
   background: var(--success);
-  color: #ffffff;
+  color: #FFFFFF;
   border-color: transparent;
   box-shadow: var(--shadow-xs);
 }
 
 .action-btn.primary {
   background: var(--primary);
-  color: #ffffff;
+  color: #FFFFFF;
   border-color: transparent;
   box-shadow: var(--shadow-xs);
   flex: 1.2;

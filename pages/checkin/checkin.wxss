@@ -157,8 +157,8 @@ page {
 /* ══ 按钮：主按钮 ════════════════════════════════════════════════ */
 .btn-primary {
   width: 100%;
-  background: var(--primary-light);
-  border: 2rpx solid var(--primary-light);
+  background: var(--surface-muted);
+  border: none;
   border-radius: var(--radius-full);
   padding: 0 var(--space-lg);
   height: 96rpx; /* lg size */
@@ -171,16 +171,14 @@ page {
 }
 
 .btn-primary.ready {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--dark-button);
   box-shadow: var(--shadow-md);
 }
 
 .btn-primary:active { transform: scale(0.98); }
 
 .btn-primary.main {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--dark-button);
   box-shadow: var(--shadow-lg);
 }
 

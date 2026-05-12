@@ -26,7 +26,7 @@
   font-weight: 500;
   font-size: 48rpx;
   line-height: 100%;
-  color: #000000;
+  color: #242529;
 }
 
 .manage-btn {
@@ -39,7 +39,7 @@
 .guide-list {
   flex: 1;
   padding-top: 24rpx;
-  background: #F6F6F6;
+  background: #F7F8FA;
 }
 
 /* ── 攻略卡片 ── */
@@ -61,7 +61,7 @@
   border-radius: 24rpx;
   overflow: hidden;
   position: relative;
-  background: #f0f0f0;
+  background: #F2F4F7;
 }
 
 .card-img {
@@ -79,7 +79,7 @@
   padding: 6rpx 12rpx;
   font-family: 'PingFang SC';
   font-size: 20rpx;
-  color: #ffffff;
+  color: #FFFFFF;
   line-height: 20rpx;
   backdrop-filter: blur(4px);
 }
@@ -107,7 +107,7 @@
   font-family: 'PingFang SC';
   font-weight: 500;
   font-size: 32rpx;
-  color: #262626;
+  color: #242529;
   line-height: 32rpx;
   white-space: nowrap;
   overflow: hidden;
@@ -142,12 +142,12 @@
 }
 
 .spot-tag {
-  background: #F6F6F6;
+  background: #F7F8FA;
   border-radius: 12rpx;
   padding: 8rpx 16rpx;
   font-family: 'PingFang SC';
   font-size: 24rpx;
-  color: #BABABA;
+  color: #A0A4AE;
   line-height: 24rpx;
   flex-shrink: 0;
   white-space: nowrap;
@@ -166,7 +166,7 @@
 .card-desc {
   font-family: 'PingFang SC';
   font-size: 28rpx;
-  color: #C2C2C2;
+  color: #A0A4AE;
   line-height: 28rpx;
   white-space: nowrap;
   overflow: hidden;
@@ -188,7 +188,7 @@
   width: 56rpx;
   height: 56rpx;
   border-radius: 16rpx;
-  background: #FFF0F0;
+  background: #FFFFFF0F0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -196,7 +196,7 @@
 
 .delete-icon {
   font-size: 32rpx;
-  color: #DC6962;
+  color: #FF5A5F;
 }
 
 /* ── 空状态 ── */
@@ -219,13 +219,13 @@
   font-family: 'PingFang SC';
   font-weight: 500;
   font-size: 32rpx;
-  color: #666666;
+  color: #6E727A;
 }
 
 .empty-desc {
   font-family: 'PingFang SC';
   font-size: 26rpx;
-  color: #999999;
+  color: #6E727A;
 }
 
 /* ── 底部安全区 ── */

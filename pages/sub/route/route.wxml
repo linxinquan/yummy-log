@@ -95,7 +95,7 @@
       </view>
       <view class="nav-stat">
         <text class="ns-val">{{currentNavShop.timeStr || '5分钟'}}</text>
-        <text class="ns-lbl">{{travelMode === 'walk' ? '步行' : travelMode === 'transit' ? '地铁' : '驾车'}}</text>
+        <text class="ns-lbl">{{travelMode === 'walk' ? '步行' : travelMode === 'transit' ? '公共交通' : '驾车'}}</text>
       </view>
       <view class="nav-stat">
         <text class="ns-val"><i class="mgc_star_fill"></i> {{currentNavShop.rating}}</text>
@@ -139,7 +139,7 @@
         bindtap="onSelectMode"
         data-mode="{{item}}"
       >
-        <text><i class="{{item === 'drive' ? 'mgc_car_line' : item === 'transit' ? 'mgc_train_line' : 'mgc_walk_line'}}"></i> {{item === 'drive' ? '驾车' : item === 'transit' ? '地铁' : '步行'}}</text>
+        <text><i class="{{item === 'drive' ? 'mgc_car_line' : item === 'transit' ? 'mgc_train_line' : 'mgc_walk_line'}}"></i> {{item === 'drive' ? '驾车' : item === 'transit' ? '公共交通' : '步行'}}</text>
       </view>
       <view class="mode-chip optimize" bindtap="onOptimizeRoute">
         <text><i class="mgc_flashlight_line"></i> 最优</text>

@@ -248,18 +248,17 @@
         </scroll-view>
       </view>
 
-      <view class="bottom-bar" wx:if="{{routeShops.length > 0 && !isEditing}}">
-        <view class="bottom-btn secondary save-btn" bindtap="onSaveToMyRoute">
-          <i class="mgc_finger_love_line"></i>
-          <text>保存</text>
-        </view>
-        <view class="bottom-btn secondary" bindtap="onOpenReorderSheet">
-          <i class="mgc_ai_line"></i>
-          <text>重排</text>
-        </view>
-        <view class="bottom-btn primary view-btn" bindtap="onViewRoute">
+      <view class="bottom-bar route-preview-bar" wx:if="{{routeShops.length > 0 && !isEditing}}">
+        <view class="bottom-btn secondary route-icon-btn" bindtap="onViewRoute">
           <i class="mgc_route_line"></i>
-          <text>查看路线</text>
+        </view>
+        <view class="bottom-btn secondary reorder-btn" bindtap="onOpenReorderSheet">
+          <i class="mgc_ai_line"></i>
+          <text>修改</text>
+        </view>
+        <view class="bottom-btn primary route-save-btn" bindtap="onSaveToMyRoute">
+          <i class="mgc_finger_love_line"></i>
+          <text>保存路线</text>
         </view>
       </view>
       <view class="bottom-bar edit-bottom-bar" wx:if="{{routeShops.length > 0 && isEditing}}">
@@ -284,17 +283,19 @@
       </view>
         <view class="map-card route-map-preview-card" wx:if="{{mapPreviewShop}}">
           <view class="preview-tabs-panel">
-            <view class="preview-tab-row">
-              <view
-                wx:for="{{previewTabs}}"
-                wx:key="index"
-                class="preview-tab-item {{((currentMapDay < 0 && item.index === 0) || currentMapDay === item.index) ? 'active' : ''}}"
-                bindtap="onSelectMapPreviewDay"
-                data-index="{{item.index}}"
-              >
-                {{item.label}}
+            <scroll-view class="preview-tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
+              <view class="preview-tab-row">
+                <view
+                  wx:for="{{previewTabs}}"
+                  wx:key="index"
+                  class="preview-tab-item {{((currentMapDay < 0 && item.index === 0) || currentMapDay === item.index) ? 'active' : ''}}"
+                  bindtap="onSelectMapPreviewDay"
+                  data-index="{{item.index}}"
+                >
+                  {{item.label}}
+                </view>
               </view>
-            </view>
+            </scroll-view>
             <view class="preview-tab-divider"></view>
           </view>
 
@@ -358,26 +359,40 @@
 
     <view class="reorder-sheet-mask" wx:if="{{reorderSheetVisible}}" bindtap="onCloseReorderSheet"></view>
     <view class="reorder-sheet" wx:if="{{reorderSheetVisible}}">
-      <view class="reorder-sheet-handle"></view>
       <view class="reorder-sheet-header">
-        <text class="reorder-sheet-title">重排方式</text>
+        <text class="reorder-sheet-title">修改路线规划</text>
         <view class="reorder-sheet-close" bindtap="onCloseReorderSheet">
           <i class="mgc_close_line"></i>
         </view>
       </view>
-      <view class="reorder-sheet-option" bindtap="onChooseSmartReorder">
-        <view class="reorder-option-main">
-          <text class="reorder-option-title">智能规划</text>
-          <text class="reorder-option-desc">系统 AI 自动重新排序</text>
+      <view class="reorder-sheet-option-list">
+        <view
+          class="reorder-sheet-option {{pendingReorderMode === 'smart' ? 'active' : ''}}"
+          bindtap="onSelectReorderMode"
+          data-mode="smart"
+        >
+          <i class="reorder-option-icon mgc_ai_line"></i>
+          <view class="reorder-option-main">
+            <text class="reorder-option-title">智能规划</text>
+            <text class="reorder-option-desc">AI 智能分析路线，自动重新排序最佳路线</text>
+          </view>
         </view>
-        <i class="mgc_right_small_fill"></i>
+        <view
+          class="reorder-sheet-option {{pendingReorderMode === 'manual' ? 'active' : ''}}"
+          bindtap="onSelectReorderMode"
+          data-mode="manual"
+        >
+          <i class="reorder-option-icon mgc_pencil_3_line"></i>
+          <view class="reorder-option-main">
+            <text class="reorder-option-title">手动编辑</text>
+            <text class="reorder-option-desc">进入编辑状态，按需求手动调整路线顺序</text>
+          </view>
+        </view>
       </view>
-      <view class="reorder-sheet-option" bindtap="onChooseManualReorder">
-        <view class="reorder-option-main">
-          <text class="reorder-option-title">手动编辑</text>
-          <text class="reorder-option-desc">进入编辑状态手动调整顺序</text>
+      <view class="reorder-sheet-footer">
+        <view class="reorder-confirm-btn" bindtap="onConfirmReorderMode">
+          <text>确认</text>
         </view>
-        <i class="mgc_right_small_fill"></i>
       </view>
     </view>
   </block>

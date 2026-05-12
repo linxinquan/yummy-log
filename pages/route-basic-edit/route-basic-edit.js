@@ -3,6 +3,7 @@ const shopData = require('../../utils/shopData')
 const { spotData } = require('../../utils/spotData')
 const {
   applyTravelMeta,
+  MODE_CONFIG,
   getGlobalTransportPreferences,
   saveGlobalTransportPreferences
 } = require('../../utils/travel')
@@ -49,10 +50,10 @@ const GUANGDONG_CITIES = [
 const DAY_OPTIONS = Array.from({ length: 30 }, (_, index) => index + 1)
 
 const TRANSPORT_PREFERENCE_OPTIONS = [
-  { key: 'walk', label: '步行' },
-  { key: 'ride', label: '骑行' },
-  { key: 'transit', label: '公共交通' },
-  { key: 'drive', label: '驾车' }
+  { key: 'walk', label: '步行', icon: MODE_CONFIG.walk.icon },
+  { key: 'ride', label: '骑行', icon: MODE_CONFIG.ride.icon },
+  { key: 'transit', label: '公共交通', icon: MODE_CONFIG.transit.icon },
+  { key: 'drive', label: '驾车', icon: MODE_CONFIG.drive.icon }
 ]
 
 function buildCityCoverPool() {
@@ -170,6 +171,21 @@ function inferTransportPreferences() {
   return getGlobalTransportPreferences()
 }
 
+function buildEmptyRoute() {
+  return {
+    id: `custom-${Date.now()}`,
+    title: '',
+    city: '',
+    dayCount: 1,
+    daySections: [{ id: `day-${Date.now()}`, items: [] }],
+    daySummaries: [],
+    dayDetails: [],
+    sourceType: 'custom',
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  }
+}
+
 function applyTransportPreferences(daySections, preferences) {
   return stripEditState(daySections).map(day => ({
     ...day,
@@ -184,6 +200,7 @@ function applyTransportPreferences(daySections, preferences) {
 Page({
   data: {
     route: null,
+    isNewRoute: false,
     coverImage: '',
     title: '',
     city: '',
@@ -209,17 +226,21 @@ Page({
   },
 
   onLoad(options) {
-    if (!options.route) {
+    const isNewRoute = options.create === '1'
+    if (!options.route && options.create !== '1') {
       wx.showToast({ title: '路线不存在', icon: 'none' })
       setTimeout(() => wx.navigateBack({ delta: 1 }), 1200)
       return
     }
 
-    const route = JSON.parse(decodeURIComponent(options.route))
+    const route = options.route
+      ? JSON.parse(decodeURIComponent(options.route))
+      : buildEmptyRoute()
     const daySections = stripEditState(route.daySections || [])
     const transportPreferences = inferTransportPreferences()
     this.setData({
       route,
+      isNewRoute,
       coverImage: resolveRouteCoverImage(route, daySections),
       title: route.title || '',
       city: route.city || route.cityText || '',
@@ -317,7 +338,7 @@ Page({
     this.setData({ showTransportPicker: false })
   },
 
-  onSelectTransportPreference(e) {
+  onSelectTransportMode(e) {
     const type = e.currentTarget.dataset.type
     const mode = e.currentTarget.dataset.mode
     if (!type || !mode) return

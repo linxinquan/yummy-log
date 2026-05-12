@@ -214,7 +214,7 @@
       </view>
       <view class="bottom-btn secondary route-adjust-btn" bindtap="onStartRouteEdit">
         <i class="mgc_ai_line"></i>
-        <text>重排</text>
+        <text>修改</text>
       </view>
       <view class="bottom-btn primary route-nav-btn" bindtap="onViewRoute">
         <i class="mgc_route_line"></i>
@@ -235,17 +235,19 @@
       </view>
       <view class="map-card route-map-preview-card" wx:if="{{mapPreviewPlace}}">
         <view class="preview-tabs-panel">
-          <view class="preview-tab-row">
-            <view
-              wx:for="{{previewTabs}}"
-              wx:key="index"
-              class="preview-tab-item {{((currentMapDay < 0 && item.index === 0) || currentMapDay === item.index) ? 'active' : ''}}"
-              bindtap="onSelectMapPreviewDay"
-              data-index="{{item.index}}"
-            >
-              {{item.label}}
+          <scroll-view class="preview-tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
+            <view class="preview-tab-row">
+              <view
+                wx:for="{{previewTabs}}"
+                wx:key="index"
+                class="preview-tab-item {{((currentMapDay < 0 && item.index === 0) || currentMapDay === item.index) ? 'active' : ''}}"
+                bindtap="onSelectMapPreviewDay"
+                data-index="{{item.index}}"
+              >
+                {{item.label}}
+              </view>
             </view>
-          </view>
+          </scroll-view>
           <view class="preview-tab-divider"></view>
         </view>
 

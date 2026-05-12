@@ -54,7 +54,7 @@
   </view>
 
   <view class="bottom-bar">
-    <view class="icon-btn delete-btn" bindtap="onDeleteRoute">
+    <view class="icon-btn delete-btn" wx:if="{{!isNewRoute}}" bindtap="onDeleteRoute">
       <i class="mgc_delete_2_line"></i>
     </view>
     <view class="bottom-btn secondary" bindtap="onCancel">取消</view>
@@ -109,43 +109,42 @@
   <view class="sheet-mask {{showTransportPicker ? 'show' : ''}}" bindtap="onCloseTransportPicker">
     <view class="sheet-panel transport-sheet" catchtap="preventBubble">
       <view class="sheet-header">
-        <text class="sheet-title">交通偏好</text>
+        <text class="sheet-title">交通偏好（全局）</text>
         <i class="mgc_close_line sheet-close" bindtap="onCloseTransportPicker"></i>
       </view>
       <view class="sheet-body">
         <view class="transport-group">
-          <text class="transport-group-title">距离小于 1 公里</text>
-          <view class="transport-option-row">
+          <text class="transport-group-title">小于 1 公里</text>
+          <view class="transport-option-grid">
             <view
               wx:for="{{transportOptions}}"
               wx:key="key"
-              class="transport-option {{draftTransportPreferences.shortDistanceMode === item.key ? 'active' : ''}}"
-              bindtap="onSelectTransportPreference"
+              class="transport-option-card {{draftTransportPreferences.shortDistanceMode === item.key ? 'active' : ''}}"
+              bindtap="onSelectTransportMode"
               data-type="shortDistanceMode"
               data-mode="{{item.key}}"
             >
-              {{item.label}}
+              <i class="transport-option-icon {{item.icon}}"></i>
+              <text class="transport-option-label">{{item.label}}</text>
             </view>
           </view>
         </view>
-
         <view class="transport-group">
-          <text class="transport-group-title">距离大于 1 公里</text>
-          <view class="transport-option-row">
+          <text class="transport-group-title">大于等于 1 公里</text>
+          <view class="transport-option-grid">
             <view
               wx:for="{{transportOptions}}"
               wx:key="key"
-              class="transport-option {{draftTransportPreferences.longDistanceMode === item.key ? 'active' : ''}}"
-              bindtap="onSelectTransportPreference"
+              class="transport-option-card {{draftTransportPreferences.longDistanceMode === item.key ? 'active' : ''}}"
+              bindtap="onSelectTransportMode"
               data-type="longDistanceMode"
               data-mode="{{item.key}}"
             >
-              {{item.label}}
+              <i class="transport-option-icon {{item.icon}}"></i>
+              <text class="transport-option-label">{{item.label}}</text>
             </view>
           </view>
         </view>
-
-        <view class="transport-hint">两种距离场景各选择 1 种，共 2 个偏好</view>
         <view class="sheet-confirm" bindtap="onConfirmTransportPicker">确定</view>
       </view>
     </view>

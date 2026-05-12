@@ -13,7 +13,7 @@
 
 .travel-meta-icon {
   flex-shrink: 0;
-  color: #999999;
+  color: #6E727A;
   font-size: 24rpx;
   line-height: 24rpx;
 }
@@ -22,12 +22,12 @@
   flex-shrink: 0;
   font-size: 24rpx;
   line-height: 24rpx;
-  color: #CCCCCC;
+  color: #C7CAD1;
 }
 
 .travel-meta-text {
   min-width: 0;
-  color: #999999;
+  color: #6E727A;
   font-size: 24rpx;
   line-height: 24rpx;
   white-space: nowrap;
