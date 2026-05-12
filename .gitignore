@@ -1,6 +1,9 @@
 # 微信云开发
 cloudbaserc.json
 
+# 云函数代码（避免API Key泄露）
+cloud/
+
 # 云函数依赖（node_modules）
 cloud/*/node_modules/
 

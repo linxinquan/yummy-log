@@ -427,6 +427,97 @@ dataScript/
 
 ---
 
+## 图片识别改为云函数调用（2026-05-12 ✅）
+
+### 修改原因
+1. **混元模型限制**：混元免费版不支持多模态（图片输入），且不支持通过`wx.cloud.extend.AI.createModel`调用第三方模型（如Qwen）
+2. **API Key安全**：前端直连ModelScope API存在Key泄露风险
+3. **方案调整**：改用云函数调用ModelScope Qwen API，保障Key安全
+
+### 技术架构
+- **调用方式**：前端通过`wx.cloud.callFunction`调用云函数
+- **云函数**：`cloud/recognizePhoto/index.js`
+- **模型**：`Qwen/Qwen3.5-27B`（ModelScope多模态）
+- **API**：ModelScope OpenAI兼容API `https://api-inference.modelscope.cn/v1/chat/completions`
+- **图片传输**：上传到云存储 → 获取临时访问链接 → 传给AI（不使用Base64）
+
+### 云函数配置
+- **超时设置**：创建`cloud/recognizePhoto/config.json`，设置`"timeout": 60`（秒）
+- **原因**：默认3秒超时，调用外部AI API需要更长时间
+- **环境变量**：API Key优先读取`process.env.MODELSCOPE_API_KEY`，兜底使用测试Key
+
+### 关键代码（`cloud/recognizePhoto/index.js`）
+```javascript
+// HTTP POST 请求封装（Promise）
+function httpPost(url, headers, body) {
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url)
+    const options = {
+      hostname: urlObj.hostname,
+      port: 443,
+      path: urlObj.pathname + urlObj.search,
+      method: 'POST',
+      headers: headers
+    }
+    const req = https.request(options, (res) => {
+      const chunks = []
+      res.on('data', (chunk) => { chunks.push(chunk) })
+      res.on('end', () => {
+        const data = Buffer.concat(chunks).toString()
+        try {
+          resolve({ statusCode: res.statusCode, data: JSON.parse(data) })
+        } catch (e) {
+          resolve({ statusCode: res.statusCode, data: data })
+        }
+      })
+    })
+    req.on('error', reject)
+    req.write(JSON.stringify(body))
+    req.end()
+  })
+}
+```
+
+### 前端调用链路
+```
+用户选择图片
+  → onChoosePhoto()
+    → _recognizePhoto()
+      → utils/recognizePhoto.js → wx.cloud.callFunction('recognizePhoto')
+        → 云函数调用ModelScope Qwen API
+          → 返回 { success, name, desc }
+            → 更新UI显示识别结果
+```
+
+### 已删除内容
+1. **测试函数**：
+   - `onTestAIGenerate()` - 测试混元AI生成
+   - `_callHunyuanDirectTest()` - 测试专用直接调用混元
+
+
+
+### 已修改文件
+| 文件 | 改动 |
+|------|------|
+| `utils/recognizePhoto.js` | 改为调用云函数`recognizePhoto`，删除前端直连API代码和混元分支 |
+| `cloud/recognizePhoto/index.js` | **新建** 云函数：调用ModelScope Qwen API |
+| `cloud/recognizePhoto/package.json` | **新建** 云函数依赖配置 |
+| `cloud/recognizePhoto/config.json` | **新建** 超时配置（30秒） | 好像没用，在控制台已配置60s
+| `pages/checkin/checkin.js` | 删除测试函数、未使用字段、混元相关代码 |
+
+### 踩坑记录
+1. **云函数超时（3秒）** → 创建`config.json`设置`timeout: 30`
+2. **云函数不支持`cloud.callContainer`** → 改用Node.js原生`https`模块调用外部API
+3. **`process.env`拼写错误** → 修正为`process.env.MODELSCOPE_API_KEY`
+4. **Buffer拼接错误** → 重写`httpPost`函数正确拼接响应Buffer
+
+### TODO
+- [ ] 部署云函数后测试调用是否正常
+- [ ] 在云开发控制台配置环境变量`MODELSCOPE_API_KEY`
+- [ ] 测试不同网络环境下云函数调用稳定性
+
+---
+
 ## TODO
 
 - [ ] **路线页面 Loading 状态**
