@@ -244,8 +244,8 @@ Page({
     transportTargetIndex: -1,
     planDaySheetVisible: false,
     dayOptions: DAY_OPTIONS,
-    selectedPlanDayCount: 1,
-    selectedPlanDayIndex: 0,
+    selectedPlanDayCount: 3,
+    selectedPlanDayIndex: 2,
     deleteActionWidthPx: 72,
     routeActionSheetVisible: false,
     routeActionOptions: ROUTE_ACTION_OPTIONS,
@@ -715,8 +715,8 @@ Page({
     }
     this.setData({
       planDaySheetVisible: true,
-      selectedPlanDayCount: Math.max(1, Math.min(this.data.selectedPlanDayCount || 1, 30)),
-      selectedPlanDayIndex: Math.max(Math.max(1, Math.min(this.data.selectedPlanDayCount || 1, 30)) - 1, 0)
+      selectedPlanDayCount: Math.max(1, Math.min(this.data.selectedPlanDayCount || 3, 30)),
+      selectedPlanDayIndex: Math.max(Math.max(1, Math.min(this.data.selectedPlanDayCount || 3, 30)) - 1, 0)
     })
   },
 

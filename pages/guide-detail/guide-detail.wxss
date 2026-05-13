@@ -160,7 +160,7 @@ page {
 }
 
 .overview-section {
-  margin: 64rpx 48rpx 0;
+  margin: 48rpx 48rpx 0;
 }
 
 .overview-anchor {
@@ -691,8 +691,8 @@ page {
 .preview-desc-right {
   min-width: 0;
   color: #6E727A;
-  font-size: 28rpx;
-  line-height: 28rpx;
+  font-size: 32rpx;
+  line-height: 32rpx;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

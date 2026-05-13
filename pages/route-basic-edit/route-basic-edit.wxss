@@ -297,25 +297,26 @@ border: 2rpx solid #E5E7EB;
 }
 
 .day-picker-item {
-  height: 88rpx;
+  height: 120rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6E727A;
-  font-size: 32rpx;
-  line-height: 32rpx;
+  color: #242529;
+  font-size: 48rpx;
+  line-height: 48rpx;
 }
 
 .sheet-confirm {
   height: 96rpx;
   border-radius: 999rpx;
-  margin-top: 48rpx;
+  margin-top: 32rpx;
   background: #242529;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #FFFFFF;
   font-size: 32rpx;
+  line-height: 32rpx;
   font-weight: 500;
 }
 

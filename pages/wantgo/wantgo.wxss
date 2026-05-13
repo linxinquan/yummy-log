@@ -668,7 +668,7 @@
 
 .plan-day-close {
   width: 48rpx;
-  height: 48rpx;
+  height: rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -686,13 +686,13 @@
 }
 
 .plan-day-picker-item {
-  height: 88rpx;
+  height: 120rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6E727A;
-  font-size: 32rpx;
-  line-height: 32rpx;
+  color: #242529;
+  font-size: 48rpx;
+  line-height: 48rpx;
 }
 
 .plan-day-save {

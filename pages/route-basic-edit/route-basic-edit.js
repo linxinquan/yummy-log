@@ -172,12 +172,18 @@ function inferTransportPreferences() {
 }
 
 function buildEmptyRoute() {
+  const timestamp = Date.now()
   return {
-    id: `custom-${Date.now()}`,
+    id: `custom-${timestamp}`,
     title: '',
     city: '',
-    dayCount: 1,
-    daySections: [{ id: `day-${Date.now()}`, items: [] }],
+    dayCount: 3,
+    daySections: Array.from({ length: 3 }, (_, index) => ({
+      id: `day-${timestamp}-${index}`,
+      title: `第${index + 1}天`,
+      countText: '0 个地点',
+      items: []
+    })),
     daySummaries: [],
     dayDetails: [],
     sourceType: 'custom',
@@ -204,16 +210,16 @@ Page({
     coverImage: '',
     title: '',
     city: '',
-    dayCount: 1,
+    dayCount: 3,
     maxTitleLength: 20,
     showCityPicker: false,
     showDayPicker: false,
     showTransportPicker: false,
     cityOptions: [],
     dayOptions: DAY_OPTIONS,
-    dayPickerIndex: 0,
+    dayPickerIndex: 2,
     transportOptions: TRANSPORT_PREFERENCE_OPTIONS,
-    draftDayCount: 1,
+    draftDayCount: 3,
     transportPreferences: {
       shortDistanceMode: 'walk',
       longDistanceMode: 'ride'

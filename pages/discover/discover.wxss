@@ -206,7 +206,7 @@ page {
 .featured-title {
   font-family: 'PingFang SC';
   font-weight: 500;
-  font-size: 28rpx;
+  font-size: 32rpx;
   line-height: 100%;
   color: #FFFFFF;
 }

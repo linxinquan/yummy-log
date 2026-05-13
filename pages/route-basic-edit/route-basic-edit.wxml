@@ -94,7 +94,7 @@
         <i class="mgc_close_line sheet-close" bindtap="onCloseDayPicker"></i>
       </view>
       <view class="sheet-body">
-        <picker-view class="day-picker-view" indicator-style="height: 88rpx;" value="{{[dayPickerIndex]}}" bindchange="onDayPickerChange">
+        <picker-view class="day-picker-view" indicator-style="height: 88rpx; background: transparent; border-top: 1px solid #FFFFFF; border-bottom: 1px solid #FFFFFF;" value="{{[dayPickerIndex]}}" bindchange="onDayPickerChange">
           <picker-view-column>
             <view wx:for="{{dayOptions}}" wx:key="*this" class="day-picker-item">
               {{item}} 天
