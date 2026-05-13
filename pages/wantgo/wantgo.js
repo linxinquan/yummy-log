@@ -9,6 +9,21 @@ const ITEM_H = 60 // px，每项高度用于计算排序
 const DEFAULT_COVER = '/images/covers/01.jpeg'
 const DAY_OPTIONS = Array.from({ length: 30 }, (_, index) => index + 1)
 const DELETE_ACTION_WIDTH_RPX = 144
+const DEFAULT_ROUTE_AVATAR = '/images/app-logo.jpg'
+const ROUTE_ACTION_OPTIONS = [
+  { key: 'publish', label: '发布攻略', icon: 'mgc_send_plane_line' },
+  { key: 'copy', label: '复制路线', icon: 'mgc_copy_2_line' },
+  { key: 'edit', label: '编辑信息', icon: 'mgc_pencil_3_line' },
+  { key: 'delete', label: '删除路线', icon: 'mgc_delete_2_line', danger: true }
+]
+
+function getCurrentUserProfile() {
+  const userInfo = util.loadData('userInfo', null) || {}
+  return {
+    nickName: userInfo.nickName || '觅食者',
+    avatarUrl: userInfo.avatarUrl || DEFAULT_ROUTE_AVATAR
+  }
+}
 
 function withSwipeState(items) {
   return (items || []).map(item => ({
@@ -73,6 +88,133 @@ function buildPreviewItems(items) {
   return routeItems.map(item => applyTravelMeta(item, item.travelMode))
 }
 
+function buildRouteCoverPool() {
+  const foodCovers = [...(shopData.shops || []), ...(shopData.foods || []), ...(util.loadData('userAddedShops', []) || [])]
+    .map(item => item.logo || item.image || item.thumb || item.coverImage)
+    .filter(Boolean)
+  const spotCovers = (util.getSpotData() || [])
+    .map(item => item.image || item.logo || item.thumb || item.coverImage)
+    .filter(Boolean)
+  return [...foodCovers, ...spotCovers, DEFAULT_COVER]
+}
+
+function resolveRouteCardCover(item, index = 0) {
+  const daySectionCover = (item.daySections || []).reduce((cover, day) => {
+    if (cover) return cover
+    const firstItem = (day.items || []).find(place => place && (place.coverImage || place.image || place.logo || place.thumb))
+    return firstItem ? (firstItem.coverImage || firstItem.image || firstItem.logo || firstItem.thumb) : ''
+  }, '')
+  const dayDetailCover = (item.dayDetails || []).reduce((cover, day) => {
+    if (cover) return cover
+    const firstItem = (day || []).find(place => place && (place.coverImage || place.image || place.logo || place.thumb))
+    return firstItem ? (firstItem.coverImage || firstItem.image || firstItem.logo || firstItem.thumb) : ''
+  }, '')
+  const localPool = buildRouteCoverPool()
+  return item.coverImage || item.image || daySectionCover || dayDetailCover || localPool[index % localPool.length] || DEFAULT_COVER
+}
+
+function buildRouteCards(items) {
+  const currentUser = getCurrentUserProfile()
+  return (items || [])
+    .slice()
+    .sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0))
+    .map((item, index) => {
+    const hasOwnAuthor = Boolean(item.author)
+    const ownAvatar = item.authorAvatar || item.avatarUrl
+    const routeCover = resolveRouteCardCover(item, index)
+    return {
+      ...item,
+      subtitle: item.subtitle || '',
+      city: item.city || '未设置城市',
+      author: hasOwnAuthor ? item.author : currentUser.nickName,
+      authorAvatar: hasOwnAuthor
+        ? (ownAvatar || routeCover || DEFAULT_ROUTE_AVATAR)
+        : currentUser.avatarUrl,
+      image: routeCover,
+      coverImage: routeCover
+    }
+  })
+}
+
+function flattenRouteGuideContent(route) {
+  const daySections = route.daySections || []
+  const dayDetails = route.dayDetails || []
+  if (daySections.length) {
+    return daySections.reduce((result, day, dayIndex) => {
+      const items = (day.items || []).map((item, itemIndex) => ({
+        ...item,
+        dayIndex,
+        itemIndex
+      }))
+      return result.concat(items)
+    }, [])
+  }
+  if (dayDetails.length) {
+    return dayDetails.reduce((result, day, dayIndex) => {
+      const items = (day.items || []).map((item, itemIndex) => ({
+        ...item,
+        dayIndex,
+        itemIndex
+      }))
+      return result.concat(items)
+    }, [])
+  }
+  return []
+}
+
+function buildGuideDraftFromRoute(route, copy = false) {
+  const currentUser = getCurrentUserProfile()
+  const daySections = route.daySections || []
+  const flatContent = flattenRouteGuideContent(route)
+  const title = copy ? `${route.title || '未命名路线'}-副本` : (route.title || '未命名路线')
+  return {
+    id: `guide-${Date.now()}-${copy ? 'copy' : 'publish'}`,
+    routeId: route.id,
+    title,
+    coverImage: route.coverImage || route.image || DEFAULT_COVER,
+    content: flatContent,
+    daySections,
+    date: Date.now(),
+    city: route.city || '',
+    duration: `${Math.max(daySections.length || route.dayCount || 1, 1)}天`,
+    shopCount: flatContent.length,
+    author: route.author || currentUser.nickName,
+    authorAvatar: route.authorAvatar || currentUser.avatarUrl
+  }
+}
+
+function buildCopiedRoute(route) {
+  const timestamp = Date.now()
+  const title = String(route.title || '未命名路线')
+  const normalizedTitle = title.startsWith('（复制）') ? title : `（复制）${title}`
+  return {
+    ...route,
+    id: `route-copy-${timestamp}`,
+    title: normalizedTitle,
+    createdAt: timestamp,
+    updatedAt: timestamp
+  }
+}
+
+function getEmptyStateMeta(tab) {
+  if (tab === 'plan') {
+    return {
+      emptyIcon: 'mgc_route_line',
+      emptyHint: '去攻略页导入或复制路线吧'
+    }
+  }
+  if (tab === 'visited') {
+    return {
+      emptyIcon: 'mgc_foot_line',
+      emptyHint: '去探索页记录你的足迹吧'
+    }
+  }
+  return {
+    emptyIcon: 'mgc_heart_line',
+    emptyHint: '去探索页添加想去地点吧'
+  }
+}
+
 Page({
   data: {
     // 当前Tab
@@ -82,6 +224,8 @@ Page({
       plan: '路线',
       visited: '足迹'
     },
+    emptyIcon: 'mgc_heart_line',
+    emptyHint: '去探索页添加想去地点吧',
     // 数据
     items: [],
     empty: true,
@@ -102,7 +246,11 @@ Page({
     dayOptions: DAY_OPTIONS,
     selectedPlanDayCount: 1,
     selectedPlanDayIndex: 0,
-    deleteActionWidthPx: 72
+    deleteActionWidthPx: 72,
+    routeActionSheetVisible: false,
+    routeActionOptions: ROUTE_ACTION_OPTIONS,
+    selectedRouteAction: 'publish',
+    routeActionTarget: null
   },
 
   onLoad(options) {
@@ -121,9 +269,11 @@ Page({
     const contentTop = menuTop + menuHeight + 12
     const listTop = contentTop + 25
     const deleteActionWidthPx = sysInfo.windowWidth * DELETE_ACTION_WIDTH_RPX / 750
+    const emptyStateMeta = getEmptyStateMeta(tab)
     
     this.setData({ 
       tab, 
+      ...emptyStateMeta,
       menuTop,
       menuHeight,
       menuRightInset,
@@ -149,7 +299,7 @@ Page({
     const pendingTab = wx.getStorageSync('pendingWantgoTab')
     if (pendingTab) {
       wx.removeStorageSync('pendingWantgoTab')
-      this.setData({ tab: pendingTab, items: [], empty: true })
+      this.setData({ tab: pendingTab, ...getEmptyStateMeta(pendingTab), items: [], empty: true })
     }
     this._loadData()
   },
@@ -158,7 +308,7 @@ Page({
   onTabChange(e) {
     const tab = e.currentTarget.dataset.tab
     if (tab === this.data.tab) return
-    this.setData({ tab, items: [], empty: true })
+    this.setData({ tab, ...getEmptyStateMeta(tab), items: [], empty: true })
     this._loadData()
   },
 
@@ -177,14 +327,33 @@ Page({
       
       const allFoodItems = [...shops, ...foods, ...userShops]
       
-      const foodItems = foodIds.map(id => allFoodItems.find(s => String(s.id) === String(id))).filter(Boolean)
-      const spotItems = spotIds.map(id => spots.find(s => String(s.id) === String(id))).filter(Boolean)
+      const foodItems = foodIds
+        .map(id => allFoodItems.find(s => String(s.id) === String(id)))
+        .filter(Boolean)
+        .map(item => ({ ...item, type: 'food' }))
+      const spotItems = spotIds
+        .map(id => spots.find(s => String(s.id) === String(id)))
+        .filter(Boolean)
+        .map(item => ({ ...item, type: 'spot' }))
       
       items = withSwipeState(buildPreviewItems([...foodItems, ...spotItems]))
       this.setData({ items, empty: items.length === 0 })
     } else if (tab === 'plan') {
       const savedRoutes = util.loadData('savedRoutes', [])
-      this.setData({ items: savedRoutes, empty: savedRoutes.length === 0 })
+      const normalizedRoutes = savedRoutes.map((item, index) => {
+        const routeCover = resolveRouteCardCover(item, index)
+        return {
+          ...item,
+          image: item.image || routeCover,
+          coverImage: routeCover
+        }
+      })
+      if (JSON.stringify(normalizedRoutes) !== JSON.stringify(savedRoutes)) {
+        util.saveData('savedRoutes', normalizedRoutes)
+      }
+      const visibleRoutes = normalizedRoutes.filter(item => !item.isDraft)
+      const routeCards = buildRouteCards(visibleRoutes)
+      this.setData({ items: routeCards, empty: routeCards.length === 0 })
     } else {
       // 足迹
       const ids = util.loadData('userCheckedIn', [])
@@ -202,9 +371,94 @@ Page({
 
   // ─── 点击路线卡片 ─────────────────────────────
   onRouteCardTap(e) {
+    if (Date.now() - (this._lastRouteLongPressTime || 0) < 350) return
     const route = e.currentTarget.dataset.route
     const routeStr = encodeURIComponent(JSON.stringify(route))
     wx.navigateTo({ url: `/pages/my-route/my-route?route=${routeStr}` })
+  },
+
+  onRouteCardLongPress(e) {
+    const route = e.currentTarget.dataset.route
+    if (!route) return
+    this._lastRouteLongPressTime = Date.now()
+    wx.vibrateShort({ type: 'light' })
+    this.setData({
+      routeActionSheetVisible: true,
+      selectedRouteAction: 'publish',
+      routeActionTarget: route
+    })
+  },
+
+  onCloseRouteActionSheet() {
+    this.setData({
+      routeActionSheetVisible: false,
+      selectedRouteAction: 'publish',
+      routeActionTarget: null
+    })
+  },
+
+  onSelectRouteAction(e) {
+    const action = e.currentTarget.dataset.action
+    if (!action) return
+    this.setData({ selectedRouteAction: action })
+  },
+
+  publishRouteAsGuide(route, copy = false) {
+    const guides = util.loadData('myGuides', [])
+    if (!copy) {
+      const exists = guides.find(item => String(item.routeId) === String(route.id))
+      if (exists) {
+        wx.showToast({ title: '已发布过攻略', icon: 'none' })
+        return
+      }
+    }
+    const nextGuides = [buildGuideDraftFromRoute(route, copy)].concat(guides)
+    util.saveData('myGuides', nextGuides)
+    wx.showToast({ title: copy ? '已复制攻略' : '已发布为攻略', icon: 'success' })
+  },
+
+  copyRouteCard(route) {
+    const savedRoutes = util.loadData('savedRoutes', [])
+    const copiedRoute = buildCopiedRoute(route)
+    util.saveData('savedRoutes', [copiedRoute].concat(savedRoutes))
+    wx.showToast({ title: '已复制路线', icon: 'success' })
+  },
+
+  onConfirmRouteAction() {
+    const { selectedRouteAction, routeActionTarget } = this.data
+    if (!selectedRouteAction || !routeActionTarget) return
+
+    if (selectedRouteAction === 'delete') {
+      wx.showModal({
+        title: '删除路线',
+        content: '删除后无法恢复，确认删除吗？',
+        confirmColor: '#FF5A5F',
+        success: (res) => {
+          if (!res.confirm) return
+          const savedRoutes = util.loadData('savedRoutes', [])
+          const nextRoutes = savedRoutes.filter(item => String(item.id) !== String(routeActionTarget.id))
+          util.saveData('savedRoutes', nextRoutes)
+          this.onCloseRouteActionSheet()
+          this._loadData()
+          wx.showToast({ title: '已删除', icon: 'success' })
+        }
+      })
+      return
+    }
+
+    if (selectedRouteAction === 'publish') {
+      this.publishRouteAsGuide(routeActionTarget, false)
+    } else if (selectedRouteAction === 'copy') {
+      this.copyRouteCard(routeActionTarget)
+      this._loadData()
+    } else if (selectedRouteAction === 'edit') {
+      const routeStr = encodeURIComponent(JSON.stringify(routeActionTarget))
+      wx.navigateTo({
+        url: `/pages/route-basic-edit/route-basic-edit?route=${routeStr}`
+      })
+    }
+
+    this.onCloseRouteActionSheet()
   },
 
   // ─── 点击项目 ─────────────────────────────
@@ -440,14 +694,14 @@ Page({
 
   // ─── 移除想去 ─────────────────────────────
   onRemove(e) {
-    const id = e.currentTarget.dataset.id
+    const id = String(e.currentTarget.dataset.id)
     const { items } = this.data
-    const item = items.find(i => i.id === id)
+    const item = items.find(i => String(i.id) === id)
     if (!item) return
-
-    const isSpot = isSpotItem(item)
-    const type = isSpot ? 'spot' : 'food'
-    util.toggleLike(id, type)
+    const type = item.type === 'spot' ? 'spot' : 'food'
+    const key = type === 'spot' ? 'userWantSpots' : 'userWantFoods'
+    const nextIds = util.loadData(key, []).filter(savedId => String(savedId) !== id)
+    util.saveData(key, nextIds)
     this._loadData()
     wx.showToast({ title: '已移除', icon: 'none', duration: 1000 })
   },

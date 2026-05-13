@@ -108,6 +108,19 @@
   color: #242529;
 }
 
+.shortcut-icon {
+  font-size: 40rpx;
+  line-height: 40rpx;
+}
+
+.icon-favorite {
+  color: #F4C542;
+}
+
+.icon-publish {
+  color: #47BFFE;
+}
+
 /* 图标渐变色 */
 .icon-gradient {
   background: linear-gradient(180deg, #C5D3E3 0%, #D8E1EC 100%);

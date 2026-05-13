@@ -19,12 +19,12 @@
   <!-- ══ 快捷功能 ══ -->
   <view class="shortcut-section">
     <view class="shortcut-card" bindtap="onMenuTap" data-type="favorites">
-      <i class="mgc_heart_fill icon-gradient"></i>
+      <i class="mgc_star_fill shortcut-icon icon-favorite"></i>
       <text>我的收藏</text>
     </view>
     <view class="shortcut-card" bindtap="onMenuTap" data-type="guides">
-      <i class="mgc_notebook_fill icon-gradient"></i>
-      <text>我的攻略</text>
+      <i class="mgc_send_plane_fill shortcut-icon icon-publish"></i>
+      <text>我的发布</text>
     </view>
   </view>
 

@@ -37,11 +37,15 @@
   <!-- 列表视图 -->
   <block wx:if="{{viewMode === 'list'}}">
     <view class="empty-state" wx:if="{{checkins.length === 0}}">
-      <i class="mgc_ticket_line empty-icon display"></i>
-      <text class="empty-title heading-2">采集本还是空的</text>
-      <text class="empty-desc body-sm">去拍下你的第一张采集邮票吧</text>
-      <button class="btn btn-primary" bindtap="onGoCheckinFood"><i class="mgc_fork_spoon_line"></i> 美食打卡 →</button>
-      <button class="btn btn-secondary" bindtap="onGoCheckinSpot"><i class="mgc_scenery_line"></i> 景点打卡 →</button>
+      <view class="empty-illustration">
+        <i class="mgc_package_line empty-icon"></i>
+      </view>
+      <text class="empty-title">我的采集本</text>
+      <text class="empty-hint">去记录你的第一张采集卡吧</text>
+      <view class="empty-actions">
+        <button class="empty-btn empty-btn-primary" bindtap="onGoCheckinFood"><i class="mgc_fork_spoon_line"></i>美食打卡</button>
+        <button class="empty-btn empty-btn-secondary" bindtap="onGoCheckinSpot"><i class="mgc_scenery_line"></i>景点打卡</button>
+      </view>
     </view>
 
     <view class="stamps-grid" wx:else>

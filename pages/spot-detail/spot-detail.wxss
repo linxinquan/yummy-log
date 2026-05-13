@@ -399,7 +399,7 @@
 }
 
 .collect-action-icon.collected {
-  color: #FF5A5F;
+  color: #EEB237;
 }
 
 .want-btn {
@@ -411,6 +411,17 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  gap: 12rpx;
+}
+
+.want-action-icon {
+  font-size: 40rpx;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+.want-action-icon.wanted {
+  color: #FF5A5F;
 }
 
 .want-btn text {

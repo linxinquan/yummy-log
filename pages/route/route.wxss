@@ -609,23 +609,32 @@ page {
 
 .route-preview-bar {
   justify-content: flex-start;
+  gap: 12rpx;
 }
 
-.route-preview-bar .route-icon-btn {
+.route-preview-bar .route-edit-meta-btn {
   width: 96rpx;
   flex: 0 0 96rpx;
   padding: 0;
 }
 
 .route-preview-bar .reorder-btn {
-  width: 188rpx;
-  flex: 0 0 188rpx;
+  flex: 1 1 0;
+  padding: 0 16rpx;
+}
+
+.route-preview-bar .route-view-btn {
+  flex: 1 1 0;
   padding: 0 16rpx;
 }
 
 .route-preview-bar .route-save-btn {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   background: #242529;
+}
+
+.route-preview-bar .bottom-btn text {
+  font-size: 28rpx;
 }
 
 .bottom-btn i {

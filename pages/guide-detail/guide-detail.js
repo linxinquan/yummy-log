@@ -139,7 +139,7 @@ function buildCoverPool(guide) {
 }
 
 function getCityInfo(guide) {
-  const source = [guide.title || '', (guide.tags || []).join(' ')].join(' ')
+  const source = [guide.city || '', guide.cityText || '', guide.title || '', (guide.tags || []).join(' ')].join(' ')
   for (let i = 0; i < CITY_PRESETS.length; i += 1) {
     if (CITY_PRESETS[i].match.test(source)) {
       return CITY_PRESETS[i]
@@ -283,6 +283,9 @@ function buildGenericSections(guide, covers) {
 }
 
 function buildDaySections(guide, cityInfo) {
+  if (guide.daySections && guide.daySections.length) {
+    return syncDaySections(guide.daySections, cityInfo)
+  }
   const covers = buildCoverPool(guide)
   const content = [guide.title || '', (guide.tags || []).join(' '), (guide.desc || '')].join(' ')
   if (/西安|长安/.test(content)) {

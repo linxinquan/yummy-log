@@ -1,9 +1,68 @@
 const app = getApp()
 
+function inferGuideCity(guide = {}) {
+  const sourceText = [
+    guide.city,
+    guide.districtName,
+    guide.title,
+    guide.desc
+  ].join(' ')
+
+  if (/西安|长安/.test(sourceText)) return '西安市'
+  if (/广州/.test(sourceText)) return '广州市'
+  if (/汕头/.test(sourceText)) return '汕头市'
+  if (/佛山/.test(sourceText)) return '佛山市'
+  if (/珠海/.test(sourceText)) return '珠海市'
+  return '深圳市'
+}
+
+function getSavedGuideCount(guideId) {
+  const savedRoutes = wx.getStorageSync('savedRoutes') || []
+  return savedRoutes.filter(item => String(item.guideId || item.id) === String(guideId)).length
+}
+
+function decorateGuideCards(guides = []) {
+  return guides.map(item => ({
+    ...item,
+    cityText: item.cityText || inferGuideCity(item),
+    authorAvatar: item.authorAvatar || item.coverImage,
+    useRouteCount: (item.baseUseCount || 0) + getSavedGuideCount(item.id)
+  }))
+}
+
+function mapCityToDistrict(cityText = '') {
+  const source = String(cityText || '')
+  if (/南山/.test(source)) return 'nanshan'
+  if (/福田/.test(source)) return 'futian'
+  if (/罗湖/.test(source)) return 'luohu'
+  if (/宝安/.test(source)) return 'baoan'
+  if (/龙岗/.test(source)) return 'longgang'
+  if (/龙华/.test(source)) return 'longhua'
+  if (/盐田/.test(source)) return 'yantian'
+  if (/大鹏/.test(source)) return 'dapeng'
+  return ''
+}
+
+function getPublishedGuides(cardColors = []) {
+  const guides = wx.getStorageSync('myGuides') || []
+  return guides.map((item, index) => ({
+    ...item,
+    district: item.district || mapCityToDistrict(item.city || item.cityText),
+    districtName: item.districtName || '',
+    category: item.category || 'all',
+    cardColor: item.cardColor || cardColors[index % cardColors.length] || '#F7F7F7',
+    cityText: item.cityText || inferGuideCity(item),
+    baseUseCount: item.baseUseCount || 0,
+    duration: item.duration || `${Math.max((item.daySections || []).length, 1)}天`,
+    shopCount: item.shopCount || ((item.content || []).length || 0)
+  }))
+}
+
 Page({
   data: {
     districtName: '',
     districtId: '',
+    guideSource: [],
     guides: []
   },
 
@@ -17,6 +76,14 @@ Page({
     })
 
     this.loadDistrictGuides()
+  },
+
+  onShow() {
+    if (this.data.guideSource.length) {
+      this.setData({
+        guides: decorateGuideCards(this.data.guideSource)
+      })
+    }
   },
 
   loadDistrictGuides() {
@@ -505,12 +572,21 @@ Page({
       }
     ]
 
+    const normalizedGuides = allGuides.map(item => ({
+      ...item,
+      baseUseCount: item.likes || 0,
+      cityText: inferGuideCity(item)
+    }))
+
+    const publishedGuides = getPublishedGuides(cardColors)
+    const mergedGuides = publishedGuides.concat(normalizedGuides)
     const filteredGuides = this.data.districtId
-      ? allGuides.filter(g => g.district === this.data.districtId)
-      : allGuides
+      ? mergedGuides.filter(g => g.district === this.data.districtId)
+      : mergedGuides
 
     this.setData({
-      guides: filteredGuides
+      guideSource: filteredGuides,
+      guides: decorateGuideCards(filteredGuides)
     })
   },
 

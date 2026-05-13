@@ -16,9 +16,12 @@
     <view class="hero-mask" wx:if="{{viewMode === 'list'}}"></view>
   </view>
 
-  <view class="top-actions" style="top: {{menuTop}}px; height: {{menuHeight}}px;">
-    <view class="top-icon" bindtap="onBack">
+  <view class="top-actions {{isEditing ? 'top-actions-editing' : ''}}" style="top: {{menuTop}}px; height: {{menuHeight}}px;">
+    <view class="top-icon" bindtap="onBack" wx:if="{{!isEditing}}">
       <i class="mgc_left_line"></i>
+    </view>
+    <view class="edit-header-title" wx:if="{{isEditing}}">
+      <text>编辑路线</text>
     </view>
   </view>
 
@@ -40,7 +43,7 @@
           <view class="sheet-header" id="route-scroll-top">
             <text class="guide-title">{{route.title}}</text>
             <view class="guide-meta-row">
-              <text class="guide-meta">{{summaryText}}</text>
+                <text class="guide-meta">{{summaryText}}</text>
               <text class="guide-city">{{cityText}}</text>
             </view>
           </view>
@@ -73,7 +76,7 @@
             <view class="overview-anchor" id="route-overview-anchor" wx:if="{{!isEditing}}"></view>
             <view class="overview-section" wx:if="{{!isEditing}}">
               <text class="overview-title">概览</text>
-              <view class="overview-list">
+              <view class="overview-list" wx:if="{{hasRoutePlaces}}">
                 <view
                   class="overview-card"
                   wx:for="{{daySections}}"
@@ -97,6 +100,7 @@
                   </view>
                 </view>
               </view>
+              <view class="overview-empty" wx:else>暂未添加行程地点</view>
             </view>
             <view class="day-separator overview-separator" wx:if="{{!isEditing}}"></view>
 
@@ -191,6 +195,13 @@
                   <i class="mgc_location_2_line"></i>
                   <text>添加地点</text>
                 </view>
+                <view class="route-empty-card" wx:else>
+                  <view class="route-empty-icon">
+                    <i class="mgc_route_line"></i>
+                  </view>
+                  <text class="route-empty-title">还没有添加地点</text>
+                  <text class="route-empty-hint">点击下方“编辑”，进入编辑后添加地点</text>
+                </view>
               </view>
 
               <view class="day-separator" wx:if="{{dayIndex < daySections.length - 1}}"></view>
@@ -205,7 +216,7 @@
         <text>取消</text>
       </view>
       <view class="bottom-btn primary" bindtap="onSave">
-        <text>确认修改</text>
+        <text>保存</text>
       </view>
     </view>
     <view class="bottom-bar route-bottom-bar" wx:else>
@@ -214,7 +225,7 @@
       </view>
       <view class="bottom-btn secondary route-adjust-btn" bindtap="onStartRouteEdit">
         <i class="mgc_ai_line"></i>
-        <text>修改</text>
+        <text>编辑</text>
       </view>
       <view class="bottom-btn primary route-nav-btn" bindtap="onViewRoute">
         <i class="mgc_route_line"></i>
@@ -315,35 +326,55 @@
         <text class="picker-title">添加地点</text>
         <i class="mgc_close_line picker-close" bindtap="onClosePlacePicker"></i>
       </view>
-      <view class="picker-tabs">
-        <view class="picker-tab {{placePickerTab === 'all' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="all">全部</view>
-        <view class="picker-tab {{placePickerTab === 'want' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="want">想去</view>
-        <view class="picker-tab {{placePickerTab === 'collect' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="collect">收藏</view>
-      </view>
-      <scroll-view class="place-picker-scroll" scroll-y show-scrollbar="{{false}}">
-        <block wx:if="{{placePickerTab === 'all' ? placePickerItems.length : (placePickerTab === 'want' ? placePickerWantItems.length : placePickerCollectItems.length)}}">
-          <view
-            class="picker-place-item"
-            wx:for="{{placePickerTab === 'all' ? placePickerItems : (placePickerTab === 'want' ? placePickerWantItems : placePickerCollectItems)}}"
-            wx:key="sourceKey"
-            bindtap="onAddPlaceToDay"
-            data-item="{{item}}"
-          >
-            <image class="picker-place-image" src="{{item.image}}" mode="aspectFill"></image>
-            <view class="picker-place-main">
-              <view class="picker-place-tag">{{item.tag}}</view>
-              <text class="picker-place-name">{{item.name}}</text>
-              <text class="picker-place-meta">{{item.sourceType === 'want' ? '来自想去' : item.sourceType === 'collect' ? '来自收藏' : '已加入来源列表'}}</text>
-            </view>
-            <view class="picker-place-add">
-              <i class="mgc_add_line"></i>
-            </view>
+      <view class="picker-body">
+        <view class="picker-toolbar">
+          <view class="picker-tabs">
+            <view class="picker-tab {{placePickerTab === 'all' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="all">全部</view>
+            <view class="picker-tab {{placePickerTab === 'want' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="want">想去</view>
+            <view class="picker-tab {{placePickerTab === 'collect' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="collect">收藏</view>
           </view>
-        </block>
-        <view class="picker-empty" wx:else>
-          <text>还没有可添加的地点</text>
+          <view class="picker-map-btn" bindtap="onChoosePlaceFromMap">
+            <i class="mgc_location_line"></i>
+            <text>地图选点</text>
+          </view>
         </view>
-      </scroll-view>
+        <scroll-view class="place-picker-scroll" scroll-y show-scrollbar="{{false}}">
+          <block wx:if="{{placePickerCurrentItems.length}}">
+            <view
+              class="picker-place-card"
+              wx:for="{{placePickerCurrentItems}}"
+              wx:key="sourceKey"
+              bindtap="onAddPlaceToDay"
+              data-item="{{item}}"
+            >
+              <view class="picker-place-image-wrap">
+                <image class="picker-place-image" src="{{item.image}}" mode="aspectFill"></image>
+                <view class="picker-place-tag">{{item.tag}}</view>
+              </view>
+              <view class="picker-place-info">
+                <view class="picker-place-info-inner">
+                  <text class="picker-place-name">{{item.name}}</text>
+                  <view class="picker-place-rating">
+                    <view class="picker-rating-star" wx:if="{{item.rating}}">
+                      <text>{{item.rating}}</text>
+                    </view>
+                    <text class="picker-place-chip" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+                  </view>
+                </view>
+                <view class="picker-place-footer">
+                  <text class="picker-place-meta">{{item.sourceText}}</text>
+                </view>
+              </view>
+              <view class="picker-place-add-btn">
+                <i class="mgc_add_line"></i>
+              </view>
+            </view>
+          </block>
+          <view class="picker-empty" wx:else>
+            <text>还没有可添加的地点</text>
+          </view>
+        </scroll-view>
+      </view>
     </view>
   </view>
 

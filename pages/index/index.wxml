@@ -119,8 +119,10 @@
       </view>
 
       <view class="empty-state" wx:if="{{filteredItems.length === 0}}">
-        <i class="mgc_leaf_line empty-icon"></i>
-        <text class="empty-text body-sm">附近暂无{{currentCategory === '全部' ? '内容' : currentCategory}}</text>
+        <view class="empty-illustration">
+          <i class="mgc_leaf_line empty-icon"></i>
+        </view>
+        <text class="empty-text body-sm">附近暂无{{currentCategory === '全部' ? '内容' : currentCategory}}，换个分类看看</text>
       </view>
 
       <!-- 卡片列表 (合并美食与景点的统一排版) -->
@@ -178,7 +180,7 @@
                 data-shopid="{{item.id}}"
                 data-type="{{item.type}}"
               >
-                <i class="{{item.isLiked ? 'mgc_check_2_fill' : 'mgc_plus_fill'}} icon-btn-text"></i>
+                <i class="{{item.isLiked ? 'mgc_heart_fill' : 'mgc_heart_line'}} icon-btn-text"></i>
               </view>
             </view>
           </view>

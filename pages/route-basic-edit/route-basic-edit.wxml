@@ -1,6 +1,6 @@
 <view class="page" wx:if="{{route}}">
   <view class="header">
-    <view class="district-title">基础信息</view>
+    <view class="district-title">{{isNewRoute ? '创建路线' : '基础信息'}}</view>
   </view>
 
   <view class="settings-panel">
@@ -58,7 +58,7 @@
       <i class="mgc_delete_2_line"></i>
     </view>
     <view class="bottom-btn secondary" bindtap="onCancel">取消</view>
-    <view class="bottom-btn primary" bindtap="onSave">保存</view>
+    <view class="bottom-btn primary" bindtap="onSave">{{isNewRoute ? '下一步' : '保存'}}</view>
   </view>
 
   <view class="location-picker-mask {{showCityPicker ? 'show' : ''}}" bindtap="onCloseCityPicker">

@@ -360,17 +360,28 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-3xl) 0;
+  padding: 96rpx 48rpx 64rpx;
+}
+
+.empty-illustration {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 999rpx;
+  background: #F7F8FA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32rpx;
 }
 
 .empty-icon {
   font-size: 80rpx;
-  margin-bottom: var(--space-md);
-  opacity: 0.5;
+  color: #A0A4AE;
 }
 
 .empty-text {
-  color: var(--text-secondary);
+  color: #6E727A;
+  text-align: center;
 }
 
 /* ── 列表卡片 (统一重构样式) ── */
@@ -384,13 +395,13 @@
   margin-bottom: 48rpx; /* 24px */
   position: relative;
   width: 100vw;
-  height: 200rpx; /* 100px */
+  height: 192rpx; /* 96px */
   box-sizing: border-box;
 }
 
 .card-img-wrap, .shop-thumb-wrapper {
-  width: 200rpx; /* 100px */
-  height: 200rpx; /* 100px */
+  width: 192rpx; /* 96px */
+  height: 192rpx; /* 96px */
   flex-shrink: 0;
   border-radius: 24rpx; /* 12px */
   overflow: hidden;
@@ -433,7 +444,7 @@
   flex-direction: column;
   padding: 16rpx 0; /* 上下: 8px, 左右: 0 */
   justify-content: space-between;
-  height: 200rpx; /* 100px */
+  height: 192rpx; /* 96px */
   box-sizing: border-box;
   width: calc(100vw - 328rpx); /* 精确计算剩余宽度: 100vw - padding(48*2) - img(200) - gap(32) */
   min-width: 0;
@@ -509,7 +520,7 @@
 
 .stat-item, .footer-hours, .card-desc {
   font-family: 'PingFang SC';
-  font-size: 28rpx; /* 14px */
+  font-size: 24rpx; /* 12px */
   color: #A0A4AE;
   line-height: 28rpx; /* 14px */
   white-space: nowrap;
@@ -519,7 +530,7 @@
   display: block;
 }
 
-/* ── 右侧想去按钮 (矩形背景 + 加号) ── */
+/* ── 右侧想去按钮 ── */
 .shop-action-icons, .want-btn {
   position: absolute;
   right: 48rpx; /* 24px */
@@ -527,7 +538,6 @@
   width: 56rpx; /* 28px */
   height: 56rpx; /* 28px */
   border-radius: 16rpx; /* 8px */
-  background: linear-gradient(180deg, rgba(197, 211, 227, 0.1) 0%, rgba(216, 225, 236, 0.1) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -542,22 +552,16 @@
 }
 
 .icon-btn-text, .want-btn i {
-  font-size: 32rpx; /* 16px */
-  color: transparent;
-  background: linear-gradient(180deg, #C5D3E3 0%, #D8E1EC 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent; /* 确保文字填充为透明，以便显示渐变背景 */
+  font-size: 40rpx; /* 20px */
+  color: #C7CAD1;
 }
 
 /* 已想去状态 */
 .icon-btn.liked, .want-btn.wanted {
-  background: linear-gradient(180deg, rgba(197, 211, 227, 0.1) 0%, rgba(216, 225, 236, 0.1) 100%);
+  background: #FFFFFF;
 }
 .icon-btn.liked i, .want-btn.wanted i {
-  color: #47BFFE;
-  background: none;
-  -webkit-background-clip: unset;
-  -webkit-text-fill-color: initial;
+  color: #FF5A5F;
 }
 
 /* ─── Location Picker (Copied from before) ───── */

@@ -3,6 +3,63 @@ const util = require('../../utils/util')
 const shopData = require('../../utils/shopData')
 const spotData = require('../../utils/spotData')
 
+const DELETE_ACTION_WIDTH_RPX = 176
+
+function withSwipeState(items) {
+  return (items || []).map(item => ({
+    ...item,
+    swipeOffset: 0
+  }))
+}
+
+function closeSwipeItems(items, keepIndex = -1) {
+  let changed = false
+  const nextItems = (items || []).map((item, index) => {
+    if (index !== keepIndex && item && item.swipeOffset) {
+      changed = true
+      return {
+        ...item,
+        swipeOffset: 0
+      }
+    }
+    return item
+  })
+  return { nextItems, changed }
+}
+
+function inferGuideCity(guide = {}) {
+  const sourceText = [
+    guide.city,
+    guide.cityText,
+    guide.districtName,
+    guide.title,
+    guide.desc,
+    ...(guide.tags || [])
+  ].join(' ')
+
+  if (/西安|长安/.test(sourceText)) return '西安市'
+  if (/广州/.test(sourceText)) return '广州市'
+  if (/汕头/.test(sourceText)) return '汕头市'
+  if (/佛山/.test(sourceText)) return '佛山市'
+  if (/珠海/.test(sourceText)) return '珠海市'
+  return '深圳市'
+}
+
+function getSavedGuideCount(guideId) {
+  const savedRoutes = wx.getStorageSync('savedRoutes') || []
+  return savedRoutes.filter(item => String(item.guideId || item.id) === String(guideId)).length
+}
+
+function padNumber(value) {
+  return String(value).padStart(2, '0')
+}
+
+function formatPublishedAt(timestamp) {
+  const date = new Date(timestamp || Date.now())
+  if (Number.isNaN(date.getTime())) return '刚刚发布'
+  return `${date.getFullYear()}/${padNumber(date.getMonth() + 1)}/${padNumber(date.getDate())} ${padNumber(date.getHours())}:${padNumber(date.getMinutes())}`
+}
+
 Page({
   data: {
     // 攻略列表
@@ -10,7 +67,8 @@ Page({
     guideCount: 0,
 
     // 导航栏
-    statusBarHeight: 44
+    statusBarHeight: 44,
+    deleteActionWidthPx: 84
   },
 
   onLoad() {
@@ -26,119 +84,184 @@ Page({
   initNavigationBar() {
     const sysInfo = wx.getSystemInfoSync()
     this.setData({
-      statusBarHeight: sysInfo.statusBarHeight || 44
+      statusBarHeight: sysInfo.statusBarHeight || 44,
+      deleteActionWidthPx: sysInfo.windowWidth * DELETE_ACTION_WIDTH_RPX / 750
     })
   },
 
   // 加载我的攻略
   loadMyGuides() {
     const guides = util.loadData('myGuides', [])
-    
-    // 处理每个攻略，生成封面图和元数据
-    guides.forEach(g => {
-      // 格式化日期
-      g.dateStr = new Date(g.date).toLocaleDateString('zh-CN')
-      
-      // 尝试获取封面图：从攻略内容中的第一个店铺/景点获取图片
-      if (!g.coverImage && g.content && g.content.length > 0) {
-        const firstItem = g.content[0]
-        const allShops = [...(shopData.shops || []), ...(shopData.foods || [])]
-        const allSpots = spotData.spotData || []
-        
-        // 在店铺中查找
-        const shop = allShops.find(s => String(s.id) === String(firstItem.id))
-        if (shop) {
-          g.coverImage = shop.logo || shop.image || shop.thumb
-        } else {
-          // 在景点中查找
-          const spot = allSpots.find(s => String(s.id) === String(firstItem.id))
-          if (spot) {
-            g.coverImage = spot.image || spot.logo || spot.thumb
-          }
-        }
-        
-        // 如果都没有，使用默认封面
-        if (!g.coverImage) {
-          g.coverImage = '/images/app-logo.jpg'
-        }
-      }
-      
-      // 计算店铺数量
-      g.shopCount = g.content ? g.content.length : 0
-    })
-    
-    this.setData({
-      myGuides: guides,
-      guideCount: guides.length
-    })
-  },
 
-  // 加载攻略到地图
-  onLoadGuide(e) {
-    const guide = e.currentTarget.dataset.guide
-    if (!guide || !guide.content) {
-      wx.showToast({ title: '攻略内容不存在', icon: 'none' })
-      return
-    }
+    const nextGuides = withSwipeState(
+      guides
+        .slice()
+        .sort((a, b) => (b.date || 0) - (a.date || 0))
+        .map(guide => {
+          const nextGuide = { ...guide }
 
-    // 跳转到探索页，传递攻略内容
-    wx.switchTab({
-      url: '/pages/index/index',
-      success: () => {
-        const pages = getCurrentPages()
-        const currentPage = pages[pages.length - 1]
-        if (currentPage && currentPage.loadGuideFromContent) {
-          currentPage.loadGuideFromContent(guide.content)
-        }
-        wx.showToast({ title: '已加载攻略', icon: 'success' })
-      }
-    })
-  },
+          if (!nextGuide.coverImage && nextGuide.content && nextGuide.content.length > 0) {
+            const firstItem = nextGuide.content[0]
+            const allShops = [...(shopData.shops || []), ...(shopData.foods || [])]
+            const allSpots = spotData.spotData || []
 
-  // 管理攻略
-  onManageGuides() {
-    if (this.data.myGuides.length === 0) {
-      wx.showToast({ title: '还没有攻略', icon: 'none' })
-      return
-    }
-
-    wx.showActionSheet({
-      itemList: ['清空所有攻略'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          wx.showModal({
-            title: '确认清空',
-            content: '确定要清空所有攻略吗？',
-            success: (m) => {
-              if (m.confirm) {
-                util.saveData('myGuides', [])
-                this.loadMyGuides()
-                wx.showToast({ title: '已清空', icon: 'success' })
+            const shop = allShops.find(s => String(s.id) === String(firstItem.id))
+            if (shop) {
+              nextGuide.coverImage = shop.logo || shop.image || shop.thumb
+            } else {
+              const spot = allSpots.find(s => String(s.id) === String(firstItem.id))
+              if (spot) {
+                nextGuide.coverImage = spot.image || spot.logo || spot.thumb
               }
             }
-          })
-        }
-      }
+          }
+
+          if (!nextGuide.coverImage) {
+            nextGuide.coverImage = '/images/app-logo.jpg'
+          }
+
+          nextGuide.shopCount = nextGuide.shopCount || ((nextGuide.content || []).length || 0)
+          nextGuide.duration = nextGuide.duration || `${Math.max((nextGuide.daySections || []).length, 1)}天`
+          nextGuide.cityText = nextGuide.cityText || inferGuideCity(nextGuide)
+          nextGuide.useRouteCount = (nextGuide.baseUseCount || 0) + getSavedGuideCount(nextGuide.id)
+          nextGuide.publishedAtText = formatPublishedAt(nextGuide.date)
+
+          return nextGuide
+        })
+    )
+
+    this.setData({
+      myGuides: nextGuides,
+      guideCount: nextGuides.length
     })
   },
 
-  // 删除单条攻略
-  onDeleteGuide(e) {
-    e.stopPropagation()
-    const guideId = e.currentTarget.dataset.id
-    wx.showModal({
-      title: '确认删除',
-      content: '确定要删除这条攻略吗？',
-      success: (res) => {
-        if (res.confirm) {
-          let guides = util.loadData('myGuides', [])
-          guides = guides.filter(g => g.id !== guideId)
-          util.saveData('myGuides', guides)
-          this.loadMyGuides()
-          wx.showToast({ title: '已删除', icon: 'success' })
-        }
+  onGuideTap(e) {
+    if (Date.now() - (this._lastSwipeTime || 0) < 250) return
+
+    const guide = e.currentTarget.dataset.guide
+    const index = parseInt(e.currentTarget.dataset.index, 10)
+    const guides = this.data.myGuides || []
+    const tappedGuide = guides[index]
+    const hasOpenItem = guides.some(item => item && item.swipeOffset)
+
+    if (hasOpenItem) {
+      const { nextItems, changed } = closeSwipeItems(guides)
+      if (changed) {
+        this.setData({ myGuides: nextItems })
       }
+      if (tappedGuide && tappedGuide.swipeOffset) {
+        return
+      }
+    }
+
+    if (!guide) return
+    wx.navigateTo({
+      url: `/pages/guide-detail/guide-detail?guide=${encodeURIComponent(JSON.stringify(guide))}`
     })
+  },
+
+  onCardTouchStart(e) {
+    const index = parseInt(e.currentTarget.dataset.index, 10)
+    const touch = e.touches && e.touches[0]
+    if (Number.isNaN(index) || !touch) return
+
+    const guides = this.data.myGuides || []
+    const currentItem = guides[index]
+    const { nextItems, changed } = closeSwipeItems(guides, index)
+    if (changed) {
+      this.setData({ myGuides: nextItems })
+    }
+
+    this._swipeGesture = {
+      index,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      startOffset: (currentItem && currentItem.swipeOffset) || 0,
+      isHorizontal: false,
+      locked: false,
+      moved: false
+    }
+  },
+
+  onCardTouchMove(e) {
+    if (!this._swipeGesture) return
+    const touch = e.touches && e.touches[0]
+    if (!touch) return
+
+    const gesture = this._swipeGesture
+    const deltaX = touch.clientX - gesture.startX
+    const deltaY = touch.clientY - gesture.startY
+
+    if (!gesture.isHorizontal && !gesture.locked) {
+      if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        gesture.locked = true
+        return
+      }
+      gesture.isHorizontal = true
+    }
+
+    if (!gesture.isHorizontal) return
+
+    const guides = [...(this.data.myGuides || [])]
+    const currentItem = guides[gesture.index]
+    if (!currentItem) return
+
+    let nextOffset = gesture.startOffset + deltaX
+    const minOffset = -this.data.deleteActionWidthPx
+    nextOffset = Math.max(minOffset, Math.min(0, nextOffset))
+
+    if (currentItem.swipeOffset === nextOffset) return
+    guides[gesture.index] = {
+      ...currentItem,
+      swipeOffset: nextOffset
+    }
+    gesture.moved = true
+    this.setData({ myGuides: guides })
+  },
+
+  onCardTouchEnd() {
+    if (!this._swipeGesture) return
+
+    const gesture = this._swipeGesture
+    const guides = [...(this.data.myGuides || [])]
+    const currentItem = guides[gesture.index]
+    if (!currentItem) {
+      this._swipeGesture = null
+      return
+    }
+
+    const minOffset = -this.data.deleteActionWidthPx
+    const shouldOpen = Math.abs(currentItem.swipeOffset || 0) > this.data.deleteActionWidthPx / 2
+    const finalOffset = shouldOpen ? minOffset : 0
+
+    if (currentItem.swipeOffset !== finalOffset) {
+      guides[gesture.index] = {
+        ...currentItem,
+        swipeOffset: finalOffset
+      }
+      this.setData({ myGuides: guides })
+    }
+
+    if (gesture.moved) {
+      this._lastSwipeTime = Date.now()
+    }
+    this._swipeGesture = null
+  },
+
+  onGoGuidePage() {
+    wx.switchTab({
+      url: '/pages/wantgo/wantgo'
+    })
+  },
+
+  onDeleteGuide(e) {
+    const guideId = e.currentTarget.dataset.id
+    const guides = util.loadData('myGuides', []).filter(g => String(g.id) !== String(guideId))
+    util.saveData('myGuides', guides)
+    this.loadMyGuides()
+    wx.showToast({ title: '已删除', icon: 'success' })
   },
 
   // 图片加载失败

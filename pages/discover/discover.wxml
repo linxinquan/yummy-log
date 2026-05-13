@@ -59,7 +59,6 @@
       wx:for="{{currentGuides}}"
       wx:key="id"
       class="guide-card"
-      style="background: {{item.cardColor}};"
       bindtap="onGuideTap"
       data-guide="{{item}}"
     >
@@ -67,18 +66,18 @@
         <image class="guide-cover" src="{{item.coverImage}}" mode="aspectFill" />
       </view>
       <view class="guide-info">
-        <text class="guide-desc">{{item.desc}}</text>
+        <text class="guide-title">{{item.title}}</text>
+        <text class="guide-city">{{item.cityText}}</text>
         <text class="guide-stats">{{item.duration}} · {{item.shopCount}} 个地点</text>
       </view>
       <view class="guide-divider"></view>
       <view class="guide-footer">
-        <text class="guide-title">{{item.title}}</text>
         <view class="guide-meta">
           <view class="guide-author-wrap">
-            <image class="guide-author-avatar" src="{{item.coverImage}}" mode="aspectFill" />
+            <image class="guide-author-avatar" src="{{item.authorAvatar || item.coverImage}}" mode="aspectFill" />
             <text class="guide-author">{{item.author}}</text>
           </view>
-          <text class="guide-likes">{{item.likes}} 人收藏</text>
+          <text class="guide-likes">{{item.useRouteCount}} 人使用路线</text>
         </view>
       </view>
     </view>

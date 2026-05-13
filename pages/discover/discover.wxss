@@ -222,20 +222,22 @@ page {
 
 .guide-card {
   width: 100%;
-  height: 424rpx;
+  min-height: 368rpx;
   border-radius: 32rpx;
   padding: 32rpx;
   box-sizing: border-box;
   position: relative;
+  border: 2rpx solid #F6F7F7;
+  background: linear-gradient(180deg, #F7F8FA 0%, #FFFFFF 100%);
 }
 
 .guide-cover-wrap {
   position: absolute;
-  width: 216rpx;
-  height: 216rpx;
+  width: 192rpx;
+  height: 192rpx;
   left: 32rpx;
   top: 32rpx;
-  border-radius: 24rpx;
+  border-radius: 16rpx;
   overflow: hidden;
 }
 
@@ -247,24 +249,40 @@ page {
 
 .guide-info {
   position: absolute;
-  left: 272rpx;
-  width: 350rpx;
+  top: 32rpx;
+  left: 256rpx;
+  right: 32rpx;
+  width: auto;
+  height: 192rpx;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
 }
 
-.guide-desc {
+.guide-title {
+  width: 100%;
+  max-width: 100%;
+  height: 96rpx;
+  display: -webkit-box;
+  overflow: hidden;
+  font-family: 'PingFang SC';
+  font-weight: 500;
+  font-size: 32rpx;
+  line-height: 48rpx;
+  color: #242529;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+}
+
+.guide-city {
+  margin-top: 24rpx;
   font-family: 'PingFang SC';
   font-weight: 400;
-  font-size: 28rpx;
-  line-height: 44rpx;
-  color: #6E727A;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  margin-top: 8rpx;
-  height: 132rpx;
+  font-size: 24rpx;
+  line-height: 100%;
+  color: #A0A4AE;
 }
 
 .guide-stats {
@@ -273,7 +291,7 @@ page {
   font-size: 24rpx;
   line-height: 100%;
   color: #A0A4AE;
-  margin-top: 48rpx;
+  margin-top: 16rpx;
 }
 
 .guide-divider {
@@ -281,26 +299,17 @@ page {
   width: calc(100% - 64rpx);
   height: 0;
   left: 32rpx;
-  top: 280rpx;
-  opacity: 0.05;
-  border-top: 1rpx solid #000000;
+  top: 272rpx;
+  height: 2rpx;
+  background: linear-gradient(to right, #EEF0F3 50%, transparent 50%);
+  background-size: 16rpx 2rpx;
 }
 
 .guide-footer {
   position: absolute;
   width: calc(100% - 64rpx);
   left: 32rpx;
-  top: 312rpx;
-}
-
-.guide-title {
-  font-family: 'PingFang SC';
-  font-weight: 500;
-  font-size: 32rpx;
-  line-height: 100%;
-  color: #242529;
-  display: block;
-  margin-bottom: 24rpx;
+  top: 304rpx;
 }
 
 .guide-meta {
@@ -329,7 +338,7 @@ page {
   font-weight: 400;
   font-size: 24rpx;
   line-height: 100%;
-  color: #6E727A;
+  color: #A0A4AE;
 }
 
 .guide-likes {

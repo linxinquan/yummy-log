@@ -205,7 +205,7 @@ Page({
     title: '',
     city: '',
     dayCount: 1,
-    maxTitleLength: 25,
+    maxTitleLength: 20,
     showCityPicker: false,
     showDayPicker: false,
     showTransportPicker: false,
@@ -393,7 +393,8 @@ Page({
   },
 
   onSave() {
-    const title = (this.data.title || '').trim()
+    const inputTitle = (this.data.title || '').trim()
+    const title = inputTitle || (this.data.isNewRoute ? '未命名路线' : '')
     const city = (this.data.city || '').trim()
 
     if (!title) {
@@ -420,10 +421,11 @@ Page({
       daySummaries,
       dayDetails,
       subtitle: buildSummaryText(nextSections),
-      image: this.data.coverImage || baseRoute.image || daySummaries[0]?.image || DEFAULT_COVERS[0],
-      coverImage: this.data.coverImage || baseRoute.coverImage || '',
+      image: this.data.coverImage || baseRoute.coverImage || baseRoute.image || daySummaries[0]?.image || DEFAULT_COVERS[0],
+      coverImage: this.data.coverImage || baseRoute.coverImage || baseRoute.image || daySummaries[0]?.image || DEFAULT_COVERS[0],
       transportPreferences: { ...transportPreferences },
       transportPreferenceText: buildTransportPreferenceSummary(transportPreferences),
+      isDraft: false,
       updatedAt: Date.now()
     }
 
@@ -435,6 +437,13 @@ Page({
       savedRoutes.push(updatedRoute)
     }
     wx.setStorageSync('savedRoutes', savedRoutes)
+
+    if (this.data.isNewRoute) {
+      wx.redirectTo({
+        url: `/pages/my-route/my-route?route=${encodeURIComponent(JSON.stringify(updatedRoute))}`
+      })
+      return
+    }
 
     wx.showToast({ title: '已保存', icon: 'success' })
     setTimeout(() => wx.navigateBack({ delta: 1 }), 300)

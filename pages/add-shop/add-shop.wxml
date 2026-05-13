@@ -44,5 +44,40 @@
     </view>
   </view>
 
+  <view class="import-sheet-mask {{importSheetVisible ? 'show' : ''}}" bindtap="onCloseLinkImport"></view>
+  <view class="import-sheet {{importSheetVisible ? 'show' : ''}}" catchtap="preventBubble">
+    <view class="import-sheet-header">
+      <text class="import-sheet-title">解析路线</text>
+      <view class="import-sheet-close" bindtap="onCloseLinkImport">
+        <i class="mgc_close_line"></i>
+      </view>
+    </view>
+
+    <view class="import-sheet-body">
+      <view class="import-input-wrap">
+        <textarea
+          class="import-textarea"
+          value="{{guideLink}}"
+          placeholder="粘贴文本或链接"
+          placeholder-class="import-placeholder"
+          maxlength="-1"
+          auto-height
+          cursor-spacing="24"
+          bindinput="onLinkInput"
+        ></textarea>
+      </view>
+
+      <view class="import-hint-list">
+        <text class="import-hint">支持：公众号文章链接、小红书分享链接、纯文本内容</text>
+        <text class="import-hint">当前先提供录入入口，解析能力下一步接入</text>
+      </view>
+    </view>
+
+    <view class="import-sheet-footer">
+      <view class="import-secondary-btn" bindtap="onPasteLink">粘贴内容</view>
+      <view class="import-primary-btn" bindtap="onConfirmLink">确认</view>
+    </view>
+  </view>
+
   <custom-tabbar></custom-tabbar>
 </view>

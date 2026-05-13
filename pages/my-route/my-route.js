@@ -300,17 +300,49 @@ function buildDaySectionsFromLegacy(route) {
   return sections
 }
 
+function buildExploreExtraItems() {
+  return [
+    { id: 901, name: '深圳美术馆', category: '文化展馆', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, tags: ['展览', '艺术'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
+    { id: 902, name: '关山月美术馆', category: '文化展馆', type: 'culture', lat: 22.541, lng: 114.038, rating: 4.6, tags: ['国画', '收藏'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
+    { id: 903, name: '深圳音乐厅', category: '文化展馆', type: 'culture', lat: 22.544, lng: 114.042, rating: 4.7, tags: ['演出', '音乐'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
+    { id: 904, name: '何香凝美术馆', category: '文化展馆', type: 'culture', lat: 22.532, lng: 113.986, rating: 4.4, tags: ['美术', '展览'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
+    { id: 911, name: '梧桐山国家森林公园', category: '自然户外', type: 'outdoor', lat: 22.624, lng: 114.198, rating: 4.8, tags: ['登山', '观景'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
+    { id: 912, name: '塘朗山郊野公园', category: '自然户外', type: 'outdoor', lat: 22.542, lng: 113.958, rating: 4.5, tags: ['徒步', '骑行'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
+    { id: 913, name: '深圳湾公园', category: '自然户外', type: 'outdoor', lat: 22.498, lng: 113.914, rating: 4.7, tags: ['滨海', '跑步'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
+    { id: 914, name: '梅林水库', category: '自然户外', type: 'outdoor', lat: 22.568, lng: 114.032, rating: 4.6, tags: ['水库', '徒步'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
+    { id: 921, name: '华润万象城', category: '购物', type: 'shopping', lat: 22.541, lng: 114.063, rating: 4.8, tags: ['高端', '奢侈品'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
+    { id: 922, name: '海岸城', category: '购物', type: 'shopping', lat: 22.489, lng: 113.921, rating: 4.6, tags: ['餐饮', '娱乐'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
+    { id: 923, name: '东门老街', category: '购物', type: 'shopping', lat: 22.543, lng: 114.078, rating: 4.5, tags: ['老街', '小吃'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
+    { id: 924, name: '益田假日广场', category: '购物', type: 'shopping', lat: 22.535, lng: 113.988, rating: 4.7, tags: ['品牌', '餐饮'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
+    { id: 931, name: '深圳华侨城洲际大酒店', category: '酒店', type: 'hotel', lat: 22.538, lng: 113.989, rating: 4.8, tags: ['五星', '豪华'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg', price: 1280 },
+    { id: 932, name: '深圳湾安达仕酒店', category: '酒店', type: 'hotel', lat: 22.501, lng: 113.912, rating: 4.9, tags: ['海景', '高端'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg', price: 1580 },
+    { id: 933, name: '深圳柏悦酒店', category: '酒店', type: 'hotel', lat: 22.542, lng: 114.061, rating: 4.7, tags: ['商务', '舒适'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg', price: 980 },
+    { id: 934, name: '深圳大鹏古城民宿', category: '酒店', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', price: 380 }
+  ]
+}
+
 function buildPlaceCandidate(item, type, source) {
   if (!item) return null
+  const resolvedType = item.type || type || 'spot'
   const displayImage = item.displayImage || item.image || item.logo || item.thumb || DEFAULT_COVERS[0]
+  const sourceTextMap = {
+    want: '来自想去',
+    collect: '来自收藏',
+    all: '已在想去和收藏'
+  }
+  const rawTags = Array.isArray(item.tags) ? item.tags.filter(Boolean) : []
   return {
     id: String(item.id),
-    sourceKey: `${type}-${item.id}`,
+    sourceKey: `${resolvedType}-${item.id}`,
     sourceType: source,
-    type,
+    sourceText: sourceTextMap[source] || '已加入来源列表',
+    type: resolvedType,
     name: item.name,
-    tag: type === 'food' ? '美食' : inferTag(item.name),
+    tag: resolvedType === 'food' ? '美食' : (item.displayCategory || item.category || inferTag(item.name)),
     image: displayImage,
+    rating: item.rating || item.score || '',
+    price: item.price || '',
+    tags: rawTags.slice(0, 2),
     lat: item.lat || item.latitude,
     lng: item.lng || item.longitude
   }
@@ -320,6 +352,8 @@ function buildPlacePickerData() {
   const userAddedShops = util.loadData('userAddedShops', [])
   const allFoods = [...(shops || []), ...((shopDataModule && shopDataModule.foods) || []), ...userAddedShops]
   const allSpots = spotData || []
+  const extraPlaces = buildExploreExtraItems()
+  const allNonFoodPlaces = [...allSpots, ...extraPlaces]
   const wantFoodIds = util.loadData('userWantFoods', []).map(item => String(item))
   const wantSpotIds = util.loadData('userWantSpots', []).map(item => String(item))
   const collectFoodIds = util.loadData('userCollectedFoods', []).map(item => String(item))
@@ -339,7 +373,8 @@ function buildPlacePickerData() {
       if (existed) {
         allMap.set(candidate.sourceKey, {
           ...existed,
-          sourceType: existed.sourceType === source ? source : 'all'
+          sourceType: existed.sourceType === source ? source : 'all',
+          sourceText: existed.sourceType === source ? candidate.sourceText : '已在想去和收藏'
         })
       } else {
         allMap.set(candidate.sourceKey, candidate)
@@ -348,9 +383,9 @@ function buildPlacePickerData() {
   }
 
   appendItems(wantFoodIds, allFoods, 'food', 'want', wantItems)
-  appendItems(wantSpotIds, allSpots, 'spot', 'want', wantItems)
+  appendItems(wantSpotIds, allNonFoodPlaces, 'spot', 'want', wantItems)
   appendItems(collectFoodIds, allFoods, 'food', 'collect', collectItems)
-  appendItems(collectSpotIds, allSpots, 'spot', 'collect', collectItems)
+  appendItems(collectSpotIds, allNonFoodPlaces, 'spot', 'collect', collectItems)
 
   return {
     all: Array.from(allMap.values()),
@@ -369,6 +404,20 @@ function buildAddedPlace(item) {
     type: item.type,
     lat: item.lat,
     lng: item.lng
+  }
+}
+
+function buildMapPickedPlace(location) {
+  const latitude = Number(location.latitude)
+  const longitude = Number(location.longitude)
+  return {
+    id: `map-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+    name: location.name || location.address || '地图选点',
+    tag: '地点',
+    image: DEFAULT_COVERS[0],
+    type: 'spot',
+    lat: latitude,
+    lng: longitude
   }
 }
 
@@ -410,6 +459,7 @@ Page({
     sheetScrollTarget: '',
     cityText: '深圳市',
     summaryText: '',
+    hasRoutePlaces: false,
     daySections: [],
     originalDaySections: [],
     tabs: [],
@@ -446,8 +496,12 @@ Page({
     placePickerVisible: false,
     placePickerTab: 'all',
     placePickerItems: [],
+    placePickerWantItems: [],
+    placePickerCollectItems: [],
+    placePickerCurrentItems: [],
     placePickerDayIndex: -1,
     autoEnterEdit: false,
+    isNewRouteDraft: false,
     transportSheetVisible: false,
     transportOptions: [],
     pendingTransportMode: 'walk',
@@ -478,14 +532,16 @@ Page({
       editTabStickyTop,
       routeId: String(route.id),
       returnTo: options.returnTo || '',
-      autoEnterEdit: options.edit === '1'
+      autoEnterEdit: options.edit === '1',
+      isNewRouteDraft: options.create === '1' || Boolean(route.isDraft)
     })
     this.refreshPlacePickerItems()
     this.applyRoute(route)
   },
 
   onShow() {
-    const { routeId, isEditing } = this.data
+    const { routeId, isEditing, isNewRouteDraft } = this.data
+    if (isNewRouteDraft) return
     if (!routeId || isEditing) return
     const savedRoutes = util.loadData('savedRoutes', [])
     const latestRoute = savedRoutes.find(item => String(item.id) === String(routeId))
@@ -509,6 +565,7 @@ Page({
     const cityInfo = getCityInfo(cityText)
     const daySections = syncDaySections(buildDaySectionsFromLegacy(route), cityInfo)
     const summaryText = route.subtitle || buildSummaryText(daySections)
+    const flattenedPlaces = flattenDaySections(daySections)
 
     this.setData({
       route,
@@ -519,6 +576,7 @@ Page({
       originalDaySections: JSON.parse(JSON.stringify(stripEditState(daySections))),
       tabs: buildTabs(daySections.length),
       summaryText,
+      hasRoutePlaces: flattenedPlaces.length > 0,
       currentTab: 0,
       currentMapDay: -1,
       sheetScrollTarget: '',
@@ -530,8 +588,8 @@ Page({
       swipeDay: -1,
       swipeIndex: -1,
       swipeStartOffset: 0,
-      mapPreviewPlaces: flattenDaySections(daySections),
-      mapPreviewPlace: flattenDaySections(daySections)[0] || null,
+      mapPreviewPlaces: flattenedPlaces,
+      mapPreviewPlace: flattenedPlaces[0] || null,
       mapPreviewIndex: 0
     }, () => {
       this.updateMapData(daySections, cityInfo, -1)
@@ -573,6 +631,7 @@ Page({
       daySummaries,
       dayDetails,
       image: route.image || daySummaries[0]?.image || DEFAULT_COVERS[0],
+      isDraft: Boolean(route.isDraft),
       updatedAt: Date.now()
     }
   },
@@ -698,6 +757,15 @@ Page({
   },
 
   onBack() {
+    if (this.data.isNewRouteDraft && !this.data.isEditing) {
+      wx.navigateBack({
+        delta: 1,
+        fail: () => {
+          wx.switchTab({ url: '/pages/add-shop/add-shop' })
+        }
+      })
+      return
+    }
     if (this.data.returnTo === 'plan') {
       wx.setStorageSync('pendingWantgoTab', 'plan')
       wx.switchTab({ url: '/pages/wantgo/wantgo' })
@@ -839,7 +907,7 @@ Page({
       placePickerTab: 'all',
       placePickerDayIndex: -1
     })
-    wx.showToast({ title: '进入修改路线', icon: 'none' })
+    wx.showToast({ title: '进入编辑路线', icon: 'none' })
   },
 
   onCancelEdit() {
@@ -856,6 +924,7 @@ Page({
       daySections: restored,
       tabs: buildTabs(restored.length),
       summaryText: buildSummaryText(restored),
+      hasRoutePlaces: flattenDaySections(restored).length > 0,
       sheetScrollTarget: '',
       currentTab: 0,
       placePickerVisible: false,
@@ -871,7 +940,8 @@ Page({
     const summaryText = buildSummaryText(savedSections)
     const updatedRoute = {
       ...this.buildUpdatedRoute(savedSections),
-      subtitle: summaryText
+      subtitle: summaryText,
+      isDraft: false
     }
 
     this.saveRouteToStorage(updatedRoute, '保存成功')
@@ -893,7 +963,9 @@ Page({
       dragTouchStartY: 0,
       dragOffsetY: 0,
       placePickerVisible: false,
-      placePickerDayIndex: -1
+      placePickerDayIndex: -1,
+      isNewRouteDraft: false,
+      hasRoutePlaces: flattenDaySections(savedSections).length > 0
     })
     this.updateMapData(savedSections, this.data.cityInfo, nextMapDay)
     this.refreshMapPreview(savedSections, this.data.mapPreviewIndex)
@@ -1065,11 +1137,20 @@ Page({
 
   refreshPlacePickerItems() {
     const pickerData = buildPlacePickerData()
+    const placePickerCurrentItems = this.resolvePlacePickerItems(this.data.placePickerTab, pickerData)
     this.setData({
       placePickerItems: pickerData.all || [],
       placePickerWantItems: pickerData.want || [],
-      placePickerCollectItems: pickerData.collect || []
+      placePickerCollectItems: pickerData.collect || [],
+      placePickerCurrentItems
     })
+  },
+
+  resolvePlacePickerItems(tab, pickerData) {
+    const source = pickerData || this.data
+    if (tab === 'want') return source.want || source.placePickerWantItems || []
+    if (tab === 'collect') return source.collect || source.placePickerCollectItems || []
+    return source.all || source.placePickerItems || []
   },
 
   onDragStart(e) {
@@ -1240,6 +1321,7 @@ Page({
     this.setData({
       placePickerVisible: true,
       placePickerTab: 'all',
+      placePickerCurrentItems: this.resolvePlacePickerItems('all'),
       placePickerDayIndex: parseInt(e.currentTarget.dataset.dayIndex, 10)
     })
   },
@@ -1253,7 +1335,46 @@ Page({
 
   onSwitchPlacePickerTab(e) {
     const tab = e.currentTarget.dataset.tab
-    this.setData({ placePickerTab: tab })
+    this.setData({
+      placePickerTab: tab,
+      placePickerCurrentItems: this.resolvePlacePickerItems(tab)
+    })
+  },
+
+  onChoosePlaceFromMap() {
+    const dayIndex = this.data.placePickerDayIndex
+    if (dayIndex < 0) return
+    const { cityInfo } = this.data
+    wx.chooseLocation({
+      latitude: cityInfo.lat,
+      longitude: cityInfo.lng,
+      success: (res) => {
+        if (typeof res.latitude !== 'number' || typeof res.longitude !== 'number') return
+        const nextSections = this.data.daySections.slice()
+        const targetDay = nextSections[dayIndex] || { id: `day-${dayIndex}`, items: [] }
+        const nextItems = (targetDay.items || []).slice()
+        nextItems.push(buildMapPickedPlace(res))
+        nextSections[dayIndex] = {
+          ...targetDay,
+          items: nextItems
+        }
+        const syncedSections = syncDaySections(nextSections, this.data.cityInfo)
+        this.setData({
+          daySections: syncedSections,
+          tabs: buildTabs(syncedSections.length),
+          summaryText: buildSummaryText(syncedSections),
+          currentTab: dayIndex + 1,
+          sheetScrollTarget: `route-day-anchor-${dayIndex}`,
+          placePickerVisible: false,
+          placePickerDayIndex: -1
+        })
+        wx.showToast({ title: '已添加地点', icon: 'success' })
+      },
+      fail: (err) => {
+        if (err && err.errMsg && err.errMsg.includes('cancel')) return
+        wx.showToast({ title: '地图选点失败', icon: 'none' })
+      }
+    })
   },
 
   onAddPlaceToDay(e) {

@@ -14,24 +14,43 @@
     <view class="tab-right"></view>
   </view>
 
-  <view wx:if="{{empty}}" class="empty-wrap" style="padding-top: {{listTop}}px;">
+  <view wx:if="{{empty}}" class="empty-wrap">
     <view class="empty-illustration">
-      <i class="empty-icon {{tab === 'want' ? 'mgc_heart_line' : (tab === 'plan' ? 'mgc_map_line' : 'mgc_location_line')}}"></i>
+      <i class="empty-icon {{emptyIcon}}"></i>
     </view>
     <text class="empty-title">{{titles[tab]}}</text>
-    <text class="empty-hint">{{tab === 'want' ? '去探索页收藏心仪的美食和景点吧' : (tab === 'plan' ? '去攻略详情页复制路线到这里吧' : '还没标记任何到访记录')}}</text>
+    <text class="empty-hint">{{emptyHint}}</text>
     <view class="empty-btn" bindtap="onGoHome" wx:if="{{tab !== 'visited'}}">去探索</view>
   </view>
 
   <block wx:else>
     <view wx:if="{{tab === 'plan'}}" class="route-card-list" style="padding-top: {{listTop}}px;">
       <block wx:for="{{items}}" wx:key="id">
-        <view class="route-card route-card-theme-{{index % 4}}" bindtap="onRouteCardTap" data-route="{{item}}">
-          <text class="route-title">{{item.title}}</text>
-          <image class="route-image" src="{{item.image}}" mode="aspectFill" />
-          <view class="route-footer">
-            <text class="route-subtitle">{{item.subtitle}}</text>
-            <i class="mgc_right_small_line route-arrow"></i>
+        <view class="route-card-frame">
+          <view class="route-card-backdrop"></view>
+          <view class="route-card route-card-theme-{{index % 4}}" bindtap="onRouteCardTap" bindlongpress="onRouteCardLongPress" data-route="{{item}}">
+            <view class="route-card-stroke"></view>
+            <view class="route-card-top">
+              <image class="route-image" src="{{item.coverImage}}" mode="aspectFill" />
+              <view class="route-main">
+                <text class="route-title">{{item.title}}</text>
+                <text class="route-subtitle">{{item.subtitle}}</text>
+              </view>
+            </view>
+            <view class="route-cutout-wrap route-cutout-wrap-left">
+              <view class="route-cutout route-cutout-left"></view>
+            </view>
+            <view class="route-cutout-wrap route-cutout-wrap-right">
+              <view class="route-cutout route-cutout-right"></view>
+            </view>
+            <view class="route-divider"></view>
+            <view class="route-footer">
+              <view class="route-author-wrap">
+                <image class="route-author-avatar" src="{{item.authorAvatar}}" mode="aspectFill" />
+                <text class="route-author">{{item.author}}</text>
+              </view>
+              <text class="route-city">{{item.city}}</text>
+            </view>
           </view>
         </view>
       </block>
@@ -117,6 +136,30 @@
           </picker-view-column>
         </picker-view>
         <view class="plan-day-save" bindtap="onConfirmPlanRoute">保存</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="route-action-mask {{routeActionSheetVisible ? 'show' : ''}}" bindtap="onCloseRouteActionSheet">
+    <view class="route-action-sheet" catchtap="preventBubble">
+      <view class="route-action-header">
+        <text class="route-action-title">路线编辑</text>
+        <i class="mgc_close_line route-action-close" bindtap="onCloseRouteActionSheet"></i>
+      </view>
+      <view class="route-action-body">
+        <view class="route-action-grid">
+          <view
+            wx:for="{{routeActionOptions}}"
+            wx:key="key"
+            class="route-action-card {{selectedRouteAction === item.key ? 'active' : ''}} {{item.danger ? 'danger' : ''}}"
+            bindtap="onSelectRouteAction"
+            data-action="{{item.key}}"
+          >
+            <i class="route-action-icon {{item.icon}}"></i>
+            <text class="route-action-label">{{item.label}}</text>
+          </view>
+        </view>
+        <view class="route-action-confirm" bindtap="onConfirmRouteAction">确认</view>
       </view>
     </view>
   </view>

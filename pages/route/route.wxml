@@ -249,16 +249,20 @@
       </view>
 
       <view class="bottom-bar route-preview-bar" wx:if="{{routeShops.length > 0 && !isEditing}}">
-        <view class="bottom-btn secondary route-icon-btn" bindtap="onViewRoute">
-          <i class="mgc_route_line"></i>
+        <view class="bottom-btn secondary route-edit-meta-btn" bindtap="onEditBasicInfo">
+          <i class="mgc_pencil_3_line"></i>
         </view>
         <view class="bottom-btn secondary reorder-btn" bindtap="onOpenReorderSheet">
           <i class="mgc_ai_line"></i>
-          <text>修改</text>
+          <text>编辑</text>
+        </view>
+        <view class="bottom-btn secondary route-view-btn" bindtap="onViewRoute">
+          <i class="mgc_route_line"></i>
+          <text>路线</text>
         </view>
         <view class="bottom-btn primary route-save-btn" bindtap="onSaveToMyRoute">
           <i class="mgc_finger_love_line"></i>
-          <text>保存路线</text>
+          <text>保存</text>
         </view>
       </view>
       <view class="bottom-bar edit-bottom-bar" wx:if="{{routeShops.length > 0 && isEditing}}">
@@ -266,7 +270,7 @@
           <text>取消</text>
         </view>
         <view class="bottom-btn primary" bindtap="onConfirmEdit">
-          <text>确认修改</text>
+          <text>保存</text>
         </view>
       </view>
     </block>
@@ -360,7 +364,7 @@
     <view class="reorder-sheet-mask" wx:if="{{reorderSheetVisible}}" bindtap="onCloseReorderSheet"></view>
     <view class="reorder-sheet" wx:if="{{reorderSheetVisible}}">
       <view class="reorder-sheet-header">
-        <text class="reorder-sheet-title">修改路线规划</text>
+        <text class="reorder-sheet-title">编辑路线规划</text>
         <view class="reorder-sheet-close" bindtap="onCloseReorderSheet">
           <i class="mgc_close_line"></i>
         </view>

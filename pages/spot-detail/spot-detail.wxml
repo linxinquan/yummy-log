@@ -126,9 +126,10 @@
     <view class="action-bg"></view>
     <view class="action-content">
       <view class="collect-action-btn" bindtap="onCollect">
-        <i class="{{isCollected ? 'mgc_heart_fill collected' : 'mgc_heart_line'}} collect-action-icon"></i>
+        <i class="{{isCollected ? 'mgc_star_fill collected' : 'mgc_star_line'}} collect-action-icon"></i>
       </view>
       <view class="want-btn" bindtap="onWant">
+        <i class="{{isLiked ? 'mgc_heart_fill wanted' : 'mgc_heart_line'}} want-action-icon"></i>
         <text>{{isLiked ? '已添加到想去' : '添加到想去'}}</text>
       </view>
     </view>

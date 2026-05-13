@@ -1,6 +1,51 @@
 // 觅食图 - 攻略页
 const app = getApp()
 
+function inferGuideCity(guide = {}) {
+  const sourceText = [
+    guide.city,
+    guide.districtName,
+    guide.title,
+    guide.desc,
+    ...(guide.tags || []),
+    ...(guide.shops || [])
+  ].join(' ')
+
+  if (/西安|长安/.test(sourceText)) return '西安市'
+  if (/广州/.test(sourceText)) return '广州市'
+  if (/汕头/.test(sourceText)) return '汕头市'
+  if (/佛山/.test(sourceText)) return '佛山市'
+  if (/珠海/.test(sourceText)) return '珠海市'
+  return '深圳市'
+}
+
+function getSavedGuideCount(guideId) {
+  const savedRoutes = wx.getStorageSync('savedRoutes') || []
+  return savedRoutes.filter(item => String(item.guideId || item.id) === String(guideId)).length
+}
+
+function decorateGuideCards(guides = []) {
+  return guides.map(item => ({
+    ...item,
+    cityText: item.cityText || inferGuideCity(item),
+    authorAvatar: item.authorAvatar || item.coverImage,
+    useRouteCount: (item.baseUseCount || 0) + getSavedGuideCount(item.id)
+  }))
+}
+
+function getPublishedGuides(cardColors = []) {
+  const guides = wx.getStorageSync('myGuides') || []
+  return guides.map((item, index) => ({
+    ...item,
+    category: item.category || 'all',
+    cardColor: item.cardColor || cardColors[index % cardColors.length] || '#F7F7F7',
+    cityText: item.cityText || inferGuideCity(item),
+    baseUseCount: item.baseUseCount || 0,
+    duration: item.duration || `${Math.max((item.daySections || []).length, 1)}天`,
+    shopCount: item.shopCount || ((item.content || []).length || 0)
+  }))
+}
+
 Page({
   data: {
     // 导航栏高度
@@ -59,7 +104,22 @@ Page({
     this.loadGuides()
   },
 
-  loadGuides() {
+  onShow() {
+    this.loadGuides(this.data.currentCategory || '全部')
+  },
+
+  refreshGuideList(categoryName = '全部') {
+    const filtered = categoryName === '全部'
+      ? this.data.allGuides
+      : this.data.allGuides.filter(item => item.category === 'recommend')
+
+    this.setData({
+      currentCategory: categoryName,
+      currentGuides: decorateGuideCards(filtered)
+    })
+  },
+
+  loadGuides(categoryName = '全部') {
     const coverImages = [
       '/images/covers/01.jpeg',
       '/images/covers/02.jpeg',
@@ -314,11 +374,21 @@ Page({
       }
     ]
 
+    const normalizedGuides = allGuides.map(item => ({
+      ...item,
+      baseUseCount: item.likes || 0,
+      cityText: inferGuideCity(item)
+    }))
+
+    const publishedGuides = getPublishedGuides(cardColors)
+    const mergedGuides = publishedGuides.concat(normalizedGuides)
+
     this.setData({
       featuredGuides,
-      allGuides,
-      currentGuides: [...allGuides]
+      allGuides: mergedGuides
     })
+
+    this.refreshGuideList(categoryName)
   },
 
   onDistrictChange(e) {
@@ -330,21 +400,8 @@ Page({
   },
 
   onCategoryChange(e) {
-    const category = e.currentTarget.dataset.category
     const categoryName = e.currentTarget.dataset.name
-    
-    if (categoryName === '全部') {
-      this.setData({ 
-        currentCategory: categoryName,
-        currentGuides: [...this.data.allGuides]
-      })
-    } else {
-      const filtered = this.data.allGuides.filter(g => g.category === 'recommend')
-      this.setData({ 
-        currentCategory: categoryName,
-        currentGuides: [...filtered]
-      })
-    }
+    this.refreshGuideList(categoryName)
   },
 
   onGuideTap(e) {

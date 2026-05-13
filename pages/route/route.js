@@ -30,6 +30,8 @@ const CITY_PRESETS = [
   { match: /深圳|南山|福田|罗湖|宝安|龙岗|盐田|龙华|光明|坪山|大鹏/, name: '深圳市', lat: 22.5431, lng: 114.0579 }
 ]
 
+const TRIP_DESCRIPTORS = ['自由', '漫游', '轻享', '悠游', '随心', '惬意', '探索', '慢享']
+
 function isSpotItem(item) {
   return item.type === 'spot' || item.category === '景点' || item.category === '公园' || !item.price
 }
@@ -55,6 +57,29 @@ function getItemTagText(item) {
     return '景点'
   }
   return '美食'
+}
+
+function buildLocalCoverPool() {
+  const foodCovers = [...(shopData.shops || []), ...(shopData.foods || [])]
+    .map(item => item.logo || item.image || item.thumb)
+    .filter(Boolean)
+  const spotCovers = util.getSpotData()
+    .map(item => item.image || item.logo || item.thumb)
+    .filter(Boolean)
+  return [...foodCovers, ...spotCovers, ...DEFAULT_COVERS]
+}
+
+function resolveRouteCoverImage(routeDaySections, fallbackImage = '') {
+  const itemCovers = (routeDaySections || []).reduce((result, day) => {
+    ;(day.items || []).forEach(item => {
+      const cover = item.coverImage || item.image || item.logo || item.thumb
+      if (cover) result.push(cover)
+    })
+    return result
+  }, [])
+
+  const localCoverPool = buildLocalCoverPool()
+  return itemCovers[0] || fallbackImage || localCoverPool[0] || DEFAULT_COVERS[0]
 }
 
 function getItemMetaText(item) {
@@ -103,6 +128,29 @@ function buildDayLabel(dayNumber) {
   const labels = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
   if (dayNumber <= 10) return `第${labels[dayNumber - 1]}天`
   return `第${dayNumber}天`
+}
+
+function toChineseNumber(num) {
+  const digitMap = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九']
+  const value = Math.max(0, parseInt(num, 10) || 0)
+  if (value <= 10) return value === 10 ? '十' : digitMap[value]
+  if (value < 20) return `十${digitMap[value % 10]}`
+  if (value < 100) {
+    const tens = Math.floor(value / 10)
+    const ones = value % 10
+    return `${digitMap[tens]}十${ones ? digitMap[ones] : ''}`
+  }
+  return String(value)
+}
+
+function hashText(text) {
+  const source = String(text || '')
+  let hash = 0
+  for (let i = 0; i < source.length; i += 1) {
+    hash = ((hash << 5) - hash) + source.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash)
 }
 
 function buildTabs(dayCount) {
@@ -160,14 +208,18 @@ function buildPreviewDaySections(routeShops, preferredDayCount = 1) {
   return sections
 }
 
-function buildPreviewTitle(cityText, routeType) {
-  const cityName = String(cityText || '').replace(/市$/, '')
-  if (cityName) {
-    if (routeType === 'spot') return `${cityName}景点智能规划路线`
-    if (routeType === 'food') return `${cityName}美食智能规划路线`
-    return `${cityName}智能规划路线`
-  }
-  return '智能规划路线'
+function buildPreviewTitle(cityText, dayCount = 1, routeDaySections = []) {
+  const cityName = String(cityText || '').trim() || '深圳市'
+  const safeDayCount = Math.max(1, parseInt(dayCount, 10) || 1)
+  const nightCount = Math.max(safeDayCount - 1, 0)
+  const durationText = nightCount > 0
+    ? `${toChineseNumber(safeDayCount)}天${toChineseNumber(nightCount)}夜`
+    : `${toChineseNumber(safeDayCount)}天`
+  const seedText = (routeDaySections || [])
+    .flatMap(day => (day.items || []).map(item => item.id || item.name || ''))
+    .join('|')
+  const descriptor = TRIP_DESCRIPTORS[hashText(`${cityName}-${durationText}-${seedText}`) % TRIP_DESCRIPTORS.length]
+  return `${cityName}${durationText}${descriptor}之旅`
 }
 
 function buildLegacyRouteData(daySections) {
@@ -218,26 +270,30 @@ function getLikeType(item, routeType) {
 }
 
 function savePreviewRouteData(data) {
-  const { routeDaySections, summaryText, cityText, routeType, previewRouteId } = data
+  const { routeDaySections, summaryText, cityText, previewRouteId } = data
   if (!routeDaySections || !routeDaySections.length) return null
 
   const routeId = previewRouteId || `ai-${Date.now()}`
+  const timestamp = Date.now()
+  const savedRoutes = util.loadData('savedRoutes', [])
+  const existingRoute = savedRoutes.find(item => String(item.id) === String(routeId))
   const { daySummaries, dayDetails } = buildLegacyRouteData(routeDaySections)
   const savedRoute = {
     id: routeId,
-    title: buildPreviewTitle(cityText, routeType),
+    title: buildPreviewTitle(cityText, routeDaySections.length, routeDaySections),
     subtitle: summaryText,
-    image: daySummaries[0]?.image || DEFAULT_COVERS[0],
+    image: resolveRouteCoverImage(routeDaySections, daySummaries[0]?.image),
+    coverImage: resolveRouteCoverImage(routeDaySections, daySummaries[0]?.image),
     author: 'AI规划',
     city: cityText,
     sourceType: 'ai',
     daySections: routeDaySections,
     daySummaries,
     dayDetails,
-    createdAt: Date.now()
+    createdAt: existingRoute && existingRoute.createdAt ? existingRoute.createdAt : timestamp,
+    updatedAt: timestamp
   }
 
-  const savedRoutes = util.loadData('savedRoutes', [])
   const index = savedRoutes.findIndex(item => String(item.id) === String(routeId))
   if (index >= 0) {
     savedRoutes[index] = savedRoute
@@ -483,7 +539,7 @@ Page({
       sheetScrollTarget: '',
       summaryText: routeDaySections.length ? buildSummaryText(routeDaySections) : '',
       cityText: cityInfo.name,
-      routeTitle: buildPreviewTitle(cityInfo.name, this.data.routeType),
+      routeTitle: buildPreviewTitle(cityInfo.name, routeDaySections.length, routeDaySections),
       mapPreviewShop: routeShops && routeShops.length ? routeShops[0] : null,
       mapPreviewIndex: 0
     }, () => {
@@ -802,6 +858,15 @@ Page({
     this.setData({
       reorderSheetVisible: true,
       pendingReorderMode: this.data.isEditing ? 'manual' : 'smart'
+    })
+  },
+
+  onEditBasicInfo() {
+    const savedRoute = savePreviewRouteData(this.data)
+    if (!savedRoute) return
+    this.setData({ previewRouteId: savedRoute.id })
+    wx.navigateTo({
+      url: `/pages/route-basic-edit/route-basic-edit?route=${encodeURIComponent(JSON.stringify(savedRoute))}`
     })
   },
 

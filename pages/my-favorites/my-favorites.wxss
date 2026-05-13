@@ -8,6 +8,8 @@
   min-height: 100vh;
   background: #FFFFFF;
   padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── 大标题（与 district-guide 一致） ── */
@@ -32,33 +34,54 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 120rpx 64rpx;
+  box-sizing: border-box;
+  padding: 0 48rpx calc(120rpx + env(safe-area-inset-bottom));
+}
+
+.empty-illustration {
+  width: 240rpx;
+  height: 240rpx;
+  border-radius: 999rpx;
+  background: #F7F8FA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 48rpx;
 }
 
 .empty-icon {
   font-size: 120rpx;
-  color: #D8D8D8;
-  margin-bottom: 32rpx;
+  color: #A0A4AE;
 }
 
-.empty-text {
-  font-family: 'PingFang SC';
+.empty-title {
+  color: #242529;
+  font-size: 40rpx;
+  line-height: 40rpx;
+  margin-bottom: 32rpx;
+  font-weight: 500;
+}
+
+.empty-hint {
   font-size: 28rpx;
   color: #6E727A;
   text-align: center;
-  line-height: 1.6;
+  line-height: 40rpx;
   white-space: pre-line;
+  margin-bottom: 48rpx;
 }
 
 .empty-btn {
-  margin-top: 48rpx;
-  padding: 20rpx 64rpx;
-  background: #3D403F;
-  border-radius: 40rpx;
-  font-family: 'PingFang SC';
-  font-weight: 500;
+  min-width: 176rpx;
+  height: 80rpx;
+  padding: 0 32rpx;
+  border-radius: 999rpx;
+  background: #242529;
   font-size: 28rpx;
   color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── 列表容器 ── */
@@ -225,21 +248,21 @@
   transition: all 0.3s;
 }
 
-.want-icon {
+.collect-icon {
   background: #F7F8FA;
 }
 
-.icon-btn.liked {
-  background: #E8F5E8;
+.icon-btn.collected {
+  background: #FFFFFF;
 }
 
 .icon-btn-text {
-  font-size: 32rpx;
+  font-size: 40rpx;
   color: #6E727A;
 }
 
-.icon-btn.liked .icon-btn-text {
-  color: #27AE60;
+.icon-btn.collected .icon-btn-text {
+  color: #EEB237;
 }
 
 /* ── 底部安全区 ── */

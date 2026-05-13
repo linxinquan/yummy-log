@@ -6,8 +6,11 @@
 
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{showEmpty}}">
-    <i class="mgc_heart_line empty-icon"></i>
-    <text class="empty-text">{{emptyText}}</text>
+    <view class="empty-illustration">
+      <i class="mgc_star_line empty-icon"></i>
+    </view>
+    <text class="empty-title">我的收藏</text>
+    <text class="empty-hint">{{emptyText}}</text>
     <view class="empty-btn" bindtap="onBack">去探索</view>
   </view>
 
@@ -55,14 +58,14 @@
         </view>
       </view>
 
-      <!-- 右侧：取消想去按钮 -->
+      <!-- 右侧：取消收藏按钮 -->
       <view class="shop-action-icons">
         <view
-          class="icon-btn want-icon liked"
+          class="icon-btn collect-icon collected"
           catchtap="onRemoveCollect"
           data-item="{{item}}"
         >
-          <i class="mgc_check_2_fill icon-btn-text"></i>
+          <i class="mgc_star_fill icon-btn-text"></i>
         </view>
       </view>
     </view>

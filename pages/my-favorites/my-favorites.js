@@ -124,7 +124,7 @@ Page({
     this.setData({
       allList,
       showEmpty: allList.length === 0,
-      emptyText: '还没有收藏哦～\n去探索页发现喜欢的美食和景点吧'
+      emptyText: '去探索页收藏喜欢的地点吧'
     })
   },
 
