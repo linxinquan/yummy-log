@@ -221,7 +221,7 @@
     </view>
     <view class="bottom-bar route-bottom-bar" wx:else>
       <view class="bottom-btn secondary route-icon-btn" bindtap="onEditMeta">
-        <i class="mgc_pencil_3_line"></i>
+        <i class="mgc_settings_3_line"></i>
       </view>
       <view class="bottom-btn secondary route-adjust-btn" bindtap="onStartRouteEdit">
         <i class="mgc_ai_line"></i>

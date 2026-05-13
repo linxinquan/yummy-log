@@ -250,7 +250,7 @@
 
       <view class="bottom-bar route-preview-bar" wx:if="{{routeShops.length > 0 && !isEditing}}">
         <view class="bottom-btn secondary route-edit-meta-btn" bindtap="onEditBasicInfo">
-          <i class="mgc_pencil_3_line"></i>
+          <i class="mgc_settings_3_line"></i>
         </view>
         <view class="bottom-btn secondary reorder-btn" bindtap="onOpenReorderSheet">
           <i class="mgc_ai_line"></i>
