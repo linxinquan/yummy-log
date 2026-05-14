@@ -338,20 +338,20 @@
   gap: 12rpx;
   height: 88rpx;
   margin-bottom: 48rpx;
-  border-radius: 24rpx;
+  border-radius: 999rpx;
   background: #ffffff;
   color: #242529;
   font-size: 28rpx;
-  border: 2rpx solid #F7F8FA;
+  border: 2rpx solid #E5E7EB;
 }
 
 .add-place-entry i {
   font-size: 32rpx;
-  color: #242529;
+  color: #6E727A;
 }
 
 .add-place-entry text {
-  color: #242529;
+  color: #6E727A;
 }
 
 .add-place-entry-empty {
@@ -464,6 +464,186 @@
   font-weight: 500;
 }
 
+/* 编辑路线规划底部弹窗：路线详情和规划路线详情统一 */
+.reorder-sheet-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(0, 0, 0, 0.26);
+}
+
+.reorder-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 91;
+  border-radius: 32rpx 32rpx 0 0;
+  background: #FFFFFF;
+  padding: 0 0 calc(24rpx + env(safe-area-inset-bottom));
+}
+
+.reorder-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 128rpx;
+  padding: 0 48rpx;
+  box-sizing: border-box;
+}
+
+.reorder-sheet-title {
+  color: #242529;
+  font-size: 40rpx;
+  font-weight: 500;
+  line-height: 100%;
+}
+
+.reorder-sheet-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #242529;
+}
+
+.reorder-sheet-close i {
+  font-size: 48rpx;
+}
+
+.reorder-sheet-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+  padding: 0 48rpx;
+  box-sizing: border-box;
+}
+
+.reorder-sheet-option {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  min-height: 148rpx;
+  padding: 30rpx;
+  background: #FFFFFF;
+  border: 2rpx solid #E5E7EB;
+  border-radius: 24rpx;
+}
+
+.reorder-sheet-option.active {
+  border-color: #242529;
+}
+
+.reorder-option-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  gap: 24rpx;
+}
+
+.reorder-option-icon {
+  flex-shrink: 0;
+  color: #242529;
+  font-size: 40rpx;
+  line-height: 40rpx;
+}
+
+.reorder-option-title {
+  display: block;
+  color: #242529;
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+.reorder-option-desc {
+  display: block;
+  color: #6E727A;
+  font-size: 28rpx;
+  line-height: 28rpx;
+}
+
+.reorder-sheet-footer {
+  padding: 48rpx 48rpx 0;
+}
+
+.reorder-confirm-btn {
+  height: 96rpx;
+  border-radius: 999rpx;
+  background: #242529;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reorder-confirm-btn text {
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 32rpx;
+}
+
+/* 返回确认弹窗：
+路线详情编辑态也统一改成自定义弹窗。 */
+.exit-confirm-sheet {
+  border-radius: 32rpx 32rpx 0 0;
+  background: #FFFFFF;
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+}
+
+.exit-confirm-body {
+  padding: 8rpx 48rpx 0;
+}
+
+.exit-confirm-desc {
+  display: block;
+  color: #6E727A;
+  font-size: 28rpx;
+  line-height: 44rpx;
+}
+
+.exit-confirm-footer {
+  display: flex;
+  gap: 24rpx;
+  padding: 40rpx 48rpx 0;
+}
+
+.exit-confirm-btn {
+  flex: 1;
+  height: 96rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.exit-confirm-btn text {
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 32rpx;
+}
+
+.exit-confirm-btn.secondary {
+  border: 2rpx solid #E5E7EB;
+  background: #FFFFFF;
+}
+
+.exit-confirm-btn.secondary text {
+  color: #242529;
+}
+
+.exit-confirm-btn.primary {
+  background: #242529;
+}
+
+.exit-confirm-btn.primary text {
+  color: #FFFFFF;
+}
+
 /* 添加地点底部弹窗 */
 .place-picker-mask {
   position: fixed;
@@ -569,10 +749,10 @@
 
 .place-intro-title {
   display: block;
-  margin-top: 32rpx;
+  margin-top: 24rpx;
   color: #242529;
   font-size: 48rpx;
-  line-height: 48rpx;
+  line-height: 64rpx;
   font-weight: 500;
 }
 
@@ -758,48 +938,32 @@
 
 .picker-place-card {
   display: flex;
-  align-items: flex-start;
-  gap: 32rpx;
+  align-items: center;
+  gap: 24rpx;
   padding: 0 48rpx;
   margin-bottom: 48rpx;
-  position: relative;
-  width: 100%;
-  height: 192rpx;
+  min-height: 160rpx;
   box-sizing: border-box;
+  background: #FFFFFF;
 }
 
-.picker-place-image-wrap {
-  width: 192rpx;
-  height: 192rpx;
-  border-radius: 24rpx;
-  overflow: hidden;
+/* 添加地点卡片主体：和详情页地点列表保持同样的封面 + 内容结构 */
+.picker-route-place-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 32rpx;
+  min-width: 0;
+}
+
+.picker-route-place-cover-wrap {
   position: relative;
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
   background: #F2F4F7;
   flex-shrink: 0;
-}
-
-.picker-place-image {
-  width: 100%;
-  height: 100%;
-}
-
-.picker-place-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 192rpx;
-  padding: 16rpx 0;
-  box-sizing: border-box;
-}
-
-.picker-place-info-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-  min-width: 0;
-  width: 100%;
 }
 
 .picker-place-tag {
@@ -815,16 +979,46 @@
   backdrop-filter: blur(4px);
 }
 
+.picker-place-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.picker-route-place-info-row {
+  flex: 1;
+  min-width: 0;
+  height: 160rpx;
+  display: flex;
+  align-items: center;
+}
+
+.picker-route-place-content {
+  flex: 1;
+  min-width: 0;
+  height: 144rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24rpx;
+}
+
+.picker-route-place-top {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  min-width: 0;
+}
+
 .picker-place-name {
   color: #242529;
   font-size: 32rpx;
   line-height: 32rpx;
-  font-weight: 500;
+  font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-right: 64rpx;
-  box-sizing: border-box;
+  width: 100%;
 }
 
 .picker-place-rating {
@@ -833,12 +1027,13 @@
   gap: 16rpx;
   width: 100%;
   overflow: hidden;
+  flex-wrap: nowrap;
 }
 
 .picker-rating-star {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8rpx;
+  justify-content: center;
   background: #FDF8E3;
   border-radius: 12rpx;
   padding: 8rpx 16rpx;
@@ -863,14 +1058,12 @@
   display: flex;
   align-items: center;
   width: 100%;
-  padding-right: 64rpx;
-  box-sizing: border-box;
 }
 
 .picker-place-meta {
   color: #A0A4AE;
   font-size: 24rpx;
-  line-height: 28rpx;
+  line-height: 24rpx;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -878,9 +1071,6 @@
 }
 
 .picker-place-add-btn {
-  position: absolute;
-  right: 48rpx;
-  top: 0;
   width: 56rpx;
   height: 56rpx;
   border-radius: 16rpx;
@@ -1077,33 +1267,6 @@
   flex-shrink: 0;
   max-width: 180rpx;
   text-align: right;
-}
-
-.preview-btn-row {
-  display: flex;
-  gap: 20rpx;
-  width: 100%;
-}
-
-.preview-btn {
-  flex: 1;
-  min-width: 0;
-  height: 88rpx;
-  border-radius: 16rpx;
-  background: #F7F8FA;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-btn text {
-  color: #242529;
-  font-size: 28rpx;
-  line-height: 28rpx;
-}
-
-.preview-btn.disabled {
-  opacity: 0.35;
 }
 
 .preview-footer {

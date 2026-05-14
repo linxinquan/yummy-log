@@ -494,6 +494,7 @@ Page({
     navMapTarget: null,
     placeIntroVisible: false,
     placeIntroData: null,
+    exitConfirmVisible: false,
 
     // ★ 所有想去店铺候选池
     allLikedShops: [],
@@ -1527,6 +1528,28 @@ Page({
   // 阻止弹窗面板点击冒泡到遮罩层。
   preventBubble() {},
 
+  // 关闭返回确认弹窗
+  onCloseExitConfirm() {
+    this.setData({ exitConfirmVisible: false })
+  },
+
+  // 直接退出当前规划页，不保存当前路线
+  onConfirmDirectExit() {
+    this.setData({ exitConfirmVisible: false })
+    wx.navigateBack({
+      delta: 1,
+      fail: () => {
+        wx.switchTab({ url: '/pages/wantgo/wantgo' })
+      }
+    })
+  },
+
+  // 保持并退出：先保存路线，再离开当前页面
+  onConfirmSaveExit() {
+    this.setData({ exitConfirmVisible: false })
+    this.saveAndExit()
+  },
+
   // 返回上一页
   onBack() {
     if (!this.data.hasUnsavedPreview) {
@@ -1538,23 +1561,6 @@ Page({
       })
       return
     }
-    wx.showModal({
-      title: '是否保存当前路线？',
-      content: '保持并退出后会加入我的路线，直接退出则不保存当前规划。',
-      confirmText: '保持并退出',
-      cancelText: '直接退出',
-      success: (res) => {
-        if (res.confirm) {
-          this.saveAndExit()
-          return
-        }
-        wx.navigateBack({
-          delta: 1,
-          fail: () => {
-            wx.switchTab({ url: '/pages/wantgo/wantgo' })
-          }
-        })
-      }
-    })
+    this.setData({ exitConfirmVisible: true })
   }
 })

@@ -14,15 +14,16 @@
       enable-scroll="true"
       enable-overlooking="true"
       bindregionchange="onMapRegionChange"
-    ></map>
+    >
+      <!-- 左上角返回按钮：
+      放到 map 内部作为 cover-view 覆盖层，避免被原生地图层挡住导致点不到。 -->
+      <cover-view class="map-top-actions" style="top: {{menuTop}}px;">
+        <cover-view class="map-top-icon" catchtap="onBack">
+          <cover-view class="map-top-icon-glyph">‹</cover-view>
+        </cover-view>
+      </cover-view>
+    </map>
     <view class="hero-mask" wx:if="{{!isNavigating}}"></view>
-  </view>
-
-  <!-- 左上角返回按钮 -->
-  <view class="top-actions" style="top: {{menuTop}}px; height: {{menuHeight}}px;">
-    <view class="top-icon" bindtap="onBack">
-      <i class="mgc_left_line"></i>
-    </view>
   </view>
 
   <!-- 导览模式顶部进度条 -->
@@ -456,6 +457,29 @@
           <text class="place-intro-desc">{{placeIntroData.desc}}</text>
         </view>
       </scroll-view>
+    </view>
+  </view>
+
+  <!-- 返回确认弹窗：
+  自定义弹窗可以保留“保持并退出 / 直接退出”的完整文案，
+  不再受系统弹窗按钮文案长度限制。 -->
+  <view class="sheet-mask {{exitConfirmVisible ? 'show' : ''}}" bindtap="onCloseExitConfirm">
+    <view class="sheet-panel exit-confirm-sheet" catchtap="preventBubble">
+      <view class="sheet-modal-header">
+        <text class="sheet-modal-title">是否保存当前路线？</text>
+        <i class="mgc_close_line sheet-modal-close" bindtap="onCloseExitConfirm"></i>
+      </view>
+      <view class="exit-confirm-body">
+        <text class="exit-confirm-desc">保持并退出后会加入我的路线，直接退出则不保存当前规划。</text>
+      </view>
+      <view class="exit-confirm-footer">
+        <view class="exit-confirm-btn secondary" bindtap="onConfirmDirectExit">
+          <text>直接退出</text>
+        </view>
+        <view class="exit-confirm-btn primary" bindtap="onConfirmSaveExit">
+          <text>保持并退出</text>
+        </view>
+      </view>
     </view>
   </view>
 </view>

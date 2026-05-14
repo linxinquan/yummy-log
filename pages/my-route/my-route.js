@@ -562,10 +562,13 @@ Page({
     transportOptions: [],
     pendingTransportMode: 'walk',
     transportTarget: null,
+    reorderSheetVisible: false,
+    pendingReorderMode: 'smart',
     navMapSheetVisible: false,
     navMapTarget: null,
     placeIntroVisible: false,
-    placeIntroData: null
+    placeIntroData: null,
+    exitConfirmVisible: false
   },
 
   // 页面初始化：
@@ -928,22 +931,27 @@ Page({
         this.goBackBySource()
         return
       }
-      wx.showModal({
-        title: '是否保持当前修改？',
-        content: '保持并退出后会更新当前路线，直接退出则不保留这次修改。',
-        confirmText: '保持并退出',
-        cancelText: '直接退出',
-        success: (res) => {
-          if (res.confirm) {
-            this.onSaveAndExit()
-            return
-          }
-          this.goBackBySource()
-        }
-      })
+      this.setData({ exitConfirmVisible: true })
       return
     }
     this.goBackBySource()
+  },
+
+  // 关闭编辑返回确认弹窗
+  onCloseExitConfirm() {
+    this.setData({ exitConfirmVisible: false })
+  },
+
+  // 编辑态下直接退出，不保留这次修改
+  onConfirmDirectExit() {
+    this.setData({ exitConfirmVisible: false })
+    this.goBackBySource()
+  },
+
+  // 编辑态下保持并退出：先保存，再离开当前页面
+  onConfirmSaveExit() {
+    this.setData({ exitConfirmVisible: false })
+    this.onSaveAndExit()
   },
 
   // 提示用户使用右上角分享
@@ -1071,12 +1079,90 @@ Page({
     })
   },
 
+  // 打开“编辑路线规划”底部弹窗：
+  // 用户可以先选“智能规划”还是“手动编辑”。
+  onOpenReorderSheet() {
+    this.setData({
+      reorderSheetVisible: true,
+      pendingReorderMode: 'smart'
+    })
+  },
+
+  // 关闭“编辑路线规划”底部弹窗
+  onCloseReorderSheet() {
+    this.setData({ reorderSheetVisible: false })
+  },
+
+  // 切换底部弹窗里的编辑方式
+  onSelectReorderMode(e) {
+    const mode = e.currentTarget.dataset.mode
+    if (!mode) return
+    this.setData({ pendingReorderMode: mode })
+  },
+
+  // 确认编辑方式：
+  // 1. 手动编辑：进入原来的编辑态
+  // 2. 智能规划：直接按当前城市中心重新排序并保存
+  onConfirmReorderMode() {
+    if (this.data.pendingReorderMode === 'manual') {
+      this.setData({ reorderSheetVisible: false })
+      this.onStartRouteEdit()
+      return
+    }
+
+    const currentSections = stripEditState(this.data.daySections || [])
+    const hasPlaces = flattenDaySections(currentSections).length > 0
+    if (!hasPlaces) {
+      wx.showToast({ title: '当前没有可规划地点', icon: 'none' })
+      return
+    }
+
+    const optimizedSections = syncDaySections(currentSections, this.data.cityInfo)
+    const summaryText = buildSummaryText(optimizedSections)
+    const updatedRoute = {
+      ...this.buildUpdatedRoute(optimizedSections),
+      subtitle: summaryText,
+      isDraft: this.data.fromPreview
+    }
+    const nextMapDay = this.data.currentMapDay >= optimizedSections.length ? -1 : this.data.currentMapDay
+
+    if (this.data.fromPreview) {
+      this.setData({
+        reorderSheetVisible: false,
+        route: updatedRoute,
+        daySections: optimizedSections,
+        summaryText,
+        tabs: buildTabs(optimizedSections.length),
+        originalDaySections: JSON.parse(JSON.stringify(stripEditState(optimizedSections))),
+        hasRoutePlaces: flattenDaySections(optimizedSections).length > 0
+      })
+      this.refreshMapPreview(optimizedSections, this.data.mapPreviewIndex)
+      this.updateMapData(optimizedSections, this.data.cityInfo, nextMapDay)
+      this.handoffPreviewRoute(updatedRoute, '已智能规划')
+      return
+    }
+
+    this.saveRouteToStorage(updatedRoute, '已智能规划')
+    this.setData({
+      reorderSheetVisible: false,
+      route: updatedRoute,
+      daySections: optimizedSections,
+      summaryText,
+      tabs: buildTabs(optimizedSections.length),
+      originalDaySections: JSON.parse(JSON.stringify(stripEditState(optimizedSections))),
+      hasRoutePlaces: flattenDaySections(optimizedSections).length > 0
+    })
+    this.refreshMapPreview(optimizedSections, this.data.mapPreviewIndex)
+    this.updateMapData(optimizedSections, this.data.cityInfo, nextMapDay)
+  },
+
   // 进入编辑态：允许拖拽、删除、加地点
   onStartRouteEdit() {
     const daySections = this.resetSwipeOffsets(this.data.daySections)
     this.refreshPlacePickerItems()
     this.setData({
       isEditing: true,
+      reorderSheetVisible: false,
       viewMode: 'list',
       dragging: false,
       currentTab: Math.min(daySections.length, 1),
@@ -1108,7 +1194,7 @@ Page({
     }
     wx.showModal({
       title: '是否保存当前修改？',
-      content: '保存后会更新当前路线，不保存将丢弃本次编辑。',
+      content: '保存后会更新当前路线，不保存将丢弃本次编辑',
       confirmText: '保存',
       cancelText: '不保存',
       success: (res) => {

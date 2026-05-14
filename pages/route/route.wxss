@@ -40,22 +40,21 @@ page {
   pointer-events: none;
 }
 
-/* 左上角返回区域 */
-.top-actions {
+/* 地图内的左上角返回区域：
+放在 map 组件内部，保证点击事件不会被地图吞掉。 */
+.map-top-actions {
   position: fixed;
-  z-index: 30;
+  z-index: 60;
   display: flex;
   align-items: center;
-  gap: 24rpx;
-}
-
-.top-actions {
   left: 48rpx;
 }
 
-.top-icon {
-  width: 64rpx;
-  height: 64rpx;
+/* 返回按钮本体：
+单独给足高度，避免深色半透明背景被父层裁切。 */
+.map-top-icon {
+  width: 72rpx;
+  height: 72rpx;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.25);
   display: flex;
@@ -63,8 +62,69 @@ page {
   justify-content: center;
 }
 
-.top-icon i {
-  font-size: 40rpx;
+/* cover-view 里直接用文字箭头，避免 icon 字体在地图覆盖层里失效。 */
+.map-top-icon-glyph {
+  font-size: 44rpx;
+  line-height: 44rpx;
+  color: #FFFFFF;
+  text-align: center;
+}
+
+/* 返回确认弹窗：
+使用自定义底部弹窗，保留完整按钮文案。 */
+.exit-confirm-sheet {
+  border-radius: 32rpx 32rpx 0 0;
+  background: #FFFFFF;
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+}
+
+.exit-confirm-body {
+  padding: 8rpx 48rpx 0;
+}
+
+.exit-confirm-desc {
+  display: block;
+  color: #6E727A;
+  font-size: 28rpx;
+  line-height: 44rpx;
+}
+
+.exit-confirm-footer {
+  display: flex;
+  gap: 24rpx;
+  padding: 40rpx 48rpx 0;
+}
+
+.exit-confirm-btn {
+  flex: 1;
+  height: 96rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.exit-confirm-btn text {
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 32rpx;
+}
+
+.exit-confirm-btn.secondary {
+  border: 2rpx solid #E5E7EB;
+  background: #FFFFFF;
+}
+
+.exit-confirm-btn.secondary text {
+  color: #242529;
+}
+
+.exit-confirm-btn.primary {
+  background: #242529;
+}
+
+.exit-confirm-btn.primary text {
   color: #FFFFFF;
 }
 
@@ -1127,33 +1187,6 @@ page {
   flex-shrink: 0;
   max-width: 180rpx;
   text-align: right;
-}
-
-.preview-btn-row {
-  display: flex;
-  gap: 20rpx;
-  width: 100%;
-}
-
-.preview-btn {
-  flex: 1;
-  min-width: 0;
-  height: 76rpx;
-  border-radius: 16rpx;
-  background: #F7F8FA;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-btn text {
-  color: #242529;
-  font-size: 28rpx;
-  line-height: 28rpx;
-}
-
-.preview-btn.disabled {
-  opacity: 0.35;
 }
 
 .preview-footer {

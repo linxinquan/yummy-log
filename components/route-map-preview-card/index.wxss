@@ -33,8 +33,8 @@
 .preview-tab-item {
   flex-shrink: 0;
   color: #A0A4AE;
-  font-size: 28rpx;
-  line-height: 28rpx;
+  font-size: 32rpx;
+  line-height: 32rpx;
   font-weight: 500;
 }
 
@@ -132,6 +132,8 @@
 .preview-chip.score {
   background: #FDF8E3;
   color: #EE8733;
+  font-size: 24rpx;
+  line-height: 24rpx;
 }
 
 .preview-desc-row {

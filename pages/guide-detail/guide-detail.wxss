@@ -685,10 +685,10 @@ page {
 
 .place-intro-title {
   display: block;
-  margin-top: 32rpx;
+  margin-top: 24rpx;
   color: #242529;
   font-size: 48rpx;
-  line-height: 48rpx;
+  line-height: 64rpx;
   font-weight: 500;
 }
 
@@ -1009,33 +1009,6 @@ page {
   flex-shrink: 0;
   max-width: 180rpx;
   text-align: right;
-}
-
-.preview-btn-row {
-  display: flex;
-  gap: 20rpx;
-  width: 100%;
-}
-
-.preview-btn {
-  flex: 1;
-  min-width: 0;
-  height: 88rpx;
-  border-radius: 16rpx;
-  background: #F7F8FA;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-btn text {
-  color: #242529;
-  font-size: 28rpx;
-  line-height: 28rpx;
-}
-
-.preview-btn.disabled {
-  opacity: 0.35;
 }
 
 .preview-footer {

@@ -214,7 +214,7 @@ ${safeText}`
     const response = await cloud.cloud.ai.model.generateText({
       model: 'hunyuan-2.0-instruct-20251111',
       messages: [
-        { role: 'system', content: '你擅长从网页正文中提取地点列表，并保持输出简洁、准确、可解析。' },
+        { role: 'system', content: '你擅长从网页正文中提取地点列表，并保持输出简洁、准确、可解析' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.2,

@@ -256,7 +256,7 @@
       <view class="bottom-btn secondary route-icon-btn" bindtap="onEditMeta">
         <i class="mgc_settings_3_line"></i>
       </view>
-      <view class="bottom-btn secondary route-adjust-btn" bindtap="onStartRouteEdit">
+      <view class="bottom-btn secondary route-adjust-btn" bindtap="onOpenReorderSheet">
         <i class="mgc_ai_line"></i>
         <text>编辑</text>
       </view>
@@ -300,6 +300,46 @@
     </view>
   </block>
 
+  <!-- 编辑路线规划：路线详情和规划路线详情统一使用同一套选择方式 -->
+  <view class="reorder-sheet-mask" wx:if="{{reorderSheetVisible}}" bindtap="onCloseReorderSheet"></view>
+  <view class="reorder-sheet" wx:if="{{reorderSheetVisible}}">
+    <view class="reorder-sheet-header">
+      <text class="reorder-sheet-title">编辑路线规划</text>
+      <view class="reorder-sheet-close" bindtap="onCloseReorderSheet">
+        <i class="mgc_close_line"></i>
+      </view>
+    </view>
+    <view class="reorder-sheet-option-list">
+      <view
+        class="reorder-sheet-option {{pendingReorderMode === 'smart' ? 'active' : ''}}"
+        bindtap="onSelectReorderMode"
+        data-mode="smart"
+      >
+        <i class="reorder-option-icon mgc_ai_line"></i>
+        <view class="reorder-option-main">
+          <text class="reorder-option-title">智能规划</text>
+          <text class="reorder-option-desc">AI 智能分析路线，自动重新排序最佳路线</text>
+        </view>
+      </view>
+      <view
+        class="reorder-sheet-option {{pendingReorderMode === 'manual' ? 'active' : ''}}"
+        bindtap="onSelectReorderMode"
+        data-mode="manual"
+      >
+        <i class="reorder-option-icon mgc_pencil_3_line"></i>
+        <view class="reorder-option-main">
+          <text class="reorder-option-title">手动编辑</text>
+          <text class="reorder-option-desc">进入编辑状态，按需求手动调整路线顺序</text>
+        </view>
+      </view>
+    </view>
+    <view class="reorder-sheet-footer">
+      <view class="reorder-confirm-btn" bindtap="onConfirmReorderMode">
+        <text>确认</text>
+      </view>
+    </view>
+  </view>
+
   <view class="place-picker-mask {{placePickerVisible ? 'show' : ''}}" bindtap="onClosePlacePicker">
     <view class="place-picker-panel" catchtap="preventBubble">
       <view class="picker-header">
@@ -327,22 +367,27 @@
               bindtap="onAddPlaceToDay"
               data-item="{{item}}"
             >
-              <view class="picker-place-image-wrap">
-                <image class="picker-place-image" src="{{item.image}}" mode="aspectFill"></image>
-                <view class="picker-place-tag">{{item.tag}}</view>
-              </view>
-              <view class="picker-place-info">
-                <view class="picker-place-info-inner">
-                  <text class="picker-place-name">{{item.name}}</text>
-                  <view class="picker-place-rating">
-                    <view class="picker-rating-star" wx:if="{{item.rating}}">
-                      <text>{{item.rating}}</text>
-                    </view>
-                    <text class="picker-place-chip" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
-                  </view>
+              <!-- 添加地点列表改成和详情页地点卡片同一套视觉，只保留右侧加号图标 -->
+              <view class="picker-route-place-main">
+                <view class="picker-route-place-cover-wrap">
+                  <image class="picker-place-image" src="{{item.image}}" mode="aspectFill"></image>
+                  <view class="picker-place-tag" wx:if="{{item.displayCategory || item.tag}}">{{item.displayCategory || item.tag}}</view>
                 </view>
-                <view class="picker-place-footer">
-                  <text class="picker-place-meta">{{item.sourceText}}</text>
+                <view class="picker-route-place-info-row">
+                  <view class="picker-route-place-content">
+                    <view class="picker-route-place-top">
+                      <text class="picker-place-name">{{item.name}}</text>
+                      <view class="picker-place-rating">
+                        <view class="picker-rating-star" wx:if="{{item.rating}}">
+                          <text>{{item.rating}}</text>
+                        </view>
+                        <text class="picker-place-chip" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+                      </view>
+                    </view>
+                    <view class="picker-place-footer">
+                      <text class="picker-place-meta">{{item.sourceText}}</text>
+                    </view>
+                  </view>
                 </view>
               </view>
               <view class="picker-place-add-btn">
@@ -430,6 +475,28 @@
           <text class="place-intro-desc">{{placeIntroData.desc}}</text>
         </view>
       </scroll-view>
+    </view>
+  </view>
+
+  <!-- 编辑返回确认弹窗：
+  这里不用系统弹窗，避免完整按钮文案被系统限制。 -->
+  <view class="sheet-mask {{exitConfirmVisible ? 'show' : ''}}" bindtap="onCloseExitConfirm">
+    <view class="sheet-panel exit-confirm-sheet" catchtap="preventBubble">
+      <view class="sheet-modal-header">
+        <text class="sheet-modal-title">是否保持当前修改？</text>
+        <i class="mgc_close_line sheet-modal-close" bindtap="onCloseExitConfirm"></i>
+      </view>
+      <view class="exit-confirm-body">
+        <text class="exit-confirm-desc">保持并退出后会更新当前路线，直接退出则不保留这次修改。</text>
+      </view>
+      <view class="exit-confirm-footer">
+        <view class="exit-confirm-btn secondary" bindtap="onConfirmDirectExit">
+          <text>直接退出</text>
+        </view>
+        <view class="exit-confirm-btn primary" bindtap="onConfirmSaveExit">
+          <text>保持并退出</text>
+        </view>
+      </view>
     </view>
   </view>
 </view>
