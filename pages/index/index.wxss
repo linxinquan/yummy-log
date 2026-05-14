@@ -387,21 +387,28 @@
 /* ── 列表卡片 (统一重构样式) ── */
 .shop-card, .spot-card {
   display: flex;
-  align-items: flex-start;
-  gap: 32rpx; /* 16px 间距，图片与右侧信息 */
+  align-items: center;
+  gap: 24rpx; /* 12px：中间信息到右侧图标 */
   background: transparent;
   border-radius: 0;
   padding: 0 48rpx; /* 24px */
   margin-bottom: 48rpx; /* 24px */
-  position: relative;
   width: 100vw;
-  height: 192rpx; /* 96px */
+  min-height: 160rpx; /* 80px */
   box-sizing: border-box;
 }
 
+.card-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 32rpx; /* 16px：封面到中间信息 */
+  min-width: 0;
+}
+
 .card-img-wrap, .shop-thumb-wrapper {
-  width: 192rpx; /* 96px */
-  height: 192rpx; /* 96px */
+  width: 160rpx; /* 80px */
+  height: 160rpx; /* 80px */
   flex-shrink: 0;
   border-radius: 24rpx; /* 12px */
   overflow: hidden;
@@ -440,27 +447,18 @@
 }
 
 .shop-info, .card-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16rpx 0; /* 上下: 8px, 左右: 0 */
-  justify-content: space-between;
-  height: 192rpx; /* 96px */
+  justify-content: center;
+  min-height: 160rpx;
   box-sizing: border-box;
-  width: calc(100vw - 328rpx); /* 精确计算剩余宽度: 100vw - padding(48*2) - img(200) - gap(32) */
   min-width: 0;
-}
-
-.card-info-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx; /* 12px */
-  min-width: 0; /* 继续向内传递 min-width 约束 */
-  width: 100%;
 }
 
 .shop-name, .card-name {
   font-family: 'PingFang SC';
-  font-weight: 500;
+  font-weight: 400;
   font-size: 32rpx;
   color: #242529;
   line-height: 32rpx;
@@ -468,18 +466,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
-  display: block; /* 确保 text-overflow 能够生效 */
-  padding-right: 64rpx; /* 给右上角的想去按钮预留空间，防止重叠 */
+  display: block;
   box-sizing: border-box;
+  margin-bottom: 16rpx;
 }
 
+.card-tags,
 .shop-meta, .card-rating {
   display: flex;
   align-items: center;
   gap: 16rpx; /* 8px */
-  flex-wrap: nowrap; /* 强制不换行 */
-  overflow: hidden; /* 超出隐藏 */
+  flex-wrap: nowrap;
+  overflow: hidden;
   width: 100%;
+  margin-bottom: 32rpx;
 }
 
 .shop-rating, .rating-star {
@@ -512,10 +512,10 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  min-width: 0; /* 防止撑爆 */
+  gap: 8rpx;
+  min-width: 0;
   width: 100%;
   box-sizing: border-box;
-  padding-right: 64rpx;
 }
 
 .stat-item, .footer-hours, .card-desc {
@@ -526,33 +526,39 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 100%;
+  width: auto;
   display: block;
+  flex-shrink: 0;
 }
 
 /* ── 右侧想去按钮 ── */
 .shop-action-icons, .want-btn {
-  position: absolute;
-  right: 48rpx; /* 24px */
-  top: 0; /* Align with top of card */
-  width: 56rpx; /* 28px */
-  height: 56rpx; /* 28px */
+  flex: 0 0 48rpx;
+  width: 48rpx; /* 24px */
+  height: 48rpx; /* 24px */
   border-radius: 16rpx; /* 8px */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.card-separator {
+  color: #A0A4AE;
+  font-size: 24rpx;
+  line-height: 28rpx;
+  flex-shrink: 0;
+}
+
 .want-icon {
-  width: 32rpx; /* 16px */
-  height: 32rpx; /* 16px */
+  width: 48rpx; /* 24px */
+  height: 48rpx; /* 24px */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .icon-btn-text, .want-btn i {
-  font-size: 40rpx; /* 20px */
+  font-size: 48rpx; /* 24px */
   color: #C7CAD1;
 }
 

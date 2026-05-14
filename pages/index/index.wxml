@@ -133,46 +133,38 @@
         >
           <!-- 统一卡片布局 -->
           <view class="shop-card" bindtap="onItemTap" data-item="{{item}}">
-            <!-- 左侧：图片区 -->
-            <view class="card-img-wrap">
-              <!-- 缩略图 -->
-              <image
-                wx:if="{{item.displayImage}}"
-                class="card-img"
-                src="{{item.displayImage}}"
-                mode="aspectFill"
-                binderror="onImageError"
-                data-index="{{index}}"
-              />
-              <view wx:if="{{!item.displayImage}}" class="shop-emoji-placeholder">
-                <i class="mgc_sparkles_line shop-emoji"></i>
+            <view class="card-main">
+              <view class="card-img-wrap">
+                <image
+                  wx:if="{{item.displayImage}}"
+                  class="card-img"
+                  src="{{item.displayImage}}"
+                  mode="aspectFill"
+                  binderror="onImageError"
+                  data-index="{{index}}"
+                />
+                <view wx:if="{{!item.displayImage}}" class="shop-emoji-placeholder">
+                  <i class="mgc_sparkles_line shop-emoji"></i>
+                </view>
+                <view class="card-cat-badge" wx:if="{{item.displayCategory}}">{{item.displayCategory}}</view>
               </view>
-              
-              <!-- 左上角分类徽章 (美食/景点等) -->
-              <view class="card-cat-badge">{{item.displayCategory}}</view>
-            </view>
 
-            <!-- 中间：信息区 -->
-            <view class="card-info">
-              <view class="card-info-inner">
+              <view class="card-info">
                 <view class="card-name">{{item.name}}</view>
-                
-                <!-- 评分与标签 -->
-                <view class="card-rating">
-                  <view class="rating-star">
-                    <text>{{item.rating || '4.0'}}</text>
+                <view class="card-tags">
+                  <view class="rating-star" wx:if="{{item.rating}}">
+                    <text>{{item.rating}}</text>
                   </view>
                   <text class="spot-tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
                 </view>
-              </view>
-              
-              <!-- 底部：距离及统计 -->
-              <view class="card-footer">
-                <text class="card-desc">{{item.displayWantCount}} 人想去 · {{item.distance}}</text>
+                <view class="card-footer">
+                  <text class="card-desc">{{item.displayWantCount}} 人想去</text>
+                  <text class="card-separator">·</text>
+                  <text class="card-desc">{{item.distance}}</text>
+                </view>
               </view>
             </view>
 
-            <!-- 右侧：想去按钮 -->
             <view class="shop-action-icons">
               <view
                 class="icon-btn want-icon {{item.isLiked ? 'liked' : ''}}"
