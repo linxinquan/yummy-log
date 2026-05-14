@@ -413,8 +413,8 @@
   ></transport-info-sheet>
 
   <!-- 请选择导航地图：这里提供腾讯地图、高德地图和复制地址 -->
-  <view class="sheet-mask {{navMapSheetVisible ? 'show' : ''}}" bindtap="onCloseNavMapSheet">
-    <view class="sheet-panel route-action-sheet" catchtap="preventBubble">
+  <view class="sheet-mask nav-map-sheet-mask {{navMapSheetVisible ? 'show' : ''}}" bindtap="onCloseNavMapSheet">
+    <view class="sheet-panel route-action-sheet nav-map-sheet-panel" catchtap="preventBubble">
       <view class="sheet-modal-header">
         <text class="sheet-modal-title">请选择导航地图</text>
         <i class="mgc_close_line sheet-modal-close" bindtap="onCloseNavMapSheet"></i>
@@ -479,7 +479,7 @@
   </view>
 
   <!-- 编辑返回确认弹窗：
-  这里不用系统弹窗，避免完整按钮文案被系统限制。 -->
+  这里不用系统弹窗，避免完整按钮文案被系统限制 -->
   <view class="sheet-mask {{exitConfirmVisible ? 'show' : ''}}" bindtap="onCloseExitConfirm">
     <view class="sheet-panel exit-confirm-sheet" catchtap="preventBubble">
       <view class="sheet-modal-header">
@@ -487,7 +487,7 @@
         <i class="mgc_close_line sheet-modal-close" bindtap="onCloseExitConfirm"></i>
       </view>
       <view class="exit-confirm-body">
-        <text class="exit-confirm-desc">保持并退出后会更新当前路线，直接退出则不保留这次修改。</text>
+        <text class="exit-confirm-desc">保持并退出后会更新当前路线，直接退出则不保留这次修改</text>
       </view>
       <view class="exit-confirm-footer">
         <view class="exit-confirm-btn secondary" bindtap="onConfirmDirectExit">

@@ -471,6 +471,11 @@
   pointer-events: auto;
 }
 
+/* 导航地图弹窗需要压过其它底部弹窗，避免被后面的面板盖住 */
+.nav-map-sheet-mask {
+  z-index: 1003;
+}
+
 .sheet-panel {
   position: fixed;
   left: 0;
@@ -486,6 +491,10 @@
 
 .sheet-mask.show .sheet-panel {
   transform: translateY(0);
+}
+
+.nav-map-sheet-panel {
+  z-index: 1004;
 }
 
 .sheet-modal-header {

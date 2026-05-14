@@ -33,7 +33,9 @@ Page({
     isCollected: false,
     displayAvatars: [],
     relatedItems: [],
-    isFoodDetail: true
+    isFoodDetail: true,
+    navMapSheetVisible: false,
+    navMapTarget: null
   },
 
   // 页面初始化：
@@ -164,20 +166,83 @@ Page({
     wx.showToast({ title: '请点击右上角分享', icon: 'none' })
   },
 
-  // 打开系统地图导航到当前店铺
+  // 地址卡片点击后，打开“请选择导航地图”底部弹窗。
+  onOpenNavMapSheet() {
+    const { spot } = this.data
+    if (!spot) return
+    this.setData({
+      navMapSheetVisible: true,
+      navMapTarget: {
+        lat: spot.lat || spot.latitude || 0,
+        lng: spot.lng || spot.longitude || 0,
+        name: spot.name,
+        address: spot.address || spot.name
+      }
+    })
+  },
+
+  // 位置地图点击后，继续使用微信原生地图。
   onNavigate() {
     const { spot } = this.data
-    if ((spot.lat || spot.latitude) && (spot.lng || spot.longitude)) {
+    const latitude = spot && (spot.lat || spot.latitude)
+    const longitude = spot && (spot.lng || spot.longitude)
+    if (latitude && longitude) {
       wx.openLocation({
-        latitude: spot.lat || spot.latitude,
-        longitude: spot.lng || spot.longitude,
+        latitude,
+        longitude,
         name: spot.name,
         address: spot.address,
         scale: 16
       })
-    } else {
-      wx.showToast({ title: '暂无坐标', icon: 'none' })
+      return
     }
+    wx.showToast({ title: '暂无坐标', icon: 'none' })
+  },
+
+  // 关闭导航地图选择弹窗。
+  onCloseNavMapSheet() {
+    this.setData({
+      navMapSheetVisible: false,
+      navMapTarget: null
+    })
+  },
+
+  // 在导航弹窗里选择地图应用或复制地址。
+  onSelectNavMapOption(e) {
+    const type = e.currentTarget.dataset.type
+    const target = this.data.navMapTarget
+    if (!type || !target) return
+
+    if (type === 'copy') {
+      wx.setClipboardData({
+        data: target.address || target.name,
+        success: () => {
+          wx.showToast({ title: '地址已复制', icon: 'success' })
+          this.onCloseNavMapSheet()
+        }
+      })
+      return
+    }
+
+    if (!target.lat || !target.lng) {
+      wx.showToast({ title: '暂无坐标', icon: 'none' })
+      return
+    }
+
+    if (type === 'tencent') {
+      util.openWechatNavigation(target)
+      this.onCloseNavMapSheet()
+      return
+    }
+
+    if (type === 'gaode') {
+      util.openGaodeNavigation(target.lat, target.lng, target.name)
+      this.onCloseNavMapSheet()
+    }
+  },
+
+  // 阻止弹窗面板点击冒泡到遮罩层。
+  preventBubble() {
   },
 
   // 有电话时直接拨号

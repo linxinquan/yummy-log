@@ -25,6 +25,11 @@
   pointer-events: auto;
 }
 
+/* 导航地图弹窗要盖在地点简介上面，避免点击地址后看不到选择面板 */
+.nav-map-sheet-mask {
+  z-index: 1003;
+}
+
 /* 通用底部弹窗面板：默认在底部隐藏，显示时上滑出现 */
 .sheet-panel {
   position: fixed;
@@ -41,6 +46,10 @@
 
 .sheet-mask.show .sheet-panel {
   transform: translateY(0);
+}
+
+.nav-map-sheet-panel {
+  z-index: 1004;
 }
 
 /* 弹窗头部：单独使用自己的类名，避免影响页面顶部标题区 */

@@ -43,7 +43,7 @@
       
       <text class="open-time">{{openTimeText}}</text>
       
-      <view class="address-box" bindtap="onNavigate">
+      <view class="address-box" bindtap="onOpenNavMapSheet">
         <view class="address-content">
           <text class="address-label">地址</text>
           <text class="address-text">{{spot.address}}</text>
@@ -76,6 +76,7 @@
           enable-scroll="{{false}}"
           enable-rotate="{{false}}"
           enable-overlooking="{{false}}"
+          bindtap="onNavigate"
         ></map>
       </view>
     </view>
@@ -137,8 +138,8 @@
   </view>
 
   <!-- 请选择导航地图：探索详情地址和位置卡片统一走这里 -->
-  <view class="sheet-mask {{navMapSheetVisible ? 'show' : ''}}" bindtap="onCloseNavMapSheet">
-    <view class="sheet-panel route-action-sheet" catchtap="preventBubble">
+  <view class="sheet-mask nav-map-sheet-mask {{navMapSheetVisible ? 'show' : ''}}" bindtap="onCloseNavMapSheet">
+    <view class="sheet-panel route-action-sheet nav-map-sheet-panel" catchtap="preventBubble">
       <view class="sheet-modal-header">
         <text class="sheet-modal-title">请选择导航地图</text>
         <i class="mgc_close_line sheet-modal-close" bindtap="onCloseNavMapSheet"></i>

@@ -160,8 +160,8 @@ Page({
     })
   },
 
-  // 地址或位置卡片点击后，先打开“请选择导航地图”弹窗。
-  onNavigate() {
+  // 地址卡片点击后，打开“请选择导航地图”底部弹窗。
+  onOpenNavMapSheet() {
     const { spot } = this.data
     if (!spot) return
     this.setData({
@@ -173,6 +173,24 @@ Page({
         address: spot.address || spot.name
       }
     })
+  },
+
+  // 位置地图点击后，继续使用微信原生地图。
+  onNavigate() {
+    const { spot } = this.data
+    const latitude = spot && (spot.lat || spot.latitude)
+    const longitude = spot && (spot.lng || spot.longitude)
+    if (latitude && longitude) {
+      wx.openLocation({
+        latitude,
+        longitude,
+        name: spot.name,
+        address: spot.address,
+        scale: 16
+      })
+      return
+    }
+    wx.showToast({ title: '暂无坐标', icon: 'none' })
   },
 
   // 关闭导航地图选择弹窗。
