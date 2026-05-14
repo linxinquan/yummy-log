@@ -557,6 +557,7 @@ Page({
     placePickerDayIndex: -1,
     autoEnterEdit: false,
     isNewRouteDraft: false,
+    fromPreview: false,
     transportSheetVisible: false,
     transportOptions: [],
     pendingTransportMode: 'walk',
@@ -596,7 +597,8 @@ Page({
       routeId: String(route.id),
       returnTo: options.returnTo || '',
       autoEnterEdit: options.edit === '1',
-      isNewRouteDraft: options.create === '1' || Boolean(route.isDraft)
+      isNewRouteDraft: options.create === '1' || Boolean(route.isDraft),
+      fromPreview: options.fromPreview === '1'
     })
     this.refreshPlacePickerItems()
     this.applyRoute(route)
@@ -687,6 +689,69 @@ Page({
     if (showToastTitle) {
       wx.showToast({ title: showToastTitle, icon: 'success' })
     }
+  },
+
+  // 从“路线规划详情”临时进入手动编辑时：
+  // 保存结果不直接落库，而是回传给上一页，再返回上一页。
+  handoffPreviewRoute(route, showToastTitle) {
+    const eventChannel = this.getOpenerEventChannel && this.getOpenerEventChannel()
+    eventChannel && eventChannel.emit('previewRouteEdited', route)
+    if (showToastTitle) {
+      wx.showToast({ title: showToastTitle, icon: 'success' })
+    }
+    setTimeout(() => {
+      wx.navigateBack({
+        delta: 1,
+        fail: () => {
+          wx.switchTab({ url: '/pages/wantgo/wantgo' })
+        }
+      })
+    }, 300)
+  },
+
+  // 判断编辑态是否真的有改动：
+  // 只有内容结构发生变化，才算“未保存修改”。
+  hasEditingChanges() {
+    const currentSections = stripEditState(this.data.daySections || [])
+    const originalSections = stripEditState(this.data.originalDaySections || [])
+    return JSON.stringify(currentSections) !== JSON.stringify(originalSections)
+  },
+
+  // 丢弃当前编辑改动：
+  // 普通路线恢复到进入编辑前；从路线规划页进入时直接返回上一页。
+  discardRouteEdits() {
+    if (this.data.fromPreview) {
+      wx.navigateBack({
+        delta: 1,
+        fail: () => {
+          wx.switchTab({ url: '/pages/wantgo/wantgo' })
+        }
+      })
+      return
+    }
+    const restored = syncDaySections(this.data.originalDaySections || [], this.data.cityInfo)
+    this.setData({
+      isEditing: false,
+      dragging: false,
+      dragDay: -1,
+      dragIndex: -1,
+      dragTouchStartY: 0,
+      swipeDay: -1,
+      swipeIndex: -1,
+      swipeStartOffset: 0,
+      daySections: restored,
+      tabs: buildTabs(restored.length),
+      summaryText: buildSummaryText(restored),
+      hasRoutePlaces: flattenDaySections(restored).length > 0,
+      sheetScrollTarget: '',
+      currentTab: 0,
+      placePickerVisible: false,
+      placePickerDayIndex: -1,
+      placeIntroVisible: false,
+      navMapSheetVisible: false
+    })
+    this.updateMapData(restored, this.data.cityInfo, this.data.currentMapDay)
+    this.refreshMapPreview(restored, this.data.mapPreviewIndex)
   },
 
   // 按当前编辑结果组装出一份最新路线对象，方便保存或跳去编辑基础信息。
@@ -835,12 +900,13 @@ Page({
 
   // 顶部返回逻辑：
   // 新建路线、从路线页进入、普通返回，这三种来源处理不一样。
-  onBack() {
+  goBackBySource() {
     if (this.data.isNewRouteDraft && !this.data.isEditing) {
       wx.navigateBack({
         delta: 1,
         fail: () => {
-          wx.switchTab({ url: '/pages/add-shop/add-shop' })
+          // 兜底回首页，避免误回到不存在的中间入口上下文。
+          wx.switchTab({ url: '/pages/index/index' })
         }
       })
       return
@@ -851,6 +917,33 @@ Page({
       return
     }
     wx.navigateBack()
+  },
+
+  // 顶部返回逻辑：
+  // 编辑态下单独走“保持并退出 / 直接退出”，其余情况按来源正常返回。
+  onBack() {
+    if (this.data.isEditing) {
+      const changed = this.hasEditingChanges()
+      if (!changed) {
+        this.goBackBySource()
+        return
+      }
+      wx.showModal({
+        title: '是否保持当前修改？',
+        content: '保持并退出后会更新当前路线，直接退出则不保留这次修改。',
+        confirmText: '保持并退出',
+        cancelText: '直接退出',
+        success: (res) => {
+          if (res.confirm) {
+            this.onSaveAndExit()
+            return
+          }
+          this.goBackBySource()
+        }
+      })
+      return
+    }
+    this.goBackBySource()
   },
 
   // 提示用户使用右上角分享
@@ -945,7 +1038,10 @@ Page({
 
   // 点击上一站 / 下一站
   onMapPreviewStep(e) {
-    const index = parseInt(e.currentTarget.dataset.index, 10)
+    const index = parseInt(
+      (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
+      10
+    )
     if (Number.isNaN(index) || index < 0) return
     this.onChangeMapPreview({ detail: { index } })
   },
@@ -1005,40 +1101,54 @@ Page({
 
   // 取消编辑：恢复到进入编辑前的状态
   onCancelEdit() {
-    const restored = syncDaySections(this.data.originalDaySections || [], this.data.cityInfo)
-    this.setData({
-      isEditing: false,
-      dragging: false,
-      dragDay: -1,
-      dragIndex: -1,
-      dragTouchStartY: 0,
-      swipeDay: -1,
-      swipeIndex: -1,
-      swipeStartOffset: 0,
-      daySections: restored,
-      tabs: buildTabs(restored.length),
-      summaryText: buildSummaryText(restored),
-      hasRoutePlaces: flattenDaySections(restored).length > 0,
-      sheetScrollTarget: '',
-      currentTab: 0,
-      placePickerVisible: false,
-      placePickerDayIndex: -1,
-      placeIntroVisible: false,
-      navMapSheetVisible: false
+    const changed = this.hasEditingChanges()
+    if (!changed) {
+      this.discardRouteEdits()
+      return
+    }
+    wx.showModal({
+      title: '是否保存当前修改？',
+      content: '保存后会更新当前路线，不保存将丢弃本次编辑。',
+      confirmText: '保存',
+      cancelText: '不保存',
+      success: (res) => {
+        if (res.confirm) {
+          this.onSave()
+          return
+        }
+        this.discardRouteEdits()
+      }
     })
-    this.updateMapData(restored, this.data.cityInfo, this.data.currentMapDay)
-    this.refreshMapPreview(restored, this.data.mapPreviewIndex)
   },
 
   // 保存编辑结果，并退出编辑态
-  onSave() {
+  buildSavedRoutePayload() {
     const cleanedSections = syncDaySections(this.data.daySections, this.data.cityInfo)
     const savedSections = removeEmptyDaysOnSave(cleanedSections)
     const summaryText = buildSummaryText(savedSections)
     const updatedRoute = {
       ...this.buildUpdatedRoute(savedSections),
       subtitle: summaryText,
-      isDraft: false
+      isDraft: this.data.fromPreview
+    }
+    return {
+      savedSections,
+      summaryText,
+      updatedRoute
+    }
+  },
+
+  // 保存当前编辑，但停留在当前页面。
+  onSave() {
+    const { savedSections, summaryText, updatedRoute } = this.buildSavedRoutePayload()
+
+    if (this.data.fromPreview) {
+      this.setData({
+        route: updatedRoute,
+        daySections: savedSections
+      })
+      this.handoffPreviewRoute(updatedRoute, '保存成功')
+      return
     }
 
     this.saveRouteToStorage(updatedRoute, '保存成功')
@@ -1068,6 +1178,49 @@ Page({
     })
     this.updateMapData(savedSections, this.data.cityInfo, nextMapDay)
     this.refreshMapPreview(savedSections, this.data.mapPreviewIndex)
+  },
+
+  // 保存当前编辑，并直接离开当前页。
+  onSaveAndExit() {
+    const { savedSections, summaryText, updatedRoute } = this.buildSavedRoutePayload()
+
+    if (this.data.fromPreview) {
+      this.setData({
+        route: updatedRoute,
+        daySections: savedSections
+      })
+      this.handoffPreviewRoute(updatedRoute, '保存成功')
+      return
+    }
+
+    const nextMapDay = this.data.currentMapDay >= savedSections.length ? -1 : this.data.currentMapDay
+    this.saveRouteToStorage(updatedRoute, '保存成功')
+    this.setData({
+      route: updatedRoute,
+      isEditing: false,
+      dragging: false,
+      daySections: savedSections,
+      summaryText,
+      tabs: buildTabs(savedSections.length),
+      sheetScrollTarget: '',
+      currentTab: Math.min(this.data.currentTab, savedSections.length),
+      originalDaySections: JSON.parse(JSON.stringify(stripEditState(savedSections))),
+      dragDay: -1,
+      dragIndex: -1,
+      dragTouchStartY: 0,
+      dragOffsetY: 0,
+      placePickerVisible: false,
+      placePickerDayIndex: -1,
+      isNewRouteDraft: false,
+      hasRoutePlaces: flattenDaySections(savedSections).length > 0,
+      placeIntroVisible: false,
+      navMapSheetVisible: false
+    })
+    this.updateMapData(savedSections, this.data.cityInfo, nextMapDay)
+    this.refreshMapPreview(savedSections, this.data.mapPreviewIndex)
+    setTimeout(() => {
+      this.goBackBySource()
+    }, 300)
   },
 
   // 打开交通方式弹窗：既支持列表里的地点，也支持地图预览卡片里的地点
@@ -1173,6 +1326,22 @@ Page({
         lng: item.lng,
         name: item.name,
         address: item.address || `${this.data.cityText || ''}${item.name || ''}`
+      }
+    })
+  },
+
+  // 点击地点简介里的地址：
+  // 和右侧导航图标共用同一个地图选择弹窗。
+  onOpenPlaceIntroNavigation() {
+    const target = this.data.placeIntroData
+    if (!target) return
+    this.setData({
+      navMapSheetVisible: true,
+      navMapTarget: {
+        lat: target.lat,
+        lng: target.lng,
+        name: target.name,
+        address: target.address || `${this.data.cityText || ''}${target.name || ''}`
       }
     })
   },

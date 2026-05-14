@@ -288,7 +288,10 @@ page {
 }
 
 .import-placeholder {
+  /* 占位文字和真实输入文字保持同一套字号、行高，避免视觉上“漂高”。 */
   color: #A0A4AE;
+  font-size: 32rpx;
+  line-height: 48rpx;
 }
 
 .import-hint-list {

@@ -50,7 +50,7 @@ yummy-log/
 │   ├── shop-detail/         # 店铺详情页
 │   ├── spot-detail/         # 景点详情页
 │   ├── route/               # 路线规划页
-│   ├── add-shop/            # 添加店铺页
+│   ├── route-entry/         # 中间路线入口页
 │   ├── checkin/             # 打卡采集页
 │   ├── collection/          # 采集记录页
 │   ├── my-favorites/       # 我的收藏页
@@ -241,16 +241,16 @@ App({
 - 店铺跳转
 - 路线规划入口
 
-#### 添加店铺页 (pages/add-shop/)
+#### 路线入口页 (pages/route-entry/)
 
 | 文件 | 职责 |
 |------|------|
-| `add-shop.js` | 用户添加新店铺 |
+| `route-entry.js` | 解析路线与创建路线入口 |
 
 **核心功能：**
-- 店铺基本信息录入
-- 坐标拾取
-- 图片上传
+- 粘贴正文或链接解析路线
+- 跳转路线规划页
+- 创建空白路线
 
 #### 其他页面
 
@@ -274,7 +274,7 @@ App({
 |-----|------|------|
 | 探索 | `/pages/index/index` | 地图图标 |
 | 想去 | `/pages/wantgo/wantgo` | 收藏图标 |
-| 添加 | `/pages/add-shop/add-shop` | 十字图标 |
+| 中间入口 | `/pages/route-entry/route-entry` | 十字图标 |
 | 攻略 | `/pages/discover/discover` | 书本图标 |
 | 我的 | `/pages/my/my` | 用户图标 |
 
@@ -553,7 +553,7 @@ checkinUtil.saveCheckin({
 ```
 pages/index/index      → 探索
 pages/wantgo/wantgo    → 想去
-pages/add-shop/add-shop → 添加
+pages/route-entry/route-entry → 中间入口
 pages/discover/discover → 攻略
 pages/my/my            → 我的
 ```

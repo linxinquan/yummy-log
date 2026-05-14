@@ -931,7 +931,7 @@
 .preview-tabs-panel {
   display: flex;
   flex-direction: column;
-  gap: 32rpx;
+  gap: 24rpx;
   width: 100%;
 }
 
@@ -1088,7 +1088,7 @@
 .preview-btn {
   flex: 1;
   min-width: 0;
-  height: 76rpx;
+  height: 88rpx;
   border-radius: 16rpx;
   background: #F7F8FA;
   display: flex;

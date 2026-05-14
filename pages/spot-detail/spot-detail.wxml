@@ -135,4 +135,37 @@
       </view>
     </view>
   </view>
+
+  <!-- 请选择导航地图：探索详情地址和位置卡片统一走这里 -->
+  <view class="sheet-mask {{navMapSheetVisible ? 'show' : ''}}" bindtap="onCloseNavMapSheet">
+    <view class="sheet-panel route-action-sheet" catchtap="preventBubble">
+      <view class="sheet-modal-header">
+        <text class="sheet-modal-title">请选择导航地图</text>
+        <i class="mgc_close_line sheet-modal-close" bindtap="onCloseNavMapSheet"></i>
+      </view>
+      <view class="route-sheet-option-list">
+        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="tencent">
+          <view class="route-sheet-option-main">
+            <i class="mgc_navigation_fill"></i>
+            <text>腾讯地图（推荐）</text>
+          </view>
+          <i class="mgc_right_small_line route-sheet-option-arrow"></i>
+        </view>
+        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="gaode">
+          <view class="route-sheet-option-main">
+            <i class="mgc_navigation_fill"></i>
+            <text>高德地图</text>
+          </view>
+          <i class="mgc_right_small_line route-sheet-option-arrow"></i>
+        </view>
+        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="copy">
+          <view class="route-sheet-option-main">
+            <i class="mgc_copy_2_line"></i>
+            <text>复制地址</text>
+          </view>
+          <i class="mgc_right_small_line route-sheet-option-arrow"></i>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>

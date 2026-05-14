@@ -1,5 +1,6 @@
 // utils/checkinUtil.js - 打卡采集数据层
 // 腾讯地图逆地理接口（直接用 wx.request，无需 SDK 文件）
+const util = require('./util')
 
 const QQMAP_KEY = 'SWGBZ-7P2CB-LK2UO-JZYYV-6BZYQ-KEBUG'
 
@@ -120,6 +121,11 @@ function getCheckins() {
  */
 function saveCheckin(data) {
   const checkins = getCheckins()
+  const matchedPlace = util.findKnownPlace({
+    name: data.spotName,
+    address: data.address,
+    type: data.type
+  }, data.type)
   const checkin = {
     id: 'CK' + Date.now().toString(36).toUpperCase(),
     type: data.type || 'food',       // 'food' 美食 | 'spot' 景点
@@ -130,10 +136,14 @@ function saveCheckin(data) {
     longitude: data.longitude,
     description: data.description || generateDescription(data.spotName, data.address, data.type),
     date: new Date().toISOString(),
-    city: extractCity(data.address)
+    city: extractCity(data.address),
+    // 如果这条采集能匹配到系统里的真实地点，就顺手记下它的 id，
+    // 后面“足迹 / 已去过 / 详情跳转”都能更稳定地复用。
+    relatedPlaceId: matchedPlace ? String(matchedPlace.id) : ''
   }
   checkins.unshift(checkin)
   wx.setStorageSync('checkin_records', checkins)
+  util.syncLegacyCheckedInFromRecords()
   return checkin
 }
 
@@ -144,6 +154,7 @@ function deleteCheckin(id) {
   const checkins = getCheckins()
   const filtered = checkins.filter(c => c.id !== id)
   wx.setStorageSync('checkin_records', filtered)
+  util.syncLegacyCheckedInFromRecords()
   return filtered
 }
 

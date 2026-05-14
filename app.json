@@ -9,7 +9,7 @@
     "pages/shop-detail/shop-detail",
     "pages/spot-detail/spot-detail",
     "pages/route/route",
-    "pages/add-shop/add-shop",
+    "pages/route-entry/route-entry",
     "pages/link-import/link-import",
     "pages/webview/webview",
     "pages/checkin/checkin",
@@ -42,7 +42,7 @@
         "text": "想去"
       },
       {
-        "pagePath": "pages/add-shop/add-shop",
+        "pagePath": "pages/route-entry/route-entry",
         "text": ""
       },
       {

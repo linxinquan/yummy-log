@@ -57,7 +57,10 @@
 }
 
 .link-placeholder {
+  /* 占位文字补齐字号和行高，和输入内容保持同样的视觉基线。 */
   color: #A0A4AE;
+  font-size: 28rpx;
+  line-height: 44rpx;
 }
 
 .link-hint-list {

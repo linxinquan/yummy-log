@@ -17,7 +17,7 @@ Component({
         selectedIconPath: "/images/tabbar-spots-active.png"
       },
       {
-        pagePath: "/pages/add-shop/add-shop",
+        pagePath: "/pages/route-entry/route-entry",
         text: "",
         iconPath: "/images/tabbar-add.png",
         selectedIconPath: "/images/tabbar-add.png"
@@ -63,13 +63,14 @@ Component({
       const data = e.currentTarget.dataset
       const url = data.path
       if (url) {
-        const addPagePath = '/pages/add-shop/add-shop'
+        // 中间按钮是“路线入口页”，需要单独记住上一个正常 Tab。
+        const centerEntryPath = '/pages/route-entry/route-entry'
         const pages = getCurrentPages()
         const currentPage = pages[pages.length - 1]
         const currentRoute = currentPage ? `/${currentPage.route}` : ''
 
-        if (url === addPagePath) {
-          const fallbackPath = currentRoute && currentRoute !== addPagePath
+        if (url === centerEntryPath) {
+          const fallbackPath = currentRoute && currentRoute !== centerEntryPath
             ? currentRoute
             : (wx.getStorageSync('tabbarLastNormalPath') || '/pages/index/index')
           wx.setStorageSync('tabbarLastNormalPath', fallbackPath)

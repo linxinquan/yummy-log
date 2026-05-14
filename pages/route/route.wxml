@@ -322,79 +322,25 @@
           <i class="mgc_fullscreen_line"></i>
         </view>
       </view>
-        <view class="map-card route-map-preview-card" wx:if="{{mapPreviewShop}}">
-          <view class="preview-tabs-panel">
-            <scroll-view class="preview-tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
-              <view class="preview-tab-row">
-                <view
-                  wx:for="{{previewTabs}}"
-                  wx:key="index"
-                  class="preview-tab-item {{((currentMapDay < 0 && item.index === 0) || currentMapDay === item.index) ? 'active' : ''}}"
-                  bindtap="onSelectMapPreviewDay"
-                  data-index="{{item.index}}"
-                >
-                  {{item.label}}
-                </view>
-              </view>
-            </scroll-view>
-            <view class="preview-tab-divider"></view>
-          </view>
-
-          <view class="preview-card-stage">
-            <view class="preview-detail-card">
-              <view class="preview-side-inner">
-                <view class="preview-card-head">
-                  <image class="preview-cover-image" src="{{mapPreviewShop.image || mapPreviewShop.coverImage}}" mode="aspectFill"></image>
-                  <view class="preview-head-main">
-                    <text class="preview-name">{{mapPreviewShop.name}}</text>
-                    <view class="preview-meta-row" wx:if="{{previewDisplayMeta.length > 0}}">
-                      <view
-                        wx:for="{{previewDisplayMeta}}"
-                        wx:key="index"
-                        wx:for-item="chip"
-                        class="preview-chip {{chip.type === 'score' ? 'score' : ''}}"
-                      >
-                        {{chip.text}}
-                      </view>
-                    </view>
-                  </view>
-                </view>
-
-                <view class="preview-desc-row">
-                  <text class="preview-desc-left">{{previewDescriptionText}}</text>
-                  <text class="preview-desc-right">{{previewFeeText}}</text>
-                </view>
-              </view>
-
-              <view class="preview-btn-row">
-                <view
-                  class="preview-btn {{previewDisablePrev ? 'disabled' : ''}}"
-                  bindtap="onMapPreviewStep"
-                  data-index="{{previewPrevIndex}}"
-                >
-                  <text>上一站</text>
-                </view>
-                <view
-                  class="preview-btn {{previewDisableNext ? 'disabled' : ''}}"
-                  bindtap="onMapPreviewStep"
-                  data-index="{{previewNextIndex}}"
-                >
-                  <text>下一站</text>
-                </view>
-              </view>
-            </view>
-          </view>
-
-          <view class="preview-footer">
-            <view class="preview-footer-side">
-              <text>{{previewStationText}}</text>
-            </view>
-            <travel-meta-line variant="compact" travel-meta="{{mapPreviewShop.travelMeta}}" bindtapmeta="onOpenMapTransportSheet"></travel-meta-line>
-            <view class="preview-footer-side right">
-              <text>{{previewCountText}}</text>
-            </view>
-          </view>
-        </view>
+        <route-map-preview-card
+          class="map-card"
+          wx:if="{{mapPreviewShop}}"
+          current-item="{{mapPreviewShop}}"
+          preview-tabs="{{previewTabs}}"
+          current-map-day="{{currentMapDay}}"
+          preview-display-meta="{{previewDisplayMeta}}"
+          preview-description-text="{{previewDescriptionText}}"
+          preview-fee-text="{{previewFeeText}}"
+          preview-station-text="{{previewStationText}}"
+          preview-count-text="{{previewCountText}}"
+          preview-prev-index="{{previewPrevIndex}}"
+          preview-next-index="{{previewNextIndex}}"
+          preview-disable-prev="{{previewDisablePrev}}"
+          preview-disable-next="{{previewDisableNext}}"
+          bindselectday="onSelectMapPreviewDay"
+          bindstep="onMapPreviewStep"
+          bindtapmeta="onOpenMapTransportSheet"
+        ></route-map-preview-card>
       </view>
     </block>
 
@@ -500,7 +446,7 @@
           </view>
           <text class="place-intro-title">{{placeIntroData.name}}</text>
           <text class="place-intro-open-time">{{placeIntroData.openTimeText}}</text>
-          <view class="place-intro-address-box">
+          <view class="place-intro-address-box" bindtap="onOpenPlaceIntroNavigation">
             <view class="place-intro-address-content">
               <text class="place-intro-address-label">地址</text>
               <text class="place-intro-address-text">{{placeIntroData.address}}</text>

@@ -279,6 +279,24 @@ function getEmptyStateMeta(tab) {
   }
 }
 
+// 统一打开地点详情：
+// 足迹里如果是“系统未收录但用户采集过的地点”，就把完整对象直接带去详情页。
+function openPlaceDetail(item) {
+  if (!item) return
+  if (item.type === 'spot') {
+    if (item.detailSource === 'record') {
+      const spotStr = encodeURIComponent(JSON.stringify(item))
+      wx.navigateTo({ url: `/pages/spot-detail/spot-detail?spotData=${spotStr}` })
+      return
+    }
+    wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${item.id}` })
+    return
+  }
+
+  const shopStr = encodeURIComponent(JSON.stringify(item))
+  wx.navigateTo({ url: `/pages/shop-detail/shop-detail?shopData=${shopStr}&id=${item.id}` })
+}
+
 Page({
   data: {
     // 当前Tab
@@ -429,16 +447,8 @@ Page({
       const routeCards = buildRouteCards(visibleRoutes)
       this.setData({ items: routeCards, empty: routeCards.length === 0 })
     } else {
-      // 足迹
-      const ids = util.loadData('userCheckedIn', [])
-      const foods = shopData.foods || []
-      const shops = shopData.shops || []
-      const userShops = util.loadData('userAddedShops', [])
-      const spots = util.getSpotData()
-      const allItems = [...shops, ...foods, ...userShops, ...spots]
-      
-      // 统一用字符串比较
-      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(ids.map(id => allItems.find(s => String(s.id) === String(id))).filter(Boolean))))
+      // 足迹统一以 checkin_records 为准，再在这里转成卡片展示数据。
+      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(util.getFootprintItems())))
       this.setData({ items, empty: items.length === 0 })
     }
   },
@@ -561,16 +571,7 @@ Page({
     }
 
     const item = e.currentTarget.dataset.item
-    
-    // 判断是否为景点：根据 category 是否包含'景点'、'公园'等，或者是否存在特定的字段
-    const isSpot = isSpotItem(item)
-    
-    if (isSpot) {
-      wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${item.id}` })
-    } else {
-      const shopStr = encodeURIComponent(JSON.stringify(item))
-      wx.navigateTo({ url: `/pages/shop-detail/shop-detail?shopData=${shopStr}&id=${item.id}` })
-    }
+    openPlaceDetail(item)
   },
 
   // 打开交通方式弹窗

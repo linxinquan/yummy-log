@@ -13,7 +13,7 @@
       <textarea
         class="link-textarea"
         value="{{guideLink}}"
-        placeholder="粘贴文本或链接"
+        placeholder="粘贴纯链接、攻略正文或分享文案"
         placeholder-class="link-placeholder"
         maxlength="-1"
         auto-height
@@ -23,8 +23,7 @@
     </view>
 
     <view class="link-hint-list">
-      <text class="link-hint">支持：公众号文章链接、小红书分享链接、纯文本内容</text>
-      <text class="link-hint">当前先提供录入入口，解析能力下一步接入</text>
+      <text class="link-hint">支持识别微信公众号、小红书笔记的文本内容或者链接</text>
     </view>
   </view>
 

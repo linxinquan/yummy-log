@@ -259,14 +259,14 @@ Page({
   loadUserData() {
     const wantFoods = util.loadData('userWantFoods', [])
     const wantSpots = util.loadData('userWantSpots', [])
-    const checkedIn = util.loadData('userCheckedIn', [])
+    const checkedIn = util.getFootprintItems()
     
     // 合并所有的想去 ID，方便在混合列表中判断
     const likedShops = [...wantFoods, ...wantSpots]
 
     this.setData({
       likedShops: likedShops,
-      visitedShops: checkedIn
+      visitedShops: checkedIn.map(item => String(item.id))
     })
     this.updateItemStatus()
   },
@@ -551,14 +551,8 @@ Page({
 
   // 点击右侧心形，加入或移出“想去”
   onToggleLike(e) {
-    // 检查登录状态
-    const userInfo = util.loadData('userInfo', null)
-    if (!userInfo) {
-      wx.showToast({
-        title: '请先登录',
-        icon: 'none',
-        duration: 1500
-      })
+    // 统一走公共登录校验，避免每个页面提示文案不一致。
+    if (!util.requireLogin()) {
       return
     }
     

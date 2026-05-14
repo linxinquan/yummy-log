@@ -690,7 +690,10 @@ Page({
 
   // 点击上一站 / 下一站
   onMapPreviewStep(e) {
-    const index = parseInt(e.currentTarget.dataset.index, 10)
+    const index = parseInt(
+      (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
+      10
+    )
     if (Number.isNaN(index) || index < 0) return
     this.onChangeMapPreview({ detail: { index } })
   },
@@ -791,6 +794,22 @@ Page({
         lng: item.lng,
         name: item.name,
         address: item.address || `${this.data.cityText || ''}${item.name || ''}`
+      }
+    })
+  },
+
+  // 点击地点简介里的地址：
+  // 继续复用现有的导航地图选择弹窗，保证交互一致。
+  onOpenPlaceIntroNavigation() {
+    const target = this.data.placeIntroData
+    if (!target) return
+    this.setData({
+      navMapSheetVisible: true,
+      navMapTarget: {
+        lat: target.lat,
+        lng: target.lng,
+        name: target.name,
+        address: target.address || `${this.data.cityText || ''}${target.name || ''}`
       }
     })
   },

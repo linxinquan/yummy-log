@@ -5,6 +5,22 @@ const util = require('../../utils/util')
 const shopData = require('../../utils/shopData')
 const spotData = require('../../utils/spotData')
 
+// 统一解析景点详情入参：
+// 既支持传统 id，也支持足迹里传进来的完整 spotData。
+function resolveSpot(options = {}) {
+  if (options.spotData) {
+    return JSON.parse(decodeURIComponent(options.spotData))
+  }
+  if (options.spot) {
+    return JSON.parse(decodeURIComponent(options.spot))
+  }
+  const id = parseInt(options.id, 10)
+  if (!Number.isNaN(id)) {
+    return spotData.spotData.find(item => item.id === id) || null
+  }
+  return null
+}
+
 Page({
   data: {
     spot: null,
@@ -16,6 +32,8 @@ Page({
     secondaryTag: '',
     wantStatText: '',
     openTimeText: '',
+    navMapSheetVisible: false,
+    navMapTarget: null
   },
 
   // 页面初始化：
@@ -31,9 +49,8 @@ Page({
       ? Math.max(sysInfo.windowWidth - menuButtonInfo.left + 8, 24)
       : 103
 
-    // 兼容没传参情况，默认给一个可展示的景点。
-    const id = parseInt(options.id) || 101 // 默认 101 是中山公园
-    const sourceSpot = spotData.spotData.find(s => s.id === id) || spotData.spotData[0]
+    // 优先读取真实入参；没有入参时，才回退到默认景点。
+    const sourceSpot = resolveSpot(options) || spotData.spotData[0]
     const spot = sourceSpot ? {
       ...sourceSpot,
       wantCount: sourceSpot.wantCount || 4232
@@ -117,6 +134,7 @@ Page({
   onCollect() {
     const { spot } = this.data
     if (!spot) return
+    if (!util.requireLogin()) return
     
     const isCollected = util.toggleCollect(spot.id, 'spot')
     
@@ -132,6 +150,7 @@ Page({
   onWant() {
     const { spot } = this.data
     if (!spot) return
+    if (!util.requireLogin()) return
     const isLiked = util.toggleLike(spot.id, 'spot')
     this.setData({ isLiked })
     wx.showToast({
@@ -141,20 +160,66 @@ Page({
     })
   },
 
-  // 打开系统地图导航到当前景点
+  // 地址或位置卡片点击后，先打开“请选择导航地图”弹窗。
   onNavigate() {
     const { spot } = this.data
-    if (spot.lat && spot.lng) {
-      wx.openLocation({
-        latitude: spot.lat,
-        longitude: spot.lng,
+    if (!spot) return
+    this.setData({
+      navMapSheetVisible: true,
+      navMapTarget: {
+        lat: spot.lat || spot.latitude || 0,
+        lng: spot.lng || spot.longitude || 0,
         name: spot.name,
-        address: spot.address,
-        scale: 16
+        address: spot.address || spot.name
+      }
+    })
+  },
+
+  // 关闭导航地图选择弹窗。
+  onCloseNavMapSheet() {
+    this.setData({
+      navMapSheetVisible: false,
+      navMapTarget: null
+    })
+  },
+
+  // 在导航弹窗里选择地图应用或复制地址。
+  onSelectNavMapOption(e) {
+    const type = e.currentTarget.dataset.type
+    const target = this.data.navMapTarget
+    if (!type || !target) return
+
+    // 复制地址不依赖坐标，所以单独放行。
+    if (type === 'copy') {
+      wx.setClipboardData({
+        data: target.address || target.name,
+        success: () => {
+          wx.showToast({ title: '地址已复制', icon: 'success' })
+          this.onCloseNavMapSheet()
+        }
       })
-    } else {
-      wx.showToast({ title: '暂无坐标', icon: 'none' })
+      return
     }
+
+    if (!target.lat || !target.lng) {
+      wx.showToast({ title: '暂无坐标', icon: 'none' })
+      return
+    }
+
+    if (type === 'tencent') {
+      util.openWechatNavigation(target)
+      this.onCloseNavMapSheet()
+      return
+    }
+
+    if (type === 'gaode') {
+      util.openGaodeNavigation(target.lat, target.lng, target.name)
+      this.onCloseNavMapSheet()
+    }
+  },
+
+  // 阻止弹窗面板点击冒泡到遮罩层。
+  preventBubble() {
   },
 
   // 点击附近美食卡片，进入对应的美食详情页

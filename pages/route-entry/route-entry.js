@@ -1,14 +1,6 @@
 // 一周展示文案：用于首页问候下面那一排日期标签。
 const WEEKDAY_LABELS = ['一', '二', '三', '四', '五', '六', '日']
-// 暂存待解析链接的本地缓存键。
-const PENDING_GUIDE_LINKS_KEY = 'pendingGuideLinks'
-
-// 根据链接内容简单判断它来自哪里。
-function inferLinkType(url = '') {
-  if (/mp\.weixin\.qq\.com/i.test(url)) return '公众号'
-  if (/xiaohongshu\.com|xhslink\.com/i.test(url)) return '小红书'
-  return '文本'
-}
+const { parseRouteTextToIds, resolveRouteImportText } = require('../../utils/route-import')
 
 // 根据当前时间返回问候语。
 function getGreetingText(date = new Date()) {
@@ -39,7 +31,8 @@ Page({
     greetingText: '下午好',
     weekdayItems: [],
     importSheetVisible: false,
-    guideLink: ''
+    guideLink: '',
+    parsingRoute: false
   },
 
   // 页面初始化：计算顶部安全区、问候语和日期条。
@@ -110,30 +103,49 @@ Page({
     })
   },
 
-  // 确认导入链接：先存到本地待处理列表里
-  onConfirmLink() {
+  // 确认导入内容：
+  // 这里会直接解析地点，并跳去路线规划页。
+  async onConfirmLink() {
     const guideLink = (this.data.guideLink || '').trim()
     if (!guideLink) {
-      wx.showToast({ title: '请先粘贴链接', icon: 'none' })
+      wx.showToast({ title: '请先粘贴链接或正文', icon: 'none' })
       return
     }
 
-    const links = wx.getStorageSync(PENDING_GUIDE_LINKS_KEY) || []
-    links.unshift({
-      id: `guide-link-${Date.now()}`,
-      url: guideLink,
-      content: guideLink,
-      type: inferLinkType(guideLink),
-      createdAt: Date.now(),
-      status: 'pending'
-    })
-    wx.setStorageSync(PENDING_GUIDE_LINKS_KEY, links)
+    if (this.data.parsingRoute) return
+    this.setData({ parsingRoute: true })
+    wx.showLoading({ title: '解析中...' })
+    try {
+      const resolvedInput = await resolveRouteImportText(guideLink)
+      if (!resolvedInput.success || !resolvedInput.text) {
+        wx.showToast({ title: resolvedInput.message || '解析失败', icon: 'none' })
+        return
+      }
 
-    this.setData({
-      guideLink: '',
-      importSheetVisible: false
-    })
-    wx.showToast({ title: '内容已添加', icon: 'success' })
+      const parseResult = parseRouteTextToIds(resolvedInput.text)
+      if (!parseResult.totalCount) {
+        wx.showToast({ title: '暂未识别到可规划地点', icon: 'none' })
+        return
+      }
+
+      this.setData({
+        guideLink: '',
+        importSheetVisible: false
+      })
+
+      wx.showToast({
+        title: `已识别 ${parseResult.totalCount} 个地点`,
+        icon: 'success'
+      })
+      setTimeout(() => {
+        wx.navigateTo({
+          url: `/pages/route/route?type=plan&ids=${parseResult.routeIds.join(',')}&dayCount=${parseResult.dayCount}`
+        })
+      }, 300)
+    } finally {
+      wx.hideLoading()
+      this.setData({ parsingRoute: false })
+    }
   },
 
   // 点击“创建路线”后进入基础信息页

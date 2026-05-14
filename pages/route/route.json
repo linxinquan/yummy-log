@@ -2,6 +2,7 @@
   "navigationStyle": "custom",
   "usingComponents": {
     "travel-meta-line": "/components/travel-meta-line/index",
-    "transport-info-sheet": "/components/transport-info-sheet/index"
+    "transport-info-sheet": "/components/transport-info-sheet/index",
+    "route-map-preview-card": "/components/route-map-preview-card/index"
   }
 }

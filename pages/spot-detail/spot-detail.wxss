@@ -455,3 +455,107 @@
   flex-wrap: wrap;
   gap: 16rpx;
 }
+
+/* 地址导航底部弹窗：探索详情地址和位置卡片都复用这一套 */
+.sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.3s;
+  z-index: 1001;
+}
+
+.sheet-mask.show {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.sheet-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+  z-index: 1002;
+}
+
+.sheet-mask.show .sheet-panel {
+  transform: translateY(0);
+}
+
+.sheet-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 128rpx;
+  padding: 0 48rpx;
+  box-sizing: border-box;
+}
+
+.sheet-modal-title {
+  color: #242529;
+  font-size: 40rpx;
+  font-weight: 500;
+  line-height: 40rpx;
+}
+
+.sheet-modal-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #242529;
+  font-size: 48rpx;
+}
+
+.route-action-sheet {
+  z-index: 1002;
+}
+
+.route-sheet-option-list {
+  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.route-sheet-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 104rpx;
+  padding: 0 32rpx;
+  border-radius: 24rpx;
+  border: 2rpx solid #E5E7EB;
+  background: #FFFFFF;
+}
+
+.route-sheet-option + .route-sheet-option {
+  margin-top: 24rpx;
+}
+
+.route-sheet-option-main {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  color: #242529;
+}
+
+.route-sheet-option-main i {
+  font-size: 40rpx;
+  color: #242529;
+}
+
+.route-sheet-option-main text {
+  font-size: 32rpx;
+  line-height: 32rpx;
+  color: #242529;
+}
+
+.route-sheet-option-arrow {
+  font-size: 36rpx;
+  color: #C7CAD1;
+}

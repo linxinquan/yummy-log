@@ -26,7 +26,7 @@
 │   ├── route/           # 路线规划
 │   ├── discover/        # 发现页（攻略导入）
 │   ├── my/              # 我的页面
-│   └── add-shop/        # 添加店铺
+│   └── route-entry/     # 中间路线入口
 ├── components/          # 自定义组件
 ├── utils/
 │   ├── shopData.js      # 店铺数据

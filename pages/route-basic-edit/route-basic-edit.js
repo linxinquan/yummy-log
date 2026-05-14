@@ -224,6 +224,7 @@ Page({
   data: {
     route: null,
     isNewRoute: false,
+    isTempPreview: false,
     coverImage: '',
     title: '',
     city: '',
@@ -266,6 +267,7 @@ Page({
     this.setData({
       route,
       isNewRoute,
+      isTempPreview: options.temp === '1',
       coverImage: resolveRouteCoverImage(route, daySections),
       title: route.title || '',
       city: route.city || route.cityText || '',
@@ -468,8 +470,16 @@ Page({
       coverImage: this.data.coverImage || baseRoute.coverImage || baseRoute.image || daySummaries[0]?.image || DEFAULT_COVERS[0],
       transportPreferences: { ...transportPreferences },
       transportPreferenceText: buildTransportPreferenceSummary(transportPreferences),
-      isDraft: false,
+      isDraft: this.data.isTempPreview,
       updatedAt: Date.now()
+    }
+
+    if (this.data.isTempPreview) {
+      const eventChannel = this.getOpenerEventChannel && this.getOpenerEventChannel()
+      eventChannel && eventChannel.emit('routeBasicSaved', updatedRoute)
+      wx.showToast({ title: '已更新基础信息', icon: 'success' })
+      setTimeout(() => wx.navigateBack({ delta: 1 }), 300)
+      return
     }
 
     const savedRoutes = util.loadData('savedRoutes', [])

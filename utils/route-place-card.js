@@ -60,7 +60,10 @@ function buildPlaceIntroData(item = {}, cityText = '', defaultImage = '') {
     openTimeText: `营业时间：${item.openHours || item.hours || '全天'} · ${feeText}`,
     address: item.address || `${cityText || ''}${item.name || ''}`,
     desc: item.desc || '暂未补充简介',
-    type: item.type || 'spot'
+    type: item.type || 'spot',
+    // 地点简介里的地址点击后也要能直接调起导航弹窗，所以这里顺手把坐标带上。
+    lat: item.lat || item.latitude || 0,
+    lng: item.lng || item.longitude || 0
   }
 }
 

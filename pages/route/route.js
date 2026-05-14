@@ -321,20 +321,21 @@ function getLikeType(item, routeType) {
   return item.type === 'spot' ? 'spot' : 'food'
 }
 
-// 把当前预览路线先暂存到 savedRoutes，方便后续进入编辑或保存。
-function savePreviewRouteData(data) {
-  const { routeDaySections, summaryText, cityText, previewRouteId } = data
+// 先把当前预览路线整理成统一对象：
+// 这里只负责组装数据，不直接写入 savedRoutes。
+function buildPreviewRouteData(data, options = {}) {
+  const { routeDaySections, summaryText, cityText, previewRouteId, routeTitle } = data
   if (!routeDaySections || !routeDaySections.length) return null
 
-  const routeId = previewRouteId || `ai-${Date.now()}`
+  const routeId = options.routeId || previewRouteId || `ai-${Date.now()}`
   const timestamp = Date.now()
   const savedRoutes = util.loadData('savedRoutes', [])
   const existingRoute = savedRoutes.find(item => String(item.id) === String(routeId))
   const { daySummaries, dayDetails } = buildLegacyRouteData(routeDaySections)
-  const savedRoute = {
+  return {
     id: routeId,
-    title: buildPreviewTitle(cityText, routeDaySections.length, routeDaySections),
-    subtitle: summaryText,
+    title: routeTitle || buildPreviewTitle(cityText, routeDaySections.length, routeDaySections),
+    subtitle: summaryText || buildSummaryText(routeDaySections),
     image: resolveRouteCoverImage(routeDaySections, daySummaries[0]?.image),
     coverImage: resolveRouteCoverImage(routeDaySections, daySummaries[0]?.image),
     author: 'AI规划',
@@ -344,10 +345,17 @@ function savePreviewRouteData(data) {
     daySummaries,
     dayDetails,
     createdAt: existingRoute && existingRoute.createdAt ? existingRoute.createdAt : timestamp,
-    updatedAt: timestamp
+    updatedAt: timestamp,
+    isDraft: Boolean(options.isDraft)
   }
+}
 
-  const index = savedRoutes.findIndex(item => String(item.id) === String(routeId))
+// 只有用户明确点“保存”时，才真正写入 savedRoutes。
+function savePreviewRouteData(data, options = {}) {
+  const savedRoute = buildPreviewRouteData(data, options)
+  if (!savedRoute) return null
+  const savedRoutes = util.loadData('savedRoutes', [])
+  const index = savedRoutes.findIndex(item => String(item.id) === String(savedRoute.id))
   if (index >= 0) {
     savedRoutes[index] = savedRoute
   } else {
@@ -355,6 +363,79 @@ function savePreviewRouteData(data) {
   }
   wx.setStorageSync('savedRoutes', savedRoutes)
   return savedRoute
+}
+
+// 把临时路线重新应用回当前预览页：
+// 这样从“基础信息”页回来后，不需要先落库也能立刻看到修改结果。
+function buildPreviewStateFromRoute(route = {}, currentStart = null) {
+  const citySource = route.city || route.cityText || route.title || ''
+  const cityInfo = getCityInfo(citySource)
+  const routeDaySections = (route.daySections || []).map((day, dayIndex) => ({
+    ...day,
+    id: day.id || `preview-day-${dayIndex}`,
+    title: day.title || buildDayLabel(dayIndex + 1),
+    countText: `${(day.items || []).length} 个地点`,
+    items: (day.items || []).map((item, itemIndex) => {
+      const lat = item.lat || item.latitude
+      const lng = item.lng || item.longitude
+      const decorated = decorateRouteCardItem({
+        ...item,
+        coverImage: item.coverImage || getCoverImage(item),
+        image: item.image || item.coverImage || getCoverImage(item),
+        tagText: item.tagText || getItemTagText(item),
+        distanceStr: item.distanceStr || util.formatDistance(item.distanceFromPrev || 0),
+        timeStr: item.timeStr || estimateRouteDuration(item.distanceFromPrev || 0, item.travelMode)
+      })
+      return {
+        ...decorated,
+        lat,
+        lng,
+        latitude: lat,
+        longitude: lng,
+        dayIndex,
+        itemIndex
+      }
+    })
+  }))
+  const routeShops = routeDaySections.reduce((result, day) => result.concat(day.items || []), [])
+  const totalDistanceValue = routeShops.reduce((sum, item) => sum + (item.distanceFromPrev || 0), 0)
+  const totalMinutes = routeShops.reduce((sum, item) => {
+    const modeKey = (item.travelMeta && item.travelMeta.mode) || item.travelMode
+    const modeConfig = MODE_CONFIG[modeKey] || MODE_CONFIG.ride
+    return sum + ((Math.max(0, item.distanceFromPrev || 0) / 1000) * modeConfig.minutesPerKm)
+  }, 0)
+  const previewViewData = routeShops.length
+    ? buildMapPreviewViewData(routeDaySections, -1, 0, routeShops[0], routeShops.length)
+    : {}
+
+  return {
+    routeShops,
+    routeDaySections,
+    tabs: routeDaySections.length ? buildTabs(routeDaySections.length) : [],
+    currentTab: 0,
+    currentMapDay: -1,
+    sheetScrollTarget: '',
+    summaryText: route.subtitle || buildSummaryText(routeDaySections),
+    cityText: cityInfo.name,
+    routeTitle: route.title || buildPreviewTitle(cityInfo.name, routeDaySections.length, routeDaySections),
+    previewRouteId: route.id ? String(route.id) : '',
+    hasUnsavedPreview: true,
+    preferredDayCount: Math.max(routeDaySections.length || route.dayCount || 1, 1),
+    totalDistance: util.formatDistance(totalDistanceValue),
+    totalTime: formatDurationShort(totalMinutes),
+    mapPreviewShop: routeShops[0] || null,
+    mapPreviewIndex: 0,
+    mapCenter: routeShops.length
+      ? {
+          lat: routeShops[0].lat || routeShops[0].latitude,
+          lng: routeShops[0].lng || routeShops[0].longitude
+        }
+      : {
+          lat: (currentStart && currentStart.lat) || cityInfo.lat,
+          lng: (currentStart && currentStart.lng) || cityInfo.lng
+        },
+    ...previewViewData
+  }
 }
 
 Page({
@@ -387,6 +468,7 @@ Page({
     summaryText: '',
     cityText: '深圳市',
     previewRouteId: '',
+    hasUnsavedPreview: false,
     reorderSheetVisible: false,
     pendingReorderMode: 'smart',
     routeShopsBackup: [],
@@ -479,6 +561,7 @@ Page({
 
   // 回到页面时重新加载一次，保证基础信息页改动后这里同步更新。
   onShow() {
+    if (this.data.hasUnsavedPreview) return
     this.loadRoute()
   },
 
@@ -588,7 +671,10 @@ Page({
   },
 
   // 把当前路线转成“按天展示”的预览结构，并更新标题、摘要、预览卡片。
-  refreshPreviewRoute(routeShops) {
+  refreshPreviewRoute(routeShops, options = {}) {
+    const shouldMarkDirty = options.markDirty !== undefined
+      ? Boolean(options.markDirty)
+      : Boolean(this.data.hasUnsavedPreview || !this.data.previewRouteId)
     const citySource = [
       this.data.currentStart && this.data.currentStart.name,
       ...(routeShops || []).map(item => item.city || item.address || item.name)
@@ -605,15 +691,10 @@ Page({
       summaryText: routeDaySections.length ? buildSummaryText(routeDaySections) : '',
       cityText: cityInfo.name,
       routeTitle: buildPreviewTitle(cityInfo.name, routeDaySections.length, routeDaySections),
+      // 只有真正发生了新的路线改动时，才标记为“未保存”。
+      hasUnsavedPreview: routeDaySections.length > 0 ? shouldMarkDirty : false,
       mapPreviewShop: routeShops && routeShops.length ? routeShops[0] : null,
       mapPreviewIndex: 0
-    }, () => {
-      if (!this.data.isEditing) {
-        const savedRoute = savePreviewRouteData(this.data)
-        if (savedRoute) {
-          this.setData({ previewRouteId: savedRoute.id })
-        }
-      }
     })
   },
 
@@ -906,7 +987,7 @@ Page({
       nextData.currentNavShop = nextRouteShops[transportTargetIndex]
     }
     this.setData(nextData)
-    this.refreshPreviewRoute(nextRouteShops)
+    this.refreshPreviewRoute(nextRouteShops, { markDirty: true })
     if (this.data.viewMode === 'map' || isNavigating) {
       this.focusPreviewByIndex(this.data.mapPreviewIndex)
     }
@@ -921,7 +1002,7 @@ Page({
         : this.data.allLikedShops.filter(s => s.selected)
       const routeShops = this._planAndAnnotate(shops)
       this.setData({ routeShops, isEditing: false, reorderSheetVisible: false })
-      this.refreshPreviewRoute(routeShops)
+      this.refreshPreviewRoute(routeShops, { markDirty: true })
       this.updateMap()
       wx.hideLoading()
       wx.showToast({ title: '路线已优化', icon: 'success' })
@@ -947,11 +1028,21 @@ Page({
 
   // 去基础信息页
   onEditBasicInfo() {
-    const savedRoute = savePreviewRouteData(this.data)
-    if (!savedRoute) return
-    this.setData({ previewRouteId: savedRoute.id })
+    const previewRoute = buildPreviewRouteData(this.data, { isDraft: true })
+    if (!previewRoute) return
+    this.setData({ previewRouteId: previewRoute.id, hasUnsavedPreview: true })
     wx.navigateTo({
-      url: `/pages/route-basic-edit/route-basic-edit?route=${encodeURIComponent(JSON.stringify(savedRoute))}`
+      url: `/pages/route-basic-edit/route-basic-edit?route=${encodeURIComponent(JSON.stringify(previewRoute))}&temp=1`,
+      success: (res) => {
+        res.eventChannel.on('routeBasicSaved', (updatedRoute) => {
+          if (!updatedRoute) return
+          this.setData(buildPreviewStateFromRoute(updatedRoute, this.data.currentStart))
+          this.updateMap()
+          if (updatedRoute.daySections && updatedRoute.daySections.length) {
+            this.focusPreviewByIndex(0, -1)
+          }
+        })
+      }
     })
   },
 
@@ -970,14 +1061,26 @@ Page({
   // 确认重排方式：智能重排直接优化，手动编辑跳到我的路线编辑页。
   onConfirmReorderMode() {
     if (this.data.pendingReorderMode === 'manual') {
-      const savedRoute = savePreviewRouteData(this.data)
-      if (!savedRoute) return
+      const previewRoute = buildPreviewRouteData(this.data, { isDraft: true })
+      if (!previewRoute) return
       this.setData({
         reorderSheetVisible: false,
-        previewRouteId: savedRoute.id
+        previewRouteId: previewRoute.id,
+        hasUnsavedPreview: true
       })
       wx.navigateTo({
-        url: `/pages/my-route/my-route?route=${encodeURIComponent(JSON.stringify(savedRoute))}&edit=1`
+        url: `/pages/my-route/my-route?route=${encodeURIComponent(JSON.stringify(previewRoute))}&edit=1&create=1&fromPreview=1`,
+        success: (res) => {
+          // 手动编辑保存后，把最新路线回传给当前预览页；取消则直接回到这里。
+          res.eventChannel.on('previewRouteEdited', (updatedRoute) => {
+            if (!updatedRoute) return
+            this.setData(buildPreviewStateFromRoute(updatedRoute, this.data.currentStart))
+            this.updateMap()
+            if (updatedRoute.daySections && updatedRoute.daySections.length) {
+              this.focusPreviewByIndex(0, -1)
+            }
+          })
+        }
       })
       return
     }
@@ -1261,6 +1364,22 @@ Page({
     })
   },
 
+  // 点击地点简介里的地址：
+  // 继续复用同一个“请选择导航地图”弹窗，避免两套导航逻辑不一致。
+  onOpenPlaceIntroNavigation() {
+    const target = this.data.placeIntroData
+    if (!target) return
+    this.setData({
+      navMapSheetVisible: true,
+      navMapTarget: {
+        lat: target.lat,
+        lng: target.lng,
+        name: target.name,
+        address: target.address || `${this.data.cityText || ''}${target.name || ''}`
+      }
+    })
+  },
+
   // 关闭导航地图选择弹窗。
   onCloseNavMapSheet() {
     this.setData({
@@ -1302,8 +1421,33 @@ Page({
   onSaveToMyRoute() {
     const savedRoute = savePreviewRouteData(this.data)
     if (!savedRoute) return
-    this.setData({ previewRouteId: savedRoute.id })
+    this.setData({
+      previewRouteId: savedRoute.id,
+      hasUnsavedPreview: false
+    })
     wx.showToast({ title: '已保存到路线', icon: 'success' })
+  },
+
+  // 保存当前规划路线并退出页面。
+  saveAndExit() {
+    const savedRoute = savePreviewRouteData(this.data)
+    if (!savedRoute) {
+      wx.navigateBack()
+      return
+    }
+    this.setData({
+      previewRouteId: savedRoute.id,
+      hasUnsavedPreview: false
+    })
+    wx.showToast({ title: '已保存到路线', icon: 'success' })
+    setTimeout(() => {
+      wx.navigateBack({
+        delta: 1,
+        fail: () => {
+          wx.switchTab({ url: '/pages/wantgo/wantgo' })
+        }
+      })
+    }, 300)
   },
 
   // 底部“路线”按钮：切到地图模式
@@ -1372,7 +1516,10 @@ Page({
 
   // 点击上一站 / 下一站
   onMapPreviewStep(e) {
-    const index = parseInt(e.currentTarget.dataset.index, 10)
+    const index = parseInt(
+      (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
+      10
+    )
     if (Number.isNaN(index) || index < 0) return
     this.onChangeMapPreview({ detail: { index } })
   },
@@ -1382,6 +1529,32 @@ Page({
 
   // 返回上一页
   onBack() {
-    wx.navigateBack()
+    if (!this.data.hasUnsavedPreview) {
+      wx.navigateBack({
+        delta: 1,
+        fail: () => {
+          wx.switchTab({ url: '/pages/wantgo/wantgo' })
+        }
+      })
+      return
+    }
+    wx.showModal({
+      title: '是否保存当前路线？',
+      content: '保持并退出后会加入我的路线，直接退出则不保存当前规划。',
+      confirmText: '保持并退出',
+      cancelText: '直接退出',
+      success: (res) => {
+        if (res.confirm) {
+          this.saveAndExit()
+          return
+        }
+        wx.navigateBack({
+          delta: 1,
+          fail: () => {
+            wx.switchTab({ url: '/pages/wantgo/wantgo' })
+          }
+        })
+      }
+    })
   }
 })

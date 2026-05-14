@@ -191,6 +191,7 @@ Page({
   onCollect() {
     const { spot } = this.data
     if (!spot) return
+    if (!util.requireLogin()) return
     
     const isCollected = util.toggleCollect(spot.id, 'food')
     
@@ -205,6 +206,7 @@ Page({
   // 添加到想去 / 取消想去
   onWant() {
     const shopId = this.data.spot.id
+    if (!util.requireLogin()) return
     const isLiked = util.toggleLike(shopId, 'food')
     this.setData({ isLiked })
 

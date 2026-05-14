@@ -9,6 +9,24 @@ try {
   console.warn('checkinUtil 加载失败:', e)
 }
 
+// 统一打开地点详情：
+// 如果足迹里的景点来自采集记录而不是系统内置数据，就直接把完整对象传过去。
+function openPlaceDetail(shop) {
+  if (!shop) return
+  if (shop.type === 'spot') {
+    if (shop.detailSource === 'record') {
+      const spotStr = encodeURIComponent(JSON.stringify(shop))
+      wx.navigateTo({ url: `/pages/spot-detail/spot-detail?spotData=${spotStr}` })
+      return
+    }
+    wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${shop.id}` })
+    return
+  }
+  wx.navigateTo({
+    url: `/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(shop))}`
+  })
+}
+
 Page({
   data: {
     // 登录状态
@@ -432,24 +450,16 @@ Page({
       .map(id => itemMap[String(id)])
       .filter(Boolean)
 
-    const userData = util.getUserShops()
-    const legacyVisitedMap = userData.checkedInShops || {}
-    const visitedIds = util.loadData('userCheckedIn', [])
-    const visitedList = visitedIds
-      .map(id => {
-        const key = String(id)
-        const shop = itemMap[key]
-        const rawData = legacyVisitedMap[key] || legacyVisitedMap[Number(id)] || {}
-        return shop ? {
-          shopId: Number(id),
-          shop,
-          data: {
-            ...rawData,
-            dateStr: rawData.date ? new Date(rawData.date).toLocaleDateString('zh-CN') : '已标记到访'
-          }
-        } : null
-      })
-      .filter(Boolean)
+    const footprintItems = util.getFootprintItems()
+    const visitedList = footprintItems.map(item => ({
+      shopId: item.id,
+      shop: itemMap[String(item.id)] || item,
+      data: {
+        dateStr: item.checkedInAt
+          ? new Date(item.checkedInAt).toLocaleDateString('zh-CN')
+          : '已标记到访'
+      }
+    }))
     
     this.setData({
       likedShops,
@@ -481,19 +491,14 @@ Page({
   onShopTap(e) {
     const shop = e.currentTarget.dataset.shop
     if (!shop) return
-    if (shop.type === 'spot') {
-      wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${shop.id}` })
-      return
-    }
-    wx.navigateTo({
-      url: `/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(shop))}`
-    })
+    openPlaceDetail(shop)
   },
 
   // 从“想去”里移除一个地点。
   onRemoveLiked(e) {
     const shopId = e.currentTarget.dataset.shopid
-    util.toggleLike(shopId)
+    const type = e.currentTarget.dataset.type || 'food'
+    util.toggleLike(shopId, type)
     this.loadData()
     wx.showToast({ title: '已取消', icon: 'none' })
   },
@@ -516,10 +521,10 @@ Page({
     })
   },
 
-  // 去添加页面。
-  onAddShop() {
+  // 进入中间的路线入口页。
+  onOpenRouteEntry() {
     wx.navigateTo({
-      url: '/pages/add-shop/add-shop'
+      url: '/pages/route-entry/route-entry'
     })
   },
 

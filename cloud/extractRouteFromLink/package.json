@@ -1,0 +1,9 @@
+{
+  "name": "extractRouteFromLink",
+  "version": "1.0.0",
+  "description": "从纯链接里提取攻略正文，供路线解析使用",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

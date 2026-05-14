@@ -47,7 +47,7 @@
     </view>
   </view>
 
-  <!-- 解析路线底部弹窗：当前先提供录入入口 -->
+  <!-- 解析路线底部弹窗：粘贴正文后可直接生成路线 -->
   <view class="import-sheet-mask {{importSheetVisible ? 'show' : ''}}" bindtap="onCloseLinkImport"></view>
   <view class="import-sheet {{importSheetVisible ? 'show' : ''}}" catchtap="preventBubble">
     <view class="import-sheet-header">
@@ -62,7 +62,7 @@
         <textarea
           class="import-textarea"
           value="{{guideLink}}"
-          placeholder="粘贴文本或链接"
+          placeholder="粘贴纯链接、攻略正文或分享文案"
           placeholder-class="import-placeholder"
           maxlength="-1"
           auto-height
@@ -72,8 +72,7 @@
       </view>
 
       <view class="import-hint-list">
-        <text class="import-hint">支持：公众号文章链接、小红书分享链接、纯文本内容</text>
-        <text class="import-hint">当前先提供录入入口，解析能力下一步接入</text>
+        <text class="import-hint">支持识别微信公众号、小红书笔记的文本内容或者链接</text>
       </view>
     </view>
 
