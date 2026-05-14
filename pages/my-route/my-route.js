@@ -2,9 +2,17 @@ const util = require('../../utils/util')
 const shopDataModule = require('../../utils/shopData')
 const { shops, shopNameMap } = shopDataModule
 const { spotData } = require('../../utils/spotData')
-const { applyTravelMeta, buildTravelOptions } = require('../../utils/travel')
+const { applyTravelMeta, buildTravelOptions, MODE_CONFIG } = require('../../utils/travel')
 const { buildMapPreviewViewData } = require('../../utils/map-preview')
+const { resolveDisplayCategory } = require('../../utils/displayCategory')
+const { formatTripSummary, normalizeTripSummaryText } = require('../../utils/trip-duration')
+const {
+  buildPlaceCardTags,
+  buildRouteTravelDisplay,
+  buildPlaceIntroData
+} = require('../../utils/route-place-card')
 
+// 默认封面池：当路线或地点没有图片时，从这里兜底取图。
 const DEFAULT_COVERS = [
   '/images/covers/01.jpeg',
   '/images/covers/02.jpeg',
@@ -20,6 +28,7 @@ const DEFAULT_COVERS = [
   '/images/covers/12.jpeg'
 ]
 
+// 城市预设：根据路线标题或城市文案，尽量反推路线所在城市和中心坐标。
 const CITY_PRESETS = [
   { match: /西安|长安/, name: '西安市', lat: 34.3416, lng: 108.9398 },
   { match: /广州/, name: '广州市', lat: 23.1291, lng: 113.2644 },
@@ -30,6 +39,7 @@ const CITY_PRESETS = [
   { match: /深圳|南山|福田|罗湖|宝安|龙岗|盐田|龙华|光明|坪山|大鹏/, name: '深圳市', lat: 22.5431, lng: 114.0579 }
 ]
 
+// 西安这组点位是给旧攻略和示例路线补坐标用的。
 const XIAN_POI_MAP = {
   '西安城墙永宁门城楼': { lat: 34.2476, lng: 108.9461, type: 'spot' },
   '西安钟楼': { lat: 34.259, lng: 108.9488, type: 'spot' },
@@ -69,12 +79,14 @@ const GUANGDONG_CITIES = [
   { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445 }
 ]
 
+// 生成“第几天”的展示文字。
 function buildDayLabel(dayNumber) {
   const labels = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
   if (dayNumber <= 10) return `第${labels[dayNumber - 1]}天`
   return `第${dayNumber}天`
 }
 
+// 生成顶部 Tab：包含“行程总览”和每天的标签。
 function buildTabs(dayCount) {
   const tabs = [{ key: 'overview', label: '行程总览' }]
   for (let i = 0; i < dayCount; i += 1) {
@@ -83,6 +95,7 @@ function buildTabs(dayCount) {
   return tabs
 }
 
+// 统一处理名称，方便做模糊匹配。
 function normalizeName(name) {
   return String(name || '')
     .replace(/\s+/g, '')
@@ -90,6 +103,7 @@ function normalizeName(name) {
     .toLowerCase()
 }
 
+// 当地点缺坐标时，按城市中心生成一组临时坐标，避免地图和路线失效。
 function buildSyntheticLatLng(cityInfo, dayIndex, itemIndex) {
   return {
     lat: cityInfo.lat + ((dayIndex * 0.018) - 0.018) + (itemIndex * 0.0035),
@@ -97,6 +111,7 @@ function buildSyntheticLatLng(cityInfo, dayIndex, itemIndex) {
   }
 }
 
+// 根据地点名称猜一个大概标签，主要用于旧数据兜底。
 function inferTag(name) {
   if (/博物馆|展馆|美术馆/.test(name)) return '文化展馆'
   if (/演出|剧场|音乐会/.test(name)) return '演出'
@@ -105,6 +120,7 @@ function inferTag(name) {
   return '景点'
 }
 
+// 尝试把地点名称匹配到系统已有的美食或景点数据。
 function findMatchedPlace(name) {
   const normalized = normalizeName(name)
   if (!normalized) return null
@@ -129,6 +145,7 @@ function findMatchedPlace(name) {
   return xianPoi ? XIAN_POI_MAP[xianPoi] : null
 }
 
+// 去掉编辑态临时字段，避免把左滑偏移量之类的界面状态保存进正式数据。
 function stripEditState(daySections) {
   return (daySections || []).map(day => ({
     ...day,
@@ -140,27 +157,48 @@ function stripEditState(daySections) {
   }))
 }
 
+// 给路线详情列表补齐展示字段：
+// 1. 封面上的大类标签
+// 2. 评分和普通标签
+// 3. 底部中文距离和中文时间
+function decorateRoutePlaceItem(item = {}) {
+  const displayCategory = item.displayCategory || resolveDisplayCategory(item)
+  const travelDisplay = buildRouteTravelDisplay(item.travelMeta, item.distanceFromPrev)
+  return {
+    ...item,
+    displayCategory,
+    tags: buildPlaceCardTags({ ...item, displayCategory }),
+    ...travelDisplay
+  }
+}
+
+// 把路线每天的地点整理成统一结构，并补全坐标、标签、图片、交通信息。
 function syncDaySections(daySections, cityInfo) {
   const fallbackCity = cityInfo || { lat: 22.5431, lng: 114.0579 }
   return stripEditState(daySections).map((day, dayIndex) => {
     const rawItems = (day.items || []).map((item, itemIndex) => {
       const matched = findMatchedPlace(item.name)
       const synthetic = buildSyntheticLatLng(fallbackCity, dayIndex, itemIndex)
-      const tag = item.tag || inferTag(item.name)
+      const rawTags = Array.isArray(item.tags) && item.tags.length
+        ? item.tags
+        : ((matched && Array.isArray(matched.tags)) ? matched.tags : [])
+      const itemType = item.type || matched?.type || ((item.tag || inferTag(item.name)) === '美食' ? 'food' : 'spot')
       return {
         ...item,
         id: item.id || `day-${dayIndex}-item-${itemIndex}`,
         name: item.name || '待补充地点',
-        tag,
+        tag: item.tag || inferTag(item.name),
         image: item.image || matched?.image || matched?.logo || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length],
-        type: item.type || matched?.type || (tag === '美食' ? 'food' : 'spot'),
+        type: itemType,
         rating: item.rating || matched?.rating || matched?.score || '',
-        tags: item.tags || matched?.tags || [],
+        tags: rawTags,
+        displayCategory: item.displayCategory || resolveDisplayCategory({ ...matched, ...item, type: itemType }),
         desc: item.desc || matched?.desc || '',
         hours: item.hours || matched?.hours || '',
         openHours: item.openHours || matched?.openHours || '',
         free: item.free !== undefined ? item.free : matched?.free,
         price: item.price || matched?.price || '',
+        address: item.address || matched?.address || `${fallbackCity.name || ''}${item.name || ''}`,
         lat: item.lat || item.latitude || matched?.lat || synthetic.lat,
         lng: item.lng || item.longitude || matched?.lng || synthetic.lng,
         swipeOffset: item.swipeOffset || 0
@@ -177,7 +215,7 @@ function syncDaySections(daySections, cityInfo) {
       id: day.id || `day-${dayIndex}`,
       title: buildDayLabel(dayIndex + 1),
       countText: `${plannedItems.length} 个地点`,
-      items: plannedItems.map(item => ({
+      items: plannedItems.map(item => decorateRoutePlaceItem({
         ...applyTravelMeta(item, item.travelMode),
         swipeOffset: item.swipeOffset || 0
       }))
@@ -185,6 +223,7 @@ function syncDaySections(daySections, cityInfo) {
   })
 }
 
+// 当用户改了旅行天数时，补齐或裁剪天数，再重新同步数据结构。
 function alignDaySections(daySections, targetCount, cityInfo) {
   const sections = stripEditState(daySections).slice(0, targetCount)
   while (sections.length < targetCount) {
@@ -196,6 +235,7 @@ function alignDaySections(daySections, targetCount, cityInfo) {
   return syncDaySections(sections, cityInfo)
 }
 
+// 兼容旧版路线结构，给老数据继续生成 daySummaries / dayDetails。
 function buildLegacyRouteData(daySections) {
   const cleanSections = stripEditState(daySections)
   const daySummaries = cleanSections.map((day, index) => ({
@@ -218,6 +258,7 @@ function buildLegacyRouteData(daySections) {
   return { daySummaries, dayDetails }
 }
 
+// 把“按天分组”的路线拍平成普通数组，方便地图预览和统计。
 function flattenDaySections(daySections) {
   const flattened = []
   ;(daySections || []).forEach((day, dayIndex) => {
@@ -228,6 +269,7 @@ function flattenDaySections(daySections) {
   return flattened
 }
 
+// 根据“第几天”算出它在地图预览列表里的起始下标。
 function getPreviewIndexByDay(daySections, dayIndex) {
   if (!daySections || dayIndex < 0 || dayIndex >= daySections.length) return 0
   let offset = 0
@@ -237,6 +279,7 @@ function getPreviewIndexByDay(daySections, dayIndex) {
   return offset
 }
 
+// 反过来：根据地图预览的下标，找到它属于第几天。
 function getDayIndexByPreview(daySections, previewIndex) {
   if (!daySections || !daySections.length) return -1
   let offset = 0
@@ -248,19 +291,21 @@ function getDayIndexByPreview(daySections, previewIndex) {
   return daySections.length - 1
 }
 
+// 生成顶部摘要文案，例如“3 天 2 晚 · 8 个地点”。
 function buildSummaryText(daySections) {
   const dayCount = daySections.length
-  const nightCount = Math.max(dayCount - 1, 0)
   const placeCount = daySections.reduce((sum, day) => sum + (day.items || []).length, 0)
-  return `${dayCount} 天 ${nightCount} 晚 · ${placeCount} 个地点`
+  return formatTripSummary(dayCount, placeCount)
 }
 
+// 保存时去掉完全空白的天数，但至少保留 1 天。
 function removeEmptyDaysOnSave(daySections) {
   const sections = (daySections || []).filter(day => (day.items || []).length > 0)
   if (sections.length) return sections
   return (daySections || []).slice(0, 1)
 }
 
+// 从标题或城市文字里尽量推断出城市信息。
 function getCityInfo(text) {
   const source = String(text || '')
   for (let i = 0; i < CITY_PRESETS.length; i += 1) {
@@ -271,6 +316,7 @@ function getCityInfo(text) {
   return { name: source || '深圳市', lat: 22.5431, lng: 114.0579 }
 }
 
+// 兼容旧路线数据：如果没有 daySections，就从旧字段里重建出来。
 function buildDaySectionsFromLegacy(route) {
   if (route.daySections && route.daySections.length) {
     return route.daySections
@@ -300,6 +346,7 @@ function buildDaySectionsFromLegacy(route) {
   return sections
 }
 
+// 补充探索页里的扩展地点，供“添加地点弹窗”复用。
 function buildExploreExtraItems() {
   return [
     { id: 901, name: '深圳美术馆', category: '文化展馆', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, tags: ['展览', '艺术'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
@@ -321,6 +368,8 @@ function buildExploreExtraItems() {
   ]
 }
 
+// 把“想去 / 收藏 / 全部”来源的地点，统一整理成添加地点弹窗可用的数据格式。
+// 这样弹窗里就不用分别兼容很多不同字段名了。
 function buildPlaceCandidate(item, type, source) {
   if (!item) return null
   const resolvedType = item.type || type || 'spot'
@@ -330,6 +379,7 @@ function buildPlaceCandidate(item, type, source) {
     collect: '来自收藏',
     all: '已在想去和收藏'
   }
+  // 标签里只保留真实有值的内容，避免出现空标签。
   const rawTags = Array.isArray(item.tags) ? item.tags.filter(Boolean) : []
   return {
     id: String(item.id),
@@ -338,7 +388,8 @@ function buildPlaceCandidate(item, type, source) {
     sourceText: sourceTextMap[source] || '已加入来源列表',
     type: resolvedType,
     name: item.name,
-    tag: resolvedType === 'food' ? '美食' : (item.displayCategory || item.category || inferTag(item.name)),
+    // 这里显示的是大类标签，不显示“粤菜”“面馆”这种细分类。
+    tag: resolveDisplayCategory({ ...item, type: resolvedType }),
     image: displayImage,
     rating: item.rating || item.score || '',
     price: item.price || '',
@@ -348,6 +399,7 @@ function buildPlaceCandidate(item, type, source) {
   }
 }
 
+// 汇总“想去 / 收藏 / 全部”三类来源，给添加地点弹窗使用。
 function buildPlacePickerData() {
   const userAddedShops = util.loadData('userAddedShops', [])
   const allFoods = [...(shops || []), ...((shopDataModule && shopDataModule.foods) || []), ...userAddedShops]
@@ -394,6 +446,7 @@ function buildPlacePickerData() {
   }
 }
 
+// 把弹窗里选中的地点转换成正式加入路线的数据格式。
 function buildAddedPlace(item) {
   return {
     id: `manual-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
@@ -407,6 +460,7 @@ function buildAddedPlace(item) {
   }
 }
 
+// 把地图选点结果也转换成和普通地点一致的格式。
 function buildMapPickedPlace(location) {
   const latitude = Number(location.latitude)
   const longitude = Number(location.longitude)
@@ -421,6 +475,7 @@ function buildMapPickedPlace(location) {
   }
 }
 
+// 跨天拖拽时，把某个地点从原来那天移动到目标那天。
 function moveItemAcrossDays(daySections, fromDayIndex, fromItemIndex, toDayIndex, toItemIndex) {
   const nextSections = (daySections || []).map(day => ({
     ...day,
@@ -505,9 +560,17 @@ Page({
     transportSheetVisible: false,
     transportOptions: [],
     pendingTransportMode: 'walk',
-    transportTarget: null
+    transportTarget: null,
+    navMapSheetVisible: false,
+    navMapTarget: null,
+    placeIntroVisible: false,
+    placeIntroData: null
   },
 
+  // 页面初始化：
+  // 1. 读取路线数据
+  // 2. 计算顶部布局高度
+  // 3. 预先准备添加地点弹窗数据
   onLoad(options) {
     const sysInfo = wx.getSystemInfoSync()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
@@ -539,6 +602,7 @@ Page({
     this.applyRoute(route)
   },
 
+  // 页面重新显示时，如果路线已经被别的页面改过，就重新同步最新数据。
   onShow() {
     const { routeId, isEditing, isNewRouteDraft } = this.data
     if (isNewRouteDraft) return
@@ -560,11 +624,17 @@ Page({
     }, 300)
   },
 
+  // 把一条路线真正应用到页面上：
+  // 会同时刷新列表、地图、顶部摘要和预览卡片。
   applyRoute(route) {
     const cityText = route.city || route.cityText || getCityInfo(route.title).name
     const cityInfo = getCityInfo(cityText)
     const daySections = syncDaySections(buildDaySectionsFromLegacy(route), cityInfo)
-    const summaryText = route.subtitle || buildSummaryText(daySections)
+    const summaryText = normalizeTripSummaryText(
+      route.subtitle,
+      daySections.length,
+      daySections.reduce((sum, day) => sum + (day.items || []).length, 0)
+    )
     const flattenedPlaces = flattenDaySections(daySections)
 
     this.setData({
@@ -604,6 +674,7 @@ Page({
     })
   },
 
+  // 写回本地存储：这是“保存路线”的真正落盘入口。
   saveRouteToStorage(route, showToastTitle) {
     const savedRoutes = util.loadData('savedRoutes', [])
     const index = savedRoutes.findIndex(item => String(item.id) === String(route.id))
@@ -618,6 +689,7 @@ Page({
     }
   },
 
+  // 按当前编辑结果组装出一份最新路线对象，方便保存或跳去编辑基础信息。
   buildUpdatedRoute(daySections) {
     const { route, cityText, summaryText } = this.data
     const cleanSections = stripEditState(daySections)
@@ -636,6 +708,7 @@ Page({
     }
   },
 
+  // 关闭其他左滑卡片，只保留当前这一个的偏移量。
   resetSwipeOffsets(daySections, keepDay = -1, keepIndex = -1, keepOffset = 0) {
     return (daySections || []).map((day, dayIndex) => ({
       ...day,
@@ -646,6 +719,7 @@ Page({
     }))
   },
 
+  // 刷新地图数据：包括地图中心点、标记点和路线线条。
   updateMapData(daySections, cityInfo, mapDayIndex) {
     const sections = typeof mapDayIndex === 'number' && mapDayIndex >= 0
       ? [daySections[mapDayIndex]].filter(Boolean)
@@ -690,6 +764,7 @@ Page({
     })
   },
 
+  // 让地图自动缩放到能看见当前路线的全部地点。
   onFitRoute() {
     const effectiveDayIndex = this.data.currentMapDay >= 0
       ? this.data.currentMapDay
@@ -721,6 +796,7 @@ Page({
     })
   },
 
+  // 刷新地图模式上方的预览卡片内容。
   refreshMapPreview(daySections, previewIndex = 0, currentDayOverride) {
     const places = flattenDaySections(daySections)
     const safeIndex = places.length ? Math.max(0, Math.min(previewIndex, places.length - 1)) : 0
@@ -748,6 +824,7 @@ Page({
     this.setData(nextData)
   },
 
+  // 切换地图预览中的当前地点。
   changeMapPreview(index) {
     const nextIndex = parseInt(index, 10)
     if (Number.isNaN(nextIndex)) return
@@ -756,6 +833,8 @@ Page({
     this.refreshMapPreview(this.data.daySections, nextIndex)
   },
 
+  // 顶部返回逻辑：
+  // 新建路线、从路线页进入、普通返回，这三种来源处理不一样。
   onBack() {
     if (this.data.isNewRouteDraft && !this.data.isEditing) {
       wx.navigateBack({
@@ -774,10 +853,12 @@ Page({
     wx.navigateBack()
   },
 
+  // 提示用户使用右上角分享
   onShareTap() {
     wx.showToast({ title: '请点击右上角分享', icon: 'none' })
   },
 
+  // 列表 / 地图 两种查看模式切换
   onSwitchMode(e) {
     if (this.data.isEditing) return
     const mode = e.currentTarget.dataset.mode
@@ -795,6 +876,7 @@ Page({
     }
   },
 
+  // 底部“路线”按钮：直接切到地图模式
   onOpenMapMode() {
     if (this.data.isEditing) return
     this.setData({ viewMode: 'map' })
@@ -808,11 +890,13 @@ Page({
     )
   },
 
+  // 在地图模式里切换某一天
   onSelectMapDay(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10)
     this.updateMapData(this.data.daySections, this.data.cityInfo, index)
   },
 
+  // 地图预览卡片顶部的“每天 Tab”切换
   onSelectMapPreviewDay(e) {
     const index = parseInt(
       (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
@@ -826,6 +910,7 @@ Page({
     )
   },
 
+  // 列表模式顶部 Tab 切换：行程总览 / 第一天 / 第二天...
   onTabTap(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10)
     const sheetScrollTarget = index === 0 ? 'route-overview-anchor' : `route-day-anchor-${index - 1}`
@@ -841,10 +926,12 @@ Page({
     }
   },
 
+  // 兼容旧入口：点击“路线”时进入地图模式
   onViewRoute() {
     this.onOpenMapMode()
   },
 
+  // 点击预览卡片或箭头时切换当前预览地点
   onChangeMapPreview(e) {
     const nextIndex = parseInt(
       (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
@@ -856,12 +943,14 @@ Page({
     this.refreshMapPreview(this.data.daySections, nextIndex, nextDayIndex)
   },
 
+  // 点击上一站 / 下一站
   onMapPreviewStep(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10)
     if (Number.isNaN(index) || index < 0) return
     this.onChangeMapPreview({ detail: { index } })
   },
 
+  // 去基础信息页编辑路线名称、天数、城市这些基础资料
   onEditMeta() {
     const routeForEdit = this.buildUpdatedRoute(this.data.daySections)
     wx.navigateTo({
@@ -869,6 +958,7 @@ Page({
     })
   },
 
+  // 从路线的第一个地点开始导航
   onStartNavigation() {
     const firstDayWithPlace = (this.data.daySections || []).find(day => (day.items || []).length)
     const firstPlace = firstDayWithPlace && firstDayWithPlace.items && firstDayWithPlace.items[0]
@@ -885,6 +975,7 @@ Page({
     })
   },
 
+  // 进入编辑态：允许拖拽、删除、加地点
   onStartRouteEdit() {
     const daySections = this.resetSwipeOffsets(this.data.daySections)
     this.refreshPlacePickerItems()
@@ -905,11 +996,14 @@ Page({
       originalDaySections: JSON.parse(JSON.stringify(stripEditState(daySections))),
       placePickerVisible: false,
       placePickerTab: 'all',
-      placePickerDayIndex: -1
+      placePickerDayIndex: -1,
+      placeIntroVisible: false,
+      navMapSheetVisible: false
     })
     wx.showToast({ title: '进入编辑路线', icon: 'none' })
   },
 
+  // 取消编辑：恢复到进入编辑前的状态
   onCancelEdit() {
     const restored = syncDaySections(this.data.originalDaySections || [], this.data.cityInfo)
     this.setData({
@@ -928,12 +1022,15 @@ Page({
       sheetScrollTarget: '',
       currentTab: 0,
       placePickerVisible: false,
-      placePickerDayIndex: -1
+      placePickerDayIndex: -1,
+      placeIntroVisible: false,
+      navMapSheetVisible: false
     })
     this.updateMapData(restored, this.data.cityInfo, this.data.currentMapDay)
     this.refreshMapPreview(restored, this.data.mapPreviewIndex)
   },
 
+  // 保存编辑结果，并退出编辑态
   onSave() {
     const cleanedSections = syncDaySections(this.data.daySections, this.data.cityInfo)
     const savedSections = removeEmptyDaysOnSave(cleanedSections)
@@ -965,12 +1062,15 @@ Page({
       placePickerVisible: false,
       placePickerDayIndex: -1,
       isNewRouteDraft: false,
-      hasRoutePlaces: flattenDaySections(savedSections).length > 0
+      hasRoutePlaces: flattenDaySections(savedSections).length > 0,
+      placeIntroVisible: false,
+      navMapSheetVisible: false
     })
     this.updateMapData(savedSections, this.data.cityInfo, nextMapDay)
     this.refreshMapPreview(savedSections, this.data.mapPreviewIndex)
   },
 
+  // 打开交通方式弹窗：既支持列表里的地点，也支持地图预览卡片里的地点
   openTransportSheet(dayIndex, itemIndex, previewIndex) {
     const day = (this.data.daySections || [])[dayIndex]
     const item = ((day || {}).items || [])[itemIndex]
@@ -983,28 +1083,33 @@ Page({
     })
   },
 
+  // 列表模式里点击交通方式入口
   onOpenPlaceTransportSheet(e) {
     const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10)
     const itemIndex = parseInt(e.currentTarget.dataset.index, 10)
     this.openTransportSheet(dayIndex, itemIndex, getPreviewIndexByDay(this.data.daySections, dayIndex) + itemIndex)
   },
 
+  // 地图模式里点击交通方式入口
   onOpenMapTransportSheet() {
     const currentPlace = this.data.mapPreviewPlace
     if (!currentPlace) return
     this.openTransportSheet(currentPlace.dayIndex, currentPlace.itemIndex, this.data.mapPreviewIndex)
   },
 
+  // 关闭交通方式弹窗
   onCloseTransportSheet() {
     this.setData({ transportSheetVisible: false, transportTarget: null })
   },
 
+  // 交通方式弹窗里切换选项
   onSelectTransportMode(e) {
     const mode = e.detail && e.detail.mode
     if (!mode) return
     this.setData({ pendingTransportMode: mode })
   },
 
+  // 确认交通方式后，把新的方式写回具体地点
   onConfirmTransportMode() {
     const { transportTarget, pendingTransportMode, daySections } = this.data
     if (!transportTarget) return
@@ -1015,7 +1120,7 @@ Page({
         if (dayIndex !== transportTarget.dayIndex || itemIndex !== transportTarget.itemIndex) {
           return item
         }
-        return applyTravelMeta(item, pendingTransportMode)
+        return decorateRoutePlaceItem(applyTravelMeta(item, pendingTransportMode))
       })
     }))
     const updatedRoute = this.buildUpdatedRoute(nextSections)
@@ -1031,6 +1136,85 @@ Page({
     this.refreshMapPreview(nextSections, transportTarget.previewIndex)
   },
 
+  // 点击地点主体：打开地点简介底部弹窗。
+  onOpenPlaceIntro(e) {
+    if (this.data.isEditing) return
+    const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10)
+    const itemIndex = parseInt(e.currentTarget.dataset.index, 10)
+    const day = (this.data.daySections || [])[dayIndex]
+    const item = ((day || {}).items || [])[itemIndex]
+    if (!item) return
+    this.setData({
+      placeIntroVisible: true,
+      placeIntroData: buildPlaceIntroData(item, this.data.cityText)
+    })
+  },
+
+  // 关闭地点简介底部弹窗。
+  onClosePlaceIntro() {
+    this.setData({
+      placeIntroVisible: false,
+      placeIntroData: null
+    })
+  },
+
+  // 点击右侧导航图标：打开导航地图选择弹窗。
+  onOpenPlaceNavigation(e) {
+    if (this.data.isEditing) return
+    const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10)
+    const itemIndex = parseInt(e.currentTarget.dataset.index, 10)
+    const day = (this.data.daySections || [])[dayIndex]
+    const item = ((day || {}).items || [])[itemIndex]
+    if (!item) return
+    this.setData({
+      navMapSheetVisible: true,
+      navMapTarget: {
+        lat: item.lat,
+        lng: item.lng,
+        name: item.name,
+        address: item.address || `${this.data.cityText || ''}${item.name || ''}`
+      }
+    })
+  },
+
+  // 关闭导航地图选择弹窗。
+  onCloseNavMapSheet() {
+    this.setData({
+      navMapSheetVisible: false,
+      navMapTarget: null
+    })
+  },
+
+  // 在导航弹窗里选择地图应用或复制地址。
+  onSelectNavMapOption(e) {
+    const type = e.currentTarget.dataset.type
+    const target = this.data.navMapTarget
+    if (!type || !target) return
+
+    if (type === 'tencent') {
+      util.openWechatNavigation(target)
+      this.onCloseNavMapSheet()
+      return
+    }
+
+    if (type === 'gaode') {
+      util.openGaodeNavigation(target.lat, target.lng, target.name)
+      this.onCloseNavMapSheet()
+      return
+    }
+
+    if (type === 'copy') {
+      wx.setClipboardData({
+        data: target.address || target.name,
+        success: () => {
+          wx.showToast({ title: '地址已复制', icon: 'success' })
+          this.onCloseNavMapSheet()
+        }
+      })
+    }
+  },
+
+  // 新增一天行程
   onAddDay() {
     if (!this.data.isEditing) return
 
@@ -1048,11 +1232,14 @@ Page({
     })
   },
 
+  // 记录拖拽把手按下时的起始位置
   onHandleTouchStart(e) {
     const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || {}
     this.setData({ handleTouchStartY: touch.clientY || 0 })
   },
 
+  // 读取页面里每一天、每个地点当前的位置，
+  // 供拖拽排序时判断“应该放到哪里”。
   captureDragLayout(callback) {
     const query = wx.createSelectorQuery().in(this)
     query.selectAll('.day-section').fields({ rect: true, dataset: true })
@@ -1090,6 +1277,7 @@ Page({
     })
   },
 
+  // 根据手指当前 Y 坐标，推算拖拽目标落点。
   resolveDragTarget(currentY) {
     const layouts = this._dragLayouts || []
     if (!layouts.length) {
@@ -1135,6 +1323,7 @@ Page({
     return { dayIndex: targetDay.dayIndex, placeIndex: targetIndex }
   },
 
+  // 刷新添加地点弹窗的数据源
   refreshPlacePickerItems() {
     const pickerData = buildPlacePickerData()
     const placePickerCurrentItems = this.resolvePlacePickerItems(this.data.placePickerTab, pickerData)
@@ -1146,6 +1335,7 @@ Page({
     })
   },
 
+  // 根据当前弹窗 Tab，切换显示“全部 / 想去 / 收藏”
   resolvePlacePickerItems(tab, pickerData) {
     const source = pickerData || this.data
     if (tab === 'want') return source.want || source.placePickerWantItems || []
@@ -1153,6 +1343,7 @@ Page({
     return source.all || source.placePickerItems || []
   },
 
+  // 开始拖拽某个地点
   onDragStart(e) {
     if (!this.data.isEditing) return
     const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10)
@@ -1174,6 +1365,7 @@ Page({
     wx.vibrateShort()
   },
 
+  // 拖拽移动中：根据当前位置动态换位
   onDragMove(e) {
     if (!this.data.isEditing || !this.data.dragging) return
 
@@ -1217,6 +1409,7 @@ Page({
     })
   },
 
+  // 拖拽结束：清理临时状态
   onDragEnd() {
     if (!this.data.dragging) return
     this.setData({
@@ -1230,6 +1423,7 @@ Page({
     this._dragLayouts = null
   },
 
+  // 左滑开始：记录手指起点
   onSwipeStart(e) {
     if (!this.data.isEditing || this.data.dragging) return
     const touch = e.touches && e.touches[0]
@@ -1246,6 +1440,7 @@ Page({
     })
   },
 
+  // 左滑移动：只更新当前卡片的删除偏移量
   onSwipeMove(e) {
     if (!this.data.isEditing) return
     if (this.data.dragging) {
@@ -1270,6 +1465,7 @@ Page({
     })
   },
 
+  // 左滑结束：决定是停在打开状态，还是自动关回去
   onSwipeEnd(e) {
     if (!this.data.isEditing) return
     if (this.data.dragging) {
@@ -1293,6 +1489,7 @@ Page({
     })
   },
 
+  // 删除某一天里的一个地点
   onDeletePlace(e) {
     if (!this.data.isEditing) return
     const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10)
@@ -1315,6 +1512,7 @@ Page({
     wx.showToast({ title: '已删除地点', icon: 'none' })
   },
 
+  // 打开“添加地点”底部弹窗
   onOpenPlacePicker(e) {
     if (!this.data.isEditing) return
     this.refreshPlacePickerItems()
@@ -1326,6 +1524,7 @@ Page({
     })
   },
 
+  // 关闭“添加地点”底部弹窗
   onClosePlacePicker() {
     this.setData({
       placePickerVisible: false,
@@ -1333,6 +1532,7 @@ Page({
     })
   },
 
+  // 切换添加地点弹窗里的筛选 Tab
   onSwitchPlacePickerTab(e) {
     const tab = e.currentTarget.dataset.tab
     this.setData({
@@ -1341,6 +1541,7 @@ Page({
     })
   },
 
+  // 通过系统地图选点，把地点加进某一天
   onChoosePlaceFromMap() {
     const dayIndex = this.data.placePickerDayIndex
     if (dayIndex < 0) return
@@ -1377,6 +1578,7 @@ Page({
     })
   },
 
+  // 从弹窗列表里选一个地点，加进当前这一天
   onAddPlaceToDay(e) {
     const dayIndex = this.data.placePickerDayIndex
     const item = e.currentTarget.dataset.item
@@ -1404,12 +1606,15 @@ Page({
     wx.showToast({ title: '已添加地点', icon: 'success' })
   },
 
+  // 阻止弹窗内部点击冒泡到遮罩层
   preventBubble() {
   },
 
+  // 预留空函数，主要给模板占位用
   noop() {
   },
 
+  // 小程序右上角分享文案
   onShareAppMessage() {
     const { route } = this.data
     return {

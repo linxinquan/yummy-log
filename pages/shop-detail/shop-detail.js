@@ -1,13 +1,18 @@
 // 觅食图 - 店铺详情页
+// 这个页面复用了景点详情页的模板，所以这里主要负责把“店铺数据”
+// 转成那个模板能直接使用的格式。
 const shopData = require('../../utils/shopData')
 const spotData = require('../../utils/spotData')
 const util = require('../../utils/util')
 
+// 读取系统里所有可作为“美食详情”来源的店铺。
 function buildAllFoodItems() {
   const userAddedShops = util.loadData('userAddedShops', [])
   return [...(shopData.shops || []), ...(shopData.foods || []), ...userAddedShops]
 }
 
+// 给“推荐菜”准备封面图池。
+// 如果菜品本身没有图，就从现有美食/景点图片里兜底取。
 function buildCoverPool(currentCover) {
   const foodCovers = buildAllFoodItems()
     .map(item => item.logo || item.image || item.thumb)
@@ -31,6 +36,10 @@ Page({
     isFoodDetail: true
   },
 
+  // 页面初始化：
+  // 1. 找到当前店铺
+  // 2. 转成详情模板通用字段
+  // 3. 加载地图、收藏状态、推荐菜
   onLoad(options) {
     const sysInfo = wx.getSystemInfoSync()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
@@ -40,6 +49,7 @@ Page({
       ? Math.max(sysInfo.windowWidth - menuButtonInfo.left + 8, 24)
       : 103
 
+    // 兼容多种进入方式：直接传对象、传 shopData、只传 id。
     const shop = this.resolveShop(options)
     if (!shop) {
       wx.showToast({ title: '店铺不存在', icon: 'none' })
@@ -51,7 +61,7 @@ Page({
     const hoursText = shop.hours || '暂无营业时间'
     const priceText = shop.price ? `￥${shop.price}/人` : '暂无均价'
 
-    // 适配为景点详情模板需要的数据结构
+    // 因为模板复用了 spot-detail，所以这里把店铺数据改造成同一套字段。
     const spot = {
       ...shop,
       image: coverImage,
@@ -84,6 +94,7 @@ Page({
     this._loadNearbyShops(spot)
   },
 
+  // 统一解析页面参数，尽量找到当前店铺对象。
   resolveShop(options) {
     if (options.shop) {
       return JSON.parse(decodeURIComponent(options.shop))
@@ -98,6 +109,7 @@ Page({
     return null
   },
 
+  // 初始化地图标记点
   initMap(shop) {
     this.setData({
       mapMarkers: [{
@@ -110,6 +122,7 @@ Page({
     })
   },
 
+  // 读取当前用户对这家店的想去/收藏状态
   loadUserData(shopId) {
     const likedIds = util.loadData('userWantFoods', [])
     const collectedIds = util.loadData('userCollectedFoods', [])
@@ -120,8 +133,11 @@ Page({
     })
   },
 
+  // 这里预留图片报错回调，当前不需要特殊处理。
   onImageError() {},
 
+  // 美食详情页底部显示的是“推荐菜”，不是附近美食。
+  // 所以这里把 dishes 数组转换成卡片数据。
   _loadNearbyShops(spot) {
     const coverPool = buildCoverPool(spot.image || spot.coverImage || '/images/app-logo.jpg')
     const dishes = this.data.shop.dishes || []
@@ -138,14 +154,17 @@ Page({
     })
   },
 
+  // 返回上一页
   onBack() {
     wx.navigateBack()
   },
 
+  // 提示用户使用系统分享
   onShareTap() {
     wx.showToast({ title: '请点击右上角分享', icon: 'none' })
   },
 
+  // 打开系统地图导航到当前店铺
   onNavigate() {
     const { spot } = this.data
     if ((spot.lat || spot.latitude) && (spot.lng || spot.longitude)) {
@@ -161,13 +180,14 @@ Page({
     }
   },
 
+  // 有电话时直接拨号
   onCall() {
     if (this.data.shop.phone) {
       wx.makePhoneCall({ phoneNumber: this.data.shop.phone })
     }
   },
 
-  // 收藏/取消收藏
+  // 收藏/取消收藏当前店铺
   onCollect() {
     const { spot } = this.data
     if (!spot) return
@@ -182,7 +202,7 @@ Page({
     })
   },
 
-  // 添加到想去
+  // 添加到想去 / 取消想去
   onWant() {
     const shopId = this.data.spot.id
     const isLiked = util.toggleLike(shopId, 'food')
@@ -195,6 +215,7 @@ Page({
     })
   },
 
+  // 小程序右上角分享文案
   onShareAppMessage() {
     const { spot } = this.data
     return {

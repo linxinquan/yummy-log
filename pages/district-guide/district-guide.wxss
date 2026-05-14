@@ -2,12 +2,14 @@ page {
   background: #FFFFFF;
 }
 
+/* 页面整体容器 */
 .container {
   min-height: 100vh;
   background: #FFFFFF;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* 顶部标题区 */
 .header {
   padding: 48rpx;
   background: #FFFFFF;
@@ -22,6 +24,7 @@ page {
   color: #242529;
 }
 
+/* 攻略列表区域 */
 .guide-list {
   display: flex;
   flex-direction: column;
@@ -29,6 +32,7 @@ page {
   padding: 0 48rpx;
 }
 
+/* 单张攻略卡片 */
 .guide-card {
   width: 100%;
   min-height: 368rpx;
@@ -155,6 +159,7 @@ page {
   color: #A0A4AE;
 }
 
+/* 列表底部“没有更多了”提示 */
 .no-more {
   display: flex;
   flex-direction: row;

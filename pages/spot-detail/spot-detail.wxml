@@ -86,37 +86,38 @@
         <text class="section-title">{{relatedSectionTitle || '附近美食'}}</text>
         <text class="more-btn" wx:if="{{showRelatedMore !== false}}" bindtap="onFindFood">更多</text>
       </view>
-      <scroll-view class="nearby-scroll" scroll-x enable-flex>
-        <view class="nearby-list">
-          <block wx:if="{{isFoodDetail}}">
-            <view
-              class="dish-card"
-              wx:for="{{relatedItems}}"
-              wx:key="name"
-            >
-              <image class="nearby-img" src="{{item.coverImage}}" mode="aspectFill" />
-              <view class="nearby-info">
-                <text class="nearby-name">{{item.name}}</text>
-              </view>
+      <!-- 横向列表：这里已经改成和“精选攻略”同一类滚动逻辑 -->
+      <view class="nearby-scroll">
+        <block wx:if="{{isFoodDetail}}">
+          <!-- 美食详情页：这里显示的是推荐菜 -->
+          <view
+            class="dish-card"
+            wx:for="{{relatedItems}}"
+            wx:key="name"
+          >
+            <image class="nearby-img" src="{{item.coverImage}}" mode="aspectFill" />
+            <view class="nearby-info">
+              <text class="nearby-name">{{item.name}}</text>
             </view>
-          </block>
-          <block wx:else>
-            <view
-              class="nearby-card"
-              wx:for="{{nearbyShops}}"
-              wx:key="id"
-              bindtap="onGoShop"
-              data-id="{{item.id}}"
-            >
-              <image class="nearby-img" src="{{item.coverImage}}" mode="aspectFill" />
-              <view class="nearby-info">
-                <text class="nearby-name">{{item.name}}</text>
-                <text class="nearby-meta">{{item.wantCount || 4232}} 人想去 · {{item.distText}}</text>
-              </view>
+          </view>
+        </block>
+        <block wx:else>
+          <!-- 景点详情页：这里显示的是附近美食 -->
+          <view
+            class="nearby-card"
+            wx:for="{{nearbyShops}}"
+            wx:key="id"
+            bindtap="onGoShop"
+            data-id="{{item.id}}"
+          >
+            <image class="nearby-img" src="{{item.coverImage}}" mode="aspectFill" />
+            <view class="nearby-info">
+              <text class="nearby-name">{{item.name}}</text>
+              <text class="nearby-meta">{{item.wantCount || 4232}} 人想去 · {{item.distText}}</text>
             </view>
-          </block>
-        </view>
-      </scroll-view>
+          </view>
+        </block>
+      </view>
     </view>
     
   </view>

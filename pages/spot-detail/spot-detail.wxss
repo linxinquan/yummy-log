@@ -236,35 +236,36 @@
 
 .arrow-icon {
   font-size: 40rpx; /* 20px */
-  color: #C0C0C0;
+  color: #C7CAD1;
 }
 
 .spot-desc {
   font-size: 32rpx; /* 16px */
-  color: #6E727A;
+  color: #242529;
   line-height: 48rpx; /* 24px */
-  margin-top: 40rpx; /* 20px 距离上面的地址卡片 */
+  margin-top: 32rpx; /* 16px 距离上面的地址卡片 */
 }
 
 /* 分割线 */
 .divider {
   height: 2rpx; /* 1px */
   background: #F2F4F7;
-  margin: 64rpx 48rpx 0;
+  margin: 48rpx 48rpx 0;
 }
 
 /* 位置卡片 */
 .map-section {
-  padding: 64rpx 48rpx 0;
+  padding: 48rpx 48rpx 0;
   display: flex;
   flex-direction: column;
   gap: 32rpx; /* 16px */
 }
 
 .section-title {
-  font-size: 34rpx; /* 17px */
+  font-size: 32rpx; /* 17px */
   font-weight: 500;
   color: #242529;
+  line-height: 32rpx;
 }
 
 .map-card {
@@ -280,47 +281,56 @@
   height: 100%;
 }
 
-/* 附近美食 */
+/* 附近美食模块：外层只负责上下间距，不再负责左右留白 */
 .nearby-section {
-  padding: 64rpx 0 0 48rpx; /* margin-top 32px */
+  padding-top: 48rpx; /* margin-top 32px */
   display: flex;
   flex-direction: column;
-  gap: 32rpx; /* 16px */
+  gap: 24rpx; /* 12px */
 }
 
+/* 标题行：左右和下面列表保持同样的边距 */
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-right: 48rpx;
+  padding: 0 48rpx;
 }
 
 .more-btn {
   font-size: 28rpx; /* 14px */
-  color: #FF5A5F;
+  color: #A0A4AE;
 }
 
+/* 横向滚动区：这里负责真正的左右滚动和两侧留白 */
 .nearby-scroll {
-  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 24rpx; /* 12px */
+  padding: 0 48rpx;
+  box-sizing: border-box;
+  overflow-x: auto;
   white-space: nowrap;
 }
 
-.nearby-list {
-  display: flex;
-  gap: 24rpx; /* 12px */
-  padding-right: 48rpx;
+/* 隐藏横向滚动条，保留更干净的视觉 */
+.nearby-scroll::-webkit-scrollbar {
+  display: none;
 }
 
+/* 景点详情页里的附近美食卡片 */
 .nearby-card {
-  width: 280rpx; /* 140px */
+  width: 240rpx; /* 120px */
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 24rpx; /* 12px */
 }
 
+/* 美食详情页里的推荐菜卡片 */
 .dish-card {
-  width: 280rpx;
+  width: 240rpx;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -329,8 +339,8 @@
 
 
 .nearby-img {
-  width: 280rpx; /* 140px */
-  height: 280rpx; /* 140px */
+  width: 240rpx; /* 120px */
+  height: 240rpx; /* 140px */
   border-radius: 24rpx; /* 12px */
   background: #F7F8FA;
 }
@@ -347,11 +357,13 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 32rpx;
 }
 
 .nearby-meta {
   font-size: 24rpx; /* 12px */
   color: #A0A4AE;
+  line-height: 32rpx;
 }
 
 /* ── 底部操作栏 ── */

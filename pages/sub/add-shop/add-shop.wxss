@@ -2,6 +2,8 @@
   觅食图 · 添加店铺页  (Refactored to Design System)
   ================================================ */
 
+/* 页面整体容器：负责表单、地图和底部提交按钮 */
+
 .container {
   min-height: 100vh;
   background: var(--background);
@@ -10,6 +12,7 @@
 }
 
 /* ─── Section ─────────────────────────────── */
+/* 表单基础分组：每一块输入内容都放在这里 */
 .form-section {
   background: var(--surface);
   border-radius: var(--radius-md);
@@ -45,6 +48,7 @@
 }
 
 /* ─── Category Pills ─────────────────────── */
+/* 分类胶囊按钮：用于切换店铺大类 */
 .category-select {
   display: flex;
   flex-wrap: wrap;
@@ -75,6 +79,7 @@
 }
 
 /* ─── Emoji Select ─────────────────────────── */
+/* 图标选择区：用于给自定义地点挑一个 emoji */
 .emoji-select {
   display: flex;
   flex-wrap: wrap;
@@ -97,6 +102,7 @@
 }
 
 /* ─── 🗺️ Map Choose Button ─────────────── */
+/* 地图选点入口按钮 */
 .choose-location-btn {
   display: flex;
   align-items: center;
@@ -162,6 +168,7 @@
 }
 
 /* ─── Map Picker ──────────────────────────── */
+/* 地图选择器区域 */
 .map-picker {
   position: relative;
   height: 380rpx;
@@ -188,6 +195,7 @@
 }
 
 /* ─── Submit Button ──────────────────────── */
+/* 底部固定提交按钮 */
 .submit-section {
   position: fixed;
   bottom: 0;

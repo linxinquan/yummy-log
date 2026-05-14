@@ -1,3 +1,4 @@
+/* 页面整体容器 */
 .link-import-page {
   min-height: 100vh;
   background: #FFFFFF;
@@ -5,6 +6,7 @@
   box-sizing: border-box;
 }
 
+/* 顶部标题区 */
 .link-import-header {
   display: flex;
   align-items: center;
@@ -36,6 +38,7 @@
   margin-top: 24rpx;
 }
 
+/* 输入框外层容器 */
 .link-input-wrap {
   box-sizing: border-box;
   min-height: 320rpx;
@@ -70,6 +73,7 @@
   line-height: 24rpx;
 }
 
+/* 底部固定按钮区 */
 .link-import-footer {
   position: fixed;
   left: 48rpx;

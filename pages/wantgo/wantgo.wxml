@@ -72,6 +72,7 @@
               <text class="place-delete-text">删除</text>
             </view>
           </view>
+          <!-- 实际可滑动的卡片本体：左边封面，中间信息，右边箭头 -->
           <view
             class="place-row"
             bindtap="onItemTap"
@@ -83,25 +84,31 @@
             data-index="{{index}}"
             style="transform: translateX({{item.swipeOffset || 0}}px);"
           >
-            <image class="place-cover" src="{{item.coverImage}}" mode="aspectFill"></image>
-            <view class="place-info-row">
-              <view class="place-main">
-                <view class="place-head">
-                  <view class="place-tag">
-                    <text class="place-tag-text">{{item.tagText}}</text>
-                  </view>
-                  <text class="place-name">{{item.name}}</text>
-                </view>
-                <travel-meta-line
-                  class="place-meta-line"
-                  travel-meta="{{item.travelMeta}}"
-                  variant="compact"
-                  bindtapmeta="onOpenTransportSheet"
-                  data-index="{{index}}"
-                ></travel-meta-line>
+            <view class="place-card-main">
+              <!-- 左侧封面：图片 + 封面角标 -->
+              <view class="place-cover-wrap">
+                <image class="place-cover" src="{{item.coverImage}}" mode="aspectFill"></image>
+                <view class="card-cat-badge" wx:if="{{item.displayCategory}}">{{item.displayCategory}}</view>
               </view>
-              <view class="place-arrow">
-                <i class="mgc_right_line"></i>
+              <!-- 中间信息和右侧箭头 -->
+              <view class="place-info-row">
+                <view class="place-main">
+                  <text class="place-name">{{item.name}}</text>
+                  <view class="place-tags">
+                    <view class="place-rating" wx:if="{{item.rating}}">
+                      <text>{{item.rating}}</text>
+                    </view>
+                    <text class="place-tag-chip" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+                  </view>
+                  <view class="place-footer">
+                    <text class="place-footer-text">{{item.displayWantCount}} 人想去</text>
+                    <text class="place-footer-separator">·</text>
+                    <text class="place-footer-text">{{item.distanceText}}</text>
+                  </view>
+                </view>
+                <view class="place-arrow">
+                  <i class="mgc_right_line"></i>
+                </view>
               </view>
             </view>
           </view>

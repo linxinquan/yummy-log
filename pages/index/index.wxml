@@ -131,9 +131,10 @@
           wx:for="{{filteredItems}}" 
           wx:key="id" 
         >
-          <!-- 统一卡片布局 -->
+          <!-- 统一卡片布局：左边封面，中间信息，右边想去按钮 -->
           <view class="shop-card" bindtap="onItemTap" data-item="{{item}}">
             <view class="card-main">
+              <!-- 左侧封面区：图片、兜底占位、封面角标都放这里 -->
               <view class="card-img-wrap">
                 <image
                   wx:if="{{item.displayImage}}"
@@ -149,6 +150,7 @@
                 <view class="card-cat-badge" wx:if="{{item.displayCategory}}">{{item.displayCategory}}</view>
               </view>
 
+              <!-- 中间信息区：标题、评分标签、底部数据 -->
               <view class="card-info">
                 <view class="card-name">{{item.name}}</view>
                 <view class="card-tags">
@@ -165,9 +167,10 @@
               </view>
             </view>
 
+            <!-- 右侧操作区：这里只保留想去图标 -->
             <view class="shop-action-icons">
               <view
-                class="icon-btn want-icon {{item.isLiked ? 'liked' : ''}}"
+                class="want-icon {{item.isLiked ? 'liked' : ''}}"
                 catchtap="onToggleLike"
                 data-shopid="{{item.id}}"
                 data-type="{{item.type}}"

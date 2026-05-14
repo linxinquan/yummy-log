@@ -3,6 +3,25 @@ const app = getApp()
 const shopData = require('../../utils/shopData')
 const spotData = require('../../utils/spotData')
 const util = require('../../utils/util')
+const { resolveDisplayCategory } = require('../../utils/displayCategory')
+
+const DEFAULT_CENTER = {
+  lat: 22.4846,
+  lng: 113.9046
+}
+
+// 把“想去人数”格式化成更短的展示形式。
+// 例如 1200 -> 1.2k，12000 -> 1.2w。
+function formatWantCount(count) {
+  const value = Number(count) || 1024
+  if (value >= 10000) {
+    return (value / 10000).toFixed(1).replace('.0', '') + 'w'
+  }
+  if (value >= 1000) {
+    return (value / 1000).toFixed(1).replace('.0', '') + 'k'
+  }
+  return String(value)
+}
 
 Page({
   data: {
@@ -50,6 +69,8 @@ Page({
     // 构建所有景点数据
     const allSpots = spotData.spotData || []
 
+    // 这几组是补充用的演示数据，作用和探索页一致，
+    // 这样收藏页里也能完整显示文化展馆、自然户外、购物、酒店。
     // 添加假数据（文化展馆、自然户外、购物、酒店）
     const cultureData = [
       { id: 901, name: '深圳美术馆', category: '文化展馆', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, tags: ['展览', '艺术'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
@@ -76,8 +97,10 @@ Page({
       { id: 934, name: '深圳大鹏古城民宿', category: '酒店', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', price: 380 },
     ]
 
+    // 先把“偏商业类”的数据合在一起，后面按收藏 id 去匹配。
     // 合并所有商业类数据（美食、饮品、购物、酒店）
     const businessCategoryData = [...allFoods, ...shoppingData, ...hotelData]
+    // 再把“偏景点类”的数据合在一起。
     // 合并所有景点类数据（景点、文化展馆、自然户外）
     const attractionCategoryData = [...allSpots, ...cultureData, ...outdoorData]
 
@@ -86,14 +109,18 @@ Page({
       .map(id => {
         const item = businessCategoryData.find(f => String(f.id) === String(id))
         if (item) {
-          // 限制标签数量最多2个（与探索页面一致）
-          const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2);
+          const distance = util.getDistance(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng, item.lat || DEFAULT_CENTER.lat, item.lng || DEFAULT_CENTER.lng)
+          // 标签最多只显示 2 个，避免撑破卡片布局。
+          const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2)
           return {
             ...item,
             tags: filteredTags,
             displayImage: item.logo || item.image || item.thumb,
-            displayCategory: item.category || '美食',
-            type: 'food'
+            displayCategory: resolveDisplayCategory(item),
+            displayWantCount: formatWantCount(item.wantCount),
+            distance,
+            distanceText: util.formatDistance(distance),
+            type: item.type || 'food'
           }
         }
         return null
@@ -105,21 +132,27 @@ Page({
       .map(id => {
         const item = attractionCategoryData.find(s => String(s.id) === String(id))
         if (item) {
-          // 限制标签数量最多2个（与探索页面一致）
-          const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2);
+          const distance = util.getDistance(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng, item.lat || DEFAULT_CENTER.lat, item.lng || DEFAULT_CENTER.lng)
+          // 标签最多只显示 2 个，和探索页保持一致。
+          const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2)
           return {
             ...item,
             displayImage: item.image || item.logo || item.thumb,
-            displayCategory: item.category || '景点',
-            type: 'spot'
+            displayCategory: resolveDisplayCategory(item),
+            displayWantCount: formatWantCount(item.wantCount),
+            distance,
+            distanceText: util.formatDistance(distance),
+            tags: filteredTags,
+            type: item.type || 'spot'
           }
         }
         return null
       })
       .filter(Boolean)
 
-    // 合并列表
+    // 合并后再按距离排序，让离用户更近的收藏排在前面。
     const allList = [...businessCategoryList, ...attractionCategoryList]
+      .sort((a, b) => (a.distance || 0) - (b.distance || 0))
 
     this.setData({
       allList,

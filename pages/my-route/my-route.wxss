@@ -1,9 +1,76 @@
 @import "../guide-detail/guide-detail.wxss";
 
+/* 隐藏模式切换时，强制不占位 */
 .mode-switch[hidden] {
   display: none;
 }
 
+/* 页面头部：和正常的路线规划详情保持同一套留白与层级 */
+.detail-header {
+  margin: 0 48rpx 0;
+}
+
+/* 通用底部弹窗遮罩：控制背景蒙层和点击关闭区域 */
+.sheet-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.3s;
+  z-index: 1001;
+}
+
+.sheet-mask.show {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+/* 通用底部弹窗面板：默认在底部隐藏，显示时上滑出现 */
+.sheet-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+  z-index: 1002;
+}
+
+.sheet-mask.show .sheet-panel {
+  transform: translateY(0);
+}
+
+/* 弹窗头部：单独使用自己的类名，避免影响页面顶部标题区 */
+.sheet-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 128rpx;
+  padding: 0 48rpx;
+  box-sizing: border-box;
+}
+
+.sheet-modal-title {
+  color: #242529;
+  font-size: 40rpx;
+  font-weight: 500;
+  line-height: 100%;
+}
+
+.sheet-modal-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #242529;
+  font-size: 48rpx;
+}
+
+/* 左滑删除的外层单元 */
 .place-swipe-cell {
   position: relative;
   overflow: hidden;
@@ -20,6 +87,7 @@
   display: none;
 }
 
+/* 地点列表区域 */
 .place-list {
   margin: 0 48rpx;
 }
@@ -30,6 +98,7 @@
   height: 0;
 }
 
+/* 左滑出现的删除按钮 */
 .place-delete-btn {
   position: absolute;
   top: 0;
@@ -64,12 +133,177 @@
   font-weight: 500;
 }
 
+/* 单个地点卡片 */
 .place-row {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 24rpx; /* 12px：中间信息到右侧箭头 */
   margin: 0;
+  min-height: 160rpx;
   transition: transform 0.18s ease;
   background: #FFFFFF;
   border-radius: 24rpx;
+}
+
+/* 卡片主体：左侧封面和中间信息保持 16px 间距 */
+.route-place-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 32rpx; /* 16px：封面到中间信息 */
+  min-width: 0;
+}
+
+/* 左侧封面容器：封面角标要贴在图片上 */
+.route-place-cover-wrap {
+  position: relative;
+  width: 160rpx; /* 80px */
+  height: 160rpx; /* 80px */
+  flex-shrink: 0;
+  border-radius: 20rpx; /* 10px */
+  overflow: hidden;
+  background: #F2F4F7;
+}
+
+.place-cover {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 20rpx; /* 10px */
+}
+
+/* 封面角标：和探索列表保持同一套视觉 */
+.card-cat-badge {
+  position: absolute;
+  top: 12rpx; /* 6px */
+  left: 12rpx; /* 6px */
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8rpx; /* 4px */
+  padding: 6rpx 8rpx; /* 3px 4px */
+  color: #FFFFFF;
+  font-size: 20rpx; /* 10px */
+  line-height: 20rpx;
+  backdrop-filter: blur(4px);
+}
+
+.place-info-row {
+  flex: 1;
+  min-width: 0;
+  height: 160rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.place-main.route-place-content {
+  flex: 1;
+  min-width: 0;
+  height: 144rpx; /* 72px */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24rpx; /* 12px：评分标签到底部交通行 */
+}
+
+.route-place-top {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx; /* 8px：标题到评分标签 */
+  min-width: 0;
+}
+
+.route-place-name {
+  width: 100%;
+  color: #242529;
+  font-size: 32rpx; /* 16px */
+  line-height: 32rpx;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 评分和普通标签：直接复用探索列表的结构风格 */
+.route-place-tags {
+  display: flex;
+  align-items: center;
+  gap: 16rpx; /* 8px */
+  flex-wrap: nowrap;
+  overflow: hidden;
+  width: 100%;
+}
+
+.rating-star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 16rpx; /* 4px 8px */
+  border-radius: 12rpx; /* 6px */
+  background: #FDF8E3;
+  color: #EE8733;
+  font-size: 24rpx; /* 12px */
+  line-height: 24rpx;
+  flex-shrink: 0;
+}
+
+.spot-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 16rpx; /* 4px 8px */
+  border-radius: 12rpx; /* 6px */
+  background: #F6F6F6;
+  color: #BABABA;
+  font-size: 24rpx; /* 12px */
+  line-height: 24rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* 底部交通信息：出行方式 + 中文距离时间 */
+.route-place-travel-row {
+  display: flex;
+  align-items: center;
+  gap: 24rpx; /* 12px */
+  min-width: 0;
+}
+
+.route-place-travel-mode,
+.route-place-travel-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx; /* 2px */
+  min-width: 0;
+}
+
+.route-place-travel-mode i,
+.route-place-travel-summary i {
+  flex-shrink: 0;
+  font-size: 32rpx; /* 16px */
+  line-height: 32rpx;
+}
+
+.route-place-travel-mode i {
+  color: #A0A4AE;
+}
+
+.route-place-travel-summary i {
+  color: #C7CAD1;
+}
+
+.route-place-travel-mode text {
+  color: #A0A4AE;
+  font-size: 24rpx; /* 12px */
+  line-height: 24rpx;
+  white-space: nowrap;
+}
+
+.route-place-travel-summary text {
+  color: #A0A4AE;
+  font-size: 24rpx; /* 12px */
+  line-height: 24rpx;
+  white-space: nowrap;
 }
 
 .place-handle i {
@@ -80,6 +314,21 @@
 .place-row.dragging {
   box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, 0.12);
   transition: none;
+}
+
+.place-arrow {
+  width: 40rpx; /* 20px */
+  height: 40rpx; /* 20px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.place-arrow i {
+  color: #C7CAD1;
+  font-size: 40rpx; /* 20px */
+  line-height: 40rpx;
 }
 
 .add-place-entry {
@@ -117,6 +366,7 @@
   display: block;
 }
 
+/* 空路线时的提示卡片 */
 .route-empty-card {
   display: flex;
   flex-direction: column;
@@ -171,6 +421,7 @@
   font-size: 40rpx;
 }
 
+/* 底部按钮区域 */
 .route-bottom-bar {
   gap: 16rpx;
 }
@@ -213,6 +464,7 @@
   font-weight: 500;
 }
 
+/* 添加地点底部弹窗 */
 .place-picker-mask {
   position: fixed;
   inset: 0;
@@ -220,6 +472,161 @@
   z-index: 90;
   pointer-events: none;
   transition: background 0.3s;
+}
+
+/* 路线详情里的操作弹窗：用于选择导航地图 */
+.route-action-sheet {
+  z-index: 1002;
+}
+
+.route-sheet-option-list {
+  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.route-sheet-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 104rpx;
+  padding: 0 32rpx;
+  border-radius: 24rpx;
+  border: 2rpx solid #E5E7EB;
+  background: #FFFFFF;
+}
+
+.route-sheet-option + .route-sheet-option {
+  margin-top: 24rpx;
+}
+
+.route-sheet-option-main {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  color: #242529;
+}
+
+.route-sheet-option-main i {
+  font-size: 40rpx;
+  color: #242529;
+}
+
+.route-sheet-option-main text {
+  font-size: 32rpx;
+  line-height: 32rpx;
+  color: #242529;
+}
+
+.route-sheet-option-arrow {
+  font-size: 36rpx;
+  color: #C7CAD1;
+}
+
+/* 地点简介底部弹窗：只保留封面和探索详情里的核心信息 */
+.place-intro-sheet {
+  z-index: 1002;
+  max-height: 78vh;
+}
+
+.place-intro-scroll {
+  max-height: calc(78vh - 128rpx);
+}
+
+.place-intro-body {
+  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.place-intro-cover {
+  width: 240rpx;
+  height: 240rpx;
+  border-radius: 24rpx;
+  display: block;
+}
+
+.place-intro-tags {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 32rpx;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  background: #F7F8FA;
+}
+
+.tag-badge text {
+  color: #A0A4AE;
+  font-size: 24rpx;
+  line-height: 24rpx;
+}
+
+.place-intro-title {
+  display: block;
+  margin-top: 32rpx;
+  color: #242529;
+  font-size: 48rpx;
+  line-height: 48rpx;
+  font-weight: 500;
+}
+
+.place-intro-open-time {
+  display: block;
+  margin-top: 24rpx;
+  color: #A0A4AE;
+  font-size: 24rpx;
+  line-height: 24rpx;
+}
+
+.place-intro-address-box {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 24rpx 32rpx;
+  margin-top: 48rpx;
+  border: 2rpx solid #E5E7EB;
+  border-radius: 24rpx;
+  box-sizing: border-box;
+}
+
+.place-intro-address-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.place-intro-address-label {
+  color: #A0A4AE;
+  font-size: 24rpx;
+  line-height: 24rpx;
+}
+
+.place-intro-address-text {
+  color: #242529;
+  font-size: 28rpx;
+  line-height: 40rpx;
+  font-weight: 500;
+}
+
+.place-intro-address-icon {
+  font-size: 40rpx;
+  color: #C7CAD1;
+}
+
+.place-intro-desc {
+  display: block;
+  margin-top: 32rpx;
+  color: #242529;
+  font-size: 32rpx;
+  line-height: 48rpx;
 }
 
 .place-picker-mask.show {

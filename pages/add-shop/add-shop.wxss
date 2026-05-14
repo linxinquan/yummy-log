@@ -2,6 +2,7 @@ page {
   background: #FFFFFF;
 }
 
+/* 页面整体容器：负责承载顶部问候、功能入口和底部弹窗 */
 .container {
   position: relative;
   min-height: 100vh;
@@ -10,6 +11,7 @@ page {
   box-sizing: border-box;
 }
 
+/* 顶部问候栏 */
 .tab-bar {
   position: fixed;
   top: 0;
@@ -45,6 +47,7 @@ page {
   height: 48rpx;
 }
 
+/* 日期条区域 */
 .create-content {
   padding: 0 48rpx;
 }
@@ -66,6 +69,7 @@ page {
   color: #242529;
 }
 
+/* 中间两个功能卡片区域 */
 .action-section {
   position: absolute;
   left: 48rpx;
@@ -200,6 +204,7 @@ page {
   filter: blur(40rpx);
 }
 
+/* 解析路线弹窗：遮罩 + 面板 */
 .import-sheet-mask {
   position: fixed;
   inset: 0;

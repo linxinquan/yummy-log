@@ -2,9 +2,13 @@
 const util = require('../../utils/util')
 const shopData = require('../../utils/shopData')
 const spotData = require('../../utils/spotData')
+const { normalizeTripDurationText } = require('../../utils/trip-duration')
+const { backfillStoredGuides } = require('../../utils/guide-backfill')
 
+// 左滑删除区域的宽度，单位是 rpx。
 const DELETE_ACTION_WIDTH_RPX = 176
 
+// 给每条攻略补一个左滑偏移量，方便做删除交互。
 function withSwipeState(items) {
   return (items || []).map(item => ({
     ...item,
@@ -12,6 +16,7 @@ function withSwipeState(items) {
   }))
 }
 
+// 关闭其他已经打开的左滑项，只保留当前这一项。
 function closeSwipeItems(items, keepIndex = -1) {
   let changed = false
   const nextItems = (items || []).map((item, index) => {
@@ -27,6 +32,7 @@ function closeSwipeItems(items, keepIndex = -1) {
   return { nextItems, changed }
 }
 
+// 从攻略的标题、城市等字段里尽量推断出城市名称。
 function inferGuideCity(guide = {}) {
   const sourceText = [
     guide.city,
@@ -45,15 +51,18 @@ function inferGuideCity(guide = {}) {
   return '深圳市'
 }
 
+// 统计“这篇攻略被保存成路线多少次”。
 function getSavedGuideCount(guideId) {
   const savedRoutes = wx.getStorageSync('savedRoutes') || []
   return savedRoutes.filter(item => String(item.guideId || item.id) === String(guideId)).length
 }
 
+// 把数字补成两位，例如 3 -> 03。
 function padNumber(value) {
   return String(value).padStart(2, '0')
 }
 
+// 把发布时间格式化成“年/月/日 时:分”。
 function formatPublishedAt(timestamp) {
   const date = new Date(timestamp || Date.now())
   if (Number.isNaN(date.getTime())) return '刚刚发布'
@@ -71,16 +80,18 @@ Page({
     deleteActionWidthPx: 84
   },
 
+  // 页面初始化：计算顶部高度，并加载我的攻略。
   onLoad() {
     this.initNavigationBar()
     this.loadMyGuides()
   },
 
+  // 每次回到页面时都重新读取一遍，保证列表最新。
   onShow() {
     this.loadMyGuides()
   },
 
-  // 初始化导航栏
+  // 初始化导航栏高度和左滑删除宽度。
   initNavigationBar() {
     const sysInfo = wx.getSystemInfoSync()
     this.setData({
@@ -89,12 +100,16 @@ Page({
     })
   },
 
-  // 加载我的攻略
+  // 从本地缓存读取“我的攻略”，并补全封面、城市、发布时间等展示字段。
   loadMyGuides() {
     const guides = util.loadData('myGuides', [])
+    const { guides: fixedGuides, changed } = backfillStoredGuides(guides)
+    if (changed) {
+      util.saveData('myGuides', fixedGuides)
+    }
 
     const nextGuides = withSwipeState(
-      guides
+      fixedGuides
         .slice()
         .sort((a, b) => (b.date || 0) - (a.date || 0))
         .map(guide => {
@@ -121,7 +136,7 @@ Page({
           }
 
           nextGuide.shopCount = nextGuide.shopCount || ((nextGuide.content || []).length || 0)
-          nextGuide.duration = nextGuide.duration || `${Math.max((nextGuide.daySections || []).length, 1)}天`
+          nextGuide.duration = normalizeTripDurationText(nextGuide.duration, Math.max((nextGuide.daySections || []).length, 1))
           nextGuide.cityText = nextGuide.cityText || inferGuideCity(nextGuide)
           nextGuide.useRouteCount = (nextGuide.baseUseCount || 0) + getSavedGuideCount(nextGuide.id)
           nextGuide.publishedAtText = formatPublishedAt(nextGuide.date)
@@ -136,6 +151,7 @@ Page({
     })
   },
 
+  // 点击攻略卡片：如果当前有左滑打开，先关闭；否则进入详情页。
   onGuideTap(e) {
     if (Date.now() - (this._lastSwipeTime || 0) < 250) return
 
@@ -161,6 +177,7 @@ Page({
     })
   },
 
+  // 左滑开始：记录起点和当前偏移量。
   onCardTouchStart(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10)
     const touch = e.touches && e.touches[0]
@@ -184,6 +201,7 @@ Page({
     }
   },
 
+  // 左滑过程：跟着手指移动更新偏移量。
   onCardTouchMove(e) {
     if (!this._swipeGesture) return
     const touch = e.touches && e.touches[0]
@@ -221,6 +239,7 @@ Page({
     this.setData({ myGuides: guides })
   },
 
+  // 左滑结束：决定停在打开状态，还是回弹关闭。
   onCardTouchEnd() {
     if (!this._swipeGesture) return
 
@@ -250,12 +269,14 @@ Page({
     this._swipeGesture = null
   },
 
+  // 空状态按钮：去路线页导入或创建内容。
   onGoGuidePage() {
     wx.switchTab({
       url: '/pages/wantgo/wantgo'
     })
   },
 
+  // 删除一篇已发布攻略。
   onDeleteGuide(e) {
     const guideId = e.currentTarget.dataset.id
     const guides = util.loadData('myGuides', []).filter(g => String(g.id) !== String(guideId))

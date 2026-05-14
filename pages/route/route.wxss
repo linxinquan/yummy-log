@@ -1,9 +1,11 @@
 @import "../guide-detail/guide-detail.wxss";
 
+/* 路线规划页根容器 */
 page {
   background: #FFFFFF;
 }
 
+/* 页面整体容器 */
 .page {
   position: relative;
   height: 100vh;
@@ -11,6 +13,7 @@ page {
   overflow: hidden;
 }
 
+/* 顶部地图 / 头图区域 */
 .hero-wrap {
   position: relative;
   width: 100%;
@@ -37,6 +40,7 @@ page {
   pointer-events: none;
 }
 
+/* 左上角返回区域 */
 .top-actions {
   position: fixed;
   z-index: 30;
@@ -64,6 +68,7 @@ page {
   color: #FFFFFF;
 }
 
+/* 列表模式的白色内容面板 */
 .detail-sheet {
   position: fixed;
   left: 0;
@@ -83,7 +88,7 @@ page {
 .sheet-header,
 .section-card,
 .empty-card {
-  margin: 0 48rpx 24rpx;
+  margin: 0 48rpx 0;
 }
 
 .plain-section {
@@ -132,6 +137,7 @@ page {
   line-height: 22rpx;
 }
 
+/* 候选地点卡片：自定义规划时使用 */
 .candidate-card {
   padding-bottom: 8rpx;
 }
@@ -315,32 +321,58 @@ page {
   transform: rotate(-8deg);
 }
 
+/* 路线规划页会覆盖 guide-detail 的同名类，所以这里同步成新版卡片样式 */
 .route-place-main {
   flex: 1;
-  min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 16rpx;
+  align-items: center;
+  gap: 32rpx; /* 16px：封面到中间信息 */
+  min-width: 0;
 }
 
-.route-place-tag,
-.nav-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: flex-start;
-  min-width: 56rpx;
-  height: 32rpx;
-  padding: 0 8rpx;
-  border-radius: 8rpx;
-  background: #FDF8E3;
-  color: #ee8733;
-  font-size: 20rpx;
+.route-place-cover-wrap {
+  position: relative;
+  width: 160rpx; /* 80px */
+  height: 160rpx; /* 80px */
+  flex-shrink: 0;
+  border-radius: 20rpx; /* 10px */
+  overflow: hidden;
+  background: #F2F4F7;
+}
+
+.card-cat-badge {
+  position: absolute;
+  top: 12rpx; /* 6px */
+  left: 12rpx; /* 6px */
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8rpx; /* 4px */
+  padding: 6rpx 8rpx; /* 3px 4px */
+  color: #FFFFFF;
+  font-size: 20rpx; /* 10px */
   line-height: 20rpx;
+  backdrop-filter: blur(4px);
+}
+
+.place-main.route-place-content {
+  flex: 1;
+  min-width: 0;
+  height: 144rpx; /* 72px */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24rpx; /* 12px：评分标签到底部交通行 */
+}
+
+.route-place-top {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx; /* 8px：标题到评分标签 */
+  min-width: 0;
 }
 
 .route-place-name,
 .nav-destination-name {
+  width: 100%;
   color: #242529;
   font-size: 32rpx;
   line-height: 32rpx;
@@ -349,11 +381,79 @@ page {
   text-overflow: ellipsis;
 }
 
-.route-place-travel,
-.nav-destination-meta {
-  color: #6E727A;
+.route-place-tags {
+  display: flex;
+  align-items: center;
+  gap: 16rpx; /* 8px */
+  flex-wrap: nowrap;
+  overflow: hidden;
+  width: 100%;
+}
+
+.rating-star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  background: #FDF8E3;
+  color: #EE8733;
   font-size: 24rpx;
   line-height: 24rpx;
+  flex-shrink: 0;
+}
+
+.spot-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  background: #F6F6F6;
+  color: #BABABA;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.route-place-travel-row {
+  display: flex;
+  align-items: center;
+  gap: 24rpx; /* 12px */
+  min-width: 0;
+}
+
+.route-place-travel-mode,
+.route-place-travel-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx; /* 2px */
+  min-width: 0;
+}
+
+.route-place-travel-mode i,
+.route-place-travel-summary i {
+  flex-shrink: 0;
+  font-size: 32rpx; /* 16px */
+  line-height: 32rpx;
+}
+
+.route-place-travel-mode i {
+  color: #A0A4AE;
+}
+
+.route-place-travel-summary i {
+  color: #C7CAD1;
+}
+
+.route-place-travel-mode text,
+.route-place-travel-summary text,
+.nav-destination-meta {
+  color: #A0A4AE;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  white-space: nowrap;
 }
 
 .route-place-actions,
@@ -744,6 +844,7 @@ page {
   border: 2rpx solid rgba(71, 191, 254, 0.18);
 }
 
+/* 导览模式下方的主信息卡片 */
 .nav-card {
   position: fixed;
   left: 48rpx;

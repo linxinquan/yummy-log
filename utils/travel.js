@@ -10,18 +10,27 @@ const MODE_CONFIG = {
   walk: { key: 'walk', label: '步行', shortLabel: '步', icon: 'mgc_walk_line', minutesPerKm: 12 },
   ride: { key: 'ride', label: '骑行', shortLabel: '骑', icon: 'mgc_riding_line', minutesPerKm: 4 },
   transit: { key: 'transit', label: '公共交通', shortLabel: '公', icon: 'mgc_train_2_line', minutesPerKm: 5 },
+  // 旧数据兼容：历史上单独存在“公交”，现在统一归并到“公共交通”。
   bus: { key: 'bus', label: '公交', shortLabel: '公', icon: 'mgc_bus_line', minutesPerKm: 6 },
   drive: { key: 'drive', label: '驾车', shortLabel: '车', icon: 'mgc_car_3_line', minutesPerKm: 3 }
 }
 
-const MODE_ORDER = ['walk', 'ride', 'transit', 'bus', 'drive']
+// 交通信息弹窗只展示 4 个大类，不再单独展示“公交”。
+const MODE_ORDER = ['walk', 'ride', 'transit', 'drive']
 
 function formatDurationShort(minutes) {
   const safeMinutes = Math.max(1, Math.round(minutes || 0))
-  if (safeMinutes < 60) return `${safeMinutes}min`
+  if (safeMinutes < 60) return `${safeMinutes} 分钟`
   const hours = Math.floor(safeMinutes / 60)
   const mins = safeMinutes % 60
-  return mins ? `${hours}h ${mins}min` : `${hours}h`
+  return mins ? `${hours} 小时 ${mins} 分钟` : `${hours} 小时`
+}
+
+// 把距离统一改成中文单位，避免在弹窗里出现 m / km 英文缩写。
+function formatDistanceZh(distance) {
+  const safeDistance = Math.max(Math.round(distance || 0), 0)
+  if (safeDistance < 1000) return `${safeDistance} 米`
+  return `${(safeDistance / 1000).toFixed(1).replace('.0', '')} 公里`
 }
 
 function normalizeTransportMode(mode) {
@@ -60,9 +69,11 @@ function inferDefaultMode(distance) {
 
 function buildTravelMeta(distance, mode) {
   const safeDistance = Math.max(Math.round(distance || 0), 1)
-  const modeKey = MODE_CONFIG[mode] ? mode : inferDefaultMode(safeDistance)
+  // 先把旧的 bus 统一折叠成 transit，保证界面只显示“公共交通”。
+  const normalizedMode = normalizeTransportMode(mode)
+  const modeKey = normalizedMode || inferDefaultMode(safeDistance)
   const config = MODE_CONFIG[modeKey]
-  const distanceText = util.formatDistance(safeDistance)
+  const distanceText = formatDistanceZh(safeDistance)
   const timeText = formatDurationShort((safeDistance / 1000) * config.minutesPerKm)
   return {
     mode: modeKey,

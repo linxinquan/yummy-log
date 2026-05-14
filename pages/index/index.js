@@ -4,6 +4,7 @@ const shopData = require('../../utils/shopData')
 const spotData = require('../../utils/spotData')
 const util = require('../../utils/util')
 const markerIcons = require('../../utils/markerIcons')
+const { resolveDisplayCategory } = require('../../utils/displayCategory')
 
 const GUANGDONG_CITIES = [
   { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 1070 },
@@ -29,6 +30,8 @@ const GUANGDONG_CITIES = [
   { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445, bgColor: '#E2DEE0', wantCount: 1070 }
 ]
 
+// 给城市选择器准备封面图。
+// 这里会把现有的美食和景点图片拿来循环复用，避免城市卡片没有图。
 function buildCityCoverPool() {
   const foodCovers = [...(shopData.shops || []), ...(shopData.foods || [])]
     .map(item => item.logo || item.image || item.thumb)
@@ -182,34 +185,37 @@ Page({
   loadItems() {
     const userShops = util.loadData('userAddedShops', [])
     
-    // 处理美食
+    // 先把美食数据整理成探索页统一用的字段格式。
     const foods = [...shopData.shops, ...shopData.foods, ...userShops].map(shop => {
-      // 过滤掉行政区划标签，并最多取2个
+      // 标签里像“南山区”这种行政区信息不展示，只保留前 2 个业务标签。
       const filteredTags = (shop.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2);
       return {
         ...shop,
         tags: filteredTags,
         type: 'food',
-        displayCategory: shop.category || '美食',
+        // 封面角标统一走公共方法，只显示大类，不显示细分类。
+        displayCategory: resolveDisplayCategory({ ...shop, type: 'food' }),
         lat: shop.lat || shop.latitude,
         lng: shop.lng || shop.longitude,
-        displayImage: shop.logo || shop.image || shop.thumb // 统一图片字段
+        displayImage: shop.logo || shop.image || shop.thumb // 统一图片字段，页面里只读这一个字段
       };
     })
     
-    // 处理景点
+    // 再把景点数据也整理成同一套字段，这样模板就能复用一套卡片结构。
     const spots = spotData.spotData.map(spot => {
-      // 最多取2个
+      // 景点标签同样只保留前 2 个，避免一行塞太满。
       const filteredTags = (spot.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2);
       return {
         ...spot,
         tags: filteredTags,
         type: 'spot',
-        displayCategory: spot.category || '景点',
+        displayCategory: resolveDisplayCategory({ ...spot, type: 'spot' }),
         displayImage: spot.image || spot.logo || spot.thumb // 统一图片字段
       };
     })
     
+    // 下面这几组是补充出来的演示数据，用来让探索页的大类更完整。
+    // 它们会和真实数据一起参与筛选、排序和渲染。
     // 添加假数据：文化展馆
     const cultureData = [
       { id: 901, name: '深圳美术馆', category: '文化展馆', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, tags: ['展览', '艺术'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
@@ -242,11 +248,14 @@ Page({
       { id: 934, name: '深圳大鹏古城民宿', category: '酒店', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', price: 380 },
     ]
     
+    // 最终合并成探索页的总列表，再统一做筛选和排序。
     const allItems = [...spots, ...foods, ...cultureData, ...outdoorData, ...shoppingData, ...hotelData]
     this.setData({ allItems })
     this.applyFilters()
   },
 
+  // 读取用户状态：
+  // 这里主要拿“想去”和“足迹”的本地缓存。
   loadUserData() {
     const wantFoods = util.loadData('userWantFoods', [])
     const wantSpots = util.loadData('userWantSpots', [])
@@ -262,6 +271,7 @@ Page({
     this.updateItemStatus()
   },
 
+  // 把“是否想去”和“想去人数展示文案”刷新到列表数据里。
   updateItemStatus() {
     const { allItems, likedShops } = this.data
     const updatedItems = allItems.map(item => {
@@ -288,7 +298,7 @@ Page({
     this.applyFilters()
   },
 
-  // 筛选与计算
+  // 按当前分类、排序和地图中心点，重新生成当前可见列表。
   applyFilters() {
     let { allItems, currentCategory, sortType, currentDistance, mapCenter } = this.data
     
@@ -340,6 +350,7 @@ Page({
     this.updateMarkers()
   },
 
+  // 根据当前列表更新地图上的点位。
   updateMarkers() {
     const items = this.data.filteredItems
     if (!items || items.length === 0) {
@@ -403,13 +414,14 @@ Page({
     this.setData({ allMarkers: markers })
   },
 
-  // ─── Bottom Sheet 拖拽逻辑 ───
+  // ─── Bottom Sheet 拖拽逻辑：开始拖动 ───
   onSheetTouchStart(e) {
     this.startY = e.touches[0].clientY
     this.startHeight = this.data.sheetHeight
     this.setData({ isDragging: true })
   },
 
+  // Bottom Sheet 拖动过程：实时改变列表面板高度
   onSheetTouchMove(e) {
     if (!this.data.isDragging) return
     const currentY = e.touches[0].clientY
@@ -425,6 +437,7 @@ Page({
     this.setData({ sheetHeight: newHeight })
   },
 
+  // Bottom Sheet 松手后：自动吸附到收起 / 半屏 / 全屏 其中一个状态
   onSheetTouchEnd(e) {
     this.setData({ isDragging: false })
     
@@ -451,7 +464,7 @@ Page({
     })
   },
 
-  // 分类切换
+  // 切换顶部分类，例如美食、景点、购物
   onCategoryChange(e) {
     const category = e.currentTarget.dataset.category
     this.setData({ 
@@ -466,14 +479,14 @@ Page({
     this.applyFilters()
   },
 
-  // 排序切换
+  // 切换排序方式，例如按距离、按评分
   onSortChange(e) {
     const sortType = e.currentTarget.dataset.sort
     this.setData({ sortType, currentPage: 1 })
     this.applyFilters()
   },
 
-  // 点击卡片
+  // 点击列表卡片：根据类型进入景点详情或美食详情
   onItemTap(e) {
     const item = e.currentTarget.dataset.item
     if (item.type === 'spot') {
@@ -483,7 +496,7 @@ Page({
     }
   },
 
-  // 标记点击
+  // 点击地图上的标记点，等同于点击对应的列表卡片
   onMarkerTap(e) {
     const markerId = e.detail.markerId
     const item = this.data.allItems.find(s => s.id === markerId)
@@ -492,7 +505,7 @@ Page({
     }
   },
 
-  // 点击定位
+  // 重新定位到当前用户位置
   onMyLocation() {
     wx.showLoading({ title: '定位中...' })
     wx.getLocation({
@@ -518,7 +531,7 @@ Page({
     })
   },
 
-  // 地图放大
+  // 地图放大一级
   onMapZoomIn() {
     const currentScale = this.data.mapScale
     if (currentScale < 20) {
@@ -527,7 +540,7 @@ Page({
     }
   },
 
-  // 地图缩小
+  // 地图缩小一级
   onMapZoomOut() {
     const currentScale = this.data.mapScale
     if (currentScale > 3) {
@@ -536,7 +549,7 @@ Page({
     }
   },
 
-  // 想去/取消想去
+  // 点击右侧心形，加入或移出“想去”
   onToggleLike(e) {
     // 检查登录状态
     const userInfo = util.loadData('userInfo', null)
@@ -561,6 +574,7 @@ Page({
       duration: 1000
     })
   },
+  // 计算两点之间的直线距离（单位：米）
   calculateDistance(lat1, lng1, lat2, lng2) {
     const R = 6371000 
     const dLat = (lat2 - lat1) * Math.PI / 180
@@ -572,22 +586,25 @@ Page({
     return R * c
   },
 
+  // 把米数格式化成页面展示文案，例如 883m、1.2km
   formatDistance(meters) {
     if (meters < 1000) return Math.round(meters) + 'm'
     return (meters / 1000).toFixed(1) + 'km'
   },
 
+  // 图片加载失败时，用默认图片兜底
   onImageError(e) {
     const index = e.currentTarget.dataset.index
     const key = `filteredItems[${index}].image`
     this.setData({ [key]: '/images/app-logo.jpg' })
   },
 
+  // 列表滚动到底部时的预留入口，目前暂时没有更多数据逻辑
   onLoadMore() {
     // 暂无更多数据处理
   },
 
-  // 位置选择器
+  // 位置选择器：打开 / 关闭 / 阻止冒泡 / 切换城市
   onOpenLocationPicker() { this.setData({ showLocationPicker: true }) },
   onCloseLocationPicker() { this.setData({ showLocationPicker: false }) },
   preventBubble() { },
@@ -607,13 +624,14 @@ Page({
     this.applyFilters()
   },
 
-  // 打开想去清单（切换Tab）
+  // 底部按钮：跳去“想去”页
   onOpenRoute() {
     wx.switchTab({
       url: '/pages/wantgo/wantgo'
     })
   },
 
+  // 把列表面板收起，只露出地图
   onToggleMap() {
     // 切换收起状态，显示地图
     this.setData({
@@ -622,6 +640,7 @@ Page({
     })
   },
 
+  // 直接展开到半屏列表
   onExpandSheet() {
     const sysInfo = wx.getSystemInfoSync()
     this.setData({
@@ -630,6 +649,7 @@ Page({
     })
   },
 
+  // 列表按钮：第一次到半屏，第二次到全屏
   onListBtnTap() {
     const sysInfo = wx.getSystemInfoSync()
     const wh = sysInfo.windowHeight
@@ -654,6 +674,7 @@ Page({
     }
   },
 
+  // 搜索入口暂时未接功能
   onSearchTap() {
     wx.showToast({
       title: '搜索功能开发中',
@@ -661,6 +682,7 @@ Page({
     })
   },
 
+  // 头像入口：跳到“我的”页
   onProfileTap() {
     wx.switchTab({
       url: '/pages/my/my'

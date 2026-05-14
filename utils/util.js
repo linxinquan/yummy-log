@@ -617,6 +617,7 @@ module.exports = {
   parseBlockBasedGuide,
   getNavigationUrl,
   openWechatNavigation,
+  openGaodeNavigation,
   openDirectNavigation,
   getBaiduPanoramaUrl,
   getTencentStaticUrl,

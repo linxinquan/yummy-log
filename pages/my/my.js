@@ -66,6 +66,7 @@ Page({
     journeyIndex: 0
   },
 
+  // 页面初始化：加载用户信息、统计数据、行政区和天气。
   onLoad() {
     this.loadUserInfo()
     this.loadData()
@@ -75,12 +76,14 @@ Page({
     this.loadWeather()
   },
 
+  // 回到页面时重新刷新用户和打卡数据。
   onShow() {
     this.loadUserInfo()
     this.loadData()
     this.loadCheckinStats()
   },
 
+  // 读取打卡统计、最近邮票、地图点位这些“足迹”相关数据。
   loadCheckinStats() {
     if (!checkinUtil) return
     try {
@@ -183,7 +186,7 @@ Page({
     }
   },
 
-  // 预览邮票大图
+  // 预览最近邮票的大图
   onPreviewStamp(e) {
     const id = e.currentTarget.dataset.id
     const item = this.data.recentStamps.find(c => c.id === id)
@@ -192,7 +195,7 @@ Page({
     }
   },
 
-  // 统一采集入口
+  // 统一采集入口：先让用户选“美食采集”还是“景点采集”
   onGoCheckin() {
     wx.showActionSheet({
       itemList: ['美食采集', '景点采集'],
@@ -206,7 +209,7 @@ Page({
     })
   },
 
-  // 加载行政区划信息
+  // 读取定位后的城市和区信息
   loadDistrictInfo() {
     app.whenDistrictReady((info) => {
       this.setData({
@@ -218,7 +221,7 @@ Page({
     })
   },
 
-  // 加载天气信息
+  // 读取当前定位对应的天气信息。
   loadWeather() {
     const location = app.globalData.location
     if (!location) return
@@ -257,7 +260,7 @@ Page({
     })
   },
 
-  // 加载用户信息
+  // 从本地缓存读取登录用户信息。
   loadUserInfo() {
     const userInfo = util.loadData('userInfo', null)
     if (userInfo) {
@@ -277,7 +280,7 @@ Page({
     }
   },
 
-  // 快速登录（模拟直接登录）
+  // 快速登录：当前项目里先用一份默认账号，方便体验流程。
   onQuickLogin() {
     const userInfo = {
       uid: 'MS' + Date.now().toString(36).toUpperCase(),
@@ -305,7 +308,7 @@ Page({
     })
   },
 
-  // 标题栏未登录点击
+  // 未登录时点击顶部头像区域，直接触发快速登录。
   onShowLogin() {
     if (this.data.isLoggedIn) {
       return
@@ -320,7 +323,7 @@ Page({
     this.onQuickLogin()
   },
 
-  // 编辑资料
+  // 已登录后点击资料区：可改昵称或退出登录。
   onEditProfile() {
     wx.showActionSheet({
       itemList: ['修改昵称', '退出登录'],
@@ -337,7 +340,7 @@ Page({
     })
   },
 
-  // 显示修改昵称弹窗
+  // 弹出昵称编辑框，并把结果写回缓存。
   showEditNickname() {
     wx.showModal({
       title: '修改昵称',
@@ -358,7 +361,7 @@ Page({
     })
   },
 
-  // 退出登录
+  // 退出登录，但不清掉历史打卡等业务数据。
   onLogout() {
     wx.showModal({
       title: '退出登录',
@@ -382,7 +385,7 @@ Page({
     })
   },
 
-  // 菜单点击
+  // 我的页快捷入口：收藏、我的发布、设置、分享等。
   onMenuTap(e) {
     const type = e.currentTarget.dataset.type
     
@@ -409,7 +412,7 @@ Page({
     }
   },
 
-  // 加载数据
+  // 读取“想去 / 到访 / 自己添加的地点”等统计数据。
   loadData() {
     const userAddedShops = util.loadData('userAddedShops', [])
     const foodItems = [...shopData.shops, ...(shopData.foods || []), ...userAddedShops]
@@ -468,13 +471,13 @@ Page({
     }
   },
 
-  // Tab 切换
+  // 页面内部 Tab 切换
   onSwitchTab(e) {
     const tab = e.currentTarget.dataset.tab
     this.setData({ currentTab: tab })
   },
 
-  // 店铺点击
+  // 点击列表里的地点卡片，进入对应详情页。
   onShopTap(e) {
     const shop = e.currentTarget.dataset.shop
     if (!shop) return
@@ -487,7 +490,7 @@ Page({
     })
   },
 
-  // 移除想去
+  // 从“想去”里移除一个地点。
   onRemoveLiked(e) {
     const shopId = e.currentTarget.dataset.shopid
     util.toggleLike(shopId)
@@ -495,7 +498,7 @@ Page({
     wx.showToast({ title: '已取消', icon: 'none' })
   },
 
-  // 删除店铺
+  // 删除用户自己添加的地点。
   onDeleteShop(e) {
     const shopId = e.currentTarget.dataset.shopid
     wx.showModal({
@@ -513,39 +516,39 @@ Page({
     })
   },
 
-  // 添加店铺
+  // 去添加页面。
   onAddShop() {
     wx.navigateTo({
       url: '/pages/add-shop/add-shop'
     })
   },
 
-  // 前往「想去清单」独立页面
+  // 跳到“想去”页。
   onGoWantgo() {
     wx.switchTab({ url: '/pages/wantgo/wantgo' })
   },
 
-  // 前往路线规划页
+  // 跳到路线相关页面。
   onGoRoute() {
     wx.navigateTo({ url: '/pages/route/route' })
   },
 
-  // 前往打卡采集列表
+  // 跳到采集本页面。
   onGoCollection() {
     wx.navigateTo({ url: '/pages/collection/collection' })
   },
 
-  // 美食打卡
+  // 快捷进入美食采集。
   onGoCheckinFood() {
     wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
   },
 
-  // 景点打卡
+  // 快捷进入景点采集。
   onGoCheckinSpot() {
     wx.navigateTo({ url: '/pages/checkin/checkin?type=spot' })
   },
 
-  // 点击地图卡片
+  // 点击总地图卡片：没数据时引导去采集。
   onMapTap() {
     // 有打卡点时提示，无打卡点时引导采集
     if (this.data.mapMarkers.length === 0) {
@@ -565,21 +568,21 @@ Page({
 
 
 
-  // 景点地图点击
+  // 点击景点地图卡片。
   onSpotMapTap() {
     if (this.data.spotMarkers.length === 0) {
       wx.navigateTo({ url: '/pages/checkin/checkin?type=spot' })
     }
   },
 
-  // 美食地图点击
+  // 点击美食地图卡片。
   onFoodMapTap() {
     if (this.data.foodMarkers.length === 0) {
       wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
     }
   },
 
-  // 双地图横向滚动处理
+  // 双地图横向滚动时，同步当前页码指示。
   onJourneyScroll(e) {
     const scrollLeft = e.detail.scrollLeft
     const cardWidth = wx.getSystemInfoSync().windowWidth - 80 // 减去边距

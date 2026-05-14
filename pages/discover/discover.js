@@ -1,6 +1,9 @@
 // 觅食图 - 攻略页
 const app = getApp()
+const { normalizeTripDurationText } = require('../../utils/trip-duration')
+const { backfillStoredGuides } = require('../../utils/guide-backfill')
 
+// 根据攻略已有字段，尽量推断出城市名称。
 function inferGuideCity(guide = {}) {
   const sourceText = [
     guide.city,
@@ -19,29 +22,37 @@ function inferGuideCity(guide = {}) {
   return '深圳市'
 }
 
+// 统计这篇攻略被保存成路线的次数。
 function getSavedGuideCount(guideId) {
   const savedRoutes = wx.getStorageSync('savedRoutes') || []
   return savedRoutes.filter(item => String(item.guideId || item.id) === String(guideId)).length
 }
 
+// 给攻略卡片补齐展示字段，例如城市、头像、使用次数。
 function decorateGuideCards(guides = []) {
   return guides.map(item => ({
     ...item,
     cityText: item.cityText || inferGuideCity(item),
     authorAvatar: item.authorAvatar || item.coverImage,
-    useRouteCount: (item.baseUseCount || 0) + getSavedGuideCount(item.id)
+    useRouteCount: (item.baseUseCount || 0) + getSavedGuideCount(item.id),
+    duration: normalizeTripDurationText(item.duration, Math.max((item.daySections || []).length, 1))
   }))
 }
 
+// 读取用户自己发布的攻略，并补成和攻略列表一致的字段结构。
 function getPublishedGuides(cardColors = []) {
   const guides = wx.getStorageSync('myGuides') || []
-  return guides.map((item, index) => ({
+  const { guides: fixedGuides, changed } = backfillStoredGuides(guides)
+  if (changed) {
+    wx.setStorageSync('myGuides', fixedGuides)
+  }
+  return fixedGuides.map((item, index) => ({
     ...item,
     category: item.category || 'all',
     cardColor: item.cardColor || cardColors[index % cardColors.length] || '#F7F7F7',
     cityText: item.cityText || inferGuideCity(item),
     baseUseCount: item.baseUseCount || 0,
-    duration: item.duration || `${Math.max((item.daySections || []).length, 1)}天`,
+    duration: normalizeTripDurationText(item.duration, Math.max((item.daySections || []).length, 1)),
     shopCount: item.shopCount || ((item.content || []).length || 0)
   }))
 }
@@ -83,6 +94,7 @@ Page({
     currentGuides: []
   },
 
+  // 页面初始化：计算顶部安全区，并首次加载攻略数据。
   onLoad() {
     const sysInfo = wx.getSystemInfoSync()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
@@ -104,10 +116,12 @@ Page({
     this.loadGuides()
   },
 
+  // 每次回到页面都重新加载，保证新发布的攻略能出现。
   onShow() {
     this.loadGuides(this.data.currentCategory || '全部')
   },
 
+  // 根据顶部分类切换当前列表。
   refreshGuideList(categoryName = '全部') {
     const filtered = categoryName === '全部'
       ? this.data.allGuides
@@ -119,6 +133,8 @@ Page({
     })
   },
 
+  // 组装攻略页的数据源：
+  // 包括精选攻略、内置攻略、以及用户自己发布的攻略。
   loadGuides(categoryName = '全部') {
     const coverImages = [
       '/images/covers/01.jpeg',
@@ -391,6 +407,7 @@ Page({
     this.refreshGuideList(categoryName)
   },
 
+  // 点击顶部区县入口，进入对应的区县攻略页。
   onDistrictChange(e) {
     const district = e.currentTarget.dataset.district
     const districtName = e.currentTarget.dataset.name
@@ -399,11 +416,13 @@ Page({
     })
   },
 
+  // 点击顶部分类，切换“全部 / 推荐”。
   onCategoryChange(e) {
     const categoryName = e.currentTarget.dataset.name
     this.refreshGuideList(categoryName)
   },
 
+  // 点击攻略卡片，进入攻略详情页。
   onGuideTap(e) {
     const guide = e.currentTarget.dataset.guide
     wx.navigateTo({

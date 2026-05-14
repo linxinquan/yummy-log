@@ -20,7 +20,10 @@
         <text class="transport-option-label">{{item.label}}</text>
       </view>
       <view class="transport-option-side">
-        <text class="transport-option-time">{{item.distanceText}} {{item.timeText}}</text>
+        <!-- 右侧信息拆开写，方便分别控制距离、分隔点、时间颜色 -->
+        <text class="transport-option-distance">{{item.distanceText}}</text>
+        <text class="transport-option-dot">·</text>
+        <text class="transport-option-time">{{item.timeText}}</text>
       </view>
     </view>
   </view>

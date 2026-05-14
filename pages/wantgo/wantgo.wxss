@@ -404,72 +404,78 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 32rpx;
-  height: 160rpx;
+  gap: 24rpx;
+  min-height: 160rpx;
   background: #FFFFFF;
   transition: transform 0.2s ease;
   box-sizing: border-box;
 }
 
-.place-cover {
+/* 卡片主体：左边封面，右边信息 */
+.place-card-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 32rpx;
+  min-width: 0;
+}
+
+/* 左侧封面：图片和角标都放在这里 */
+.place-cover-wrap {
   width: 160rpx;
   height: 160rpx;
   border-radius: 24rpx;
   flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+  background: #F2F4F7;
+}
+
+.place-cover {
+  width: 100%;
+  height: 100%;
   display: block;
 }
 
-.place-main {
-  height: 144rpx;
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 32rpx;
-  justify-content: center;
-}
-
-.place-info-row {
-  flex: 1;
-  min-width: 0;
-  height: 144rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.place-head {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 16rpx;
-}
-
-.place-tag {
-  min-width: 48rpx;
-  max-width: 100%;
-  height: 32rpx;
-  padding: 6rpx 8rpx;
+/* 封面角标：和探索页保持同一种样式 */
+.card-cat-badge {
+  position: absolute;
+  top: 12rpx;
+  left: 12rpx;
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 8rpx;
-  background: #FDF8E3;
+  padding: 6rpx 8rpx;
+  font-family: 'PingFang SC';
+  font-size: 20rpx;
+  color: #FFFFFF;
+  line-height: 20rpx;
+  backdrop-filter: blur(4px);
+}
+
+/* 中间主要信息区：标题、标签、底部数据 */
+.place-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
+  min-height: 160rpx;
   box-sizing: border-box;
 }
 
-.place-tag-text {
-  color: #ee8733;
-  font-size: 20rpx;
-  line-height: 20rpx;
-  font-weight: 400;
-  text-align: center;
-  white-space: nowrap;
+/* 中间信息和右侧箭头的横向布局 */
+.place-info-row {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
 }
 
+/* 标题：超长省略 */
 .place-name {
   width: 100%;
+  gap: 16rpx;
   color: #242529;
   font-size: 32rpx;
   line-height: 32rpx;
@@ -477,13 +483,63 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin-bottom: 16rpx;
 }
 
-.place-meta-line {
-  display: inline-flex;
-  max-width: 100%;
+/* 标签行：评分和业务标签 */
+.place-tags {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  width: 100%;
+  margin-bottom: 32rpx;
 }
 
+/* 评分标签 */
+.place-rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FDF8E3;
+  border-radius: 12rpx;
+  padding: 8rpx 16rpx;
+  color: #EE8733;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  flex-shrink: 0;
+}
+
+/* 普通标签 */
+.place-tag-chip {
+  background: #F7F8FA;
+  border-radius: 12rpx;
+  padding: 8rpx 16rpx;
+  color: #A0A4AE;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 底部数据：想去人数和距离 */
+.place-footer {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  min-width: 0;
+}
+
+.place-footer-text,
+.place-footer-separator {
+  color: #A0A4AE;
+  font-size: 24rpx;
+  line-height: 28rpx;
+  flex-shrink: 0;
+}
+
+/* 右侧箭头：这里只是进入详情，不改语义 */
 .place-arrow {
   width: 40rpx;
   height: 40rpx;

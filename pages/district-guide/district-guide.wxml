@@ -1,8 +1,10 @@
 <view class="container">
+  <!-- 顶部标题：显示当前区县名称 -->
   <view class="header">
     <view class="district-title">{{districtName}}</view>
   </view>
   
+  <!-- 攻略列表：结构和总攻略页卡片保持一致 -->
   <view class="guide-list">
     <view 
       wx:for="{{guides}}" 
@@ -31,6 +33,7 @@
       </view>
     </view>
     
+    <!-- 底部结束提示 -->
     <view class="no-more">
       <view class="no-more-line"></view>
       <text class="no-more-text">已经没有更多了</text>

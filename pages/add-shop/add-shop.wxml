@@ -1,4 +1,5 @@
 <view class="container">
+  <!-- 顶部问候区：显示当前时间段的问候语 -->
   <view class="tab-bar" style="padding-top: {{menuTop}}px; height: {{menuHeight}}px; padding-right: {{menuRightInset}}px;">
     <view class="tab-left">
       <view class="tab-item active">
@@ -8,6 +9,7 @@
     <view class="tab-right"></view>
   </view>
 
+  <!-- 日期条：显示本周日期，今天会高亮 -->
   <view class="create-content" style="padding-top: {{listTop}}px;">
     <view class="weekday-row">
       <text
@@ -18,6 +20,7 @@
     </view>
   </view>
 
+  <!-- 两个主入口：解析路线 / 创建路线 -->
   <view class="action-section">
     <view class="action-row">
       <view class="action-col action-col-left">
@@ -44,6 +47,7 @@
     </view>
   </view>
 
+  <!-- 解析路线底部弹窗：当前先提供录入入口 -->
   <view class="import-sheet-mask {{importSheetVisible ? 'show' : ''}}" bindtap="onCloseLinkImport"></view>
   <view class="import-sheet {{importSheetVisible ? 'show' : ''}}" catchtap="preventBubble">
     <view class="import-sheet-header">

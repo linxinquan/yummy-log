@@ -95,6 +95,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 8rpx; /* 分隔点两边保留一点呼吸感 */
   flex-shrink: 0;
   min-width: 0;
   margin-left: 16rpx;
@@ -113,12 +114,25 @@
   line-height: 32rpx;
 }
 
+.transport-option-distance,
+.transport-option-dot,
 .transport-option-time {
-  color: #6E727A;
   font-size: 32rpx;
   line-height: 32rpx;
   text-align: right;
   white-space: nowrap;
+}
+
+.transport-option-distance {
+  color: #6E727A;
+}
+
+.transport-option-dot {
+  color: #6E727A;
+}
+
+.transport-option-time {
+  color: #242529;
 }
 
 .transport-sheet-footer {

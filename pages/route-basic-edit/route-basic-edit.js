@@ -7,7 +7,9 @@ const {
   getGlobalTransportPreferences,
   saveGlobalTransportPreferences
 } = require('../../utils/travel')
+const { formatTripSummary } = require('../../utils/trip-duration')
 
+// 默认封面图池：城市或路线没有图时，从这里兜底。
 const DEFAULT_COVERS = [
   '/images/covers/01.jpeg',
   '/images/covers/02.jpeg',
@@ -23,6 +25,7 @@ const DEFAULT_COVERS = [
   '/images/covers/12.jpeg'
 ]
 
+// 城市列表：基础信息页的城市选择弹窗用这个数据。
 const GUANGDONG_CITIES = [
   { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD' },
   { id: 2, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8' },
@@ -47,8 +50,10 @@ const GUANGDONG_CITIES = [
   { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445, bgColor: '#E2DEE0' }
 ]
 
+// 旅行天数选择范围：1 到 30 天。
 const DAY_OPTIONS = Array.from({ length: 30 }, (_, index) => index + 1)
 
+// 全局交通偏好可选项。
 const TRANSPORT_PREFERENCE_OPTIONS = [
   { key: 'walk', label: '步行', icon: MODE_CONFIG.walk.icon },
   { key: 'ride', label: '骑行', icon: MODE_CONFIG.ride.icon },
@@ -56,6 +61,7 @@ const TRANSPORT_PREFERENCE_OPTIONS = [
   { key: 'drive', label: '驾车', icon: MODE_CONFIG.drive.icon }
 ]
 
+// 给城市卡片准备图片池。
 function buildCityCoverPool() {
   const foodCovers = [...(shopData.shops || []), ...(shopData.foods || [])]
     .map(item => item.logo || item.image || item.thumb)
@@ -66,6 +72,7 @@ function buildCityCoverPool() {
   return [...foodCovers, ...spotCovers]
 }
 
+// 把城市列表补上封面图，供城市选择器直接渲染。
 function buildCityOptions() {
   const coverPool = buildCityCoverPool()
   return GUANGDONG_CITIES.map((city, index) => ({
@@ -74,12 +81,14 @@ function buildCityOptions() {
   }))
 }
 
+// 从一个数组里随机取一个值。
 function pickRandomItem(list) {
   if (!list || !list.length) return ''
   const randomIndex = Math.floor(Math.random() * list.length)
   return list[randomIndex]
 }
 
+// 优先用路线自己的封面；没有时，从地点图或城市图里兜底。
 function resolveRouteCoverImage(route, daySections) {
   if (route && route.coverImage) return route.coverImage
 
@@ -103,6 +112,7 @@ function resolveRouteCoverImage(route, daySections) {
   return pickRandomItem(coverPool) || DEFAULT_COVERS[0]
 }
 
+// 去掉编辑态临时字段，避免保存进正式数据。
 function stripEditState(daySections) {
   return (daySections || []).map(day => ({
     ...day,
@@ -114,6 +124,7 @@ function stripEditState(daySections) {
   }))
 }
 
+// 当用户修改旅行天数时，对天数做裁剪或补齐。
 function alignDaySections(daySections, targetCount) {
   const sections = stripEditState(daySections).slice(0, targetCount)
   while (sections.length < targetCount) {
@@ -125,6 +136,7 @@ function alignDaySections(daySections, targetCount) {
   return sections
 }
 
+// 兼容旧结构：重新生成 daySummaries / dayDetails。
 function buildLegacyRouteData(daySections) {
   const cleanSections = stripEditState(daySections)
   const daySummaries = cleanSections.map((day, index) => ({
@@ -147,18 +159,20 @@ function buildLegacyRouteData(daySections) {
   return { daySummaries, dayDetails }
 }
 
+// 顶部摘要文案，例如“3 天 2 晚 · 0 个地点”。
 function buildSummaryText(daySections) {
   const dayCount = daySections.length
-  const nightCount = Math.max(dayCount - 1, 0)
   const placeCount = daySections.reduce((sum, day) => sum + (day.items || []).length, 0)
-  return `${dayCount} 天 ${nightCount} 晚 · ${placeCount} 个地点`
+  return formatTripSummary(dayCount, placeCount)
 }
 
+// 把交通方式 key 转成页面上可读的中文。
 function getTransportLabel(mode) {
   const matched = TRANSPORT_PREFERENCE_OPTIONS.find(item => item.key === mode)
   return matched ? matched.label : ''
 }
 
+// 生成交通偏好的展示文案。
 function buildTransportPreferenceSummary(preferences) {
   if (!preferences) return ''
   return [
@@ -167,10 +181,12 @@ function buildTransportPreferenceSummary(preferences) {
   ].filter(Boolean).join('、')
 }
 
+// 读取全局交通偏好。
 function inferTransportPreferences() {
   return getGlobalTransportPreferences()
 }
 
+// 新建路线时的默认空数据。
 function buildEmptyRoute() {
   const timestamp = Date.now()
   return {
@@ -192,6 +208,7 @@ function buildEmptyRoute() {
   }
 }
 
+// 把全局交通偏好重新应用到路线里的每个地点。
 function applyTransportPreferences(daySections, preferences) {
   return stripEditState(daySections).map(day => ({
     ...day,
@@ -231,6 +248,8 @@ Page({
     transportPreferenceText: ''
   },
 
+  // 页面初始化：
+  // 编辑已有路线时读取 route，新建路线时生成一条空路线。
   onLoad(options) {
     const isNewRoute = options.create === '1'
     if (!options.route && options.create !== '1') {
@@ -260,18 +279,22 @@ Page({
     })
   },
 
+  // 路线标题输入
   onTitleInput(e) {
     this.setData({ title: e.detail.value })
   },
 
+  // 打开城市选择弹窗
   onOpenCityPicker() {
     this.setData({ showCityPicker: true })
   },
 
+  // 关闭城市选择弹窗
   onCloseCityPicker() {
     this.setData({ showCityPicker: false })
   },
 
+  // 选择城市
   onSelectCity(e) {
     const item = e.currentTarget.dataset.item
     if (!item) return
@@ -281,6 +304,7 @@ Page({
     })
   },
 
+  // 随机更换一张路线封面
   onChooseCover() {
     wx.chooseImage({
       count: 1,
@@ -302,6 +326,7 @@ Page({
     })
   },
 
+  // 打开旅行天数选择弹窗
   onOpenDayPicker() {
     this.setData({
       showDayPicker: true,
@@ -310,10 +335,12 @@ Page({
     })
   },
 
+  // 关闭旅行天数选择弹窗
   onCloseDayPicker() {
     this.setData({ showDayPicker: false })
   },
 
+  // picker-view 滚动时同步草稿天数
   onDayPickerChange(e) {
     const value = e.detail && e.detail.value
     const pickerIndex = Array.isArray(value) ? parseInt(value[0], 10) : parseInt(value, 10)
@@ -326,6 +353,7 @@ Page({
     })
   },
 
+  // 确认旅行天数，并同步到路线结构
   onConfirmDayPicker() {
     this.setData({
       dayCount: this.data.draftDayCount,
@@ -333,6 +361,7 @@ Page({
     })
   },
 
+  // 打开交通偏好弹窗
   onOpenTransportPicker() {
     this.setData({
       showTransportPicker: true,
@@ -340,10 +369,12 @@ Page({
     })
   },
 
+  // 关闭交通偏好弹窗
   onCloseTransportPicker() {
     this.setData({ showTransportPicker: false })
   },
 
+  // 交通偏好选项切换
   onSelectTransportMode(e) {
     const type = e.currentTarget.dataset.type
     const mode = e.currentTarget.dataset.mode
@@ -356,6 +387,7 @@ Page({
     })
   },
 
+  // 确认交通偏好，并把结果应用到路线地点上
   onConfirmTransportPicker() {
     const transportPreferences = { ...this.data.draftTransportPreferences }
     saveGlobalTransportPreferences(transportPreferences)
@@ -366,10 +398,12 @@ Page({
     })
   },
 
+  // 取消并返回上一页
   onCancel() {
     wx.navigateBack({ delta: 1 })
   },
 
+  // 删除当前路线
   onDeleteRoute() {
     const routeId = this.data.route && this.data.route.id
     wx.showModal({
@@ -395,9 +429,12 @@ Page({
     })
   },
 
+  // 阻止弹窗内容点击冒泡
   preventBubble() {
   },
 
+  // 保存基础信息：
+  // 新建路线时会先写入“我的路线”，然后进入详情页。
   onSave() {
     const inputTitle = (this.data.title || '').trim()
     const title = inputTitle || (this.data.isNewRoute ? '未命名路线' : '')

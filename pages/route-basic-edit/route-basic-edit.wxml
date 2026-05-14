@@ -1,8 +1,10 @@
 <view class="page" wx:if="{{route}}">
+  <!-- 顶部标题：新建路线和编辑已有路线共用这个页面 -->
   <view class="header">
     <view class="district-title">{{isNewRoute ? '创建路线' : '基础信息'}}</view>
   </view>
 
+  <!-- 基础信息表单：封面、城市、名称、天数、交通偏好 -->
   <view class="settings-panel">
     <view class="setting-block">
       <text class="setting-label">封面</text>
@@ -53,6 +55,7 @@
     </view>
   </view>
 
+  <!-- 底部主按钮：删除 / 取消 / 保存(下一步) -->
   <view class="bottom-bar">
     <view class="icon-btn delete-btn" wx:if="{{!isNewRoute}}" bindtap="onDeleteRoute">
       <i class="mgc_delete_2_line"></i>
@@ -61,6 +64,7 @@
     <view class="bottom-btn primary" bindtap="onSave">{{isNewRoute ? '下一步' : '保存'}}</view>
   </view>
 
+  <!-- 城市选择弹窗 -->
   <view class="location-picker-mask {{showCityPicker ? 'show' : ''}}" bindtap="onCloseCityPicker">
     <view class="location-picker-panel" catchtap="preventBubble">
       <view class="picker-header">
@@ -87,6 +91,7 @@
     </view>
   </view>
 
+  <!-- 旅行天数弹窗 -->
   <view class="sheet-mask {{showDayPicker ? 'show' : ''}}" bindtap="onCloseDayPicker">
     <view class="sheet-panel" catchtap="preventBubble">
       <view class="sheet-header">
@@ -106,6 +111,7 @@
     </view>
   </view>
 
+  <!-- 全局交通偏好弹窗 -->
   <view class="sheet-mask {{showTransportPicker ? 'show' : ''}}" bindtap="onCloseTransportPicker">
     <view class="sheet-panel transport-sheet" catchtap="preventBubble">
       <view class="sheet-header">

@@ -398,6 +398,7 @@
   box-sizing: border-box;
 }
 
+/* 卡片主体：负责把封面和中间信息横向排开 */
 .card-main {
   flex: 1;
   display: flex;
@@ -406,6 +407,7 @@
   min-width: 0;
 }
 
+/* 左侧封面容器：图片和封面角标都绝对定位在这里面 */
 .card-img-wrap, .shop-thumb-wrapper {
   width: 160rpx; /* 80px */
   height: 160rpx; /* 80px */
@@ -432,6 +434,7 @@
   background: #FDF8E3;
 }
 
+/* 封面角标：统一显示大类，比如美食、景点、购物 */
 .card-cat-badge, .distance-badge, .shop-category-badge {
   position: absolute;
   top: 12rpx; /* 6px */
@@ -446,6 +449,7 @@
   backdrop-filter: blur(4px);
 }
 
+/* 中间信息区：让标题、标签、底部数据垂直排列 */
 .shop-info, .card-info {
   flex: 1;
   display: flex;
@@ -456,6 +460,7 @@
   min-width: 0;
 }
 
+/* 标题：单行显示，超长时省略 */
 .shop-name, .card-name {
   font-family: 'PingFang SC';
   font-weight: 400;
@@ -471,6 +476,7 @@
   margin-bottom: 16rpx;
 }
 
+/* 标签行：评分和业务标签在这里横向排列 */
 .card-tags,
 .shop-meta, .card-rating {
   display: flex;
@@ -482,6 +488,7 @@
   margin-bottom: 32rpx;
 }
 
+/* 评分标签：浅黄色底，用来突出评分数字 */
 .shop-rating, .rating-star {
   display: flex;
   align-items: center;
@@ -496,6 +503,7 @@
   flex-shrink: 0; /* 评分不压缩 */
 }
 
+/* 普通标签：比如“粤菜”“面馆”这种业务标签 */
 .shop-category, .spot-tag, .card-free-badge {
   background: #F7F8FA;
   border-radius: 12rpx; /* 6px */
@@ -508,6 +516,7 @@
   white-space: nowrap; /* 标签文字不换行 */
 }
 
+/* 底部数据：显示“多少人想去”和距离 */
 .shop-bottom-row, .card-footer {
   display: flex;
   align-items: center;
@@ -531,17 +540,17 @@
   flex-shrink: 0;
 }
 
-/* ── 右侧想去按钮 ── */
+/* 右侧想去按钮区域：这里只控制按钮整体占位 */
 .shop-action-icons, .want-btn {
-  flex: 0 0 48rpx;
-  width: 48rpx; /* 24px */
-  height: 48rpx; /* 24px */
-  border-radius: 16rpx; /* 8px */
+  flex: 0 0 40rpx;
+  width: 40rpx; /* 20px */
+  height: 40rpx; /* 20px */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* 中间的小圆点分隔符 */
 .card-separator {
   color: #A0A4AE;
   font-size: 24rpx;
@@ -549,24 +558,23 @@
   flex-shrink: 0;
 }
 
+/* 真正可点击的想去图标区域 */
 .want-icon {
-  width: 48rpx; /* 24px */
-  height: 48rpx; /* 24px */
+  width: 40rpx; /* 20px 点击区域 */
+  height: 40rpx; /* 20px 点击区域 */
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* 图标本身：未选中是灰色，选中后下面会变红 */
 .icon-btn-text, .want-btn i {
-  font-size: 48rpx; /* 24px */
+  font-size: 40rpx; /* 20px */
   color: #C7CAD1;
 }
 
-/* 已想去状态 */
-.icon-btn.liked, .want-btn.wanted {
-  background: #FFFFFF;
-}
-.icon-btn.liked i, .want-btn.wanted i {
+.want-icon.liked .icon-btn-text,
+.want-btn.wanted i {
   color: #FF5A5F;
 }
 

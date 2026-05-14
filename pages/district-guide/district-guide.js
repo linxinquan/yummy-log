@@ -1,5 +1,8 @@
 const app = getApp()
+const { normalizeTripDurationText } = require('../../utils/trip-duration')
+const { backfillStoredGuides } = require('../../utils/guide-backfill')
 
+// 根据攻略已有文案，尽量推断出城市名称。
 function inferGuideCity(guide = {}) {
   const sourceText = [
     guide.city,
@@ -16,20 +19,24 @@ function inferGuideCity(guide = {}) {
   return '深圳市'
 }
 
+// 统计某篇攻略被保存成路线的次数。
 function getSavedGuideCount(guideId) {
   const savedRoutes = wx.getStorageSync('savedRoutes') || []
   return savedRoutes.filter(item => String(item.guideId || item.id) === String(guideId)).length
 }
 
+// 给区县攻略卡片补齐展示字段。
 function decorateGuideCards(guides = []) {
   return guides.map(item => ({
     ...item,
     cityText: item.cityText || inferGuideCity(item),
     authorAvatar: item.authorAvatar || item.coverImage,
-    useRouteCount: (item.baseUseCount || 0) + getSavedGuideCount(item.id)
+    useRouteCount: (item.baseUseCount || 0) + getSavedGuideCount(item.id),
+    duration: normalizeTripDurationText(item.duration, Math.max((item.daySections || []).length, 1))
   }))
 }
 
+// 尝试把城市文案映射到区县 id，方便把已发布攻略归到某个区页里。
 function mapCityToDistrict(cityText = '') {
   const source = String(cityText || '')
   if (/南山/.test(source)) return 'nanshan'
@@ -43,9 +50,14 @@ function mapCityToDistrict(cityText = '') {
   return ''
 }
 
+// 读取用户已发布攻略，并补成区县攻略列表可直接使用的结构。
 function getPublishedGuides(cardColors = []) {
   const guides = wx.getStorageSync('myGuides') || []
-  return guides.map((item, index) => ({
+  const { guides: fixedGuides, changed } = backfillStoredGuides(guides)
+  if (changed) {
+    wx.setStorageSync('myGuides', fixedGuides)
+  }
+  return fixedGuides.map((item, index) => ({
     ...item,
     district: item.district || mapCityToDistrict(item.city || item.cityText),
     districtName: item.districtName || '',
@@ -53,7 +65,7 @@ function getPublishedGuides(cardColors = []) {
     cardColor: item.cardColor || cardColors[index % cardColors.length] || '#F7F7F7',
     cityText: item.cityText || inferGuideCity(item),
     baseUseCount: item.baseUseCount || 0,
-    duration: item.duration || `${Math.max((item.daySections || []).length, 1)}天`,
+    duration: normalizeTripDurationText(item.duration, Math.max((item.daySections || []).length, 1)),
     shopCount: item.shopCount || ((item.content || []).length || 0)
   }))
 }
@@ -66,6 +78,7 @@ Page({
     guides: []
   },
 
+  // 页面初始化：接收区县参数，然后加载该区的攻略列表。
   onLoad(options) {
     const districtId = options.district || ''
     const districtName = options.name ? decodeURIComponent(options.name) : '攻略'
@@ -78,6 +91,7 @@ Page({
     this.loadDistrictGuides()
   },
 
+  // 回到页面时，重新把卡片做一遍展示字段补齐。
   onShow() {
     if (this.data.guideSource.length) {
       this.setData({
@@ -86,6 +100,7 @@ Page({
     }
   },
 
+  // 读取当前区县下的攻略数据，并合并用户已发布攻略。
   loadDistrictGuides() {
     const coverImages = [
       '/images/covers/01.jpeg',
@@ -590,10 +605,12 @@ Page({
     })
   },
 
+  // 返回上一页
   goBack() {
     wx.navigateBack()
   },
 
+  // 点击攻略卡片，进入攻略详情页。
   onGuideTap(e) {
     const guide = e.currentTarget.dataset.guide
     wx.navigateTo({
