@@ -66,8 +66,8 @@ page {
 }
 
 .camera-side-btn i {
-  font-size: 48rpx;
-  line-height: 48rpx;
+  font-size: 40rpx;
+  line-height: 40rpx;
 }
 
 .camera-side-btn text {

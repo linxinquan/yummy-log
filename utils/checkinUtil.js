@@ -135,7 +135,9 @@ function saveCheckin(data) {
     latitude: data.latitude,
     longitude: data.longitude,
     description: data.description || generateDescription(data.spotName, data.address, data.type),
-    date: new Date().toISOString(),
+    // 允许确认页把用户编辑后的记录时间一起保存。
+    date: data.date || new Date().toISOString(),
+    customRecordTimeLabel: data.customRecordTimeLabel || '',
     city: extractCity(data.address),
     // 如果这条采集能匹配到系统里的真实地点，就顺手记下它的 id，
     // 后面“足迹 / 已去过 / 详情跳转”都能更稳定地复用。
@@ -145,6 +147,25 @@ function saveCheckin(data) {
   wx.setStorageSync('checkin_records', checkins)
   util.syncLegacyCheckedInFromRecords()
   return checkin
+}
+
+/**
+ * 更新打卡采集
+ */
+function updateCheckin(id, patchData) {
+  const checkins = getCheckins()
+  const nextCheckins = checkins.map(item => {
+    if (String(item.id) !== String(id)) return item
+
+    return {
+      ...item,
+      ...patchData,
+      id: item.id
+    }
+  })
+  wx.setStorageSync('checkin_records', nextCheckins)
+  util.syncLegacyCheckedInFromRecords()
+  return nextCheckins.find(item => String(item.id) === String(id)) || null
 }
 
 /**
@@ -221,6 +242,7 @@ function formatStampDate(isoString) {
 module.exports = {
   getCheckins,
   saveCheckin,
+  updateCheckin,
   deleteCheckin,
   getCheckinStats,
   reverseGeocode,

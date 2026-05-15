@@ -14,6 +14,7 @@
     "pages/webview/webview",
     "pages/checkin-camera/checkin-camera",
     "pages/checkin/checkin",
+    "pages/checkin-detail/checkin-detail",
     "pages/collection/collection",
     "pages/my-favorites/my-favorites",
     "pages/my-guides/my-guides",

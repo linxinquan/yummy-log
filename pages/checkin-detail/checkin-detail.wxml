@@ -1,60 +1,52 @@
-<view class="page {{type === 'spot' ? 'type-spot' : 'type-food'}}">
-  <!-- 第二步：新的确认采集页，样式直接复用邮票详情页 -->
-  <view class="section confirm-section" wx:if="{{step === 2}}">
+<view class="container">
+  <view class="page-content" wx:if="{{detail}}">
+    <!-- 顶部放大版邮票：沿用列表同款样式，尺寸放大 1.5 倍 -->
     <view class="detail-stamp-wrap" bindtap="onPreviewPhoto">
       <view class="detail-stamp">
         <image class="detail-stamp-shell" src="/images/collection/stamp-ticket.png" mode="scaleToFill"></image>
-        <image class="detail-stamp-photo" src="{{photoPath}}" mode="aspectFill"></image>
+        <image class="detail-stamp-photo" src="{{detail.photoPath}}" mode="aspectFill"></image>
       </view>
-      <text class="detail-stamp-title">{{spotName || 'AI 正在识别地点'}}</text>
+      <!-- 邮票标题：补回详情页底部标题 -->
+      <text class="detail-stamp-title">{{detail.spotName || '未知地点'}}</text>
     </view>
 
+    <!-- 基础信息：只保留记录时间、地址、打卡内容 -->
     <view class="detail-info-list">
       <view class="info-section">
         <view class="info-head">
-          <i class="info-ai-icon mgc_ai_fill {{recordTimeRunning ? 'running' : ''}}"></i>
-          <text class="info-title">{{recordTimeStatusText}}</text>
+          <text class="info-title">记录时间</text>
         </view>
-        <text class="info-value">{{typedRecordTime || 'AI 正在生成记录时间'}}</text>
+        <text class="info-value">{{detail.recordTimeLabel}}</text>
       </view>
 
       <view class="info-section">
         <view class="info-head">
-          <i class="info-ai-icon mgc_ai_fill {{addressRunning ? 'running' : ''}}"></i>
-          <text class="info-title">{{addressStatusText}}</text>
+          <text class="info-title">地址</text>
         </view>
-        <text class="info-value">{{typedAddress || 'AI 正在识别地址'}}</text>
+        <text class="info-value">{{detail.address || '暂未补充地址'}}</text>
       </view>
 
       <view class="info-section info-section-desc">
         <view class="info-head">
-          <i class="info-ai-icon mgc_ai_fill {{descriptionRunning ? 'running' : ''}}"></i>
-          <text class="info-title">{{descriptionStatusText}}</text>
-          <text
-            class="info-regenerate {{confirmLoading ? 'disabled' : ''}}"
-            bindtap="onRegenerateDescription"
-          >重新生成</text>
+          <text class="info-title">打卡内容</text>
         </view>
-        <text class="info-value info-value-desc">{{typedDescription || 'AI 正在生成打卡内容'}}</text>
+        <text class="info-value info-value-desc">{{detail.description || '暂未生成打卡内容'}}</text>
       </view>
     </view>
   </view>
 
-  <!-- 底部按钮：重拍 / 编辑 / 保存采集 -->
-  <view class="bottom-action-mask" wx:if="{{step === 2}}"></view>
-  <view class="bottom-actions" wx:if="{{step === 2}}">
-    <view class="action-btn action-btn-light" bindtap="onRetake">
-      <text>重拍</text>
-    </view>
-    <view class="action-btn action-btn-light" bindtap="onOpenEditSheet">
+  <!-- 底部操作区：编辑改为底部弹窗编辑 -->
+  <view class="bottom-action-mask"></view>
+  <view class="bottom-actions" wx:if="{{detail}}">
+    <button class="action-btn action-btn-light" open-type="share">
+      <text>分享</text>
+    </button>
+    <button class="action-btn action-btn-dark" bindtap="onOpenEditSheet">
       <text>编辑</text>
-    </view>
-    <view class="action-btn action-btn-dark {{(saving || confirmLoading) ? 'disabled' : ''}}" bindtap="onSaveCheckin">
-      <text>{{saving ? '保存中...' : '保存采集'}}</text>
-    </view>
+    </button>
   </view>
 
-  <!-- 编辑底部弹窗：在弹窗内编辑时间、地址、打卡内容 -->
+  <!-- 详情编辑底部弹窗：在弹窗内修改时间、地址、打卡内容 -->
   <view class="edit-sheet-mask" wx:if="{{editSheetVisible}}" bindtap="onCloseEditSheet"></view>
   <view class="edit-sheet" wx:if="{{editSheetVisible}}">
     <view class="edit-sheet-panel" catchtap="preventBubble">

@@ -26,7 +26,7 @@
 
       <view class="camera-side-btn" bindtap="onGoCollection">
         <i class="mgc_flower_4_line"></i>
-        <text>采集本</text>
+        <text>我的采集</text>
       </view>
     </view>
   </view>
