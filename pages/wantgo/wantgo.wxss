@@ -643,7 +643,7 @@
 .route-action-grid {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  gap: 32rpx;
 }
 
 .route-action-card {
@@ -692,9 +692,9 @@
 }
 
 .route-action-confirm {
-  margin-top: 32rpx;
+  margin-top: 48rpx;
   width: 100%;
-  height: 88rpx;
+  height: 96rpx;
   border-radius: 999rpx;
   background: #242529;
   color: #FFFFFF;

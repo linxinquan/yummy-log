@@ -45,7 +45,7 @@
           <view class="create-glow create-glow-blue"></view>
           <!-- 卡片内容放到卡片内部，图标在上，文案在下 -->
           <view class="action-card-content">
-            <i class="action-card-icon mgc_add_fill"></i>
+            <i class="action-card-icon mgc_route_fill"></i>
             <text class="action-card-label">创建路线</text>
           </view>
         </view>

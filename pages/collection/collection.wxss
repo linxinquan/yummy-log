@@ -213,12 +213,12 @@ page {
 
 .stamp-bottom-shadow {
   position: absolute;
-  left: 40%;
+  left: 35%;
   bottom: -16rpx;
-  width: 64rpx;
-  height: 80rpx;
-  border-radius: 999rpx;
-  background: rgba(0, 0, 0, 0.5);
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 16rpx;
+  background: rgba(0, 0, 0, 0.3);
   filter: blur(64rpx);
   opacity: 0.85;
   z-index: 0;
