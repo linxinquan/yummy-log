@@ -1,104 +1,117 @@
-<!-- pages/collection/collection.wxml - 我的采集本 (基于 Design System v1.0) -->
+<!-- 我的采集：按当前产品的二级页风格整理 -->
 <view class="container">
-
-  <!-- 顶部统计横幅 -->
-  <view class="hero-bar">
-    <view class="hero-title display">我的采集本</view>
-    <view class="hero-stats">
-      <view class="hs-item">
-        <text class="hs-num display">{{stats.totalCount}}</text>
-        <text class="hs-label caption">采集</text>
-      </view>
-      <view class="hs-sep body">·</view>
-      <view class="hs-item">
-        <text class="hs-num display">{{stats.cityCount}}</text>
-        <text class="hs-label caption">城市</text>
-      </view>
-      <view class="hs-sep body">·</view>
-      <view class="hs-item">
-        <text class="hs-num display">{{stats.spotCount}}</text>
-        <text class="hs-label caption">景点</text>
-      </view>
-    </view>
+  <!-- 大标题：对齐我的收藏这类二级页 -->
+  <view class="header">
+    <view class="district-title">我的采集</view>
   </view>
 
-  <!-- 视图切换 Tab -->
-  <view class="view-tabs">
-    <view class="vt-item body-sm {{viewMode === 'list' ? 'active' : ''}}" bindtap="onSwitchView" data-view="list">
-      <i class="mgc_list_check_line vt-icon heading-3"></i>
-      <text>列表</text>
-    </view>
-    <view class="vt-item body-sm {{viewMode === 'map' ? 'active' : ''}}" bindtap="onSwitchView" data-view="map">
-      <i class="mgc_map_line vt-icon heading-3"></i>
-      <text>地图</text>
-    </view>
-  </view>
-
-  <!-- 列表视图 -->
-  <block wx:if="{{viewMode === 'list'}}">
-    <view class="empty-state" wx:if="{{checkins.length === 0}}">
-      <view class="empty-illustration">
-        <i class="mgc_package_line empty-icon"></i>
+  <view class="page-content">
+    <view class="hero-card">
+      <view class="hero-action-row">
+        <view class="hero-action-btn" bindtap="onGoCheckin">
+          <i class="mgc_camera_2_ai_line"></i>
+          <text>采集打卡</text>
+        </view>
       </view>
-      <text class="empty-title">我的采集本</text>
-      <text class="empty-hint">去记录你的第一张采集卡吧</text>
-      <view class="empty-actions">
-        <button class="empty-btn empty-btn-primary" bindtap="onGoCheckinFood"><i class="mgc_fork_spoon_line"></i>美食打卡</button>
-        <button class="empty-btn empty-btn-secondary" bindtap="onGoCheckinSpot"><i class="mgc_scenery_line"></i>景点打卡</button>
+
+      <view class="hero-stats">
+        <view class="hs-item">
+          <text class="hs-num">{{stats.totalCount}}</text>
+          <text class="hs-label">采集</text>
+        </view>
+        <view class="hs-sep">·</view>
+        <view class="hs-item">
+          <text class="hs-num">{{stats.cityCount}}</text>
+          <text class="hs-label">城市</text>
+        </view>
+        <view class="hs-sep">·</view>
+        <view class="hs-item">
+          <text class="hs-num">{{stats.spotCount}}</text>
+          <text class="hs-label">景点</text>
+        </view>
       </view>
     </view>
 
-    <view class="stamps-grid" wx:else>
-      <view class="stamp-item" wx:for="{{checkins}}" wx:key="id" bindtap="onCheckinTap" data-id="{{item.id}}">
-        <view class="stamp-card card">
-          <!-- 类型标签 -->
-          <view class="stamp-type-tag caption"><i class="{{item.typeIcon}}"></i> {{item.typeLabel}}</view>
-          <view class="stamp-photo-wrap">
-            <image class="stamp-photo" src="{{item.photoPath}}" mode="aspectFill" />
-            <view class="stamp-postmark">
-              <text class="pm-date caption">{{item.dateStr}}</text>
+    <view class="view-tabs">
+      <view class="vt-item {{viewMode === 'list' ? 'active' : ''}}" bindtap="onSwitchView" data-view="list">
+        <i class="mgc_list_check_line vt-icon"></i>
+        <text>列表</text>
+      </view>
+      <view class="vt-item {{viewMode === 'map' ? 'active' : ''}}" bindtap="onSwitchView" data-view="map">
+        <i class="mgc_map_line vt-icon"></i>
+        <text>地图</text>
+      </view>
+    </view>
+
+    <block wx:if="{{viewMode === 'list'}}">
+      <view class="empty-state" wx:if="{{checkins.length === 0}}">
+        <view class="empty-illustration">
+          <i class="mgc_package_line empty-icon"></i>
+        </view>
+        <text class="empty-title">我的采集</text>
+        <text class="empty-hint">去记录你的第一张采集卡吧</text>
+        <view class="empty-actions">
+          <button class="empty-btn empty-btn-primary" bindtap="onGoCheckin">
+            <i class="mgc_camera_2_ai_line"></i>
+            <text>采集打卡</text>
+          </button>
+        </view>
+      </view>
+
+      <view class="checkin-list" wx:else>
+        <!-- 列表卡：改成更清晰的横向信息卡，弱化花哨邮戳效果 -->
+        <view class="checkin-card" wx:for="{{checkins}}" wx:key="id" bindtap="onCheckinTap" data-id="{{item.id}}">
+          <image class="checkin-card-photo" src="{{item.photoPath}}" mode="aspectFill" />
+          <view class="checkin-card-body">
+            <view class="checkin-card-meta">
+              <view class="checkin-type-badge {{item.type}}">
+                <i class="{{item.typeIcon}}"></i>
+                <text>{{item.typeLabel}}</text>
+              </view>
+              <text class="checkin-card-date">{{item.monthDay}} · {{item.yearText}}</text>
+            </view>
+            <text class="checkin-card-title">{{item.spotName || item.shortAddr || '未知地点'}}</text>
+            <text class="checkin-card-address">{{item.addressLine || item.shortAddr}}</text>
+            <view class="checkin-card-footer">
+              <text class="checkin-card-time">{{item.timeText}}</text>
+              <view class="checkin-card-arrow">
+                <i class="mgc_right_line"></i>
+              </view>
             </view>
           </view>
-          <view class="stamp-info">
-            <!-- 优先显示店名/景点名，再显示地址 -->
-            <text class="stamp-name body">{{item.spotName || item.shortAddr || '未知地点'}}</text>
-            <text class="stamp-addr caption">{{item.shortAddr}}</text>
+        </view>
+      </view>
+    </block>
+
+    <block wx:if="{{viewMode === 'map'}}">
+      <view class="map-wrap">
+        <map
+          class="collection-map"
+          latitude="{{mapCenter.lat}}"
+          longitude="{{mapCenter.lng}}"
+          scale="12"
+          markers="{{mapMarkers}}"
+          show-location
+          enable-zoom
+          enable-scroll
+        />
+      </view>
+      <scroll-view class="map-list" scroll-x enable-flex>
+        <view class="map-card" wx:for="{{checkins}}" wx:key="id" bindtap="onCheckinTap" data-id="{{item.id}}">
+          <image class="mc-photo" src="{{item.photoPath}}" mode="aspectFill" />
+          <view class="mc-info">
+            <view class="mc-top-row">
+              <view class="mc-type-badge {{item.type}}">
+                <i class="{{item.typeIcon}}"></i>
+                <text>{{item.typeLabel}}</text>
+              </view>
+              <text class="mc-date">{{item.monthDay}}</text>
+            </view>
+            <text class="mc-name">{{item.spotName || item.address}}</text>
+            <text class="mc-addr">{{item.shortAddr}}</text>
           </view>
         </view>
-      </view>
-    </view>
-  </block>
-
-  <!-- 地图视图 -->
-  <block wx:if="{{viewMode === 'map'}}">
-    <view class="map-wrap">
-      <map
-        class="collection-map"
-        latitude="{{mapCenter.lat}}"
-        longitude="{{mapCenter.lng}}"
-        scale="12"
-        markers="{{mapMarkers}}"
-        show-location
-        enable-zoom
-        enable-scroll
-      />
-    </view>
-    <scroll-view class="map-list" scroll-x enable-flex>
-      <view class="map-card card" wx:for="{{checkins}}" wx:key="id" bindtap="onCheckinTap" data-id="{{item.id}}">
-        <image class="mc-photo" src="{{item.photoPath}}" mode="aspectFill" />
-        <view class="mc-info">
-          <view class="mc-icon body"><i class="{{item.typeIcon}}"></i></view>
-          <text class="mc-name body-sm">{{item.spotName || item.address}}</text>
-          <text class="mc-date caption">{{item.dateStr}}</text>
-        </view>
-      </view>
-    </scroll-view>
-  </block>
-
-  <!-- 浮动采集按钮 (FAB) -->
-  <view class="fab" bindtap="onGoCheckinFood">
-    <text class="fab-icon display">＋</text>
-    <text class="fab-text caption">采集</text>
+      </scroll-view>
+    </block>
   </view>
-
 </view>

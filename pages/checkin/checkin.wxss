@@ -11,50 +11,56 @@ page {
   padding-bottom: calc(env(safe-area-inset-bottom) + var(--space-lg));
 }
 
-/* ══ 导航栏 ════════════════════════════════════════════════ */
-.nav-bar {
+/* ══ 大标题头部：对齐“我的收藏”这类二级页 ════════════════════════ */
+.header {
+  padding: 48rpx;
+  background: #FFFFFF;
+}
+
+.header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-sm) var(--space-lg);
-  background: var(--surface);
-  padding-top: calc(env(safe-area-inset-top) + var(--space-sm));
-  border-bottom: 2rpx solid var(--divider);
+  gap: 24rpx;
 }
 
-.nav-back {
-  font-size: 52rpx;
-  color: var(--primary);
-  line-height: 1;
-  
-  padding: 0 var(--space-xs);
+.district-title {
+  color: #242529;
+  font-size: 48rpx;
+  font-weight: 500;
+  line-height: 48rpx;
 }
 
-.nav-title {
-  color: var(--text-primary);
-  flex: 1;
-  text-align: center;
-}
-
-.nav-album-btn {
-  display: flex;
+.header-action-btn {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
-  background: var(--primary-light);
-  border: 2rpx solid var(--primary-light);
-  border-radius: var(--radius-full);
-  padding: var(--space-xs) var(--space-md);
+  gap: 12rpx;
+  height: 72rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  background: #242529;
+  color: #FFFFFF;
+  flex-shrink: 0;
 }
 
-.nav-album-icon,
-.nav-album-text { 
-  color: var(--primary-dark); 
-   
+.header-action-btn i {
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+.header-action-btn text {
+  color: inherit;
+  font-size: 28rpx;
+  line-height: 28rpx;
 }
 
 /* ══ 通用 ════════════════════════════════════════════════ */
 .section {
   padding: var(--space-lg);
+}
+
+.step-two-section {
+  padding-bottom: calc(176rpx + env(safe-area-inset-bottom));
 }
 
 /* ══ 引导语 ════════════════════════════════════════════════ */
@@ -154,6 +160,39 @@ page {
 
 .pce-sub { color: var(--text-disabled); }
 
+/* 拍照页补充快捷入口：给相册上传和查看采集本明确操作按钮 */
+.photo-extra-row {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.photo-extra-btn {
+  flex: 1;
+  height: 80rpx;
+  border-radius: var(--radius-full);
+  border: 2rpx solid var(--divider);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  color: var(--text-primary);
+}
+
+.photo-extra-btn.secondary {
+  background: var(--surface-muted);
+}
+
+.photo-extra-btn i {
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+.photo-extra-btn text {
+  color: inherit;
+}
+
 /* ══ 按钮：主按钮 ════════════════════════════════════════════════ */
 .btn-primary {
   width: 100%;
@@ -230,6 +269,97 @@ page {
 .main-card {
   margin-bottom: var(--space-lg);
   padding: 0; /* Override default card padding for internal structure */
+}
+
+/* 第二步主卡：改成更干净的分组布局 */
+.checkin-detail-card {
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  overflow: visible;
+  box-shadow: none;
+}
+
+.detail-hero {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 0 0 32rpx;
+}
+
+.detail-photo {
+  width: 120rpx;
+  height: 120rpx;
+}
+
+.detail-hero-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.detail-date {
+  color: #8F949C;
+}
+
+.detail-title {
+  color: #242529;
+  font-size: 36rpx;
+  font-weight: 500;
+  line-height: 44rpx;
+}
+
+.detail-subtitle {
+  color: #8F949C;
+  font-size: 24rpx;
+  line-height: 36rpx;
+}
+
+.detail-panel {
+  margin: 0 0 32rpx;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+}
+
+.detail-panel.ai-panel {
+  margin-bottom: 0;
+  padding-top: 32rpx;
+  border-top: 2rpx solid #F0F1F3;
+}
+
+.detail-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.detail-panel-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.detail-panel-title {
+  color: #242529;
+  font-size: 28rpx;
+  font-weight: 500;
+  line-height: 28rpx;
+}
+
+.detail-panel-desc {
+  color: #8F949C;
+  font-size: 24rpx;
+  line-height: 32rpx;
+}
+
+.ai-panel-head {
+  margin-bottom: 20rpx;
 }
 
 /* 照片 + 日期顶栏 */
@@ -318,7 +448,12 @@ page {
 
 .lb-icon { font-size: 32rpx; }
 
-.lb-info { flex: 1; min-width: 0; }
+.lb-info {
+  flex: 1;
+  min-width: 0;
+  margin-top: 24rpx;
+  padding-left: 76rpx;
+}
 
 .lb-loading {
   display: flex;
@@ -343,18 +478,26 @@ page {
   animation: spinSlow 1s linear infinite;
 }
 
-.lb-result { display: flex; flex-direction: column; gap: var(--space-sm); }
+.lb-result {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
 
 .lb-name-row {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+  min-width: 0;
 }
 
 .lb-name {
-  color: var(--text-primary);
+  color: #242529;
   flex: 1;
   letter-spacing: 0.5rpx;
+  font-size: 52rpx;
+  font-weight: 500;
+  line-height: 64rpx;
 }
 
 .lb-name.placeholder {
@@ -362,42 +505,65 @@ page {
 }
 
 .lb-name-input {
-  color: var(--text-primary);
+  color: #242529;
   border: none;
   background: transparent;
   padding: 0;
   flex: 1;
   border-bottom: 4rpx solid var(--primary);
+  font-size: 52rpx;
+  font-weight: 500;
+  line-height: 64rpx;
 }
 
 .lb-edit-btn {
-  color: var(--text-disabled);
-  padding: var(--space-xs) var(--space-sm);
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  color: #8F949C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  border: 2rpx solid #ECEEF1;
 }
 
-.lb-addr-row { display: flex; align-items: center; gap: var(--space-sm); }
+.lb-edit-btn i {
+  font-size: 24rpx;
+  line-height: 24rpx;
+}
+
+.lb-addr-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
 
 .lb-addr {
-  color: var(--text-secondary);
+  color: #6E727A;
   flex: 1;
+  font-size: 28rpx;
+  line-height: 40rpx;
 }
 
 .lb-addr.dim { color: var(--text-disabled); }
 
 .lb-addr-input {
-  color: var(--text-secondary);
+  color: #6E727A;
   flex: 1;
   border: none;
   background: transparent;
   padding: 0;
   border-bottom: 2rpx dashed var(--primary-light);
+  font-size: 28rpx;
+  line-height: 40rpx;
 }
 
 .lb-refresh {
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: var(--radius-sm);
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 999rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -418,7 +584,9 @@ page {
 }
 
 /* ══ AI 内容区 ════════════════════════════════════════════════ */
-.ai-block { padding: 0 0 var(--space-xs) 0; }
+.ai-block {
+  padding: 0;
+}
 
 .aib-divider {
   height: 2rpx;
@@ -431,7 +599,7 @@ page {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-md);
+  padding: 24rpx 0;
   cursor: pointer;
 }
 
@@ -457,14 +625,21 @@ page {
   color: var(--warning);
 }
 
-.aibe-texts { flex: 1; display: flex; flex-direction: column; gap: var(--space-xs); }
-
-.aibe-title {
-  color: var(--text-primary);
-  
+.aibe-texts {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
 }
 
-.aibe-hint { color: var(--text-disabled); }
+.aibe-title {
+  color: #242529;
+}
+
+.aibe-hint {
+  color: #8F949C;
+  line-height: 36rpx;
+}
 
 .aibe-arrow.spot { color: var(--primary); }
 .aibe-arrow.food { color: var(--warning); }
@@ -474,7 +649,7 @@ page {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  padding: var(--space-md);
+  padding: 8rpx 0 24rpx;
 }
 
 .aib-generating.hidden { display: none; }
@@ -520,7 +695,7 @@ page {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  padding: var(--space-md);
+  padding: 8rpx 0 24rpx;
 }
 
 .aib-result.hidden { display: none; }
@@ -568,11 +743,12 @@ page {
 }
 
 .aibr-title {
-  color: var(--text-primary);
+  color: #242529;
 }
 
 .aibr-desc {
-  color: var(--text-secondary);
+  color: #6E727A;
+  line-height: 40rpx;
 }
 
 /* ══ 按钮行 ════════════════════════════════════════════════ */
@@ -582,9 +758,100 @@ page {
   margin-top: var(--space-sm);
 }
 
+.checkin-action-row {
+  margin-top: 0;
+}
+
 .btn-row .btn-ghost,
 .btn-row .btn-primary {
   flex: 1;
+}
+
+.checkin-secondary-btn,
+.checkin-primary-btn {
+  height: 92rpx;
+}
+
+.checkin-secondary-btn {
+  background: #FFFFFF;
+  border-color: #D9DEE6;
+  color: #242529;
+}
+
+.checkin-primary-btn {
+  background: #242529;
+}
+
+/* 底部操作栏：直接复用路线页的底部按钮结构 */
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 40;
+  gap: 16rpx;
+  padding: 16rpx 48rpx calc(16rpx + env(safe-area-inset-bottom));
+  background: #FFFFFF;
+  box-sizing: border-box;
+}
+
+.bottom-btn {
+  min-width: 0;
+  height: 96rpx;
+  border-radius: 999rpx;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap:8rpx;
+  padding: 0 16rpx;
+  box-sizing: border-box;
+}
+
+.bottom-btn.secondary {
+  width: auto;
+  flex-shrink: 0;
+  background: #F2F4F7;
+  color: #242529;
+}
+
+.bottom-btn.primary {
+  flex: 1;
+  min-width: 0;
+  background: #242529;
+  color: #FFFFFF;
+}
+
+.bottom-btn i {
+  font-size: 40rpx;
+  line-height: 40rpx;
+  flex-shrink: 0;
+}
+
+.bottom-btn text {
+  font-size: 32rpx;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 100%;
+}
+
+.checkin-bottom-bar {
+  justify-content: flex-start;
+  gap: 16rpx;
+}
+
+.checkin-bottom-secondary {
+  flex: 1 1 0;
+  padding: 0 16rpx;
+}
+
+.checkin-bottom-primary {
+  flex: 1 1 0;
+  padding: 0 16rpx;
 }
 
 /* 继续提示 */

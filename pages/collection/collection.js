@@ -31,11 +31,17 @@ Page({
       const mm = String(d.getMonth() + 1).padStart(2, '0')
       const dd = String(d.getDate()).padStart(2, '0')
       const yyyy = d.getFullYear()
+      const hh = String(d.getHours()).padStart(2, '0')
+      const minute = String(d.getMinutes()).padStart(2, '0')
       // 短地址：取地址前16个字
       const shortAddr = c.address ? c.address.substring(0, 20) : ''
       return Object.assign({}, c, {
         dateStr: mm + '/' + dd + '/' + yyyy,
+        monthDay: mm + '.' + dd,
+        yearText: String(yyyy),
+        timeText: hh + ':' + minute,
         shortAddr: shortAddr,
+        addressLine: c.address || '',
         typeIcon: c.type === 'spot' ? 'mgc_scenery_line' : 'mgc_fork_spoon_line',
         typeLabel: c.type === 'spot' ? '景点' : '美食',
         // 地图标记用 spotName（店名/景点名）或地址
@@ -99,14 +105,14 @@ Page({
   },
 
   onGoCheckin() {
-    wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
+    wx.navigateTo({ url: '/pages/checkin-camera/checkin-camera?type=food&source=collection' })
   },
 
   onGoCheckinFood() {
-    wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
+    this.onGoCheckin()
   },
 
   onGoCheckinSpot() {
-    wx.navigateTo({ url: '/pages/checkin/checkin?type=spot' })
+    this.onGoCheckin()
   }
 })

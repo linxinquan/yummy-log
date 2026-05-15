@@ -12,6 +12,7 @@
     "pages/route-entry/route-entry",
     "pages/link-import/link-import",
     "pages/webview/webview",
+    "pages/checkin-camera/checkin-camera",
     "pages/checkin/checkin",
     "pages/collection/collection",
     "pages/my-favorites/my-favorites",

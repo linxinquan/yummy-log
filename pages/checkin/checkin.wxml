@@ -6,14 +6,14 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
 </wxs>
 
 <view class="page {{type === 'spot' ? 'type-spot' : 'type-food'}}">
-
-  <!-- ══ 导航栏 ══ -->
-  <view class="nav-bar">
-    <view class="nav-back" bindtap="onBack">‹</view>
-    <text class="nav-title heading-3">{{type === 'spot' ? '记录景点' : '记录美食'}}</text>
-    <view class="nav-album-btn" bindtap="onGoCollection">
-      <text class="nav-album-icon caption">✦</text>
-      <text class="nav-album-text caption">采集本</text>
+  <!-- 大标题：对齐我的收藏这类二级页 -->
+  <view class="header">
+    <view class="header-row">
+      <view class="district-title">{{navTitle || '采集打卡'}}</view>
+      <view class="header-action-btn" bindtap="onGoCollection">
+        <i class="mgc_flower_4_line"></i>
+        <text>采集本</text>
+      </view>
     </view>
   </view>
 
@@ -46,6 +46,18 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
       </view>
     </view>
 
+    <!-- 辅助入口：自动拉起相机后，用户仍然可以改走相册上传或查看采集本 -->
+    <view class="photo-extra-row">
+      <view class="photo-extra-btn" bindtap="onChooseAlbum">
+        <i class="mgc_pic_2_line"></i>
+        <text>相册上传</text>
+      </view>
+      <view class="photo-extra-btn secondary" bindtap="onGoCollection">
+        <i class="mgc_album_line"></i>
+        <text>查看采集</text>
+      </view>
+    </view>
+
     <!-- 下一步 -->
     <view class="btn-primary {{photoPath ? 'ready' : ''}}" bindtap="onNextStep">
       <text class="btn-primary-text body">{{photoPath ? '下一步 · AI 识别位置' : '请先拍照'}}</text>
@@ -56,39 +68,45 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
   <!-- ══════════════════════════════════════════════════ -->
   <!-- STEP 2：定位 + AI 内容 -->
   <!-- ══════════════════════════════════════════════════ -->
-  <view class="section" wx:if="{{step === 2}}">
-
-    <!-- 主卡片 -->
-    <view class="main-card card">
-
-      <!-- 照片 + 日期顶栏 -->
-      <view class="mc-top">
-        <view class="mct-photo-wrap" wx:if="{{photoPath}}">
+  <view class="section step-two-section" wx:if="{{step === 2}}">
+    <!-- 主卡片：重新整理图片区、位置信息区、AI 文案区的层级 -->
+    <view class="main-card checkin-detail-card">
+      <view class="detail-hero">
+        <view class="mct-photo-wrap detail-photo" wx:if="{{photoPath}}">
           <image class="mct-photo" src="{{photoPath}}" mode="aspectFill" />
         </view>
-        <view class="mct-meta">
+        <view class="detail-hero-main">
           <view class="mct-type-badge {{type}}">
             <text class="mct-type-dot"></text>
             <text class="mct-type-label caption">{{type === 'spot' ? '景点' : '美食'}}</text>
           </view>
-          <text class="mct-date caption">{{dateInfo.mm}}.{{dateInfo.dd}} · {{dateInfo.yyyy}}</text>
+          <text class="detail-date caption">{{dateInfo.mm}}.{{dateInfo.dd}} · {{dateInfo.yyyy}}</text>
+          <text class="detail-title">刚刚记录的这一刻</text>
+          <text class="detail-subtitle">确认地点后即可生成更完整的打卡文案</text>
         </view>
       </view>
 
-      <!-- 精确位置区 -->
-      <view class="location-block">
-        <view class="lb-icon-wrap {{type}}">
-          <i class="mgc_location_line lb-icon caption"></i>
+      <!-- 位置区：保留一层内容容器，不再套内层描边卡片 -->
+      <view class="detail-panel location-panel">
+        <view class="detail-panel-head">
+          <view class="lb-icon-wrap {{type}}">
+            <i class="mgc_location_line lb-icon caption"></i>
+          </view>
+          <view class="detail-panel-copy">
+            <text class="detail-panel-title">识别到的位置</text>
+            <text class="detail-panel-desc">支持补充地点名称和详细地址</text>
+          </view>
+          <view class="lb-refresh {{type}}" bindtap="onGetLocation">
+            <text class="caption">⟳</text>
+          </view>
         </view>
+
         <view class="lb-info">
-          <!-- 加载中 -->
           <view class="lb-loading" wx:if="{{locationLoading}}">
             <text class="lb-loading-text caption">正在定位...</text>
             <view class="lb-spinner"></view>
           </view>
-          <!-- 已定位 -->
           <view class="lb-result" wx:else>
-            <!-- 地点名称（可编辑） -->
             <view class="lb-name-row">
               <text class="lb-name heading-1 {{spotName ? '' : 'placeholder'}}"
                     wx:if="{{!editingName}}"
@@ -101,9 +119,10 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
                      focus
                      placeholder="输入地点名称"
                      maxlength="30" />
-              <view class="lb-edit-btn caption" bindtap="onToggleNameEdit" wx:if="{{!editingName}}">✎</view>
+              <view class="lb-edit-btn caption" bindtap="onToggleNameEdit" wx:if="{{!editingName}}">
+                <i class="mgc_pencil_3_line"></i>
+              </view>
             </view>
-            <!-- 详细地址（可编辑） -->
             <view class="lb-addr-row">
               <text class="lb-addr caption {{address ? '' : 'dim'}}"
                     wx:if="{{!editingAddr}}"
@@ -119,59 +138,62 @@ module.exports = { len: function(v) { return v == null ? 0 : typeof v === 'strin
             </view>
           </view>
         </view>
-        <!-- 刷新按钮 -->
-        <view class="lb-refresh {{type}}" bindtap="onGetLocation">
-          <text class="caption">⟳</text>
-        </view>
       </view>
 
-      <!-- AI 内容区 -->
-      <view class="ai-block">
-        <view class="aib-divider"></view>
-
-        <!-- 未生成 -->
-        <view class="aib-empty {{generatingTitle || generatingDesc ? 'hidden' : ''}}" bindtap="onGenerate">
+      <!-- AI 区：只保留分区，不再和外层形成双重描边 -->
+      <view class="detail-panel ai-panel">
+        <view class="detail-panel-head ai-panel-head">
           <view class="aibe-icon {{type}} caption">✦</view>
-          <view class="aibe-texts">
-            <text class="aibe-title body">生成打卡内容</text>
-            <text class="aibe-hint caption">AI 将根据位置和美食特色生成描述文案</text>
+          <view class="detail-panel-copy">
+            <text class="detail-panel-title">生成打卡内容</text>
+            <text class="detail-panel-desc">根据图片和地点整理一句更自然的文案</text>
           </view>
-          <view class="aibe-arrow {{type}} caption">→</view>
         </view>
 
-        <!-- 生成中：打字动画 -->
-        <view class="aib-generating {{(!generatingTitle && !generatingDesc) ? 'hidden' : ''}}">
-          <view class="aibg-header">
-            <view class="aibg-badge {{type}}">
-              <text class="aibg-badge-text caption">AI 生成中</text>
+        <view class="ai-block">
+          <view class="aib-empty {{generatingTitle || generatingDesc ? 'hidden' : ''}}" bindtap="onGenerate">
+            <view class="aibe-texts">
+              <text class="aibe-title body">生成打卡内容</text>
+              <text class="aibe-hint caption">AI 将根据位置和图片内容生成描述文案</text>
             </view>
+            <view class="aibe-arrow {{type}} caption">→</view>
           </view>
-          <text class="aibg-title heading-2">{{generatingTitle}}<text class="cursor {{type}}">|</text></text>
-          <text class="aibg-desc body-sm" wx:if="{{generatingDesc}}">{{generatingDesc}}<text class="cursor {{type}}">|</text></text>
-        </view>
 
-        <!-- 已生成：展示文案 -->
-        <view class="aib-result {{(title && !generatingTitle && !generatingDesc) ? '' : 'hidden'}}" wx:if="{{title}}">
-          <view class="aibr-header">
-            <view class="aibr-badge {{type}}">
-              <text class="aibr-badge-text caption">AI 打卡文案</text>
+          <view class="aib-generating {{(!generatingTitle && !generatingDesc) ? 'hidden' : ''}}">
+            <view class="aibg-header">
+              <view class="aibg-badge {{type}}">
+                <text class="aibg-badge-text caption">AI 生成中</text>
+              </view>
             </view>
-            <view class="aibr-retry {{type}} caption" bindtap="onGenerate">
-              <text>重新生成</text>
-            </view>
+            <text class="aibg-title heading-2">{{generatingTitle}}<text class="cursor {{type}}">|</text></text>
+            <text class="aibg-desc body-sm" wx:if="{{generatingDesc}}">{{generatingDesc}}<text class="cursor {{type}}">|</text></text>
           </view>
-          <text class="aibr-title heading-2">{{title}}</text>
-          <text class="aibr-desc body-sm">{{description}}</text>
+
+          <view class="aib-result {{(title && !generatingTitle && !generatingDesc) ? '' : 'hidden'}}" wx:if="{{title}}">
+            <view class="aibr-header">
+              <view class="aibr-badge {{type}}">
+                <text class="aibr-badge-text caption">AI 打卡文案</text>
+              </view>
+              <view class="aibr-retry {{type}} caption" bindtap="onGenerate">
+                <text>重新生成</text>
+              </view>
+            </view>
+            <text class="aibr-title heading-2">{{title}}</text>
+            <text class="aibr-desc body-sm">{{description}}</text>
+          </view>
         </view>
       </view>
-
     </view>
 
-    <!-- 底部按钮 -->
-    <view class="btn-row">
-      <view class="btn-ghost body" bindtap="onPrevStep">← 返回</view>
-      <view class="btn-primary {{generatingTitle || generatingDesc ? 'generating' : ''}}" bindtap="onGenerate">
-        <text class="btn-primary-text body">{{generatingTitle || generatingDesc ? '生成中...' : '生成打卡内容'}}</text>
+    <!-- 底部按钮：对齐项目其他页面的 bottom-btn 结构 -->
+    <view class="bottom-bar checkin-bottom-bar">
+      <view class="bottom-btn secondary checkin-bottom-secondary" bindtap="onPrevStep">
+        <i class="mgc_camera_2_ai_line"></i>
+        <text>重新拍照</text>
+      </view>
+      <view class="bottom-btn primary checkin-bottom-primary" bindtap="onGenerate">
+        <i class="mgc_pic_ai_line"></i>
+        <text>{{generatingTitle || generatingDesc ? '生成中...' : '生成打卡内容'}}</text>
       </view>
     </view>
 

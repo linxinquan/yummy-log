@@ -1,0 +1,33 @@
+<!-- 独立拍照页：从路线入口直接进入这里，避免先看到“记录美食”页面 -->
+<view class="page">
+  <view class="camera-top-bar" style="top: {{menuTop}}px; height: {{menuHeight}}px;">
+    <view class="camera-back-btn" bindtap="onBack">
+      <i class="mgc_left_line"></i>
+    </view>
+  </view>
+
+  <camera
+    class="camera-view"
+    device-position="back"
+    flash="auto"
+    binderror="onCameraError"
+  ></camera>
+
+  <view class="camera-mask">
+    <view class="camera-bottom-bar">
+      <view class="camera-side-btn" bindtap="onChooseAlbum">
+        <i class="mgc_pic_line"></i>
+        <text>相册上传</text>
+      </view>
+
+      <view class="camera-shot-btn" bindtap="onTakePhoto">
+        <view class="camera-shot-inner"></view>
+      </view>
+
+      <view class="camera-side-btn" bindtap="onGoCollection">
+        <i class="mgc_flower_4_line"></i>
+        <text>采集本</text>
+      </view>
+    </view>
+  </view>
+</view>

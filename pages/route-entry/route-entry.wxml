@@ -31,18 +31,36 @@
         <view class="action-card parse-card" bindtap="onOpenLinkImport">
           <view class="parse-glow parse-glow-red"></view>
           <view class="parse-glow parse-glow-yellow"></view>
-          <i class="action-card-icon mgc_bling_fill"></i>
+          <!-- 卡片内容放到卡片内部，图标在上，文案在下 -->
+          <view class="action-card-content">
+            <i class="action-card-icon mgc_bling_fill"></i>
+            <text class="action-card-label">解析路线</text>
+          </view>
         </view>
-        <text class="action-label">解析路线</text>
       </view>
 
       <view class="action-col action-col-right">
         <view class="action-card create-route-card" bindtap="onCreateRoute">
           <view class="create-glow create-glow-purple"></view>
           <view class="create-glow create-glow-blue"></view>
-          <i class="action-card-icon mgc_add_fill"></i>
+          <!-- 卡片内容放到卡片内部，图标在上，文案在下 -->
+          <view class="action-card-content">
+            <i class="action-card-icon mgc_add_fill"></i>
+            <text class="action-card-label">创建路线</text>
+          </view>
         </view>
-        <text class="action-label">创建路线</text>
+      </view>
+    </view>
+
+    <!-- 采集打卡入口：放在解析路线和创建路线下面，和设计稿保持 24px 间距 -->
+    <view class="checkin-entry-card" bindtap="onOpenCheckin">
+      <view class="checkin-entry-bg"></view>
+      <view class="checkin-entry-glow checkin-entry-glow-blue"></view>
+      <view class="checkin-entry-glow checkin-entry-glow-yellow"></view>
+      <view class="checkin-entry-glow checkin-entry-glow-purple"></view>
+      <view class="checkin-entry-main">
+        <i class="checkin-entry-icon mgc_camera_2_ai_line"></i>
+        <text class="checkin-entry-text">采集打卡</text>
       </view>
     </view>
   </view>

@@ -32,13 +32,59 @@ Page({
     mapCenter: { latitude: 22.543, longitude: 114.057 },
     mapScale: 13,
     allMarkers: [],
-    recentCheckins: []
+    recentCheckins: [],
+    autoCamera: false,
+    navTitle: ''
   },
 
   onLoad(query) {
     this._updateDate()
+    const app = getApp()
     const type = query.type === 'spot' ? 'spot' : 'food'
-    this.setData({ type })
+    const pendingPhoto = query.prefillPhoto === '1'
+      ? (app.globalData && app.globalData.pendingCheckinPhoto) || ''
+      : ''
+    if (app.globalData) {
+      app.globalData.pendingCheckinPhoto = ''
+    }
+    this._pendingAutoCamera = query.autoCamera === '1'
+    this._pendingAutoLocation = Boolean(pendingPhoto)
+    this.setData({
+      type,
+      autoCamera: query.autoCamera === '1',
+      navTitle: query.source === 'routeEntry'
+        ? '采集打卡'
+        : (type === 'spot' ? '记录景点' : '记录美食'),
+      photoPath: pendingPhoto,
+      step: pendingPhoto ? 2 : 1
+    })
+  },
+
+  onShow() {
+    // 通过独立拍照页进入时，已带上照片，这里自动进入定位识别流程。
+    if (this._pendingAutoLocation) {
+      this._pendingAutoLocation = false
+      setTimeout(() => {
+        this.onGetLocation()
+      }, 80)
+    }
+  },
+
+  onReady() {
+    // 从路线入口进来时，页面准备好后自动拉起相机。
+    if (!this._pendingAutoCamera) return
+    this._pendingAutoCamera = false
+    setTimeout(() => {
+      if (this.data.step !== 1 || this.data.photoPath) return
+      this.onChoosePhoto({
+        currentTarget: {
+          dataset: {
+            source: 'camera',
+            auto: '1'
+          }
+        }
+      })
+    }, 120)
   },
 
   // 更新日期信息
@@ -54,18 +100,45 @@ Page({
   },
 
   // ── STEP 1：选照片 ──────────────────────────────
-  onChoosePhoto() {
+  onChoosePhoto(e) {
+    const dataset = (e && e.currentTarget && e.currentTarget.dataset) || {}
+    const source = dataset.source || ''
+    const isAutoTrigger = dataset.auto === '1'
+    const sourceType = source === 'camera'
+      ? ['camera']
+      : source === 'album'
+        ? ['album']
+        : ['album', 'camera']
+
     wx.chooseImage({
       count: 1,
       sizeType: ['compressed'],
-      sourceType: ['album', 'camera'],
+      sourceType,
       success: (res) => {
         const path = res.tempFilePaths[0]
         this.setData({ photoPath: path })
       },
       fail: (err) => {
         console.warn('chooseImage fail:', err)
+        if (err && (err.errMsg || '').includes('cancel')) {
+          return
+        }
+        if (isAutoTrigger) {
+          wx.showToast({ title: '可以改用相册上传', icon: 'none' })
+          return
+        }
         wx.showToast({ title: '请允许相册/相机权限', icon: 'none' })
+      }
+    })
+  },
+
+  // 从相册选择照片，给用户一个明确的上传入口。
+  onChooseAlbum() {
+    this.onChoosePhoto({
+      currentTarget: {
+        dataset: {
+          source: 'album'
+        }
       }
     })
   },

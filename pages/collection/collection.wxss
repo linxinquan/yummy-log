@@ -1,137 +1,183 @@
-/* pages/collection/collection.wxss - 基于 Design System v1.0 */
+page {
+  background: #FFFFFF;
+}
 
 .container {
   min-height: 100vh;
-  background: var(--background);
-  padding-bottom: calc(var(--space-xl) + env(safe-area-inset-bottom));
+  background: #FFFFFF;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* 顶部统计横幅 */
-.hero-bar {
-  background: var(--gradient-warm);
-  padding: var(--space-xl) var(--space-md) var(--space-lg);
+.header {
+  padding: 48rpx;
+  background: #FFFFFF;
+}
+
+.district-title {
+  color: #242529;
+  font-size: 48rpx;
+  font-weight: 500;
+  line-height: 48rpx;
+}
+
+.page-content {
+  padding-left: 48rpx;
+  padding-right: 48rpx;
+}
+
+.hero-card {
+  padding: 40rpx 32rpx;
+  border-radius: 32rpx;
+  background: #FFFFFF;
+  border: 2rpx solid #F0F1F3;
+}
+
+.hero-action-row {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  border-bottom: 2rpx solid var(--border);
+  justify-content: flex-end;
 }
 
-.hero-title {
-  color: var(--primary-dark);
+.hero-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12rpx;
+  height: 72rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  background: #242529;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.hero-action-btn i {
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+.hero-action-btn text {
+  color: #FFFFFF;
+  font-size: 28rpx;
+  line-height: 28rpx;
 }
 
 .hero-stats {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  margin-top: 32rpx;
+  gap: 24rpx;
 }
 
 .hs-item {
   display: flex;
   align-items: baseline;
-  gap: var(--space-xs);
+  gap: 8rpx;
 }
 
 .hs-num {
-  color: var(--primary);
+  color: #242529;
+  font-size: 44rpx;
+  font-weight: 600;
+  line-height: 44rpx;
 }
 
-.hs-label {
-  color: var(--text-secondary);
-}
-
+.hs-label,
 .hs-sep {
-  color: var(--text-disabled);
+  color: #6E727A;
+  font-size: 24rpx;
+  line-height: 24rpx;
 }
 
-/* 视图切换 Tab */
 .view-tabs {
   display: flex;
-  background: var(--surface);
-  border-bottom: 2rpx solid var(--border);
+  gap: 16rpx;
+  margin-top: 32rpx;
+  padding: 8rpx;
+  border-radius: 999rpx;
+  background: #F7F8FA;
 }
 
 .vt-item {
   flex: 1;
+  height: 72rpx;
+  border-radius: 999rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
-  padding: var(--space-md) 0;
-  color: var(--text-secondary);
-  transition: all 0.2s;
-  border-bottom: 4rpx solid transparent;
+  gap: 8rpx;
+  color: #6E727A;
 }
 
 .vt-item.active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
-  
+  background: #FFFFFF;
+  color: #242529;
+  box-shadow: inset 0 0 0 2rpx #F0F1F3;
 }
 
 .vt-icon {
   color: inherit;
+  font-size: 30rpx;
+  line-height: 30rpx;
 }
 
-/* 空状态 */
+.vt-item text {
+  color: inherit;
+  font-size: 28rpx;
+  line-height: 28rpx;
+}
+
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-sizing: border-box;
-  min-height: calc(100vh - 320rpx);
-  padding: 0 48rpx calc(120rpx + env(safe-area-inset-bottom));
+  min-height: calc(100vh - 520rpx);
+  padding: 0 24rpx;
 }
 
 .empty-illustration {
-  width: 240rpx;
-  height: 240rpx;
+  width: 200rpx;
+  height: 200rpx;
   border-radius: 999rpx;
   background: #F7F8FA;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 48rpx;
+  margin-bottom: 40rpx;
 }
 
 .empty-icon {
-  font-size: 120rpx;
+  font-size: 100rpx;
   color: #A0A4AE;
 }
 
 .empty-title {
   color: #242529;
-  font-size: 40rpx;
-  line-height: 40rpx;
-  margin-bottom: 32rpx;
+  font-size: 36rpx;
   font-weight: 500;
+  line-height: 36rpx;
 }
 
 .empty-hint {
-  font-size: 28rpx;
+  margin-top: 24rpx;
   color: #6E727A;
+  font-size: 28rpx;
   line-height: 40rpx;
   text-align: center;
-  margin-bottom: 48rpx;
 }
 
 .empty-actions {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
+  margin-top: 40rpx;
 }
 
 .empty-btn {
   width: 100%;
-  height: 80rpx;
+  height: 88rpx;
   border-radius: 999rpx;
-  font-size: 28rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8rpx;
+  gap: 12rpx;
   border: none;
 }
 
@@ -144,131 +190,143 @@
   color: #FFFFFF;
 }
 
-.empty-btn-secondary {
-  background: #FFFFFF;
-  color: #242529;
-  box-shadow: inset 0 0 0 2rpx #E5E7EB;
+.empty-btn-primary i,
+.empty-btn-primary text {
+  color: #FFFFFF;
+  font-size: 28rpx;
+  line-height: 28rpx;
 }
 
-/* 邮票网格 */
-.stamps-grid {
+/* 列表区：改成纵向信息卡，突出标题、标签、时间 */
+.checkin-list {
   display: flex;
-  flex-wrap: wrap;
-  padding: var(--space-md);
-  gap: var(--space-md);
+  flex-direction: column;
+  gap: 24rpx;
+  padding: 32rpx 0 0;
 }
 
-.stamp-item {
-  width: calc(50% - var(--space-sm));
+.checkin-card {
+  display: flex;
+  gap: 24rpx;
+  padding: 24rpx;
+  border-radius: 28rpx;
+  background: #FFFFFF;
+  border: 2rpx solid #F0F1F3;
+  box-sizing: border-box;
 }
 
-.stamp-card {
-  padding: 0; /* override card default padding */
+.checkin-card-photo {
+  width: 176rpx;
+  height: 176rpx;
+  border-radius: 24rpx;
+  flex-shrink: 0;
+  background: #F7F8FA;
+}
+
+.checkin-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.checkin-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.checkin-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  height: 44rpx;
+  padding: 0 16rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
+.checkin-type-badge.food {
+  color: #D59B1A;
+  background: #FFF7E8;
+}
+
+.checkin-type-badge.spot {
+  color: #2F92EE;
+  background: #ECF6FF;
+}
+
+.checkin-type-badge i,
+.checkin-type-badge text {
+  color: inherit;
+  font-size: 22rpx;
+  line-height: 22rpx;
+}
+
+.checkin-card-date {
+  color: #8F949C;
+  font-size: 22rpx;
+  line-height: 22rpx;
+  flex-shrink: 0;
+}
+
+.checkin-card-title {
+  color: #242529;
+  font-size: 34rpx;
+  font-weight: 500;
+  line-height: 44rpx;
+  word-break: break-all;
+}
+
+.checkin-card-address {
+  color: #6E727A;
+  font-size: 26rpx;
+  line-height: 38rpx;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  position: relative;
-  box-shadow: var(--shadow-sm);
 }
 
-/* Stamp edge styling (perforations) */
-.stamp-card::before {
-  content: '';
-  position: absolute;
-  top: -8rpx;
-  left: 0;
-  right: 0;
-  height: 16rpx;
-  background: radial-gradient(circle at 50% 100%, var(--background) 8rpx, var(--surface) 8rpx) 0 0 / 20rpx 16rpx repeat-x;
-  z-index: 1;
+.checkin-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 8rpx;
 }
 
-.stamp-card::after {
-  content: '';
-  position: absolute;
-  bottom: -8rpx;
-  left: 0;
-  right: 0;
-  height: 16rpx;
-  background: radial-gradient(circle at 50% 0%, var(--background) 8rpx, var(--surface) 8rpx) 0 0 / 20rpx 16rpx repeat-x;
-  z-index: 1;
+.checkin-card-time {
+  color: #A0A4AE;
+  font-size: 24rpx;
+  line-height: 24rpx;
 }
 
-.stamp-photo-wrap {
-  position: relative;
-  width: 100%;
-  height: 240rpx; /* ~4:3 */
-  overflow: hidden;
-}
-
-.stamp-photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.stamp-postmark {
-  position: absolute;
-  top: var(--space-sm);
-  right: var(--space-sm);
-  background: rgba(71, 191, 254, 0.85); /* primary with opacity */
-  border-radius: var(--radius-full);
-  width: 80rpx;
-  height: 80rpx;
+.checkin-card-arrow {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 999rpx;
+  background: #F7F8FA;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2rpx solid rgba(255,255,255,0.6);
-  z-index: 2;
+  color: #8F949C;
 }
 
-.pm-date {
-  color: var(--surface);
-  
-  text-align: center;
-  transform: rotate(-15deg); /* playful angle */
+.checkin-card-arrow i {
+  color: inherit;
+  font-size: 24rpx;
+  line-height: 24rpx;
 }
 
-.stamp-info {
-  padding: var(--space-md);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  background: var(--surface);
-}
-
-.stamp-name {
-  color: var(--text-primary);
-  
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.stamp-addr {
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* 类型标签 */
-.stamp-type-tag {
-  position: absolute;
-  top: var(--space-sm);
-  left: var(--space-sm);
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(8rpx);
-  border-radius: var(--radius-sm);
-  padding: var(--space-xs) var(--space-sm);
-  
-  color: var(--text-primary);
-  z-index: 2;
-  box-shadow: var(--shadow-xs);
-}
-
-/* 地图视图 */
 .map-wrap {
   width: 100%;
-  height: 65vh;
+  height: 760rpx;
+  margin-top: 32rpx;
+  overflow: hidden;
+  border-radius: 32rpx;
 }
 
 .collection-map {
@@ -277,86 +335,92 @@
 }
 
 .map-list {
-  width: 100%;
+  margin-top: 24rpx;
   white-space: nowrap;
-  padding: var(--space-md);
-  background: var(--surface);
-  box-shadow: 0 -4rpx 16rpx rgba(0,0,0,0.06);
-  position: relative;
-  z-index: 10;
 }
 
 .map-card {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-md);
-  margin-right: var(--space-md);
+  gap: 20rpx;
   width: 360rpx;
-  white-space: normal;
-  margin-bottom: 0;
+  margin-right: 24rpx;
+  padding: 20rpx;
+  border-radius: 24rpx;
+  background: #FFFFFF;
+  border: 2rpx solid #F0F1F3;
+  box-sizing: border-box;
 }
 
 .mc-photo {
   width: 96rpx;
   height: 96rpx;
-  border-radius: var(--radius-sm);
+  border-radius: 20rpx;
   flex-shrink: 0;
-  object-fit: cover;
 }
 
 .mc-info {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
-  overflow: hidden;
+  gap: 8rpx;
 }
 
-.mc-icon {
-  color: var(--text-secondary);
+.mc-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.mc-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  height: 40rpx;
+  padding: 0 14rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
+.mc-type-badge.food {
+  color: #D59B1A;
+  background: #FFF7E8;
+}
+
+.mc-type-badge.spot {
+  color: #2F92EE;
+  background: #ECF6FF;
+}
+
+.mc-type-badge i,
+.mc-type-badge text {
+  color: inherit;
+  font-size: 20rpx;
+  line-height: 20rpx;
 }
 
 .mc-name {
-  color: var(--text-primary);
-  
+  color: #242529;
+  font-size: 28rpx;
+  font-weight: 500;
+  line-height: 36rpx;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .mc-date {
-  color: var(--text-disabled);
+  color: #8F949C;
+  font-size: 22rpx;
+  line-height: 22rpx;
 }
 
-/* 浮动采集按钮 (FAB) */
-.fab {
-  position: fixed;
-  right: var(--space-lg);
-  bottom: calc(160rpx + env(safe-area-inset-bottom));
-  width: 112rpx; /* 56px */
-  height: 112rpx; /* 56px */
-  background: var(--primary);
-  border-radius: var(--radius-full);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-lg);
-  z-index: 100;
-  transition: transform 0.2s;
-}
-
-.fab:active {
-  transform: scale(0.95);
-}
-
-.fab-icon {
-  color: var(--surface);
-  line-height: 0.8;
-  
-}
-
-.fab-text {
-  color: var(--surface);
-  
-  margin-top: -4rpx;
+.mc-addr {
+  color: #6E727A;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

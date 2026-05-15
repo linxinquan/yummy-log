@@ -153,5 +153,12 @@ Page({
     wx.navigateTo({
       url: '/pages/route-basic-edit/route-basic-edit?create=1'
     })
+  },
+
+  // 打开独立拍照页：先进入相机页，不再先经过“记录美食”页面。
+  onOpenCheckin() {
+    wx.navigateTo({
+      url: '/pages/checkin-camera/checkin-camera?type=food&source=routeEntry'
+    })
   }
 })
