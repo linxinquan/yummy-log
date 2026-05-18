@@ -558,6 +558,14 @@
   color: #242529;
 }
 
+/* 地图品牌图片：统一控制尺寸，保证两张 png 显示一致 */
+.route-sheet-option-logo {
+  width: 40rpx;
+  height: 40rpx;
+  flex-shrink: 0;
+  display: block;
+}
+
 .route-sheet-option-main text {
   font-size: 32rpx;
   line-height: 32rpx;

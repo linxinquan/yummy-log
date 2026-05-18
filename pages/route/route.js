@@ -470,7 +470,8 @@ Page({
     previewRouteId: '',
     hasUnsavedPreview: false,
     reorderSheetVisible: false,
-    pendingReorderMode: 'smart',
+    // 路线规划弹窗默认不选中任何方式，需用户手动选择
+    pendingReorderMode: '',
     routeShopsBackup: [],
     routeDaySectionsBackup: [],
     mapPreviewShop: null,
@@ -1023,7 +1024,8 @@ Page({
   onOpenReorderSheet() {
     this.setData({
       reorderSheetVisible: true,
-      pendingReorderMode: this.data.isEditing ? 'manual' : 'smart'
+      // 每次打开都重置为未选择状态
+      pendingReorderMode: ''
     })
   },
 
@@ -1049,7 +1051,11 @@ Page({
 
   // 关闭“编辑路线规划”弹窗
   onCloseReorderSheet() {
-    this.setData({ reorderSheetVisible: false })
+    this.setData({
+      reorderSheetVisible: false,
+      // 关闭时清空选择，避免下次打开沿用上一次状态
+      pendingReorderMode: ''
+    })
   },
 
   // 在弹窗里选择“智能重排”还是“手动编辑”
@@ -1061,6 +1067,11 @@ Page({
 
   // 确认重排方式：智能重排直接优化，手动编辑跳到我的路线编辑页。
   onConfirmReorderMode() {
+    if (!this.data.pendingReorderMode) {
+      wx.showToast({ title: '请先选择操作', icon: 'none' })
+      return
+    }
+
     if (this.data.pendingReorderMode === 'manual') {
       const previewRoute = buildPreviewRouteData(this.data, { isDraft: true })
       if (!previewRoute) return

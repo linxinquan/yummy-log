@@ -304,7 +304,7 @@
   <view class="reorder-sheet-mask" wx:if="{{reorderSheetVisible}}" bindtap="onCloseReorderSheet"></view>
   <view class="reorder-sheet" wx:if="{{reorderSheetVisible}}">
     <view class="reorder-sheet-header">
-      <text class="reorder-sheet-title">编辑路线规划</text>
+      <text class="reorder-sheet-title">路线规划</text>
       <view class="reorder-sheet-close" bindtap="onCloseReorderSheet">
         <i class="mgc_close_line"></i>
       </view>
@@ -420,17 +420,19 @@
         <i class="mgc_close_line sheet-modal-close" bindtap="onCloseNavMapSheet"></i>
       </view>
       <view class="route-sheet-option-list">
-        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="tencent">
+        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="gaode">
           <view class="route-sheet-option-main">
-            <i class="mgc_navigation_fill"></i>
-            <text>腾讯地图（推荐）</text>
+            <!-- 地图品牌图标：改用用户提供的 png -->
+            <image class="route-sheet-option-logo" src="/images/navigation/nav-map-amap.png" mode="aspectFit"></image>
+            <text>高德地图</text>
           </view>
           <i class="mgc_right_small_line route-sheet-option-arrow"></i>
         </view>
-        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="gaode">
+        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="tencent">
           <view class="route-sheet-option-main">
-            <i class="mgc_navigation_fill"></i>
-            <text>高德地图</text>
+            <!-- 地图品牌图标：改用用户提供的 png -->
+            <image class="route-sheet-option-logo" src="/images/navigation/nav-map-tencent.png" mode="aspectFit"></image>
+            <text>腾讯地图</text>
           </view>
           <i class="mgc_right_small_line route-sheet-option-arrow"></i>
         </view>

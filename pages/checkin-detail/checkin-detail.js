@@ -16,7 +16,11 @@ Page({
     editDescription: '',
     editLatitude: null,
     editLongitude: null,
-    editGeneratingDescription: false
+    editGeneratingDescription: false,
+    actionSheetVisible: false,
+    editNameSheetVisible: false,
+    selectedAction: '',
+    editNameValue: ''
   },
 
   onLoad(options) {
@@ -82,7 +86,119 @@ Page({
       editDescription: detail.description || '',
       editLatitude: detail.latitude || null,
       editLongitude: detail.longitude || null,
-      editGeneratingDescription: false
+      editGeneratingDescription: false,
+      actionSheetVisible: false,
+      editNameSheetVisible: false,
+      selectedAction: ''
+    })
+  },
+
+  onOpenActionSheet() {
+    this.setData({
+      actionSheetVisible: true,
+      editNameSheetVisible: false,
+      editSheetVisible: false,
+      selectedAction: ''
+    })
+  },
+
+  onCloseActionSheet() {
+    this.setData({
+      actionSheetVisible: false,
+      selectedAction: ''
+    })
+  },
+
+  onSelectAction(e) {
+    const action = e.currentTarget.dataset.action
+    if (!action) return
+    this.setData({
+      selectedAction: action
+    })
+  },
+
+  onConfirmSelectedAction() {
+    if (!this.data.selectedAction) {
+      wx.showToast({
+        title: '请选择操作',
+        icon: 'none'
+      })
+      return
+    }
+
+    if (this.data.selectedAction === 'delete') {
+      this.onDeleteCheckin()
+      return
+    }
+
+    const detail = this.data.detail || {}
+    this.setData({
+      actionSheetVisible: false,
+      editNameSheetVisible: true,
+      editNameValue: detail.spotName || ''
+    })
+  },
+
+  onCloseEditNameSheet() {
+    this.setData({
+      editNameSheetVisible: false
+    })
+  },
+
+  onEditNameInput(e) {
+    this.setData({
+      editNameValue: e.detail.value
+    })
+  },
+
+  onConfirmEditName() {
+    const { currentId, editNameValue, detail } = this.data
+    if (!checkinUtil || !currentId || !detail) return
+
+    const nextName = String(editNameValue || '').trim()
+    if (!nextName) {
+      wx.showToast({
+        title: '名称不能为空',
+        icon: 'none'
+      })
+      return
+    }
+
+    const updated = checkinUtil.updateCheckin(currentId, {
+      spotName: nextName
+    })
+
+    if (!updated) {
+      wx.showToast({
+        title: '保存失败，请重试',
+        icon: 'none'
+      })
+      return
+    }
+
+    this.setData({
+      editNameSheetVisible: false,
+      detail: {
+        ...updated,
+        recordTimeLabel: detail.recordTimeLabel
+      }
+    })
+  },
+
+  onDeleteCheckin() {
+    const { currentId } = this.data
+    if (!checkinUtil || !currentId) return
+
+    wx.showModal({
+      title: '删除采集',
+      content: '删除后这张邮票会从我的采集中移除',
+      confirmText: '删除',
+      confirmColor: '#E05252',
+      success: (res) => {
+        if (!res.confirm) return
+        checkinUtil.deleteCheckin(currentId)
+        wx.navigateBack()
+      }
     })
   },
 

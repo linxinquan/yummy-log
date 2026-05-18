@@ -43,13 +43,17 @@
   <!-- 底部按钮：重拍 / 编辑 / 保存采集 -->
   <view class="bottom-action-mask" wx:if="{{step === 2}}"></view>
   <view class="bottom-actions" wx:if="{{step === 2}}">
-    <view class="action-btn action-btn-light" bindtap="onRetake">
-      <text>重拍</text>
+    <view class="action-btn action-btn-light action-btn-icon" bindtap="onRetake">
+      <i class="mgc_camera_rotate_line"></i>
     </view>
+    <!-- 编辑按钮：补上编辑图标，延续浅色按钮样式 -->
     <view class="action-btn action-btn-light" bindtap="onOpenEditSheet">
+      <i class="mgc_pencil_3_line action-btn-inline-icon"></i>
       <text>编辑</text>
     </view>
+    <!-- 保存采集按钮：补上采集图标，延续主按钮样式 -->
     <view class="action-btn action-btn-dark {{(saving || confirmLoading) ? 'disabled' : ''}}" bindtap="onSaveCheckin">
+      <i class="mgc_flower_4_line action-btn-inline-icon"></i>
       <text>{{saving ? '保存中...' : '保存采集'}}</text>
     </view>
   </view>

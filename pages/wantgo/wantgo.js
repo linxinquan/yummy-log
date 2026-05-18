@@ -331,7 +331,8 @@ Page({
     deleteActionWidthPx: 72,
     routeActionSheetVisible: false,
     routeActionOptions: ROUTE_ACTION_OPTIONS,
-    selectedRouteAction: 'publish',
+    // 路线编辑弹窗默认不选中任何操作，需用户手动选择
+    selectedRouteAction: '',
     routeActionTarget: null
   },
 
@@ -469,7 +470,8 @@ Page({
     wx.vibrateShort({ type: 'light' })
     this.setData({
       routeActionSheetVisible: true,
-      selectedRouteAction: 'publish',
+      // 每次打开都重置为未选择状态
+      selectedRouteAction: '',
       routeActionTarget: route
     })
   },
@@ -478,7 +480,8 @@ Page({
   onCloseRouteActionSheet() {
     this.setData({
       routeActionSheetVisible: false,
-      selectedRouteAction: 'publish',
+      // 关闭弹窗时清空选择，避免下次打开沿用上次状态
+      selectedRouteAction: '',
       routeActionTarget: null
     })
   },
@@ -516,7 +519,14 @@ Page({
   // 点击弹窗确认按钮后，真正执行发布 / 复制 / 编辑 / 删除
   onConfirmRouteAction() {
     const { selectedRouteAction, routeActionTarget } = this.data
-    if (!selectedRouteAction || !routeActionTarget) return
+    if (!routeActionTarget) return
+    if (!selectedRouteAction) {
+      wx.showToast({
+        title: '请先选择操作',
+        icon: 'none'
+      })
+      return
+    }
 
     if (selectedRouteAction === 'delete') {
       wx.showModal({

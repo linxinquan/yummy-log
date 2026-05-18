@@ -291,6 +291,7 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8rpx;
   box-sizing: border-box;
 }
 
@@ -316,6 +317,24 @@ page {
   color: #060606;
 }
 
+.action-btn-icon {
+  width: 96rpx;
+  padding: 0;
+}
+
+.action-btn-icon i {
+  color: #060606;
+  font-size: 40rpx;
+  line-height: 40rpx;
+}
+
+/* 文字按钮内的小图标：和文案横向排布 */
+.action-btn-inline-icon {
+  font-size: 32rpx;
+  line-height: 32rpx;
+  flex-shrink: 0;
+}
+
 .action-btn-dark {
   flex: 1;
   min-width: 0;
@@ -323,6 +342,14 @@ page {
 }
 
 .action-btn-dark text {
+  color: #FFFFFF;
+}
+
+.action-btn-light .action-btn-inline-icon {
+  color: #060606;
+}
+
+.action-btn-dark .action-btn-inline-icon {
   color: #FFFFFF;
 }
 
@@ -465,7 +492,7 @@ page {
 }
 
 .edit-sheet-btn {
-  height: 88rpx;
+  height: 96rpx;
   border-radius: 999rpx;
   display: flex;
   align-items: center;
@@ -473,9 +500,9 @@ page {
 }
 
 .edit-sheet-btn text {
-  font-size: 28rpx;
+  font-size: 32rpx;
   font-weight: 500;
-  line-height: 28rpx;
+  line-height: 32rpx;
 }
 
 .edit-sheet-btn-light {

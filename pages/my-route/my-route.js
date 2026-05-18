@@ -563,7 +563,8 @@ Page({
     pendingTransportMode: 'walk',
     transportTarget: null,
     reorderSheetVisible: false,
-    pendingReorderMode: 'smart',
+    // 路线规划弹窗默认不选中任何方式，需用户手动选择
+    pendingReorderMode: '',
     navMapSheetVisible: false,
     navMapTarget: null,
     placeIntroVisible: false,
@@ -1084,13 +1085,18 @@ Page({
   onOpenReorderSheet() {
     this.setData({
       reorderSheetVisible: true,
-      pendingReorderMode: 'smart'
+      // 每次打开都重置为未选择状态
+      pendingReorderMode: ''
     })
   },
 
   // 关闭“编辑路线规划”底部弹窗
   onCloseReorderSheet() {
-    this.setData({ reorderSheetVisible: false })
+    this.setData({
+      reorderSheetVisible: false,
+      // 关闭时清空选择，避免下次打开沿用上一次状态
+      pendingReorderMode: ''
+    })
   },
 
   // 切换底部弹窗里的编辑方式
@@ -1104,6 +1110,11 @@ Page({
   // 1. 手动编辑：进入原来的编辑态
   // 2. 智能规划：直接按当前城市中心重新排序并保存
   onConfirmReorderMode() {
+    if (!this.data.pendingReorderMode) {
+      wx.showToast({ title: '请先选择操作', icon: 'none' })
+      return
+    }
+
     if (this.data.pendingReorderMode === 'manual') {
       this.setData({ reorderSheetVisible: false })
       this.onStartRouteEdit()
