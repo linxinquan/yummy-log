@@ -41,7 +41,7 @@
     <block wx:if="{{viewMode === 'list'}}">
       <view class="empty-state" wx:if="{{checkins.length === 0}}">
         <view class="empty-illustration">
-          <i class="mgc_package_line empty-icon"></i>
+          <i class="mgc_flower_4_line empty-icon"></i>
         </view>
         <text class="empty-title">我的采集</text>
         <text class="empty-hint">去记录你的第一张采集卡吧</text>
@@ -84,6 +84,7 @@
           scale="{{mapScale}}"
           markers="{{mapMarkers}}"
           bindmarkertap="onMarkerTap"
+          bindtap="onMapTapBackground"
           show-location
           enable-zoom
           enable-scroll

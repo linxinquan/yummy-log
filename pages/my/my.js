@@ -9,6 +9,24 @@ try {
   console.warn('checkinUtil 加载失败:', e)
 }
 
+// 登录用户没有上传头像时，随机从美食 / 景点封面里挑一张，避免回退到项目 Logo。
+function getRandomProfileImage() {
+  const foodImages = (shopData.shops || [])
+    .map((item) => item.logo || item.image || item.coverImage)
+    .filter(Boolean)
+  const spotImages = (util.getSpotData() || [])
+    .map((item) => item.image || item.coverImage || item.logo)
+    .filter(Boolean)
+  const imagePool = [...foodImages, ...spotImages]
+
+  if (!imagePool.length) {
+    return '/images/covers/01.jpeg'
+  }
+
+  const randomIndex = Math.floor(Math.random() * imagePool.length)
+  return imagePool[randomIndex]
+}
+
 // 统一打开地点详情：
 // 如果足迹里的景点来自采集记录而不是系统内置数据，就直接把完整对象传过去。
 function openPlaceDetail(shop) {
@@ -32,7 +50,7 @@ Page({
     // 登录状态
     isLoggedIn: false,
     nickName: '',
-    avatarUrl: '/images/app-logo.jpg', // 未登录默认头像
+    avatarUrl: '', // 登录后没有自定义头像时，使用随机美食 / 景点图
     hasNickname: false, // 是否有昵称
     hasAvatar: false,   // 是否选择了头像
 
@@ -88,6 +106,8 @@ Page({
   onLoad() {
     this.loadUserInfo()
     this.loadData()
+    // 首屏就刷新采集统计，避免第一次进入数字为空
+    this.loadCheckinStats()
     // 获取行政区划信息
     this.loadDistrictInfo()
     // 获取天气
@@ -282,28 +302,39 @@ Page({
   loadUserInfo() {
     const userInfo = util.loadData('userInfo', null)
     if (userInfo) {
+      // 兼容历史账号：如果之前没有头像，就补一张随机封面并写回缓存。
+      const fallbackAvatar = userInfo.avatarUrl || getRandomProfileImage()
+      const nextUserInfo = userInfo.avatarUrl
+        ? userInfo
+        : Object.assign({}, userInfo, { avatarUrl: fallbackAvatar })
+
+      if (!userInfo.avatarUrl) {
+        util.saveData('userInfo', nextUserInfo)
+      }
+
       this.setData({
         isLoggedIn: true,
-        userInfo: userInfo,
-        nickName: userInfo.nickName,
-        avatarUrl: userInfo.avatarUrl
+        userInfo: nextUserInfo,
+        nickName: nextUserInfo.nickName,
+        avatarUrl: fallbackAvatar
       })
     } else {
       this.setData({
         isLoggedIn: false,
         userInfo: {},
         nickName: '',
-        avatarUrl: '/images/app-logo.jpg'
+        avatarUrl: ''
       })
     }
   },
 
   // 快速登录：当前项目里先用一份默认账号，方便体验流程。
   onQuickLogin() {
+    const defaultAvatar = this.data.avatarUrl || getRandomProfileImage()
     const userInfo = {
       uid: 'MS' + Date.now().toString(36).toUpperCase(),
       nickName: this.data.nickName || '觅食者',
-      avatarUrl: this.data.avatarUrl || '/images/app-logo.jpg',
+      avatarUrl: defaultAvatar,
       phone: '',
       level: 'Lv.1 入门吃货',
       isVip: false,
@@ -316,7 +347,8 @@ Page({
     
     this.setData({
       isLoggedIn: true,
-      userInfo: userInfo
+      userInfo: userInfo,
+      avatarUrl: defaultAvatar
     })
 
     wx.showToast({ 
@@ -331,14 +363,24 @@ Page({
     if (this.data.isLoggedIn) {
       return
     }
+    const defaultAvatar = getRandomProfileImage()
     // 点击登录，直接调用快速登录（为了方便测试体验，目前直接生成默认账号）
     this.setData({
       nickName: '觅食者',
-      avatarUrl: '/images/app-logo.jpg',
+      avatarUrl: defaultAvatar,
       hasNickname: true,
       hasAvatar: true
     })
     this.onQuickLogin()
+  },
+
+  // 点击顶部资料区：未登录走登录，已登录走资料编辑。
+  onTapUserProfile() {
+    if (!this.data.isLoggedIn) {
+      this.onShowLogin()
+      return
+    }
+    this.onEditProfile()
   },
 
   // 已登录后点击资料区：可改昵称或退出登录。
@@ -391,7 +433,7 @@ Page({
           this.setData({
             isLoggedIn: false,
             nickName: '',
-            avatarUrl: '/images/app-logo.jpg',
+            avatarUrl: '',
             hasNickname: false,
             hasAvatar: false,
             userInfo: {},

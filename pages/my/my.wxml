@@ -1,87 +1,64 @@
-<!-- 觅食图 · 我的页面 (Figma Design 1044_132) -->
+<!-- 我的页：按新版设计改为顶部信息区 + 快捷入口 + 简洁菜单 -->
 <view class="container">
-
-  <!-- 顶部背景 -->
-  <view class="top-bg"></view>
-
-  <!-- ══ 用户信息栏 ══ -->
-  <view class="user-section" bindtap="{{!isLoggedIn ? 'onShowLogin' : ''}}">
-    <view class="user-info">
-      <text class="user-nickname">{{isLoggedIn ? (userInfo.nickName || '觅食者') : '未登录'}}</text>
-      <text class="user-desc">{{isLoggedIn ? '相遇的第 ' + (userInfo.days || 1) + ' 天' : '点击登录，点击开始探索之旅'}}</text>
-    </view>
-    <image wx:if="{{isLoggedIn}}" class="user-avatar" src="{{userInfo.avatarUrl || '/images/app-logo.jpg'}}" mode="aspectFill" />
-    <view wx:else class="user-avatar-default">
-      <i class="mgc_ghost_fill"></i>
-    </view>
-  </view>
-
-  <!-- ══ 快捷功能 ══ -->
-  <view class="shortcut-section">
-    <view class="shortcut-card" bindtap="onMenuTap" data-type="favorites">
-      <i class="mgc_star_fill shortcut-icon icon-favorite"></i>
-      <text>我的收藏</text>
-    </view>
-    <view class="shortcut-card" bindtap="onMenuTap" data-type="guides">
-      <i class="mgc_send_plane_fill shortcut-icon icon-publish"></i>
-      <text>我的发布</text>
-    </view>
-  </view>
-
-  <!-- ══ 记录卡片 ══ -->
-  <view class="record-section">
-    <view class="record-header">
-      <i class="mgc_paw_fill icon-gradient"></i>
-      <text>记录</text>
-    </view>
-    <view class="record-cards">
-      <view class="record-item item-collect">
-        <text class="record-label">采集</text>
-        <text class="record-value">{{checkinStats.totalCount || 0}}</text>
+  <!-- 顶部灰底信息区 -->
+  <view class="profile-hero">
+    <!-- 头像和昵称区域：未登录点这里登录，已登录点这里编辑资料 -->
+    <view class="user-section" bindtap="onTapUserProfile">
+      <view class="user-info">
+        <text class="user-nickname">{{isLoggedIn ? (userInfo.nickName || '觅食者') : '未登录'}}</text>
+        <text class="user-desc">{{isLoggedIn ? ('与你相遇的第 ' + (userInfo.days || 1) + ' 天') : '点击登录，开始记录你的美食足迹'}}</text>
       </view>
-      <view class="record-item item-city">
-        <text class="record-label">城市</text>
-        <text class="record-value">{{checkinStats.cityCount || 0}}</text>
+      <image wx:if="{{isLoggedIn}}" class="user-avatar" src="{{avatarUrl}}" mode="aspectFill" />
+      <view wx:else class="user-avatar-default">
+        <i class="mgc_ghost_fill"></i>
       </view>
-      <view class="record-item item-footprint">
-        <text class="record-label">足迹</text>
-        <text class="record-value">{{stats.visitedCount || 0}}</text>
+    </view>
+
+    <!-- 统计一行：点击整行进入我的采集 -->
+    <view class="stats-row" bindtap="onGoCollection">
+      <view class="stat-item">
+        <text class="stat-label">采集</text>
+        <text class="stat-value">{{checkinStats.totalCount || 0}}</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-label">城市</text>
+        <text class="stat-value">{{checkinStats.cityCount || 0}}</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-label">足迹</text>
+        <text class="stat-value">{{stats.visitedCount || 0}}</text>
+      </view>
+    </view>
+
+    <!-- 快捷入口：收藏保留，采集替换掉原来的我的发布 -->
+    <view class="shortcut-section">
+      <view class="shortcut-card" bindtap="onMenuTap" data-type="favorites">
+        <i class="mgc_star_line shortcut-icon icon-gradient"></i>
+        <text>收藏</text>
+      </view>
+      <view class="shortcut-card" bindtap="onGoCollection">
+        <i class="mgc_flower_4_line shortcut-icon icon-gradient"></i>
+        <text>采集</text>
       </view>
     </view>
   </view>
 
-  <!-- ══ 列表菜单 ══ -->
+  <!-- 下方菜单：去掉我的想去和采集本，只保留这三项 -->
   <view class="list-section">
-    <view class="list-item" bindtap="onGoWantgo">
-      <view class="list-item-left">
-        <i class="mgc_bubble_fill icon-gradient"></i>
-        <text>我的想去</text>
-      </view>
-      <i class="mgc_right_line arrow-icon"></i>
-    </view>
-    <view class="list-item" bindtap="onGoCollection">
-      <view class="list-item-left">
-        <i class="mgc_album_2_fill icon-gradient"></i>
-        <text>采集本</text>
-      </view>
+    <view class="list-item" bindtap="onMenuTap" data-type="guides">
+      <text class="list-item-text">我的发布</text>
       <i class="mgc_right_line arrow-icon"></i>
     </view>
     <view class="list-item" bindtap="onMenuTap" data-type="settings">
-      <view class="list-item-left">
-        <i class="mgc_settings_3_fill icon-gradient"></i>
-        <text>设置</text>
-      </view>
+      <text class="list-item-text">设置</text>
       <i class="mgc_right_line arrow-icon"></i>
     </view>
     <view class="list-item" bindtap="onMenuTap" data-type="share">
-      <view class="list-item-left">
-        <i class="mgc_leaf_fill icon-gradient"></i>
-        <text>分享我们</text>
-      </view>
+      <text class="list-item-text">分享我们</text>
       <i class="mgc_right_line arrow-icon"></i>
     </view>
   </view>
 
-  <!-- 自定义TabBar -->
+  <!-- 自定义 TabBar -->
   <custom-tabbar></custom-tabbar>
 </view>

@@ -42,7 +42,7 @@
       <i class="mgc_more_1_line"></i>
     </view>
     <!-- 分享按钮：补上分享图标，保持小按钮样式 -->
-    <button class="action-btn action-btn-light action-btn-share" open-type="share">
+    <button class="action-btn action-btn-light action-btn-text-secondary action-btn-share" open-type="share">
       <i class="mgc_share_forward_line action-btn-inline-icon"></i>
       <text>分享</text>
     </button>
