@@ -22,11 +22,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%BD%AE%E6%B3%B0%E7%89%9B%E8%82%89%E7%81%AB%E9%94%85(%E8%BD%A6%E5%85%AC%E5%BA%99%E5%BA%97).jpg",
+    "logo": "/images/covers/01.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "吊龙肥瘦相间，现切上桌，涮10秒入口即化，牛肉香气浓郁带淡淡奶香，是潮汕火锅的灵魂所在。"
+    "desc": "吊龙肥瘦相间，现切上桌，涮10秒入口即化，牛肉香气浓郁带淡淡奶香，是潮汕火锅的灵魂所在"
   },
   {
     "id": 102,
@@ -48,11 +48,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%87%A4%E5%87%B0%E6%A5%BC(%E5%8D%8E%E5%BC%BA%E5%8C%97%E5%BA%97).jpg",
+    "logo": "/images/covers/02.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "招牌水晶虾饺皮薄透亮，虾仁大颗弹牙，搭配鲜露笋清甜不抢味，是手工现做点心的扎实体现。"
+    "desc": "招牌水晶虾饺皮薄透亮，虾仁大颗弹牙，搭配鲜露笋清甜不抢味，是手工现做点心的扎实体现"
   },
   {
     "id": 103,
@@ -74,11 +74,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%A4%A9%E5%A4%A9%E6%B8%94%E6%B8%AF(%E5%8D%8E%E5%BC%BA%E5%8C%97%E5%BA%97).jpg",
+    "logo": "/images/covers/03.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "鸿运龙虾煲一上桌就气势十足，波士顿龙虾与八头鲍鱼真材实料，肉质紧实弹牙，汤汁浓郁到拌饭都停不下来。"
+    "desc": "鸿运龙虾煲一上桌就气势十足，波士顿龙虾与八头鲍鱼真材实料，肉质紧实弹牙，汤汁浓郁到拌饭都停不下来"
   },
   {
     "id": 104,
@@ -100,11 +100,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%91%90%E5%92%AA%E5%82%A3%E5%9B%AD%C2%B7%E4%BA%91%E5%8D%97%E8%8F%9C(%E7%9F%B3%E5%8E%A6%E5%BA%97).jpg",
+    "logo": "/images/covers/04.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "芭蕉叶包烧鸡脚筋一定要点，外层蕉叶锁住香气，鸡脚筋软糯有嚼劲，完全没有腥味，每一口都充满浓郁傣味。"
+    "desc": "芭蕉叶包烧鸡脚筋一定要点，外层蕉叶锁住香气，鸡脚筋软糯有嚼劲，完全没有腥味，每一口都充满浓郁傣味"
   },
   {
     "id": 105,
@@ -126,11 +126,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%A5%BF%E5%8C%97%E9%A2%86%E5%A4%B4%E7%BE%8A%C2%B7%E6%B8%85%E7%9C%9F%E9%A4%90%E5%8E%85%C2%B7%E5%9B%A2%E5%BB%BA%E8%81%9A%E4%BC%9A.jpg",
+    "logo": "/images/covers/05.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "一定要试试他们家的烤全羊，选用宁夏盐池滩羊现烤，上桌时两人抬着上，仪式感十足，肉香四溢，肥瘦相间还一点都不膻，服务员会现场分切，围桌共享大口吃肉的快乐。"
+    "desc": "一定要试试他们家的烤全羊，选用宁夏盐池滩羊现烤，上桌时两人抬着上，仪式感十足，肉香四溢，肥瘦相间还一点都不膻，服务员会现场分切，围桌共享大口吃肉的快乐"
   },
   {
     "id": 106,
@@ -152,11 +152,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%94%90%E5%AE%AB%C2%B7%E7%B2%A4%E8%8F%9C%E6%B5%B7%E9%B2%9C(%E5%BD%A9%E5%BE%B7%E5%BA%97).jpg",
+    "logo": "/images/covers/06.jpeg's Strange.jpg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "唐宫的金奖乳鸽堪称一绝，外皮金黄酥脆，撕开后汁水丰盈，搭配梅子酱解腻提鲜，每一口都入味均匀，是让人专程到店的理由。"
+    "desc": "唐宫的金奖乳鸽堪称一绝，外皮金黄酥脆，撕开后汁水丰盈，搭配梅子酱解腻提鲜，每一口都入味均匀，是让人专程到店的理由"
   },
   {
     "id": 107,
@@ -176,11 +176,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%8F%A4%E6%97%A9%E5%91%B3%E5%91%B3%E8%A7%89%E8%AE%B0%E5%BF%86%E5%9D%8A.jpg",
+    "logo": "/images/covers/07.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "招牌芋泥蛋糕现烤出炉，湿软绵密带颗粒流沙感，趁热吃一口就懂为什么街坊天天排队。"
+    "desc": "招牌芋泥蛋糕现烤出炉，湿软绵密带颗粒流沙感，趁热吃一口就懂为什么街坊天天排队"
   },
   {
     "id": 108,
@@ -201,11 +201,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%83%A1%E6%A1%83%E9%87%8C%E9%9F%B3%E4%B9%90%E9%85%92%E9%A6%86(%E9%A2%86%E5%B1%95%E4%B8%AD%E5%BF%83%E5%9F%8E%E5%BA%97).jpg",
+    "logo": "/images/covers/08.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "晚上9:30后变身Livehouse，乐队演出氛围感拉满，像在听小型演唱会，和朋友待到凌晨都不想走。"
+    "desc": "晚上9:30后变身Livehouse，乐队演出氛围感拉满，像在听小型演唱会，和朋友待到凌晨都不想走"
   },
   {
     "id": 109,
@@ -227,11 +227,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%98%A9%E6%A5%BC(%E5%8D%8E%E5%BC%BA%E5%8C%97%E6%80%BB%E5%BA%97).jpg",
+    "logo": "/images/covers/09.jpeg't Shoot Me Down.jpg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "他家的露笋虾饺皇个头超大，外皮晶莹有嚼劲，一口下去全是Q弹饱满的虾仁，鲜味十足，是广东早茶的标杆水准。"
+    "desc": "他家的露笋虾饺皇个头超大，外皮晶莹有嚼劲，一口下去全是Q弹饱满的虾仁，鲜味十足，是广东早茶的标杆水准"
   },
   {
     "id": 110,
@@ -252,11 +252,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%82%A5%E9%9F%AC%E8%8C%B6%E9%A4%90%E5%8E%85(%E6%B7%B1%E5%9C%B3%E6%80%BB%E5%BA%97).jpg",
+    "logo": "/images/covers/10.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "黯然销魂饭是来这里的必点项，叉烧肥瘦相间、肉质细嫩，搭配煎蛋和特制酱汁拌饭，一口下去香气四溢，难怪被这么多食客反复推荐。"
+    "desc": "黯然销魂饭是来这里的必点项，叉烧肥瘦相间、肉质细嫩，搭配煎蛋和特制酱汁拌饭，一口下去香气四溢，难怪被这么多食客反复推荐"
   },
   {
     "id": 111,
@@ -277,11 +277,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E4%B8%B9%E6%A1%82%E8%BD%A9(%E5%8D%8E%E4%BE%A8%E5%9F%8E%E5%BA%97).jpg",
+    "logo": "/images/covers/11.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "南山",
-    "desc": "水晶虾饺个个饱满透亮，鲜虾弹牙，油条现炸酥脆松软，干炒牛河锅气十足，早茶经典款几乎闭眼点不踩雷。"
+    "desc": "水晶虾饺个个饱满透亮，鲜虾弹牙，油条现炸酥脆松软，干炒牛河锅气十足，早茶经典款几乎闭眼点不踩雷"
   },
   {
     "id": 112,
@@ -302,11 +302,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%98%89%E5%8D%8E%E5%B0%8F%E5%90%83(%E8%9B%87%E5%8F%A3%E5%B8%82%E5%9C%BA%E5%BA%97).jpg",
+    "logo": "/images/covers/12.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "南山",
-    "desc": "每一只粽子都是阿姨现场包的，看得见的新鲜，咸蛋黄肉粽料足到咬一口就满足。"
+    "desc": "每一只粽子都是阿姨现场包的，看得见的新鲜，咸蛋黄肉粽料足到咬一口就满足"
   },
   {
     "id": 113,
@@ -327,11 +327,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E4%B8%B9%E4%B8%9C%E7%89%B9%E8%89%B2%E7%83%A4%E8%82%89%E5%BA%97(%E5%AD%A6%E5%BA%9C%E8%B7%AF%E4%B8%80%E9%83%A8%E5%BA%97).jpg",
+    "logo": "/images/covers/01.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "南山",
-    "desc": "黄蚬子每日空运到店，壳薄肉厚，炭火一烤汁水丰盈，鲜甜直冲味蕾，是整桌最先被抢光的硬菜。"
+    "desc": "黄蚬子每日空运到店，壳薄肉厚，炭火一烤汁水丰盈，鲜甜直冲味蕾，是整桌最先被抢光的硬菜"
   },
   {
     "id": 114,
@@ -353,11 +353,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%86%AC%E9%98%B4%E5%8A%9F%E6%B3%B0%E5%9B%BD%E8%8F%9C(%E5%8D%97%E5%B1%B1%E5%BA%97).jpg",
+    "logo": "/images/covers/02.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "南山",
-    "desc": "这碗冬阴功汤一上桌就香气扑鼻，酸辣度拿捏得刚刚好，喝一口就能唤醒味蕾，汤里的虾、菌菇和香料融合得非常到位，是我在深圳喝过最地道的一口。"
+    "desc": "这碗冬阴功汤一上桌就香气扑鼻，酸辣度拿捏得刚刚好，喝一口就能唤醒味蕾，汤里的虾、菌菇和香料融合得非常到位，是我在深圳喝过最地道的一口"
   },
   {
     "id": 115,
@@ -379,11 +379,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/79%E5%8F%B7%E6%B8%94%E8%88%B9%E6%B5%B7%E9%B2%9C%E9%A5%AD%E5%BA%97(%E8%A5%BF%E4%B8%BD%E5%BA%97).jpg",
+    "logo": "/images/covers/03.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "南山",
-    "desc": "三叔烧大罗虾是每桌必点的镇店之宝，选用个头饱满的九节虾，烧得入味却不掩鲜甜，虾肉弹牙多汁，香气扑鼻，吃过一次就忘不了。"
+    "desc": "三叔烧大罗虾是每桌必点的镇店之宝，选用个头饱满的九节虾，烧得入味却不掩鲜甜，虾肉弹牙多汁，香气扑鼻，吃过一次就忘不了"
   },
   {
     "id": 116,
@@ -403,11 +403,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E4%BA%AC%E7%82%99%E5%9D%8A(%E5%8D%8E%E4%BE%A8%E5%9F%8E%E5%BA%97).jpg",
+    "logo": "/images/covers/04.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "南山",
-    "desc": "现切烤鸭搭配鱼子酱与面包片，油脂香与海味在口中层层释放，一口咬下酥脆丰腴，是传统与创意融合的惊艳之作。"
+    "desc": "现切烤鸭搭配鱼子酱与面包片，油脂香与海味在口中层层释放，一口咬下酥脆丰腴，是传统与创意融合的惊艳之作"
   },
   {
     "id": 117,
@@ -429,11 +429,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%94%A1%E6%BE%9C%E7%82%B9%E5%BF%83(%E6%B7%B1%E5%9C%B3%E6%B5%B7%E5%B2%B8%E5%9F%8E%E5%BA%97).jpg",
+    "logo": "/images/covers/05.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "南山",
-    "desc": "每次来都必点的酥皮山楂叉烧包，外皮酥到掉渣，黄油香气扑鼻，内馅是甜咸交织的优质叉烧，山楂巧妙解腻，一口下去层次丰富，难怪一年能卖出500万个。"
+    "desc": "每次来都必点的酥皮山楂叉烧包，外皮酥到掉渣，黄油香气扑鼻，内馅是甜咸交织的优质叉烧，山楂巧妙解腻，一口下去层次丰富，难怪一年能卖出500万个"
   },
   {
     "id": 118,
@@ -455,11 +455,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%B1%B1%E7%A6%BE%E7%94%B0%C2%B7%E6%97%A5%E6%96%99%E5%B0%8F%E5%B1%8B(%E5%8D%97%E5%B1%B1%E6%A1%83%E8%8B%91%E5%85%AC%E5%AF%93%E5%BA%97).jpg",
+    "logo": "/images/covers/06.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "南山",
-    "desc": "他们家的舒芙蕾真的像云朵一样duangduang的，入口即化还不腻，配上酸奶刚刚好，是我在深圳吃过最惊艳的甜品，每次来都必点。"
+    "desc": "他们家的舒芙蕾真的像云朵一样duangduang的，入口即化还不腻，配上酸奶刚刚好，是我在深圳吃过最惊艳的甜品，每次来都必点"
   },
   {
     "id": 119,
@@ -480,11 +480,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E9%93%AD%E9%97%A8%E7%9B%9B%E5%AE%B4%C2%B7%E8%89%BA%E6%9C%AF%E6%B5%B7%E9%B2%9C%E5%A7%BF%E9%80%A0(%E5%8D%97%E5%B1%B1%E5%BA%97).jpg",
+    "logo": "/images/covers/07.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "南山",
-    "desc": "蓝龙虾、波士顿龙虾、东星斑、鲍鱼等高端海鲜不限量畅吃，现捞现杀，肉质紧实鲜甜，实现真正的海鲜自由。"
+    "desc": "蓝龙虾、波士顿龙虾、东星斑、鲍鱼等高端海鲜不限量畅吃，现捞现杀，肉质紧实鲜甜，实现真正的海鲜自由"
   },
   {
     "id": 120,
@@ -506,11 +506,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%B0%8F%E7%81%AB%E7%92%BD.jpg",
+    "logo": "/images/covers/08.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "南山",
-    "desc": "深圳首创鲜榨椰浆做锅底，现场榨椰肉压椰浆，不加一滴水，煮出奶白浓郁的椰香鸡汤，喝一口就颠覆你对椰子鸡的认知。"
+    "desc": "深圳首创鲜榨椰浆做锅底，现场榨椰肉压椰浆，不加一滴水，煮出奶白浓郁的椰香鸡汤，喝一口就颠覆你对椰子鸡的认知"
   },
   {
     "id": 121,
@@ -531,11 +531,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%B1%B1%E9%87%8C%E4%BA%BA%E5%AE%B6(%E5%9B%BD%E9%99%85%E4%BC%9A%E5%B1%95%E5%BA%97).jpg",
+    "logo": "/images/covers/09.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "宝安",
-    "desc": "一定要试试他们家的茶油跑跑鸡，鸡肉紧实有嚼劲，香气扑鼻，能吃出是散养的好食材，一上桌就让人食欲大开。"
+    "desc": "一定要试试他们家的茶油跑跑鸡，鸡肉紧实有嚼劲，香气扑鼻，能吃出是散养的好食材，一上桌就让人食欲大开"
   },
   {
     "id": 122,
@@ -556,11 +556,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%99%BE%E5%B9%B4%E6%9E%9C%E6%9E%97%E6%A4%B0%E5%AD%90%E9%B8%A1(%E5%AE%9D%E5%AE%89%E6%80%BB%E5%BA%97).jpg",
+    "logo": "/images/covers/10.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "宝安",
-    "desc": "汤底清甜回甘，鸡肉鲜嫩不柴，用整只原鸡现煮，每一口都是椰香与肉香的自然融合，吃过才懂什么叫地道椰子鸡火锅。"
+    "desc": "汤底清甜回甘，鸡肉鲜嫩不柴，用整只原鸡现煮，每一口都是椰香与肉香的自然融合，吃过才懂什么叫地道椰子鸡火锅"
   },
   {
     "id": 123,
@@ -581,11 +581,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%BD%AE%E8%8D%A3%E6%B5%B7%E9%B2%9C%E5%A4%A7%E9%A5%AD%E5%BA%97(%E5%AE%9D%E5%AE%89%E6%80%BB%E5%BA%97).jpg",
+    "logo": "/images/covers/11.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "宝安",
-    "desc": "招牌胡椒虾几乎每桌必点，虾肉饱满入味，胡椒香气浓郁却不呛口，是让人一口就记住的镇店风味。"
+    "desc": "招牌胡椒虾几乎每桌必点，虾肉饱满入味，胡椒香气浓郁却不呛口，是让人一口就记住的镇店风味"
   },
   {
     "id": 124,
@@ -605,11 +605,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%8C%97%E5%9B%BD%E9%A3%8E%E5%85%89%E9%A5%BA%E5%AD%90%E9%A6%86.jpg",
+    "logo": "/images/covers/12.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "宝安",
-    "desc": "这家饺子馆，现包现煮的饺子是灵魂，韭菜鸡蛋馅鲜得掉眉毛，猪肉大葱馅肥瘦刚好，咬开爆汁。"
+    "desc": "这家饺子馆，现包现煮的饺子是灵魂，韭菜鸡蛋馅鲜得掉眉毛，猪肉大葱馅肥瘦刚好，咬开爆汁"
   },
   {
     "id": 125,
@@ -630,11 +630,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%B5%B7%E7%88%B7%E6%B5%B7%E9%B2%9C%E9%85%92%E6%A5%BC%C2%B7%E7%B2%A4%E8%8F%9C(%E6%B8%94%E4%BA%BA%E7%A0%81%E5%A4%B4%E5%BA%97).jpg",
+    "logo": "/images/covers/01.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "宝安",
-    "desc": "就在福永海鲜市场楼上，你可以亲自挑选活蹦乱跳的海鲜，交给后厨现做，全程看得见的新鲜，吃得格外安心。"
+    "desc": "就在福永海鲜市场楼上，你可以亲自挑选活蹦乱跳的海鲜，交给后厨现做，全程看得见的新鲜，吃得格外安心"
   },
   {
     "id": 126,
@@ -655,11 +655,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E9%91%AB%E7%BC%98%E9%98%81%E4%B8%9C%E5%8C%97%E8%8F%9C(%E6%B2%99%E4%BA%95%E5%BA%97).jpg",
+    "logo": "/images/covers/02.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "宝安",
-    "desc": "锅包肉是这里的灵魂，外皮炸得酥脆不腻，内里肉质鲜嫩，裹着酸甜适口的橙汁酱，一口下去就有东北大院的热闹味儿。"
+    "desc": "锅包肉是这里的灵魂，外皮炸得酥脆不腻，内里肉质鲜嫩，裹着酸甜适口的橙汁酱，一口下去就有东北大院的热闹味儿"
   },
   {
     "id": 127,
@@ -681,11 +681,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%82%B9%E5%93%81%E9%9B%86(%E8%BE%9B%E5%85%BB%E5%BA%97).jpg",
+    "logo": "/images/covers/03.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "榴莲布丁里能挖到大块新鲜榴莲肉，布丁绵密不腻，趁冰凉入口，浓郁果香瞬间化开，是很多人专程跑一趟的理由。"
+    "desc": "榴莲布丁里能挖到大块新鲜榴莲肉，布丁绵密不腻，趁冰凉入口，浓郁果香瞬间化开，是很多人专程跑一趟的理由"
   },
   {
     "id": 128,
@@ -707,11 +707,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%B7%9D%E8%83%96%E5%AD%90%E7%BE%8E%E8%9B%99%E9%B1%BC%E5%A4%B4(%E5%85%AC%E5%9B%AD%E8%B7%AF%E5%BA%97).jpg",
+    "logo": "/images/covers/04.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "美蛙个头大、肉质细嫩，煮得入味十足，每一口都是饱满鲜辣的满足感，是真正靠味道说话的市井美味。"
+    "desc": "美蛙个头大、肉质细嫩，煮得入味十足，每一口都是饱满鲜辣的满足感，是真正靠味道说话的市井美味"
   },
   {
     "id": 129,
@@ -731,11 +731,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%82%A6%E6%BB%A1%E6%A5%BC%C2%B7%E8%A5%BF%E5%85%B3%E5%90%8D%E7%82%B9%C2%B7%E6%B9%9B%E6%B1%9F%E5%90%8D%E8%8F%9C(%E8%88%AA%E7%A9%BA%E7%BB%BC%E5%90%88%E5%A4%A7%E5%8E%A6%E5%BA%97).jpg",
+    "logo": "/images/covers/05.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "宝安",
-    "desc": "每一颗虾饺都包着三只完整大虾，皮薄到透亮，咬下去鲜甜弹牙还会爆汁，这才是深圳早茶该有的诚意。"
+    "desc": "每一颗虾饺都包着三只完整大虾，皮薄到透亮，咬下去鲜甜弹牙还会爆汁，这才是深圳早茶该有的诚意"
   },
   {
     "id": 130,
@@ -757,11 +757,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%82%B9%E9%83%BD%E5%BE%B7(%E5%89%8D%E6%B5%B7HOP%E5%BA%97).jpg",
+    "logo": "/images/covers/06.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "南山",
-    "desc": "金莎红米肠是每桌必点的招牌，红米皮软糯、油条酥脆、内里包裹整颗鲜虾，三重口感层层递进，蘸上特调酱汁，一口下去就能理解它为何是镇店之宝。"
+    "desc": "金莎红米肠是每桌必点的招牌，红米皮软糯、油条酥脆、内里包裹整颗鲜虾，三重口感层层递进，蘸上特调酱汁，一口下去就能理解它为何是镇店之宝"
   },
   {
     "id": 131,
@@ -783,11 +783,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E9%A6%99%E6%B8%AF%E6%96%B0%E5%8F%91%E7%83%A7%E8%85%8A%E8%8C%B6%E9%A4%90%E5%8E%85(%E5%87%A4%E5%87%B0%E8%B7%AF%E5%BA%97).jpg",
+    "logo": "/images/covers/07.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "光明",
-    "desc": "烧鹅皮脆肉嫩，咬一口汁水四溢，完全没有油腻感，是我在深圳吃过最接近香港水准的烧味之一。"
+    "desc": "烧鹅皮脆肉嫩，咬一口汁水四溢，完全没有油腻感，是我在深圳吃过最接近香港水准的烧味之一"
   },
   {
     "id": 132,
@@ -808,11 +808,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%B4%AB%E8%8D%86%E5%9B%AD%C2%B7%E6%BD%AE%E5%AE%B4(%E6%80%A1%E6%99%AF%E5%BA%97).jpg",
+    "logo": "/images/covers/08.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "罗湖",
-    "desc": "藏在闹市里的园林庭院，全包厢设计私密性强，特别适合商务宴请或家庭聚会，环境雅致安静，一进门就让人放松下来。"
+    "desc": "藏在闹市里的园林庭院，全包厢设计私密性强，特别适合商务宴请或家庭聚会，环境雅致安静，一进门就让人放松下来"
   },
   {
     "id": 133,
@@ -834,11 +834,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%B1%B1%E7%A6%BE%E7%94%B0%C2%B7%E6%97%A5%E6%96%99%E5%B0%8F%E5%B1%8B(%E7%BD%97%E6%B9%96%E5%BA%97).jpg",
+    "logo": "/images/covers/09.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "罗湖",
-    "desc": "现点现烤的云朵舒芙蕾，蓬松轻盈如空气，蛋香浓郁，搭配芒果冰淇淋趁热吃，每一口都是治愈感拉满的甜品体验。"
+    "desc": "现点现烤的云朵舒芙蕾，蓬松轻盈如空气，蛋香浓郁，搭配芒果冰淇淋趁热吃，每一口都是治愈感拉满的甜品体验"
   },
   {
     "id": 134,
@@ -858,11 +858,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%BD%AE%E9%A6%99%E5%9B%9B%E6%B5%B7%C2%B7%E5%AE%B6%E4%BC%A0%E6%BD%AE%E6%B1%95%E8%8F%9C(%E7%BA%A2%E6%A1%82%E5%A4%A7%E5%8E%A6%E5%BA%97).jpg",
+    "logo": "/images/covers/10.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "罗湖",
-    "desc": "一年卖出20万份的蚝仔烙，外皮金黄酥脆，内里满满蚝仔、虾仁、鱿鱼，一口下去香脆爆汁，吃过的都说这是来店必点的灵魂菜。"
+    "desc": "一年卖出20万份的蚝仔烙，外皮金黄酥脆，内里满满蚝仔、虾仁、鱿鱼，一口下去香脆爆汁，吃过的都说这是来店必点的灵魂菜"
   },
   {
     "id": 135,
@@ -884,11 +884,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%BD%AE%E6%B1%95%E5%A4%A7%E7%9B%AE%E7%89%9B%E8%82%89%E7%81%AB%E9%94%85(%E8%8E%B2%E5%A1%98%E5%BA%97).jpg",
+    "logo": "/images/covers/11.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "罗湖",
-    "desc": "五花趾肉片厚薄均匀，入口鲜嫩带劲，是整锅中最让人期待的一口。"
+    "desc": "五花趾肉片厚薄均匀，入口鲜嫩带劲，是整锅中最让人期待的一口"
   },
   {
     "id": 136,
@@ -909,11 +909,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%88%9F%E5%B8%82%E6%B0%B4%E4%BA%A7%E6%B5%B7%E9%B2%9C%E8%87%AA%E5%8A%A9(%E7%BD%97%E6%B9%96%E7%AC%8B%E5%B2%97%E5%BA%97).jpg",
+    "logo": "/images/covers/12.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "罗湖",
-    "desc": "鲜活海鲜现捞现煮，澳洲蓝龙虾、鲍鱼、帝王蟹腿任拿，肉质紧实鲜甜，真正从源头保证新鲜。"
+    "desc": "鲜活海鲜现捞现煮，澳洲蓝龙虾、鲍鱼、帝王蟹腿任拿，肉质紧实鲜甜，真正从源头保证新鲜"
   },
   {
     "id": 137,
@@ -935,11 +935,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%82%A8%E9%A6%99%E6%A5%BC%C2%B7%E7%B2%A4%E7%82%B9%E8%8C%B6%E6%A5%BC.jpg",
+    "logo": "/images/covers/01.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "罗湖",
-    "desc": "虾饺皇皮薄到透亮，一颗里塞满三只完整鲜虾，现点现蒸的Q弹口感，才是老广早茶的灵魂所在。"
+    "desc": "虾饺皇皮薄到透亮，一颗里塞满三只完整鲜虾，现点现蒸的Q弹口感，才是老广早茶的灵魂所在"
   },
   {
     "id": 138,
@@ -961,11 +961,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%AC%A8%E7%BD%97%E5%8D%9C%E6%B5%8F%E9%98%B3%E8%8F%9C%E9%A6%86(%E7%BD%97%E6%B9%96%E5%BA%97).jpg",
+    "logo": "/images/covers/02.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "罗湖",
-    "desc": "每道菜都带着妈妈手作的温度，分量扎实，味道浓郁，吃得饱又吃得好，是学生党也能连吃一周的安心选择。"
+    "desc": "每道菜都带着妈妈手作的温度，分量扎实，味道浓郁，吃得饱又吃得好，是学生党也能连吃一周的安心选择"
   },
   {
     "id": 139,
@@ -987,11 +987,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/NEED%E5%88%9B%E6%84%8F%E9%9F%A9%E5%9B%BD%E6%96%99%E7%90%86(%E6%B7%B1%E5%9C%B3%E4%B8%87%E8%B1%A1%E5%9F%8E%E5%BA%97).jpg",
+    "logo": "/images/covers/03.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "罗湖",
-    "desc": "蜂蜜无花果雪冰一上桌就惊艳全场，新鲜大块无花果搭配现挖蜂巢，淋上清甜蜂蜜，牛奶雪冰细腻不腻，餐后收尾幸福感爆棚。"
+    "desc": "蜂蜜无花果雪冰一上桌就惊艳全场，新鲜大块无花果搭配现挖蜂巢，淋上清甜蜂蜜，牛奶雪冰细腻不腻，餐后收尾幸福感爆棚"
   },
   {
     "id": 140,
@@ -1013,11 +1013,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E9%B8%A1%E5%8F%94%C2%B7%E6%B8%85%E8%BF%9C%E8%84%86%E7%9A%AE%E9%B8%A1%E7%81%AB%E9%94%85(%E9%BB%84%E8%B4%9D%E5%B2%AD%E5%BA%97).jpg",
+    "logo": "/images/covers/04.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "罗湖",
-    "desc": "招牌脆皮鸡只需涮30秒，外皮咔滋脆，内里鲜嫩多汁，搭配姜蓉酱一口入魂，是广东老饕都认可的地道吃法。"
+    "desc": "招牌脆皮鸡只需涮30秒，外皮咔滋脆，内里鲜嫩多汁，搭配姜蓉酱一口入魂，是广东老饕都认可的地道吃法"
   },
   {
     "id": 141,
@@ -1037,11 +1037,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%8D%8E%E5%BA%9C%E7%B2%A4%E5%AE%B4.jpg",
+    "logo": "/images/covers/05.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "福田",
-    "desc": "他家的虾饺拼盘堪称创意与手艺的结合，从功夫参汤虾饺到避风塘口味，每一只都皮薄馅大，咬开瞬间鲜甜爆汁，虾肉弹牙，一次尝遍多种风味，刷新了我对广式点心的认知。"
+    "desc": "他家的虾饺拼盘堪称创意与手艺的结合，从功夫参汤虾饺到避风塘口味，每一只都皮薄馅大，咬开瞬间鲜甜爆汁，虾肉弹牙，一次尝遍多种风味，刷新了我对广式点心的认知"
   },
   {
     "id": 142,
@@ -1063,11 +1063,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E9%A6%99%E8%9C%9C%E8%BD%A9(%E9%BE%99%E5%B2%97%E5%A4%A9%E5%AE%89%E6%95%B0%E7%A0%81%E5%9F%8E%E5%BA%97).jpg",
+    "logo": "/images/covers/06.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙岗",
-    "desc": "啫啫煲一上桌锅气扑面，香气直冲鼻腔，排骨煲得入味软嫩，是地道广式风味的灵魂呈现，来这必点。"
+    "desc": "啫啫煲一上桌锅气扑面，香气直冲鼻腔，排骨煲得入味软嫩，是地道广式风味的灵魂呈现，来这必点"
   },
   {
     "id": 143,
@@ -1089,11 +1089,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%91%A8%E8%AE%B0%E6%9F%B3%E5%B7%9E%E8%9E%BA%E8%9B%B3%E7%B2%89(%E4%BA%94%E5%92%8C%E5%88%86%E5%BA%97).jpg",
+    "logo": "/images/covers/07.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙华",
-    "desc": "汤底用螺肉慢炖，鲜香浓郁不发臭，是那种能让从不吃螺蛳粉的人也上瘾的正宗味道，吃完还想跨区来吃。"
+    "desc": "汤底用螺肉慢炖，鲜香浓郁不发臭，是那种能让从不吃螺蛳粉的人也上瘾的正宗味道，吃完还想跨区来吃"
   },
   {
     "id": 144,
@@ -1115,11 +1115,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%A4%A7%E5%9F%94%E9%93%AD%E8%AE%B0%E7%89%9B%E8%82%89%E5%BA%97(%E6%80%BB%E5%BA%97).jpg",
+    "logo": "/images/covers/08.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙岗",
-    "desc": "牛肉现切现涮，入口即化，每一口都能嚼出肉汁的鲜甜，是吃过最嫩的潮汕牛肉之一。"
+    "desc": "牛肉现切现涮，入口即化，每一口都能嚼出肉汁的鲜甜，是吃过最嫩的潮汕牛肉之一"
   },
   {
     "id": 145,
@@ -1138,11 +1138,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E9%B9%8F%E5%9F%8E%E9%A5%AD%E9%A6%86.jpg",
+    "logo": "/images/covers/09.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "大鹏",
-    "desc": "相传由将军赖恩爵时期流传至今的窑鸡，外皮焦香，内里多汁，每一口都是有故事的客家风味，来大鹏所城必点。"
+    "desc": "相传由将军赖恩爵时期流传至今的窑鸡，外皮焦香，内里多汁，每一口都是有故事的客家风味，来大鹏所城必点"
   },
   {
     "id": 146,
@@ -1164,11 +1164,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%98%9F%E5%BA%97%E9%A4%90%E5%8E%85(%E5%87%A4%E5%87%B0%E5%9F%8E%E5%BA%97).jpg",
+    "logo": "/images/covers/10.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "光明",
-    "desc": "一杯冻柠茶，喝出老港味道，茶香奶滑，入口瞬间穿越到深水埗街角茶档，用料扎实，是整餐的灵魂所在。"
+    "desc": "一杯冻柠茶，喝出老港味道，茶香奶滑，入口瞬间穿越到深水埗街角茶档，用料扎实，是整餐的灵魂所在"
   },
   {
     "id": 147,
@@ -1190,11 +1190,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%80%81%E5%9B%9B%E5%B7%9D%E5%A4%A7%E6%8E%92%E6%A1%A3(%E5%B8%83%E6%9D%8E%E8%B7%AF%E5%BA%97).jpg",
+    "logo": "/images/covers/11.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙岗",
-    "desc": "羊肉煲是真材实料的硬菜，汤头浓郁不膻，肉块大而新鲜，锅底还能免费加汤，一锅上桌就被抢光，宵夜聚餐闭眼点。"
+    "desc": "羊肉煲是真材实料的硬菜，汤头浓郁不膻，肉块大而新鲜，锅底还能免费加汤，一锅上桌就被抢光，宵夜聚餐闭眼点"
   },
   {
     "id": 148,
@@ -1216,11 +1216,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%B9%98%E9%87%8C%E5%B8%AE%E5%8E%A8(%E5%AE%9D%E9%BE%99%E6%80%BB%E5%BA%97).jpg",
+    "logo": "/images/covers/12.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙岗",
-    "desc": "他们家的招牌羊肉煲是真材实料，汤都是现熬的，羊肉炖得软烂入味，一上桌香气扑鼻，是很多食客专门冲着来吃的头道菜。"
+    "desc": "他们家的招牌羊肉煲是真材实料，汤都是现熬的，羊肉炖得软烂入味，一上桌香气扑鼻，是很多食客专门冲着来吃的头道菜"
   },
   {
     "id": 149,
@@ -1241,11 +1241,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E4%BA%91%E7%AB%AF%E5%B0%8F%E9%99%A2.%E6%B9%98%E8%8F%9C.%E7%83%A7%E9%B8%A1.%E7%83%A7%E7%83%A4.jpg",
+    "logo": "/images/covers/01.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙华",
-    "desc": "过生日可以预定专属的泡泡房，灯光氛围感十足，店家还会贴心布置并送上长寿面，仪式感直接拉满，特别适合朋友小聚。"
+    "desc": "过生日可以预定专属的泡泡房，灯光氛围感十足，店家还会贴心布置并送上长寿面，仪式感直接拉满，特别适合朋友小聚"
   },
   {
     "id": 150,
@@ -1265,11 +1265,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%B0%B8%E9%B9%8F%E6%B5%B7%E6%99%AF%E9%A4%90%E5%8E%85.jpg",
+    "logo": "/images/covers/02.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "大鹏",
-    "desc": "坐在落地窗边，一边听海浪声一边吃刚从海里捞上来的海鲜，这种原生态的滨海用餐体验，在深圳很难再找到第二家。"
+    "desc": "坐在落地窗边，一边听海浪声一边吃刚从海里捞上来的海鲜，这种原生态的滨海用餐体验，在深圳很难再找到第二家"
   },
   {
     "id": 151,
@@ -1287,11 +1287,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E9%A6%99%E7%A8%BB%E5%9B%AD%E8%83%9C%E8%AE%B0%E6%B5%B7%E9%B2%9C(%E9%BE%99%E5%8D%8E%E5%BA%97).jpg",
+    "logo": "/images/covers/03.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙华",
-    "desc": "他们家的海鲜砂锅粥真的惊艳，虾和贝类的鲜味完全融进粥底，绵软浓香，一锅喝到底都不腻，是我喝过最像‘仙露琼浆’的海鲜粥。"
+    "desc": "他们家的海鲜砂锅粥真的惊艳，虾和贝类的鲜味完全融进粥底，绵软浓香，一锅喝到底都不腻，是我喝过最像‘仙露琼浆’的海鲜粥"
   },
   {
     "id": 152,
@@ -1313,11 +1313,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E8%B1%AB%E4%B8%9C%E5%85%A8%E7%BE%8A%E6%B1%A4%E9%A6%86.jpg",
+    "logo": "/images/covers/04.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙华",
-    "desc": "他们家的羊腿是招牌中的招牌，肉质鲜嫩多汁，经过精心烹制后香气四溢，每一口都能尝到豫东羊肉的醇厚本味，是专程到店的首要理由。"
+    "desc": "他们家的羊腿是招牌中的招牌，肉质鲜嫩多汁，经过精心烹制后香气四溢，每一口都能尝到豫东羊肉的醇厚本味，是专程到店的首要理由"
   },
   {
     "id": 153,
@@ -1338,11 +1338,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%89%9B%E7%8E%8B%E5%BA%99(%E9%BE%99%E5%8D%8E%E8%8A%B1%E5%9B%AD%E5%BA%97).jpg",
+    "logo": "/images/covers/05.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙华",
-    "desc": "开了十几年的川菜老店，雪豆炖蹄花入口即化，汤白味浓，满满的胶原蛋白，是深圳少有的正宗川渝味道。"
+    "desc": "开了十几年的川菜老店，雪豆炖蹄花入口即化，汤白味浓，满满的胶原蛋白，是深圳少有的正宗川渝味道"
   },
   {
     "id": 154,
@@ -1363,11 +1363,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%98%8C%E8%AE%B0%E9%9A%86%E6%B1%9F%E7%8C%AA%E8%84%9A%E9%A5%AD.jpg",
+    "logo": "/images/covers/06.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙华",
-    "desc": "必点‘四点金’！这个带筋部位脆爽胶质满满，一锅四个常被抢光，是老食客心照不宣的隐藏吃法。"
+    "desc": "必点‘四点金’！这个带筋部位脆爽胶质满满，一锅四个常被抢光，是老食客心照不宣的隐藏吃法"
   },
   {
     "id": 155,
@@ -1389,11 +1389,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E9%B2%8D%E5%B8%88%E5%82%85%E7%B3%95%E7%82%B9(%E9%BE%99%E5%8D%8E%E5%A3%B9%E6%96%B9%E5%A4%A9%E5%9C%B0%E5%BA%97).jpg",
+    "logo": "/images/covers/07.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙华",
-    "desc": "他们家的肉松小贝真的值得排队，蛋糕体蓬松轻盈，酱料咸甜适中，裹满厚厚一层肉松，一口下去满足感十足，是吃过还会想回购的经典款。"
+    "desc": "他们家的肉松小贝真的值得排队，蛋糕体蓬松轻盈，酱料咸甜适中，裹满厚厚一层肉松，一口下去满足感十足，是吃过还会想回购的经典款"
   },
   {
     "id": 156,
@@ -1411,11 +1411,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E4%BA%91%E5%BB%B7%E8%8D%9F%C2%B7%E7%A7%81%E6%88%BF%E8%8F%9C(%E6%B2%B9%E6%9D%BE%E7%A7%91%E6%8A%80%E5%A4%A7%E5%8E%A6%E5%BA%97).jpg",
+    "logo": "/images/covers/08.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙华",
-    "desc": "包间自带KTV和麻将桌，吃完直接开唱搓麻，朋友聚会从餐桌到娱乐无缝衔接，私密又尽兴。"
+    "desc": "包间自带KTV和麻将桌，吃完直接开唱搓麻，朋友聚会从餐桌到娱乐无缝衔接，私密又尽兴"
   },
   {
     "id": 157,
@@ -1437,11 +1437,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%BA%B3%E7%93%A6%E6%96%B0%E7%96%86%E9%9F%B3%E4%B9%90%E9%A4%90%E5%8E%85(%E7%BA%A2%E5%B1%B1%E5%BA%97).jpg",
+    "logo": "/images/covers/09.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙华",
-    "desc": "每晚都有新疆乐手和舞者现场表演，都塔尔琴声响起，舞姿奔放热情，让吃饭变成一场沉浸式的异域文化体验。"
+    "desc": "每晚都有新疆乐手和舞者现场表演，都塔尔琴声响起，舞姿奔放热情，让吃饭变成一场沉浸式的异域文化体验"
   },
   {
     "id": 158,
@@ -1462,11 +1462,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E6%9B%BC%E6%A0%BC%E6%B4%BB%E6%B5%B7%E9%B2%9C%C2%B7%E6%A6%B4%E8%8E%B2%E8%87%AA%E5%8A%A9(%E9%BE%99%E5%8D%8E%E5%A4%A9%E8%99%B9%E8%B4%AD%E7%89%A9%E4%B8%AD%E5%BF%83%E5%BA%97).jpg",
+    "logo": "/images/covers/10.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙华",
-    "desc": "现捞澳洲蓝龙虾个头大、肉质紧实弹牙，每一口都是海洋的鲜甜馈赠，真正实现高端海鲜自由。"
+    "desc": "现捞澳洲蓝龙虾个头大、肉质紧实弹牙，每一口都是海洋的鲜甜馈赠，真正实现高端海鲜自由"
   },
   {
     "id": 159,
@@ -1488,11 +1488,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%A4%A7%E4%BA%8C%E8%A1%97%E7%B2%89%E5%BA%97%E5%B9%BF%E8%A5%BF%E5%B0%8F%E5%90%83%E9%9B%86%E5%B8%82.jpg",
+    "logo": "/images/covers/11.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "龙华",
-    "desc": "生炒老友猪杂是我在深圳吃过最地道的一口，酸笋、豆芽、芹菜和嫩牛肉猛火快炒，锅气十足，配粉吃特别过瘾，完全就是南宁街头的味道。"
+    "desc": "生炒老友猪杂是我在深圳吃过最地道的一口，酸笋、豆芽、芹菜和嫩牛肉猛火快炒，锅气十足，配粉吃特别过瘾，完全就是南宁街头的味道"
   },
   {
     "id": 160,
@@ -1512,11 +1512,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%BB%B4%E5%9B%AD%E6%B8%AF%E5%BC%8F%E8%8C%B6%E9%A4%90%E5%8E%85(%E5%9D%AA%E5%B1%B1%E6%B1%9F%E5%B2%AD%E5%BA%97).jpg",
+    "logo": "/images/covers/12.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "坪山",
-    "desc": "他们家的冻柠茶是每次来必点的，茶味醇厚回甘，柠檬片新鲜不涩，一口下去港式风味瞬间拉满，解腻又提神。"
+    "desc": "他们家的冻柠茶是每次来必点的，茶味醇厚回甘，柠檬片新鲜不涩，一口下去港式风味瞬间拉满，解腻又提神"
   },
   {
     "id": 161,
@@ -1537,11 +1537,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/GE BAKE(坪山书城店).jpg",
+    "logo": "/images/covers/01.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "坪山",
-    "desc": "他们家的舒芙蕾真的惊艳，轻盈如云朵，微甜不腻，搭配新鲜草莓和轻奶油，一勺下去入口即化，是甜品控不能错过的必点款。"
+    "desc": "他们家的舒芙蕾真的惊艳，轻盈如云朵，微甜不腻，搭配新鲜草莓和轻奶油，一勺下去入口即化，是甜品控不能错过的必点款"
   },
   {
     "id": 162,
@@ -1561,11 +1561,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E9%94%A6%E5%A0%82%E9%A3%9F%E5%BA%9C%C2%B7%E7%A7%81%E6%88%BF%E8%8F%9C%C2%B7%E5%95%86%E5%8A%A1%E5%AE%B4%E8%AF%B7(%E5%9D%AA%E5%B1%B1%E5%BA%97).jpg",
+    "logo": "/images/covers/02.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "坪山",
-    "desc": "红焖娃娃鱼是这里的绝对招牌，肉质极其细嫩，完全没有腥味，每一口都炖得入味，是来店必点的拳头产品。"
+    "desc": "红焖娃娃鱼是这里的绝对招牌，肉质极其细嫩，完全没有腥味，每一口都炖得入味，是来店必点的拳头产品"
   },
   {
     "id": 163,
@@ -1587,11 +1587,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%85%89%E6%98%8E%E4%B9%B3%E9%B8%BD%C2%B7%E5%87%A4%E5%87%B0%E9%85%92%E6%A5%BC(%E5%85%89%E6%98%8E%E6%80%BB%E5%BA%97).jpg",
+    "logo": "/images/covers/03.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "光明",
-    "desc": "光明三宝名不虚传，这只红烧乳鸽外皮酥脆到咔哧作响，咬开后汁水瞬间溢出，肉质细嫩不柴，蘸点椒盐更是香到停不下筷，来一趟至少得人手一只。"
+    "desc": "光明三宝名不虚传，这只红烧乳鸽外皮酥脆到咔哧作响，咬开后汁水瞬间溢出，肉质细嫩不柴，蘸点椒盐更是香到停不下筷，来一趟至少得人手一只"
   },
   {
     "id": 164,
@@ -1613,11 +1613,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E5%A5%BD%E5%85%89%E6%98%8E.%E6%B5%B7%E9%B2%9C.%E7%B2%A4%E8%8F%9C.%E5%AE%B4%E5%B8%AD(%E6%B1%BD%E8%BD%A6%E5%9F%8E%E5%BA%97).jpg",
+    "logo": "/images/covers/04.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "光明",
-    "desc": "乳鸽外皮焦香，内里多汁，是每次来都必点的招牌菜，粤式风味非常正宗。"
+    "desc": "乳鸽外皮焦香，内里多汁，是每次来都必点的招牌菜，粤式风味非常正宗"
   },
   {
     "id": 165,
@@ -1639,11 +1639,11 @@ module.exports = {
     "hours": "",
     "dishes": [],
     "phone": "",
-    "logo": "https://metour-1322296918.cos.ap-guangzhou.myqcloud.com/images/foods/%E7%9B%90%E7%94%B0%E5%BE%97%E7%B1%B3%E8%82%A0%E7%B2%89(%E9%87%91%E6%B5%B7%E9%9B%85%E5%B1%85%E5%88%86%E5%BA%97)%E8%80%81%E5%BA%97.jpg",
+    "logo": "/images/covers/05.jpeg",
     "checkInCount": 0,
     "wantCount": 0,
     "district": "盐田",
-    "desc": "生蚝、瑶柱、大鱿鱼堆成小山，每一口都是实打实的海味暴击，现点现做的海鲜肠粉才是老饕的终极选择。"
+    "desc": "生蚝、瑶柱、大鱿鱼堆成小山，每一口都是实打实的海味暴击，现点现做的海鲜肠粉才是老饕的终极选择"
   }
 ]
 };

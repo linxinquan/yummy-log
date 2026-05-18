@@ -36,7 +36,7 @@
 │   ├── my/             ✅ 我的页面
 │   ├── shop-detail/    ✅ 店铺详情
 │   ├── route/          ✅ 路线规划
-│   ├── add-shop/       ✅ 添加店铺
+│   ├── route-entry/    ✅ 中间路线入口
 │   └── webview/        ✅ 网页视图
 └── utils/
     ├── shopData.js     ✅ 23家店铺数据

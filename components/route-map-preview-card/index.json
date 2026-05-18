@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "travel-meta-line": "/components/travel-meta-line/index"
+  }
+}

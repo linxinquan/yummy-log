@@ -1,0 +1,47 @@
+.travel-meta-line {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8rpx;
+}
+
+.travel-meta-line.compact {
+  gap: 8rpx;
+  height: 32rpx;
+  min-height: 32rpx;
+}
+
+.travel-meta-icon {
+  flex-shrink: 0;
+  color: #6E727A;
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+.travel-meta-arrow {
+  flex-shrink: 0;
+  font-size: 32rpx;
+  line-height: 32rpx;
+  color: #C7CAD1;
+}
+
+.travel-meta-text {
+  min-width: 0;
+  color: #6E727A;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.travel-meta-line.compact .travel-meta-icon,
+.travel-meta-line.compact .travel-meta-arrow {
+  font-size: 32rpx; /* 16px */
+  line-height: 32rpx;
+}
+
+.travel-meta-line.compact .travel-meta-text {
+  font-size: 24rpx;
+  line-height: 24rpx;
+}

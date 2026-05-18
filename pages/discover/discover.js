@@ -1,671 +1,432 @@
-// 觅食迹 - 发现页
+// 觅食图 - 攻略页
 const app = getApp()
-const shopData = require('../../utils/shopData')
-const util = require('../../utils/util')
+const { normalizeTripDurationText } = require('../../utils/trip-duration')
+const { backfillStoredGuides } = require('../../utils/guide-backfill')
+
+// 根据攻略已有字段，尽量推断出城市名称。
+function inferGuideCity(guide = {}) {
+  const sourceText = [
+    guide.city,
+    guide.districtName,
+    guide.title,
+    guide.desc,
+    ...(guide.tags || []),
+    ...(guide.shops || [])
+  ].join(' ')
+
+  if (/西安|长安/.test(sourceText)) return '西安市'
+  if (/广州/.test(sourceText)) return '广州市'
+  if (/汕头/.test(sourceText)) return '汕头市'
+  if (/佛山/.test(sourceText)) return '佛山市'
+  if (/珠海/.test(sourceText)) return '珠海市'
+  return '深圳市'
+}
+
+// 统计这篇攻略被保存成路线的次数。
+function getSavedGuideCount(guideId) {
+  const savedRoutes = wx.getStorageSync('savedRoutes') || []
+  return savedRoutes.filter(item => String(item.guideId || item.id) === String(guideId)).length
+}
+
+// 给攻略卡片补齐展示字段，例如城市、头像、使用次数。
+function decorateGuideCards(guides = []) {
+  return guides.map(item => ({
+    ...item,
+    cityText: item.cityText || inferGuideCity(item),
+    authorAvatar: item.authorAvatar || item.coverImage,
+    useRouteCount: (item.baseUseCount || 0) + getSavedGuideCount(item.id),
+    duration: normalizeTripDurationText(item.duration, Math.max((item.daySections || []).length, 1))
+  }))
+}
+
+// 读取用户自己发布的攻略，并补成和攻略列表一致的字段结构。
+function getPublishedGuides(cardColors = []) {
+  const guides = wx.getStorageSync('myGuides') || []
+  const { guides: fixedGuides, changed } = backfillStoredGuides(guides)
+  if (changed) {
+    wx.setStorageSync('myGuides', fixedGuides)
+  }
+  return fixedGuides.map((item, index) => ({
+    ...item,
+    category: item.category || 'all',
+    cardColor: item.cardColor || cardColors[index % cardColors.length] || '#F7F7F7',
+    cityText: item.cityText || inferGuideCity(item),
+    baseUseCount: item.baseUseCount || 0,
+    duration: normalizeTripDurationText(item.duration, Math.max((item.daySections || []).length, 1)),
+    shopCount: item.shopCount || ((item.content || []).length || 0)
+  }))
+}
 
 Page({
   data: {
-    // 攻略推荐轮播
-    guideRecommendations: [],
-    // 深圳各区
+    // 导航栏高度
+    menuTop: 44,
+    menuHeight: 32,
+    menuRightInset: 24,
+    contentTop: 108,
+
+    // 区域
     districts: [
-      { name: '南山区' },
-      { name: '福田区' },
-      { name: '罗湖区' },
-      { name: '宝安区' },
-      { name: '龙岗区' },
-      { name: '龙华区' },
-      { name: '盐田区' },
-      { name: '光明区' },
-      { name: '坪山区' },
-      { name: '大鹏新区' }
+      { name: '福田区', id: 'futian' },
+      { name: '南山区', id: 'nanshan' },
+      { name: '罗湖区', id: 'luohu' },
+      { name: '宝安区', id: 'baoan' },
+      { name: '龙岗区', id: 'longgang' },
+      { name: '龙华区', id: 'longhua' },
+      { name: '光明区', id: 'guangming' },
+      { name: '坪山区', id: 'pingshan' },
+      { name: '盐田区', id: 'yantian' },
+      { name: '大鹏新区', id: 'dapeng' }
     ],
-    currentDistrict: '南山区',
-    // 各区美食攻略
-    districtGuides: {},
-    currentGuides: [],
-    
-    // 我的攻略
-    myGuides: [],
-    
-    // 导入弹窗
-    showImportModal: false,
-    importTab: 'text',
-    importText: '',
-    
-    // 识别结果
-    showResultModal: false,
-    foundShops: [],
-    notFoundShops: [],
 
-    // 当前行政区划
-    currentDistrict: '南山区',  // 默认值，等待定位更新
-    currentCity: '深圳市',
+    // 分类
+    categories: [
+      { name: '全部', id: 'all' },
+      { name: '推荐', id: 'recommend' }
+    ],
+    currentCategory: '全部',
 
-    // 天气信息
-    weatherIcon: '☀️',
-    weatherTemp: '25°C'
+    // 精选攻略
+    featuredGuides: [],
+
+    // 攻略列表
+    allGuides: [],
+    currentGuides: []
   },
 
+  // 页面初始化：计算顶部安全区，并首次加载攻略数据。
   onLoad() {
-    this.loadGuideRecommendations()
-    this.loadDistrictGuides()
-    this.loadMyGuides()
-    // 获取行政区划信息
-    this.loadDistrictInfo()
-    // 获取天气
-    this.loadWeather()
+    const sysInfo = wx.getSystemInfoSync()
+    const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
+    const menuRightInset = menuButtonInfo
+      ? Math.max(sysInfo.windowWidth - menuButtonInfo.left + 8, 24)
+      : 103
+
+    const contentTop = menuTop + menuHeight + 12
+
+    this.setData({
+      menuTop,
+      menuHeight,
+      menuRightInset,
+      contentTop
+    })
+
+    this.loadGuides()
   },
 
+  // 每次回到页面都重新加载，保证新发布的攻略能出现。
   onShow() {
-    this.loadMyGuides()
+    this.loadGuides(this.data.currentCategory || '全部')
   },
 
-  // 加载行政区划信息
-  loadDistrictInfo() {
-    app.whenDistrictReady((info) => {
-      this.setData({
-        currentDistrict: info.district,
-        currentCity: info.city
-      })
-      // 区划更新后重新获取天气
-      this.loadWeather()
+  // 根据顶部分类切换当前列表。
+  refreshGuideList(categoryName = '全部') {
+    const filtered = categoryName === '全部'
+      ? this.data.allGuides
+      : this.data.allGuides.filter(item => item.category === 'recommend')
+
+    this.setData({
+      currentCategory: categoryName,
+      currentGuides: decorateGuideCards(filtered)
     })
   },
 
-  // 加载天气信息
-  loadWeather() {
-    const location = app.globalData.location
-    if (!location) return
-    
-    // 使用和风天气API（免费版）
-    wx.request({
-      url: 'https://devapi.qweather.com/v7/weather/now',
-      data: {
-        location: `${Math.round(location.lng * 100) / 100},${Math.round(location.lat * 100) / 100}`,
-        key: '6e62e8e03d5e4e7ebc4e95e9e7e0a5e5'  // 和风天气API Key
-      },
-      success: (res) => {
-        if (res.data && res.data.code === '200') {
-          const now = res.data.now
-          const iconMap = {
-            '100': '☀️', '101': '☁️', '102': '⛅', '103': '🌤️',
-            '104': '☁️', '200': '🌬️', '201': '🌬️', '202': '🌬️',
-            '300': '🌦️', '301': '🌧️', '302': '⛈️', '303': '🌨️',
-            '304': '❄️', '305': '🌧️', '306': '🌧️', '307': '🌨️',
-            '308': '🌨️', '309': '🌧️', '310': '🌧️', '311': '🌧️',
-            '312': '⛈️', '313': '⛈️', '314': '🌧️', '315': '🌧️',
-            '316': '🌨️', '317': '🌨️', '318': '🌨️', '400': '🌙',
-            '401': '☁️', '402': '🌨️', '403': '❄️', '404': '❄️',
-            '405': '🌨️', '406': '🌨️', '407': '❄️', '408': '❄️',
-            '409': '🌨️', '410': '❄️', '456': '🌧️', '457': '🌨️'
-          }
-          this.setData({
-            weatherIcon: iconMap[now.icon] || '🌡️',
-            weatherTemp: now.temp + '°C'
-          })
-        }
-      },
-      fail: () => {
-        // 静默失败，保持默认天气
-      }
-    })
-  },
+  // 组装攻略页的数据源：
+  // 包括精选攻略、内置攻略、以及用户自己发布的攻略。
+  loadGuides(categoryName = '全部') {
+    const coverImages = [
+      '/images/covers/01.jpeg',
+      '/images/covers/02.jpeg',
+      '/images/covers/03.jpeg',
+      '/images/covers/04.jpeg',
+      '/images/covers/05.jpeg',
+      '/images/covers/06.jpeg',
+      '/images/covers/07.jpeg',
+      '/images/covers/08.jpeg'
+    ]
 
-  onPullDownRefresh() {
-    this.loadRecommend()
-    wx.stopPullDownRefresh()
-  },
+    const cardColors = [
+      '#F7F7F7',
+      '#F5F6F8',
+      '#F6F7F6',
+      '#F5F5F6',
+      '#F6F5F5',
+      '#F4F5F4'
+    ]
 
-  // 加载攻略推荐（精选探店攻略）
-  loadGuideRecommendations() {
-    const guides = [
+    const featuredGuides = [
       {
         id: 1,
-        title: '深圳南山老字号餐厅❗14年+老店真的好吃',
-        author: '@大湾区探店王',
-        coverImage: '/images/guides/guide_laozihao.jpg.jpg',
-        shopCount: 10,
-        tag: '老字号',
-        shops: ['嘉华小吃', '好好味面馆', '翠湖广东乡下菜', '老字号德记烧腊', '小煵记', '湛记佬海鲜', '蛇口老街鱼仔档', '海燕餐厅', '华洋酒楼', '新高记湛江鸡饭店']
+        name: '蛇口的海与月',
+        title: '深圳蛇口必吃地道老店推荐',
+        coverImage: coverImages[0],
+        author: '小胖又饿了',
+        duration: '2天',
+        shopCount: 14,
+        likes: 4222
       },
       {
         id: 2,
-        title: '深圳蛇口必吃地道老店推荐❗赶紧收藏❗',
-        author: '@小胖又饿了',
-        coverImage: '/images/guides/guide_shekou_bibei.jpg',
+        name: '春日踏青',
+        title: '深圳春日赏花攻略',
+        coverImage: coverImages[1],
+        author: '旅行博主',
+        duration: '1天',
         shopCount: 8,
-        tag: '必吃榜',
-        shops: ['同兴旺湛江鸡饭店', '嘉华小吃', '益康堂鱼仔码头', '蛇口老街鱼仔档', '冬阴功泰国菜', '原乡车田情', '鹅最好', '百草堂祖传凉茶铺']
+        likes: 2841
+      },
+      {
+        id: 3,
+        name: '周末寻味',
+        title: '深圳本地人常去的美食街',
+        coverImage: coverImages[2],
+        author: '美食达人',
+        duration: '1天',
+        shopCount: 12,
+        likes: 3567
+      },
+      {
+        id: 4,
+        name: '文艺慢生活',
+        title: '蛇口值得打卡的咖啡馆',
+        coverImage: coverImages[3],
+        author: '文艺青年',
+        duration: '半天',
+        shopCount: 6,
+        likes: 2156
+      },
+      {
+        id: 5,
+        name: '海滨漫步',
+        title: '深圳最值得去的海边景点',
+        coverImage: coverImages[4],
+        author: '旅行家',
+        duration: '1天',
+        shopCount: 5,
+        likes: 1987
       }
     ]
-    this.setData({ guideRecommendations: guides })
+
+    const allGuides = [
+      {
+        id: 6,
+        district: 'nanshan',
+        category: 'recommend',
+        title: '舌尖上的长安：3天吃遍西安老味道',
+        desc: '西安美食小吃全攻略！腊味酥饼糕点、双皮奶、鱼皮、煲仔饭，带你尝遍地道陕西风味。从回民街到永兴坊，从洒金桥到小寨，跟着这份攻略吃遍西安城！',
+        coverImage: coverImages[5],
+        cardColor: cardColors[0],
+        author: '打工人',
+        duration: '3天',
+        shopCount: 14,
+        likes: 4232,
+        tags: ['西安', '美食', '小吃'],
+        shops: ['老孙家羊肉泡馍', '贾三灌汤包', '马洪小炒泡馍', '甑糕', '肉丸胡辣汤', '柿子糊塌']
+      },
+      {
+        id: 7,
+        district: 'futian',
+        category: 'recommend',
+        title: '深圳南山老字号餐厅攻略',
+        desc: '14年+老店真的好吃！嘉华小吃、好好味面馆、翠湖广东乡下菜等10家南山老字号，带你体验深圳本地人的美食记忆。这些店承载了一代人的味蕾回忆，值得打卡！',
+        coverImage: coverImages[6],
+        cardColor: cardColors[1],
+        author: '大湾区探店王',
+        duration: '1天',
+        shopCount: 10,
+        likes: 3891,
+        tags: ['南山', '老字号', '本地美食'],
+        shops: ['嘉华小吃', '好好味面馆', '翠湖广东乡下菜', '潮香四海', '湛江鸡饭店', '桂园酒楼']
+      },
+      {
+        id: 8,
+        district: 'luohu',
+        category: 'recommend',
+        title: '深圳必打卡网红餐厅合集',
+        desc: '深圳最火的网红餐厅推荐！打卡拍照两不误，从高空景观餐厅到ins风咖啡馆，从创意料理到特色甜品，这份攻略带你刷爆朋友圈！',
+        coverImage: coverImages[7],
+        cardColor: cardColors[2],
+        author: '美食博主',
+        duration: '2天',
+        shopCount: 12,
+        likes: 6789,
+        tags: ['网红', '打卡', '拍照'],
+        shops: ['网红咖啡店', '高空餐厅', '创意料理', '甜品店', '露台酒吧', '花园餐厅']
+      },
+      {
+        id: 9,
+        district: 'yantian',
+        category: 'recommend',
+        title: '福田CBD商务宴请餐厅指南',
+        desc: '福田会展中心周边高端餐厅推荐，适合商务宴请和朋友聚会。从粤菜到日料，从海鲜到牛排，这里有最适合商务场合的用餐选择',
+        coverImage: coverImages[0],
+        cardColor: cardColors[3],
+        author: '商务美食家',
+        duration: '1天',
+        shopCount: 8,
+        likes: 2103,
+        tags: ['商务', '高端', '宴请'],
+        shops: ['粤菜餐厅', '日料放题', '海鲜酒楼', '牛排馆', '私房菜', '茶馆']
+      },
+      {
+        id: 10,
+        district: 'longgang',
+        category: 'recommend',
+        title: '深圳夜市攻略',
+        desc: '深圳各大夜市美食全攻略，从沙井到东门一网打尽！烧烤、小吃、甜品、饮品应有尽有，体验深圳夜生活的烟火气',
+        coverImage: coverImages[1],
+        cardColor: cardColors[4],
+        author: '夜市达人',
+        duration: '1天',
+        shopCount: 25,
+        likes: 8901,
+        tags: ['夜市', '小吃', '宵夜'],
+        shops: ['沙井生蚝', '东门小吃街', '福田夜市', '南山烧烤', '龙华大排档', '宝安糖水铺']
+      },
+      {
+        id: 11,
+        district: 'dapeng',
+        category: 'recommend',
+        title: '大鹏半岛海鲜之旅',
+        desc: '大鹏所城、南澳渔港，最新鲜的海鲜等你来尝！从捕捞到餐桌，体验真正的海鲜盛宴。还有美丽的海滩和古村落等着你！',
+        coverImage: coverImages[2],
+        cardColor: cardColors[5],
+        author: '海鲜控',
+        duration: '1天',
+        shopCount: 10,
+        likes: 3456
+      },
+      {
+        id: 12,
+        district: 'baoan',
+        category: 'all',
+        title: '深圳隐藏的文艺角落',
+        desc: '远离喧嚣，发现深圳那些不为人知的文艺小店和咖啡馆。老厂房改造的艺术区、独立书店、小众画廊，带你感受深圳的文艺气息',
+        coverImage: coverImages[3],
+        cardColor: cardColors[0],
+        author: '文艺青年',
+        duration: '1天',
+        shopCount: 6,
+        likes: 1567,
+        tags: ['文艺', '小众', '咖啡馆'],
+        shops: ['旧天堂书店', '华侨城创意园', '海上世界艺术中心', '深业上城', 'OCT-LOFT', '南头古城']
+      },
+      {
+        id: 13,
+        district: 'longhua',
+        category: 'all',
+        title: '东门町美食攻略',
+        desc: '东门步行街美食全攻略，20家必吃小吃等你来打卡！从传统小吃到网红美食，从老字号到新潮流，这里应有尽有',
+        coverImage: coverImages[4],
+        cardColor: cardColors[1],
+        author: '东门通',
+        duration: '半天',
+        shopCount: 20,
+        likes: 5678,
+        tags: ['东门', '小吃', '步行街'],
+        shops: ['东门町美食城', '酸辣粉', '章鱼小丸子', '牛杂', '冰淇淋', '奶茶店']
+      },
+      {
+        id: 14,
+        district: 'nanshan',
+        category: 'all',
+        title: '盐田海滨栈道徒步',
+        desc: '最美海岸线徒步路线，山海相连的绝美风景！从盐田海鲜街到大梅沙，一路海景相伴，适合周末徒步和拍照打卡',
+        coverImage: coverImages[5],
+        cardColor: cardColors[2],
+        author: '户外达人',
+        duration: '1天',
+        shopCount: 4,
+        likes: 1892,
+        tags: ['徒步', '海景', '户外'],
+        shops: ['盐田海鲜街', '大梅沙', '小梅沙', '东部华侨城']
+      },
+      {
+        id: 15,
+        district: 'futian',
+        category: 'all',
+        title: '深圳公园打卡指南',
+        desc: '深圳各大公园游玩攻略，周末亲子游好去处！莲花山、深圳湾公园、中心公园，每个公园都有独特的风景和玩法',
+        coverImage: coverImages[6],
+        cardColor: cardColors[3],
+        author: '亲子达人',
+        duration: '2天',
+        shopCount: 8,
+        likes: 2345,
+        tags: ['公园', '亲子', '游玩'],
+        shops: ['莲花山公园', '深圳湾公园', '中心公园', '笔架山公园', '塘朗山', '梅林水库']
+      },
+      {
+        id: 16,
+        district: 'luohu',
+        category: 'all',
+        title: '深圳书店地图',
+        desc: '深圳特色书店推荐，阅读爱好者的天堂！从大型书城到独立书店，从24小时书店到文艺咖啡馆，总有一款适合你',
+        coverImage: coverImages[7],
+        cardColor: cardColors[4],
+        author: '书虫',
+        duration: '1天',
+        shopCount: 10,
+        likes: 1234,
+        tags: ['书店', '阅读', '文艺'],
+        shops: ['深圳书城', '西西弗书店', '覔书店', '旧天堂书店', '24小时书店', '方所']
+      },
+      {
+        id: 17,
+        district: 'yantian',
+        category: 'all',
+        title: '深圳咖啡馆合集',
+        desc: '精选深圳特色咖啡馆，适合办公和约会！从精品咖啡到创意特调，从工业风到ins风，总有一家能打动你',
+        coverImage: coverImages[0],
+        cardColor: cardColors[5],
+        author: '咖啡控',
+        duration: '1天',
+        shopCount: 15,
+        likes: 2890,
+        tags: ['咖啡', '办公', '约会'],
+        shops: ['% Arabica', 'Blue Bottle', 'Seesaw', 'Manner', '星巴克臻选', 'Peet\'s']
+      }
+    ]
+
+    const normalizedGuides = allGuides.map(item => ({
+      ...item,
+      baseUseCount: item.likes || 0,
+      cityText: inferGuideCity(item)
+    }))
+
+    const publishedGuides = getPublishedGuides(cardColors)
+    const mergedGuides = publishedGuides.concat(normalizedGuides)
+
+    this.setData({
+      featuredGuides,
+      allGuides: mergedGuides
+    })
+
+    this.refreshGuideList(categoryName)
   },
 
-  // 点击攻略推荐卡片
+  // 点击顶部区县入口，进入对应的区县攻略页。
+  onDistrictChange(e) {
+    const district = e.currentTarget.dataset.district
+    const districtName = e.currentTarget.dataset.name
+    wx.navigateTo({
+      url: `/pages/district-guide/district-guide?district=${district}&name=${encodeURIComponent(districtName)}`
+    })
+  },
+
+  // 点击顶部分类，切换“全部 / 推荐”。
+  onCategoryChange(e) {
+    const categoryName = e.currentTarget.dataset.name
+    this.refreshGuideList(categoryName)
+  },
+
+  // 点击攻略卡片，进入攻略详情页。
   onGuideTap(e) {
     const guide = e.currentTarget.dataset.guide
     wx.navigateTo({
       url: `/pages/guide-detail/guide-detail?guide=${encodeURIComponent(JSON.stringify(guide))}`
     })
-  },
-
-  // 加载各区美食攻略
-  loadDistrictGuides() {
-    const districtGuides = {
-      '南山区': [
-        {
-          id: 'ns_1',
-          title: '深圳南山老字号餐厅❗14年+老店',
-          author: '@大湾区探店王',
-          coverImage: '/images/guides/guide_laozihao.jpg.jpg',
-          shopCount: 10,
-          tags: ['老字号', '粤菜'],
-          desc: '嘉华小吃、好好味面馆、翠湖广东乡下菜等10家南山老字号'
-        },
-        {
-          id: 'ns_2',
-          title: '深圳蛇口必吃地道老店推荐',
-          author: '@小胖又饿了',
-          coverImage: '/images/guides/guide_shekou_bibei.jpg',
-          shopCount: 8,
-          tags: ['必吃榜', '蛇口'],
-          desc: '同兴旺湛江鸡、嘉华小吃、益康堂鱼仔码头等蛇口老店'
-        },
-        {
-          id: 'ns_3',
-          title: '南山科技园打工人美食地图',
-          author: '@深圳吃货',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 12,
-          tags: ['科技园', '工作餐'],
-          desc: '科技园周边高性价比美食推荐'
-        },
-        {
-          id: 'ns_4',
-          title: '南山海上世界美食攻略',
-          author: '@探店达人',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 6,
-          tags: ['海上世界', '西餐'],
-          desc: '海上世界周边精品餐厅推荐'
-        }
-      ],
-      '福田区': [
-        {
-          id: 'ft_1',
-          title: '福田CBD商务宴请餐厅指南',
-          author: '@商务美食家',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 8,
-          tags: ['CBD', '商务'],
-          desc: '福田会展中心周边高端餐厅'
-        },
-        {
-          id: 'ft_2',
-          title: '华强北地道小吃一条街',
-          author: '@街头美食',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 15,
-          tags: ['华强北', '小吃'],
-          desc: '华强北隐藏美食小店大搜罗'
-        },
-        {
-          id: 'ft_3',
-          title: '福田皇庭广场美食攻略',
-          author: '@ mall美食',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 10,
-          tags: ['皇庭广场', '商场'],
-          desc: '皇庭广场必吃餐厅推荐'
-        },
-        {
-          id: 'ft_4',
-          title: '福田梅林美食地图',
-          author: '@梅林吃货',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 9,
-          tags: ['梅林', '本地'],
-          desc: '梅林片区老字号美食推荐'
-        }
-      ],
-      '罗湖区': [
-        {
-          id: 'lh_1',
-          title: '罗湖黄贝岭老字号美食',
-          author: '@老街坊',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 7,
-          tags: ['黄贝岭', '老字号'],
-          desc: '龟老吉凉粉、新发烧腊等25年老字号'
-        },
-        {
-          id: 'lh_2',
-          title: '罗湖东门町美食攻略',
-          author: '@东门通',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 20,
-          tags: ['东门', '小吃街'],
-          desc: '东门步行街美食全攻略'
-        },
-        {
-          id: 'lh_3',
-          title: '罗湖万象城高端美食',
-          author: '@品质生活',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 6,
-          tags: ['万象城', '高端'],
-          desc: '万象城精品餐厅推荐'
-        },
-        {
-          id: 'lh_4',
-          title: '罗湖潮汕美食聚集地',
-          author: '@潮汕人',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 11,
-          tags: ['潮汕', '牛肉火锅'],
-          desc: '罗湖正宗潮汕牛肉火锅推荐'
-        }
-      ],
-      '宝安区': [
-        {
-          id: 'ba_1',
-          title: '宝安壹方城美食全攻略',
-          author: '@宝安吃货',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 14,
-          tags: ['壹方城', '商场'],
-          desc: '壹方城必吃餐厅一网打尽'
-        },
-        {
-          id: 'ba_2',
-          title: '宝安盐田夜市美食地图',
-          author: '@夜市达人',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 25,
-          tags: ['夜市', '小吃'],
-          desc: '宝安盐田夜市各地小吃推荐'
-        },
-        {
-          id: 'ba_3',
-          title: '宝安欢乐港湾美食指南',
-          author: '@湾区美食',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 8,
-          tags: ['欢乐港湾', '海景'],
-          desc: '欢乐港湾海景餐厅推荐'
-        }
-      ],
-      '龙岗区': [
-        {
-          id: 'lg_1',
-          title: '龙岗中心城美食攻略',
-          author: '@龙岗通',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 10,
-          tags: ['中心城', '本地'],
-          desc: '龙岗中心城人气餐厅推荐'
-        },
-        {
-          id: 'lg_2',
-          title: '龙岗坂田美食地图',
-          author: '@坂田吃货',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 12,
-          tags: ['坂田', '华为'],
-          desc: '坂田华为周边美食推荐'
-        },
-        {
-          id: 'lg_3',
-          title: '龙岗罗瑞合美食街',
-          author: '@美食街探店',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 18,
-          tags: ['美食街', '客家'],
-          desc: '罗瑞合客家美食一条街'
-        }
-      ],
-      '龙华区': [
-        {
-          id: 'lh_1',
-          title: '龙华壹方天地美食攻略',
-          author: '@龙华吃货',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 9,
-          tags: ['壹方天地', '商场'],
-          desc: '龙华壹方天地美食推荐'
-        },
-        {
-          id: 'lh_2',
-          title: '龙华民治夜市美食',
-          author: '@夜市猎人',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 16,
-          tags: ['民治', '夜市'],
-          desc: '民治大道夜市烟火气美食'
-        }
-      ],
-      '盐田区': [
-        {
-          id: 'yt_1',
-          title: '盐田海鲜街美食攻略',
-          author: '@海鲜控',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 8,
-          tags: ['海鲜', '海边'],
-          desc: '盐田海鲜街新鲜海鲜推荐'
-        },
-        {
-          id: 'yt_2',
-          title: '大梅沙海滨美食指南',
-          author: '@海边美食',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 6,
-          tags: ['大梅沙', '度假'],
-          desc: '大梅沙海滨度假区餐厅推荐'
-        }
-      ],
-      '光明区': [
-        {
-          id: 'gm_1',
-          title: '光明三宝美食之旅',
-          author: '@光明通',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 5,
-          tags: ['光明三宝', '乳鸽'],
-          desc: '光明乳鸽、甜玉米、牛初乳'
-        },
-        {
-          id: 'gm_2',
-          title: '光明农场美食攻略',
-          author: '@农场美食',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 7,
-          tags: ['农场', '有机'],
-          desc: '光明农场周边农家菜推荐'
-        }
-      ],
-      '坪山区': [
-        {
-          id: 'ps_1',
-          title: '坪山牛肉一条街',
-          author: '@牛肉控',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 6,
-          tags: ['牛肉火锅', '现宰'],
-          desc: '坪山潮汕现宰牛肉火锅'
-        }
-      ],
-      '大鹏新区': [
-        {
-          id: 'dp_1',
-          title: '大鹏所城美食攻略',
-          author: '@古城美食',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 8,
-          tags: ['大鹏所城', '海鲜'],
-          desc: '大鹏所城特色餐厅推荐'
-        },
-        {
-          id: 'dp_2',
-          title: '较场尾海边美食',
-          author: '@海边吃货',
-          coverImage: '/images/app-logo.jpg',
-          shopCount: 5,
-          tags: ['较场尾', '民宿'],
-          desc: '较场尾海边民宿美食'
-        }
-      ]
-    }
-    
-    this.setData({ 
-      districtGuides: districtGuides,
-      currentGuides: districtGuides['南山区'] || []
-    })
-  },
-
-  // 切换区
-  onDistrictChange(e) {
-    const district = e.currentTarget.dataset.district
-    const guides = this.data.districtGuides[district] || []
-    this.setData({ 
-      currentDistrict: district,
-      currentGuides: guides
-    })
-  },
-
-  // 点击区攻略卡片
-  onDistrictGuideTap(e) {
-    const guide = e.currentTarget.dataset.guide
-    wx.navigateTo({
-      url: `/pages/guide-detail/guide-detail?guide=${encodeURIComponent(JSON.stringify(guide))}`
-    })
-  },
-
-  // 刷新当前区攻略
-  onRefreshGuides() {
-    // 随机打乱当前区攻略顺序
-    const guides = [...this.data.currentGuides]
-    for (let i = guides.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[guides[i], guides[j]] = [guides[j], guides[i]]
-    }
-    this.setData({ currentGuides: guides })
-  },
-
-  // 加载推荐网格（按人气/打卡数排序，取6家）
-  loadRecommend() {
-    const shops = shopData.shops
-    const sorted = [...shops].sort((a, b) => (b.checkInCount || 0) - (a.checkInCount || 0))
-    const recommend = sorted.slice(0, 6)
-    this.setData({ recommendShops: recommend })
-  },
-
-  // 加载我的攻略
-  loadMyGuides() {
-    const guides = util.loadData('myGuides', [])
-    guides.forEach(g => {
-      g.dateStr = new Date(g.date).toLocaleDateString('zh-CN')
-    })
-    this.setData({ myGuides: guides })
-  },
-
-  // 打开导入弹窗
-  onOpenImport() {
-    this.setData({ showImportModal: true, importTab: 'text', importText: '' })
-    
-    // 自动读取剪贴板
-    wx.getClipboardData({
-      success: (res) => {
-        const clipboardText = res.data || ''
-        if (clipboardText) {
-          // 检测是否是链接
-          const isLink = /xhs\.cn|xhslink\.com|xiaohongshu\.com|redbook|大众点评|dianping/.test(clipboardText)
-          // 检测是否像攻略文本
-          const looksLikeGuide = clipboardText.includes('✅') || clipboardText.includes('店名') || clipboardText.includes('推荐')
-          
-          if (isLink || looksLikeGuide || clipboardText.length > 20) {
-            this.setData({ importText: clipboardText })
-            // 自动提示用户
-            wx.showToast({
-              title: isLink ? '检测到链接，可直接解析' : '已粘贴剪贴板内容',
-              icon: 'none',
-              duration: 2000
-            })
-          }
-        }
-      }
-    })
-  },
-
-  // 关闭导入弹窗
-  onCloseImport() {
-    this.setData({ showImportModal: false })
-  },
-
-  // 切换 Tab
-  onSwitchTab(e) {
-    const tab = e.currentTarget.dataset.tab
-    this.setData({ importTab: tab })
-  },
-
-  // 文本输入
-  onTextInput(e) {
-    this.setData({ importText: e.detail.value })
-  },
-
-  // 解析攻略
-  onParseGuide() {
-    const text = this.data.importText.trim()
-    if (!text) {
-      wx.showToast({ title: '请先输入攻略内容', icon: 'none' })
-      return
-    }
-    
-    util.showLoading('智能识别中...')
-    
-    // 延迟模拟解析
-    setTimeout(() => {
-      const result = util.parseBlockBasedGuide(text)
-      
-      this.setData({
-        showImportModal: false,
-        showResultModal: true,
-        foundShops: result.foundShops,
-        notFoundShops: result.notFoundShops
-      })
-      
-      util.hideLoading()
-      
-      // 显示识别结果提示
-      const total = result.foundShops.length + result.notFoundShops.length
-      if (total === 0) {
-        wx.showToast({ 
-          title: '未识别到店铺，请检查格式', 
-          icon: 'none',
-          duration: 2500 
-        })
-      } else {
-        wx.showToast({ 
-          title: `识别到 ${total} 家店铺`, 
-          icon: 'success' 
-        })
-      }
-      
-      // 保存攻略
-      if (total > 0) {
-        this.saveGuide(text, result)
-      }
-    }, 800)
-  },
-
-  // 保存攻略
-  saveGuide(text, result) {
-    const guides = util.loadData('myGuides', [])
-    const newGuide = {
-      id: Date.now(),
-      title: text.substring(0, 30) + (text.length > 30 ? '...' : ''),
-      content: text,
-      shopCount: result.foundShops.length + result.notFoundShops.length,
-      date: new Date().toISOString()
-    }
-    guides.unshift(newGuide)
-    // 只保留最近10篇
-    if (guides.length > 10) guides.pop()
-    util.saveData('myGuides', guides)
-    this.loadMyGuides()
-  },
-
-  // 关闭结果弹窗
-  onCloseResult() {
-    this.setData({ showResultModal: false })
-  },
-
-  // 加载攻略
-  onLoadGuide(e) {
-    const guide = e.currentTarget.dataset.guide
-    this.setData({ 
-      importText: guide.content,
-      importTab: 'text'
-    })
-    this.onParseGuide()
-  },
-
-  // 选择攻略
-  onSelectGuide(e) {
-    const guide = e.currentTarget.dataset.guide
-    this.onLoadGuide({ currentTarget: { dataset: { guide } } })
-    this.onCloseImport()
-  },
-
-  // 添加新店
-  onAddNewShop(e) {
-    const shop = e.currentTarget.dataset.shop
-    wx.navigateTo({
-      url: `/pages/sub/add-shop/add-shop?shop=${encodeURIComponent(JSON.stringify(shop))}`
-    })
-  },
-
-  // 批量添加
-  onBatchAdd() {
-    wx.navigateTo({
-      url: `/pages/sub/add-shop/add-shop?batch=${encodeURIComponent(JSON.stringify(this.data.notFoundShops))}`
-    })
-  },
-
-  // 添加店铺
-  onAddShop() {
-    wx.navigateTo({
-      url: '/pages/add-shop/add-shop'
-    })
-  },
-
-  // 店铺点击
-  onShopTap(e) {
-    const shop = e.currentTarget.dataset.shop
-    wx.navigateTo({
-      url: `/pages/sub/shop-detail/shop-detail?shop=${encodeURIComponent(JSON.stringify(shop))}`
-    })
-  },
-
-  // 换一批推荐
-  onRefreshRecommend() {
-    this.loadRecommend()
-    wx.showToast({ title: '已换一批', icon: 'none' })
-  },
-
-  // 图片加载失败
-  onImageError(e) {
-    const index = e.currentTarget.dataset.index
-    if (index !== undefined) {
-      const shops = this.data.recommendShops
-      shops[index].imgError = true
-      this.setData({ recommendShops: shops })
-    }
-  },
-
-  // 管理攻略
-  onManageGuides() {
-    wx.showActionSheet({
-      itemList: ['清空所有攻略'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          wx.showModal({
-            title: '确认清空',
-            content: '确定要清空所有攻略吗？',
-            success: (m) => {
-              if (m.confirm) {
-                util.saveData('myGuides', [])
-                this.loadMyGuides()
-                wx.showToast({ title: '已清空', icon: 'success' })
-              }
-            }
-          })
-        }
-      }
-    })
-  },
-
-  // 阻止冒泡
-  stopPropagation() {}
+  }
 })

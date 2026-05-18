@@ -1,0 +1,5 @@
+<view class="travel-meta-line {{variant === 'compact' ? 'compact' : ''}}" wx:if="{{travelMeta}}" catchtap="onTap">
+  <i class="travel-meta-icon {{travelMeta.icon}}"></i>
+  <text class="travel-meta-text">{{travelMeta.label}} | {{travelMeta.distanceText}} · {{travelMeta.timeText}}</text>
+  <i class="travel-meta-arrow mgc_right_line"></i>
+</view>

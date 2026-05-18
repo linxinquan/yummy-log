@@ -1,129 +1,174 @@
-<!-- 觅食图 V2 - 景点详情页 -->
 <view class="container" wx:if="{{spot}}">
-
-  <!-- ── 顶部图片 ── -->
+  <!-- ── 顶部图片区 ── -->
   <view class="hero-wrap">
-    <image class="hero-img" src="{{spot.image}}" mode="aspectFill" />
-    <!-- 返回按钮 -->
-    <view class="back-btn" bindtap="onBack">
-      <text class="back-icon">←</text>
-    </view>
-    <!-- 想去按钮 -->
-    <view class="hero-want {{isLiked ? 'liked' : ''}}" bindtap="onWant">
-      <text>{{isLiked ? '❤️' : '🤍'}}</text>
-    </view>
-    <!-- 评分悬浮标签 -->
-    <view class="hero-rating">
-      <text class="hero-rating-text">⭐ {{spot.rating}}</text>
-    </view>
-    <!-- 分类+免费标签 -->
-    <view class="hero-badges">
-      <view class="hero-cat">{{spot.category}}</view>
-      <view class="hero-free {{spot.free ? 'free' : 'paid'}}">
-        {{spot.free ? '🆓 免费' : '🎫 收费'}}
+    <image class="hero-img" src="{{spot.image || spot.coverImage}}" mode="aspectFill" />
+    
+    <!-- 自定义导航栏按钮 -->
+    <view class="top-bar" style="top: {{menuTop}}px; height: {{menuHeight}}px;">
+      <view class="icon-btn back-btn" bindtap="onBack">
+        <i class="mgc_left_line back-icon"></i>
+      </view>
+      <view class="icon-btn share-btn" bindtap="onShareTap">
+        <i class="mgc_share_forward_line share-icon"></i>
       </view>
     </view>
+
+    <!-- 底部统计 & 头像 -->
+    <view class="hero-stats">
+      <text class="stats-text">{{wantStatText}}</text>
+      <view class="avatar-group">
+        <image class="avatar" wx:for="{{displayAvatars}}" wx:key="*this" src="{{item}}" mode="aspectFill" />
+      </view>
+    </view>
+    
+    <!-- 底部圆角遮罩 -->
+    <view class="hero-overlay"></view>
   </view>
 
-  <!-- ── 基本信息 ── -->
-  <view class="info-card">
-    <text class="spot-name">{{spot.name}}</text>
-
-    <!-- 标签 -->
-    <scroll-view class="tags-scroll" scroll-x enable-flex>
-      <view class="tags-row">
-        <text
-          wx:for="{{spot.tags}}"
-          wx:key="*this"
-          wx:for-item="tag"
-          class="tag"
-        >{{tag}}</text>
-      </view>
-    </scroll-view>
-
-    <!-- 简介 -->
-    <view class="desc-section">
-      <text class="desc-label">💡 编辑推荐</text>
-      <text class="desc-text">{{spot.desc}}</text>
-    </view>
-
-    <!-- 详情行 -->
-    <view class="detail-rows">
-      <view class="detail-row">
-        <text class="detail-icon">📍</text>
-        <text class="detail-val">{{spot.address}}</text>
-      </view>
-      <view class="detail-row">
-        <text class="detail-icon">🕐</text>
-        <text class="detail-val">{{spot.openHours}}</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- ── 地图小卡片 ── -->
-  <view class="map-card">
-    <view class="map-card-title">
-      <text class="map-title-text">📍 景点位置</text>
-    </view>
-    <map
-      class="mini-map"
-      latitude="{{spot.lat}}"
-      longitude="{{spot.lng}}"
-      scale="15"
-      markers="{{mapMarkers}}"
-      show-location
-      enable-zoom="{{false}}"
-      enable-scroll="{{false}}"
-    ></map>
-  </view>
-
-  <!-- ── 附近美食推荐 ── -->
-  <view class="nearby-section" wx:if="{{nearbyShops.length > 0}}">
-    <view class="section-header">
-      <text class="section-title">🍜 附近美食</text>
-      <text class="section-sub">逛完景点可以去</text>
-    </view>
-    <scroll-view class="nearby-scroll" scroll-x enable-flex>
-      <view class="nearby-list">
-        <view
-          class="nearby-card"
-          wx:for="{{nearbyShops}}"
-          wx:key="id"
-          bindtap="onGoShop"
-          data-id="{{item.id}}"
-        >
-          <image class="nearby-img" src="{{item.logo}}" mode="aspectFill" />
-          <view class="nearby-info">
-            <text class="nearby-name">{{item.name}}</text>
-            <text class="nearby-cat">{{item.category}}</text>
-            <view class="nearby-meta">
-              <text class="nearby-rating">⭐{{item.rating}}</text>
-              <text class="nearby-dist">{{item.distText}}</text>
-            </view>
+  <!-- ── 内容区 ── -->
+  <view class="content-wrap">
+    
+    <!-- 基本信息 -->
+    <view class="main-info">
+      <view class="info-header">
+        <view class="info-left">
+          <view class="tags-row">
+            <view class="rating-badge"><text class="rating-val">{{spot.rating || '4.6'}}</text></view>
+            <view class="tag-badge"><text>{{spot.category || '历史文化'}}</text></view>
+            <view class="tag-badge"><text>{{secondaryTag}}</text></view>
           </view>
+          <text class="spot-title">{{spot.name}}</text>
         </view>
       </view>
-    </scroll-view>
+      
+      <text class="open-time">{{openTimeText}}</text>
+      
+      <view class="address-box" bindtap="onOpenNavMapSheet">
+        <view class="address-content">
+          <text class="address-label">地址</text>
+          <text class="address-text">{{spot.address}}</text>
+        </view>
+        <i class="mgc_right_line arrow-icon"></i>
+      </view>
+
+      <view class="phone-row" wx:if="{{phoneText}}" bindtap="onCall">
+        <text class="phone-label">联系电话</text>
+        <text class="phone-text">{{phoneText}}</text>
+      </view>
+      
+      <text class="spot-desc" wx:if="{{showDesc !== false}}">{{spot.desc}}</text>
+    </view>
+    
+    <!-- 分割线 -->
+    <view class="divider" wx:if="{{showDivider !== false}}"></view>
+    
+    <!-- 位置卡片 -->
+    <view class="map-section">
+      <text class="section-title">位置</text>
+      <view class="map-card" bindtap="onNavigate">
+        <map
+          class="mini-map"
+          latitude="{{spot.lat}}"
+          longitude="{{spot.lng}}"
+          scale="15"
+          markers="{{mapMarkers}}"
+          enable-zoom="{{false}}"
+          enable-scroll="{{false}}"
+          enable-rotate="{{false}}"
+          enable-overlooking="{{false}}"
+          bindtap="onNavigate"
+        ></map>
+      </view>
+    </view>
+    
+    <!-- 附近美食 -->
+    <view class="nearby-section" wx:if="{{(isFoodDetail && relatedItems.length > 0) || (!isFoodDetail && nearbyShops.length > 0)}}">
+      <view class="section-header">
+        <text class="section-title">{{relatedSectionTitle || '附近美食'}}</text>
+        <text class="more-btn" wx:if="{{showRelatedMore !== false}}" bindtap="onFindFood">更多</text>
+      </view>
+      <!-- 横向列表：这里已经改成和“精选攻略”同一类滚动逻辑 -->
+      <view class="nearby-scroll">
+        <block wx:if="{{isFoodDetail}}">
+          <!-- 美食详情页：这里显示的是推荐菜 -->
+          <view
+            class="dish-card"
+            wx:for="{{relatedItems}}"
+            wx:key="name"
+          >
+            <image class="nearby-img" src="{{item.coverImage}}" mode="aspectFill" />
+            <view class="nearby-info">
+              <text class="nearby-name">{{item.name}}</text>
+            </view>
+          </view>
+        </block>
+        <block wx:else>
+          <!-- 景点详情页：这里显示的是附近美食 -->
+          <view
+            class="nearby-card"
+            wx:for="{{nearbyShops}}"
+            wx:key="id"
+            bindtap="onGoShop"
+            data-id="{{item.id}}"
+          >
+            <image class="nearby-img" src="{{item.coverImage}}" mode="aspectFill" />
+            <view class="nearby-info">
+              <text class="nearby-name">{{item.name}}</text>
+              <text class="nearby-meta">{{item.wantCount || 4232}} 人想去 · {{item.distText}}</text>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+    
   </view>
 
   <!-- ── 底部操作栏 ── -->
-  <view class="bottom-bar">
-    <view class="btn-nav" bindtap="onNavigate">
-      <text class="btn-icon">🧭</text>
-      <text class="btn-text">到这里</text>
-    </view>
-    <view class="btn-want {{isLiked ? 'liked' : ''}}" bindtap="onWant">
-      <text class="btn-icon">{{isLiked ? '❤️' : '🤍'}}</text>
-      <text class="btn-text">{{isLiked ? '已收藏' : '想去'}}</text>
-    </view>
-    <view class="btn-route" bindtap="onPlanRoute">
-      <text class="btn-icon">🗺️</text>
-      <text class="btn-text">规划路线</text>
-    </view>
-    <view class="btn-food" bindtap="onFindFood" wx:if="{{nearbyShops.length > 0}}">
-      <text class="btn-icon">🍜</text>
-      <text class="btn-text">附近美食</text>
+  <view class="bottom-action-bar">
+    <view class="action-bg"></view>
+    <view class="action-content">
+      <view class="collect-action-btn" bindtap="onCollect">
+        <i class="{{isCollected ? 'mgc_star_fill collected' : 'mgc_star_line'}} collect-action-icon"></i>
+      </view>
+      <view class="want-btn" bindtap="onWant">
+        <i class="{{isLiked ? 'mgc_heart_fill wanted' : 'mgc_heart_line'}} want-action-icon"></i>
+        <text>{{isLiked ? '已添加到想去' : '添加到想去'}}</text>
+      </view>
     </view>
   </view>
 
+  <!-- 请选择导航地图：探索详情地址和位置卡片统一走这里 -->
+  <view class="sheet-mask nav-map-sheet-mask {{navMapSheetVisible ? 'show' : ''}}" bindtap="onCloseNavMapSheet">
+    <view class="sheet-panel route-action-sheet nav-map-sheet-panel" catchtap="preventBubble">
+      <view class="sheet-modal-header">
+        <text class="sheet-modal-title">请选择导航地图</text>
+        <i class="mgc_close_line sheet-modal-close" bindtap="onCloseNavMapSheet"></i>
+      </view>
+      <view class="route-sheet-option-list">
+        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="gaode">
+          <view class="route-sheet-option-main">
+            <!-- 地图品牌图标：改用用户提供的 png -->
+            <image class="route-sheet-option-logo" src="/images/navigation/nav-map-amap.png" mode="aspectFit"></image>
+            <text>高德地图</text>
+          </view>
+          <i class="mgc_right_small_line route-sheet-option-arrow"></i>
+        </view>
+        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="tencent">
+          <view class="route-sheet-option-main">
+            <!-- 地图品牌图标：改用用户提供的 png -->
+            <image class="route-sheet-option-logo" src="/images/navigation/nav-map-tencent.png" mode="aspectFit"></image>
+            <text>腾讯地图</text>
+          </view>
+          <i class="mgc_right_small_line route-sheet-option-arrow"></i>
+        </view>
+        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="copy">
+          <view class="route-sheet-option-main">
+            <i class="mgc_copy_2_line"></i>
+            <text>复制地址</text>
+          </view>
+          <i class="mgc_right_small_line route-sheet-option-arrow"></i>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>

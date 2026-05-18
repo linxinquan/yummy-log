@@ -1,0 +1,9 @@
+{
+  "name": "generateAICheckin",
+  "version": "1.0.0",
+  "description": "混元 AI 生成打卡内容：标题 + 故事感描述",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

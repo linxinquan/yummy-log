@@ -1,0 +1,115 @@
+<view class="page {{type === 'spot' ? 'type-spot' : 'type-food'}}">
+  <!-- 第二步：新的确认采集页，样式直接复用邮票详情页 -->
+  <view class="section confirm-section" wx:if="{{step === 2}}">
+    <view class="detail-stamp-wrap" bindtap="onPreviewPhoto">
+      <view class="detail-stamp">
+        <image class="detail-stamp-shell" src="/images/collection/stamp-ticket.png" mode="scaleToFill"></image>
+        <image class="detail-stamp-photo" src="{{photoPath}}" mode="aspectFill"></image>
+      </view>
+      <text class="detail-stamp-title">{{spotName || 'AI 正在识别地点'}}</text>
+    </view>
+
+    <view class="detail-info-list">
+      <view class="info-section">
+        <view class="info-head">
+          <i class="info-ai-icon mgc_ai_fill {{recordTimeRunning ? 'running' : ''}}"></i>
+          <text class="info-title">{{recordTimeStatusText}}</text>
+        </view>
+        <text class="info-value">{{typedRecordTime || 'AI 正在生成记录时间'}}</text>
+      </view>
+
+      <view class="info-section">
+        <view class="info-head">
+          <i class="info-ai-icon mgc_ai_fill {{addressRunning ? 'running' : ''}}"></i>
+          <text class="info-title">{{addressStatusText}}</text>
+        </view>
+        <text class="info-value">{{typedAddress || 'AI 正在识别地址'}}</text>
+      </view>
+
+      <view class="info-section info-section-desc">
+        <view class="info-head">
+          <i class="info-ai-icon mgc_ai_fill {{descriptionRunning ? 'running' : ''}}"></i>
+          <text class="info-title">{{descriptionStatusText}}</text>
+          <text
+            class="info-regenerate {{confirmLoading ? 'disabled' : ''}}"
+            bindtap="onRegenerateDescription"
+          >重新生成</text>
+        </view>
+        <text class="info-value info-value-desc">{{typedDescription || 'AI 正在生成打卡内容'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部按钮：重拍 / 编辑 / 保存采集 -->
+  <view class="bottom-action-mask" wx:if="{{step === 2}}"></view>
+  <view class="bottom-actions" wx:if="{{step === 2}}">
+    <view class="action-btn action-btn-light action-btn-icon" bindtap="onRetake">
+      <i class="mgc_camera_rotate_line"></i>
+    </view>
+    <!-- 编辑按钮：补上编辑图标，延续浅色按钮样式 -->
+    <view class="action-btn action-btn-light action-btn-text-secondary" bindtap="onOpenEditSheet">
+      <i class="mgc_pencil_3_line action-btn-inline-icon"></i>
+      <text>编辑</text>
+    </view>
+    <!-- 保存采集按钮：补上采集图标，延续主按钮样式 -->
+    <view class="action-btn action-btn-dark action-btn-main {{(saving || confirmLoading) ? 'disabled' : ''}}" bindtap="onSaveCheckin">
+      <i class="mgc_flower_4_line action-btn-inline-icon"></i>
+      <text>{{saving ? '保存中...' : '保存采集'}}</text>
+    </view>
+  </view>
+
+  <!-- 编辑底部弹窗：在弹窗内编辑时间、地址、打卡内容 -->
+  <view class="edit-sheet-mask" wx:if="{{editSheetVisible}}" bindtap="onCloseEditSheet"></view>
+  <view class="edit-sheet" wx:if="{{editSheetVisible}}">
+    <view class="edit-sheet-panel" catchtap="preventBubble">
+      <view class="sheet-header">
+        <text class="sheet-title">编辑采集内容</text>
+        <i class="mgc_close_line sheet-close" bindtap="onCloseEditSheet"></i>
+      </view>
+      <scroll-view class="edit-sheet-content" scroll-y>
+        <view class="edit-field">
+          <view class="edit-field-head">
+            <text class="edit-field-label">地址</text>
+            <text class="edit-field-action" bindtap="onPickEditLocation">地址选点</text>
+          </view>
+          <input
+            class="edit-field-input"
+            value="{{editAddress}}"
+            bindinput="onEditAddressInput"
+            placeholder="请输入地址"
+            maxlength="20"
+          />
+        </view>
+
+        <view class="edit-field">
+          <view class="edit-field-head">
+            <text class="edit-field-label">打卡内容</text>
+            <text
+              class="edit-field-action {{editGeneratingDescription ? 'disabled' : ''}}"
+              bindtap="onGenerateEditDescription"
+            >{{editGeneratingDescription ? '生成中...' : 'AI生成'}}</text>
+          </view>
+          <textarea
+            class="edit-field-textarea edit-field-textarea-desc"
+            value="{{editDescription}}"
+            bindinput="onEditDescriptionInput"
+            placeholder="请输入打卡内容"
+            maxlength="200"
+            disable-default-padding
+            show-confirm-bar="{{false}}"
+            cursor-spacing="180"
+          />
+        </view>
+      </scroll-view>
+
+      <view class="edit-sheet-actions">
+        <view class="edit-sheet-btn edit-sheet-btn-light" bindtap="onCloseEditSheet">
+          <text>取消</text>
+        </view>
+        <view class="edit-sheet-btn edit-sheet-btn-dark" bindtap="onConfirmEditSheet">
+          <text>保存编辑</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

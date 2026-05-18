@@ -1,15 +1,25 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/spots/spots",
+    "pages/wantgo/wantgo",
     "pages/discover/discover",
+    "pages/district-guide/district-guide",
+    "pages/guide-detail/guide-detail",
     "pages/my/my",
     "pages/shop-detail/shop-detail",
     "pages/spot-detail/spot-detail",
     "pages/route/route",
-    "pages/wantgo/wantgo",
-    "pages/add-shop/add-shop",
-    "pages/webview/webview"
+    "pages/route-entry/route-entry",
+    "pages/link-import/link-import",
+    "pages/webview/webview",
+    "pages/checkin-camera/checkin-camera",
+    "pages/checkin/checkin",
+    "pages/checkin-detail/checkin-detail",
+    "pages/collection/collection",
+    "pages/my-favorites/my-favorites",
+    "pages/my-guides/my-guides",
+    "pages/my-route/my-route",
+    "pages/route-basic-edit/route-basic-edit"
   ],
   "lazyCodeLoading": "requiredComponents",
   "window": {
@@ -19,34 +29,31 @@
     "navigationBarTextStyle": "black"
   },
   "tabBar": {
-    "color": "#9CA3AF",
-    "selectedColor": "#00D9C0",
+    "custom": true,
+    "color": "#E1E1E1",
+    "selectedColor": "#3D403F",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "美食",
-        "iconPath": "images/tabbar-home.png",
-        "selectedIconPath": "images/tabbar-home-active.png"
+        "text": "探索"
       },
       {
-        "pagePath": "pages/spots/spots",
-        "text": "景点",
-        "iconPath": "images/tabbar-spots.png",
-        "selectedIconPath": "images/tabbar-spots-active.png"
+        "pagePath": "pages/wantgo/wantgo",
+        "text": "想去"
+      },
+      {
+        "pagePath": "pages/route-entry/route-entry",
+        "text": ""
       },
       {
         "pagePath": "pages/discover/discover",
-        "text": "发现",
-        "iconPath": "images/tabbar-discover.png",
-        "selectedIconPath": "images/tabbar-discover-active.png"
+        "text": "攻略"
       },
       {
         "pagePath": "pages/my/my",
-        "text": "我的",
-        "iconPath": "images/tabbar-my.png",
-        "selectedIconPath": "images/tabbar-my-active.png"
+        "text": "我的"
       }
     ]
   },

@@ -1,0 +1,94 @@
+page {
+  background: #000000;
+}
+
+/* 独立拍照页：主体就是相机画面 */
+.page {
+  position: relative;
+  min-height: 100vh;
+  background: #000000;
+}
+
+.camera-view {
+  width: 100%;
+  height: 100vh;
+}
+
+.camera-top-bar {
+  position: fixed;
+  left: 32rpx;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+}
+
+.camera-back-btn {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 999rpx;
+  background: rgba(0, 0, 0, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-back-btn i {
+  color: #FFFFFF;
+  font-size: 40rpx;
+  line-height: 40rpx;
+}
+
+/* 覆盖在相机上的说明和操作区 */
+.camera-mask {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.camera-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40rpx calc(env(safe-area-inset-bottom) + 36rpx);
+  pointer-events: auto;
+}
+
+.camera-side-btn {
+  width: 144rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  color: #FFFFFF;
+}
+
+.camera-side-btn i {
+  font-size: 40rpx;
+  line-height: 40rpx;
+}
+
+.camera-side-btn text {
+  color: #FFFFFF;
+  font-size: 24rpx;
+  line-height: 24rpx;
+}
+
+.camera-shot-btn {
+  width: 152rpx;
+  height: 152rpx;
+  border-radius: 999rpx;
+  border: 8rpx solid rgba(255, 255, 255, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-shot-inner {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+}

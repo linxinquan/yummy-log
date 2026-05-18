@@ -1,4 +1,6 @@
 {
-  "usingComponents": {},
-  "navigationBarTitleText": "发现"
+  "usingComponents": {
+    "custom-tabbar": "/custom-tabbar/index"
+  },
+  "navigationStyle": "custom"
 }

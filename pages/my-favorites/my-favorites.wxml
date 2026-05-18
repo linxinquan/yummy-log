@@ -1,0 +1,75 @@
+<view class="container">
+  <!-- 大标题（与 district-guide 一致） -->
+  <view class="header">
+    <view class="district-title">我的收藏</view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{showEmpty}}">
+    <view class="empty-illustration">
+      <i class="mgc_star_line empty-icon"></i>
+    </view>
+    <text class="empty-title">我的收藏</text>
+    <text class="empty-hint">{{emptyText}}</text>
+    <view class="empty-btn" bindtap="onBack">去探索</view>
+  </view>
+
+  <!-- 收藏列表 -->
+  <scroll-view 
+    class="list-container" 
+    scroll-y 
+    wx:if="{{!showEmpty}}"
+  >
+    <view 
+      class="card-item" 
+      wx:for="{{allList}}" 
+      wx:key="id"
+      bindtap="onItemTap"
+      data-item="{{item}}"
+    >
+      <!-- 左边封面 + 中间信息：整体复用探索页的三段式结构 -->
+      <view class="card-main">
+        <view class="card-img-wrap">
+          <image 
+            class="card-img" 
+            src="{{item.displayImage}}" 
+            mode="aspectFill"
+            binderror="onImageError"
+            data-index="{{index}}"
+          />
+          <view class="card-cat-badge">{{item.displayCategory}}</view>
+        </view>
+
+        <!-- 中间信息：标题、标签、想去人数和距离 -->
+        <view class="card-info">
+          <view class="card-name">{{item.name}}</view>
+          <view class="card-rating">
+            <view class="rating-star" wx:if="{{item.rating}}">
+              <text>{{item.rating}}</text>
+            </view>
+            <text class="spot-tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+          </view>
+          <view class="card-footer">
+            <text class="card-desc">{{item.displayWantCount}} 人想去</text>
+            <text class="card-separator">·</text>
+            <text class="card-desc">{{item.distanceText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 右侧：星星按钮，点击后直接取消收藏 -->
+      <view class="shop-action-icons">
+        <view
+          class="collect-icon"
+          catchtap="onRemoveCollect"
+          data-item="{{item}}"
+        >
+          <i class="mgc_star_fill icon-btn-text"></i>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部安全区 -->
+    <view class="safe-area-bottom"></view>
+  </scroll-view>
+</view>

@@ -1,5 +1,8 @@
 {
-  "usingComponents": {},
-  "navigationBarTitleText": "觅食图",
-  "enablePullDownRefresh": true
+  "usingComponents": {
+    "custom-tabbar": "/custom-tabbar/index"
+  },
+  "navigationBarTitleText": "探索",
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": false
 }

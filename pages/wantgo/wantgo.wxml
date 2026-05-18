@@ -1,134 +1,173 @@
-<!-- 觅食图 V1 - 想去清单页（美食/景点/已到访，拖拽排序） -->
-<view class="container" style="padding-top: {{contentTop}}px;">
-
-  <!-- ── 顶部导航栏 ── -->
-  <view class="nav-bar" style="height: {{navBarHeight}}px; padding-top: {{statusBarHeight}}px;">
-    <view class="nav-back" bindtap="onBack">
-      <text class="nav-back-icon">‹</text>
-    </view>
-    <view class="nav-title-wrap">
-      <text class="nav-title">想去清单</text>
-    </view>
-    <view class="nav-shortcuts">
-      <view class="shortcut-btn" bindtap="onGoHome">
-        <text>🏠</text>
+<view class="container">
+  <view class="tab-bar" style="padding-top: {{menuTop}}px; height: {{menuHeight}}px; padding-right: {{menuRightInset}}px;">
+    <view class="tab-left">
+      <view class="tab-item {{tab === 'want' ? 'active' : ''}}" bindtap="onTabChange" data-tab="want">
+        <text>想去</text>
+      </view>
+      <view class="tab-item {{tab === 'plan' ? 'active' : ''}}" bindtap="onTabChange" data-tab="plan">
+        <text>路线</text>
+      </view>
+      <view class="tab-item {{tab === 'visited' ? 'active' : ''}}" bindtap="onTabChange" data-tab="visited">
+        <text>足迹</text>
       </view>
     </view>
+    <view class="tab-right"></view>
   </view>
 
-  <!-- ── Tab切换 ── -->
-  <view class="tab-bar" style="top: {{navBarHeight}}px;">
-    <view
-      class="tab-item {{tab === 'food' ? 'active' : ''}}"
-      bindtap="onTabChange"
-      data-tab="food"
-    >
-      <text>🍜 美食</text>
-      <view class="tab-line" wx:if="{{tab === 'food'}}"></view>
-    </view>
-    <view
-      class="tab-item {{tab === 'spot' ? 'active' : ''}}"
-      bindtap="onTabChange"
-      data-tab="spot"
-    >
-      <text>🏔️ 景点</text>
-      <view class="tab-line" wx:if="{{tab === 'spot'}}"></view>
-    </view>
-    <view
-      class="tab-item {{tab === 'visited' ? 'active' : ''}}"
-      bindtap="onTabChange"
-      data-tab="visited"
-    >
-      <text>📍 已到访</text>
-      <view class="tab-line" wx:if="{{tab === 'visited'}}"></view>
-    </view>
-  </view>
-
-  <!-- ── 空状态 ── -->
   <view wx:if="{{empty}}" class="empty-wrap">
     <view class="empty-illustration">
-      <text class="empty-icon">{{tab === 'spot' ? '🏔️' : (tab === 'visited' ? '📍' : '🍜')}}</text>
+      <i class="empty-icon {{emptyIcon}}"></i>
     </view>
     <text class="empty-title">{{titles[tab]}}</text>
-    <text class="empty-hint">{{tab === 'spot' ? '去景点页收藏心仪的地点吧' : (tab === 'visited' ? '还没标记任何到访记录' : '去首页点击 ♡ 收藏心仪的美食')}}</text>
-    <view class="empty-btn" bindtap="onGoHome">{{tab === 'spot' ? '去景点' : '去首页'}}</view>
+    <text class="empty-hint">{{emptyHint}}</text>
+    <view class="empty-btn" bindtap="onGoHome" wx:if="{{tab !== 'visited'}}">去探索</view>
   </view>
 
-  <!-- ── 有数据时 ── -->
   <block wx:else>
-
-    <!-- 规划路线横幅 -->
-    <view class="route-banner" bindtap="onPlanRoute">
-      <view class="banner-icon-wrap">
-        <text class="banner-icon">🗺️</text>
-      </view>
-      <view class="banner-info">
-        <text class="banner-title">规划最优路线</text>
-        <text class="banner-sub">{{items.length}}个地点 · 长按拖拽调整顺序</text>
-      </view>
-      <view class="banner-arrow-wrap">
-        <text class="banner-arrow">›</text>
-      </view>
-    </view>
-
-    <!-- 提示：长按拖拽 -->
-    <view class="sort-tip" wx:if="{{items.length > 1}}">
-      <text class="tip-icon">✋</text>
-      <text class="tip-text">长按拖拽卡片可自定义出行顺序</text>
-    </view>
-
-    <!-- 可拖拽列表（普通滚动列表 + 长按拖拽） -->
-    <scroll-view class="item-list" scroll-y>
+    <view wx:if="{{tab === 'plan'}}" class="route-card-list" style="padding-top: {{listTop}}px;">
       <block wx:for="{{items}}" wx:key="id">
-        <view
-          class="item-card {{dragging && dragIndex === index ? 'dragging' : ''}}"
-          data-index="{{index}}"
-          bindtap="onItemTap"
-          data-item="{{item}}"
-          bindlongpress="onDragStart"
-        >
-          <!-- 拖拽手柄 -->
-          <view class="drag-handle" catchtap="onDragStart" data-index="{{index}}">
-            <text>☰</text>
-          </view>
-
-          <!-- 序号 -->
-          <view class="item-num">
-            <text>{{index + 1}}</text>
-          </view>
-
-          <!-- 图片 -->
-          <image
-            class="item-img"
-            src="{{item.logo || item.image || (tab === 'spot' ? '' : '/images/app-logo.jpg')}}"
-            mode="aspectFill"
-            wx:if="{{item.logo || item.image}}"
-          />
-          <view class="item-img placeholder" wx:else>
-            <text>{{tab === 'spot' ? '🏔️' : '🍜'}}</text>
-          </view>
-
-          <!-- 信息 -->
-          <view class="item-info">
-            <text class="item-name">{{item.name}}</text>
-            <text class="item-meta">{{item.category || item.district || ''}}{{item.rating || item.score ? ' · ⭐ ' + (item.rating || item.score) : ''}}</text>
-            <text class="item-address" wx:if="{{item.address || item.district}}">{{item.district || item.address}}</text>
-          </view>
-
-          <!-- 操作 -->
-          <view class="item-actions">
-            <view class="navi-btn" catchtap="onNavigate" data-item="{{item}}">
-              <text>🧭</text>
+        <view class="route-card-frame">
+          <view class="route-card-backdrop"></view>
+          <view class="route-card route-card-theme-{{index % 4}}" bindtap="onRouteCardTap" bindlongpress="onRouteCardLongPress" data-route="{{item}}">
+            <view class="route-card-stroke"></view>
+            <view class="route-card-top">
+              <image class="route-image" src="{{item.coverImage}}" mode="aspectFill" />
+              <view class="route-main">
+                <text class="route-title">{{item.title}}</text>
+                <text class="route-subtitle">{{item.subtitle}}</text>
+              </view>
             </view>
-            <view class="remove-btn" catchtap="onRemove" data-id="{{item.id}}">
-              <text>✕</text>
+            <view class="route-cutout-wrap route-cutout-wrap-left">
+              <view class="route-cutout route-cutout-left"></view>
+            </view>
+            <view class="route-cutout-wrap route-cutout-wrap-right">
+              <view class="route-cutout route-cutout-right"></view>
+            </view>
+            <view class="route-divider"></view>
+            <view class="route-footer">
+              <view class="route-author-wrap">
+                <image class="route-author-avatar" src="{{item.authorAvatar}}" mode="aspectFill" />
+                <text class="route-author">{{item.author}}</text>
+              </view>
+              <text class="route-city">{{item.city}}</text>
             </view>
           </view>
         </view>
       </block>
-    </scroll-view>
+    </view>
+
+    <view wx:else class="want-list" style="padding-top: {{listTop}}px;">
+      <view wx:if="{{tab === 'want'}}" class="want-toolbar">
+        <text class="want-toolbar-title">全部</text>
+        <view class="want-plan-entry" bindtap="onPlanRoute">
+          <i class="mgc_signature_2_ai_line"></i>
+          <text>路线规划</text>
+        </view>
+      </view>
+      <block wx:for="{{items}}" wx:key="id">
+        <view class="place-swipe-item">
+          <view wx:if="{{tab === 'want'}}" class="place-delete-action" catchtap="onRemove" data-id="{{item.id}}">
+            <view class="place-delete-inner">
+              <i class="mgc_delete_2_line place-delete-icon"></i>
+              <text class="place-delete-text">删除</text>
+            </view>
+          </view>
+          <!-- 实际可滑动的卡片本体：左边封面，中间信息，右边箭头 -->
+          <view
+            class="place-row"
+            bindtap="onItemTap"
+            bindtouchstart="onCardTouchStart"
+            bindtouchmove="onCardTouchMove"
+            bindtouchend="onCardTouchEnd"
+            bindtouchcancel="onCardTouchEnd"
+            data-item="{{item}}"
+            data-index="{{index}}"
+            style="transform: translateX({{item.swipeOffset || 0}}px);"
+          >
+            <view class="place-card-main">
+              <!-- 左侧封面：图片 + 封面角标 -->
+              <view class="place-cover-wrap">
+                <image class="place-cover" src="{{item.coverImage}}" mode="aspectFill"></image>
+                <view class="card-cat-badge" wx:if="{{item.displayCategory}}">{{item.displayCategory}}</view>
+              </view>
+              <!-- 中间信息和右侧箭头 -->
+              <view class="place-info-row">
+                <view class="place-main">
+                  <text class="place-name">{{item.name}}</text>
+                  <view class="place-tags">
+                    <view class="place-rating" wx:if="{{item.rating}}">
+                      <text>{{item.rating}}</text>
+                    </view>
+                    <text class="place-tag-chip" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+                  </view>
+                  <view class="place-footer">
+                    <text class="place-footer-text">{{item.displayWantCount}} 人想去</text>
+                    <text class="place-footer-separator">·</text>
+                    <text class="place-footer-text">{{item.distanceText}}</text>
+                  </view>
+                </view>
+                <view class="place-arrow">
+                  <i class="mgc_right_line"></i>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
   </block>
 
-  <!-- 底部安全区 -->
-  <view style="height: calc(32rpx + env(safe-area-inset-bottom))"></view>
+  <custom-tabbar></custom-tabbar>
+
+  <transport-info-sheet
+    visible="{{transportSheetVisible}}"
+    options="{{transportOptions}}"
+    selected-mode="{{pendingTransportMode}}"
+    bindclose="onCloseTransportSheet"
+    bindselect="onSelectTransportMode"
+    bindconfirm="onConfirmTransportMode"
+  ></transport-info-sheet>
+
+  <view class="plan-day-mask {{planDaySheetVisible ? 'show' : ''}}" bindtap="onClosePlanDaySheet">
+    <view class="plan-day-sheet" catchtap="preventBubble">
+      <view class="plan-day-header">
+        <text class="plan-day-title">旅行天数</text>
+        <i class="mgc_close_line plan-day-close" bindtap="onClosePlanDaySheet"></i>
+      </view>
+      <view class="plan-day-body">
+        <picker-view class="plan-day-picker-view" indicator-style="height: 88rpx; background: transparent; border-top: 1px solid #FFFFFF; border-bottom: 1px solid #FFFFFF;" value="{{[selectedPlanDayIndex]}}" bindchange="onSelectPlanDay">
+          <picker-view-column>
+            <view wx:for="{{dayOptions}}" wx:key="*this" class="plan-day-picker-item">
+              {{item}} 天
+            </view>
+          </picker-view-column>
+        </picker-view>
+        <view class="plan-day-save" bindtap="onConfirmPlanRoute">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="route-action-mask {{routeActionSheetVisible ? 'show' : ''}}" bindtap="onCloseRouteActionSheet">
+    <view class="route-action-sheet" catchtap="preventBubble">
+      <view class="route-action-header">
+        <text class="route-action-title">路线编辑</text>
+        <i class="mgc_close_line route-action-close" bindtap="onCloseRouteActionSheet"></i>
+      </view>
+      <view class="route-action-body">
+        <view class="route-action-grid">
+          <view
+            wx:for="{{routeActionOptions}}"
+            wx:key="key"
+            class="route-action-card {{selectedRouteAction === item.key ? 'active' : ''}} {{item.danger ? 'danger' : ''}}"
+            bindtap="onSelectRouteAction"
+            data-action="{{item.key}}"
+          >
+            <i class="route-action-icon {{item.icon}}"></i>
+            <text class="route-action-label">{{item.label}}</text>
+          </view>
+        </view>
+        <view class="route-action-confirm" bindtap="onConfirmRouteAction">确认</view>
+      </view>
+    </view>
+  </view>
 </view>

@@ -1,0 +1,19 @@
+<view class="custom-tabbar">
+  <view 
+    wx:for="{{list}}" 
+    wx:key="index" 
+    class="tabbar-item"
+    data-path="{{item.pagePath}}"
+    data-index="{{index}}"
+    bindtap="switchTab"
+  >
+    <view class="tabbar-icon {{index === 2 ? 'tabbar-icon-add' : ''}} {{selected === 2 && index === 2 ? 'is-active' : ''}}" style="{{index === 2 ? 'width: 72rpx; height: 72rpx;' : ''}}">
+      <image 
+        src="{{selected === index ? item.selectedIconPath : item.iconPath}}" 
+        mode="aspectFit" 
+        class="icon {{index === 2 ? 'add-icon' : ''}}"
+      />
+    </view>
+    <text class="tabbar-text" style="color: {{selected === index ? selectedColor : color}}">{{item.text}}</text>
+  </view>
+</view>

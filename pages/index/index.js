@@ -1,32 +1,84 @@
-// 觅食图 - 首页逻辑 v8.0
+// 觅食图 - 探索页逻辑 (合并景点与美食)
 const app = getApp()
 const shopData = require('../../utils/shopData')
 const spotData = require('../../utils/spotData')
 const util = require('../../utils/util')
 const markerIcons = require('../../utils/markerIcons')
+const { resolveDisplayCategory } = require('../../utils/displayCategory')
+
+const GUANGDONG_CITIES = [
+  { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 1070 },
+  { id: 2, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 1070 },
+  { id: 3, name: '汕头', fullName: '汕头市', lat: 23.3541, lng: 116.6819, bgColor: '#E4D8DC', wantCount: 1070 },
+  { id: 4, name: '湛江', fullName: '湛江市', lat: 21.2707, lng: 110.3594, bgColor: '#E6DBD8', wantCount: 1070 },
+  { id: 5, name: '汕尾', fullName: '汕尾市', lat: 22.7862, lng: 115.3751, bgColor: '#DAE5E8', wantCount: 1070 },
+  { id: 6, name: '清远', fullName: '清远市', lat: 23.6817, lng: 113.0560, bgColor: '#E0E0E0', wantCount: 1070 },
+  { id: 7, name: '佛山', fullName: '佛山市', lat: 23.0215, lng: 113.1214, bgColor: '#DCE5DE', wantCount: 1070 },
+  { id: 8, name: '东莞', fullName: '东莞市', lat: 23.0207, lng: 113.7518, bgColor: '#D8E3E8', wantCount: 1070 },
+  { id: 9, name: '珠海', fullName: '珠海市', lat: 22.2710, lng: 113.5767, bgColor: '#E3DBE6', wantCount: 1070 },
+  { id: 10, name: '中山', fullName: '中山市', lat: 22.5176, lng: 113.3928, bgColor: '#E5DFDA', wantCount: 1070 },
+  { id: 11, name: '江门', fullName: '江门市', lat: 22.5787, lng: 113.0819, bgColor: '#DCE5E3', wantCount: 1070 },
+  { id: 12, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168, bgColor: '#DCE3E8', wantCount: 1070 },
+  { id: 13, name: '肇庆', fullName: '肇庆市', lat: 23.0472, lng: 112.4651, bgColor: '#E6DDE2', wantCount: 1070 },
+  { id: 14, name: '茂名', fullName: '茂名市', lat: 21.6633, lng: 110.9255, bgColor: '#E6E0DA', wantCount: 1070 },
+  { id: 15, name: '阳江', fullName: '阳江市', lat: 21.8579, lng: 111.9822, bgColor: '#DCE7E0', wantCount: 1070 },
+  { id: 16, name: '梅州', fullName: '梅州市', lat: 24.2886, lng: 116.1176, bgColor: '#D9E3E8', wantCount: 1070 },
+  { id: 17, name: '河源', fullName: '河源市', lat: 23.7437, lng: 114.7004, bgColor: '#E4DCE3', wantCount: 1070 },
+  { id: 18, name: '韶关', fullName: '韶关市', lat: 24.8104, lng: 113.5972, bgColor: '#E3DFDB', wantCount: 1070 },
+  { id: 19, name: '揭阳', fullName: '揭阳市', lat: 23.5498, lng: 116.3728, bgColor: '#DCE5E1', wantCount: 1070 },
+  { id: 20, name: '潮州', fullName: '潮州市', lat: 23.6567, lng: 116.6226, bgColor: '#D7E2E6', wantCount: 1070 },
+  { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445, bgColor: '#E2DEE0', wantCount: 1070 }
+]
+
+// 给城市选择器准备封面图。
+// 这里会把现有的美食和景点图片拿来循环复用，避免城市卡片没有图。
+function buildCityCoverPool() {
+  const foodCovers = [...(shopData.shops || []), ...(shopData.foods || [])]
+    .map(item => item.logo || item.image || item.thumb)
+    .filter(Boolean)
+  const spotCovers = (spotData.spotData || [])
+    .map(item => item.image)
+    .filter(Boolean)
+  return [...foodCovers, ...spotCovers]
+}
 
 Page({
   data: {
+    // 布局与交互
+    statusBarHeight: 44,
+    sheetHeight: 300,
+    isDragging: false,
+    tabBarHeight: 50, // tabBar高度
+    safeAreaBottom: 0, // 安全区域底部高度
+
     // 地图配置
     mapCenter: {
       lat: 22.4846,
       lng: 113.9046
     },
-    markers: [],
+    mapScale: 15,
+    allMarkers: [],
     
     // 分类
-    categories: shopData.categories,
+    exploreCategories: [
+      { name: '全部', icon: 'mgc_grid_line', color: '#9B59B6' },
+      { name: '美食', icon: 'mgc_fork_spoon_line', color: '#E67E22' },
+      { name: '景点', icon: 'mgc_map_line', color: '#27AE60' },
+      { name: '酒店', icon: 'mgc_store_line', color: '#3498DB' },
+      { name: '饮品', icon: 'mgc_drink_line', color: '#9B59B6' },
+      { name: '购物', icon: 'mgc_shopping_bag_line', color: '#E91E63' },
+      { name: '自然户外', icon: 'mgc_tree_line', color: '#2ECC71' },
+      { name: '文化展馆', icon: 'mgc_compass_line', color: '#F39C12' }
+    ],
     currentCategory: '全部',
-    
-    // 搜索
-    searchKeyword: '',
+    scrollToCategory: '',
     
     // 排序
     sortType: 'distance', // distance | rating
     
-    // 店铺数据
-    allShops: [],
-    filteredShops: [],
+    // 数据
+    allItems: [],
+    filteredItems: [],
     pageSize: 10,
     currentPage: 1,
     hasMore: true,
@@ -35,95 +87,425 @@ Page({
     likedShops: [],
     visitedShops: {},
     
-    // 想去数量
-    likedCount: 0,
-
-    // 图标Canvas尺寸（用于生成标记图标）
-    iconCanvasSize: 40,
-
-    // 地理位置选择（小红书风格）
-    currentDistrict: '', // 当前选中的区域
-    currentDistance: 0, // 当前选中的距离（米），0表示不限
-    showLocationPicker: false, // 是否显示位置选择器弹窗
-    currentCity: '深圳市', // 当前城市（动态获取）
-    locationMode: 'my', // my=我的位置, district=区域
-    myLocationDesc: '南山区', // 我的位置描述（如"南山街道"）
-    
-    // 距离选项
-    distanceOptions: [
-      { label: '不限', value: 0 },
-      { label: '500m', value: 500 },
-      { label: '1km', value: 1000 },
-      { label: '2km', value: 2000 },
-      { label: '5km', value: 5000 }
-    ],
-    
-    // 美食类型列表（美团风格）
-    districts: [
-      { id: 0, name: '全部', icon: '🍴' },
-      { id: 1, name: '粤菜', icon: '🥘' },
-      { id: 2, name: '川菜', icon: '🌶️' },
-      { id: 3, name: '湘菜', icon: '🔶' },
-      { id: 4, name: '北京菜', icon: '🥟' },
-      { id: 5, name: '东南亚餐', icon: '🍛' },
-      { id: 6, name: '日韩料理', icon: '🍣' },
-      { id: 7, name: '西餐', icon: '🥩' },
-      { id: 8, name: '小吃', icon: '🍢' },
-      { id: 9, name: '其他', icon: '🍽️' }
-    ],
-
-    // 地图图层：food=仅美食, spots=仅景点, all=全部
-    mapLayer: 'food',
-    allMarkers: [],
-    spotMarkers: [],
-    
-    // 全城选项
-    allDistricts: [
-      { id: 0, name: 'mylocation', icon: '📍', displayName: '我的位置', isLocation: true },
-      { id: 1, name: '', icon: '🔥', displayName: '热门美食圈' },
-      { id: 2, name: '罗湖区', icon: '🏙️', lat: 22.5503, lng: 114.0847 },
-      { id: 3, name: '南山区', icon: '🌟', lat: 22.5312, lng: 113.9299 },
-      { id: 4, name: '福田区', icon: '🏰', lat: 22.5228, lng: 114.0595 },
-      { id: 5, name: '宝安区', icon: '🏭', lat: 22.7206, lng: 113.8830 },
-      { id: 6, name: '龙华区', icon: '🏢', lat: 22.7009, lng: 114.0491 },
-      { id: 7, name: '光明区', icon: '💡', lat: 22.7843, lng: 113.9295 },
-      { id: 8, name: '坪山区', icon: '⛰️', lat: 22.6877, lng: 114.3491 },
-      { id: 9, name: '大鹏新区', icon: '🏖️', lat: 22.5768, lng: 114.4828 },
-      { id: 10, name: '深汕特别合作区', icon: '🏝️', lat: 22.9836, lng: 115.0337 }
-    ]
+    // 地理位置选择
+    currentDistrict: '', 
+    currentDistance: 0, 
+    showLocationPicker: false, 
+    currentCity: '深圳市', 
+    locationMode: 'my',
+    cityOptions: []
   },
 
   onLoad() {
-    this.loadShops()
-    this.loadUserData()
-    // 预加载/生成标记图标（40x40彩色圆点）
-    markerIcons.ensureIcons(() => {
-      this.updateMarkers()
+    const sysInfo = wx.getSystemInfoSync()
+    const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
+    const menuButtonWidth = menuButtonInfo ? menuButtonInfo.width : 87
+    const menuRightInset = menuButtonInfo
+      ? Math.max(sysInfo.windowWidth - menuButtonInfo.left + 8, 24)
+      : 103
+    
+    // 计算顶部面板高度：胶囊按钮位置 + 分类标签滚动区域的高度
+    const rpxToPx = sysInfo.windowWidth / 750
+    const categoryAreaHeight = 120 * rpxToPx
+    const headerRowHeight = menuHeight + 20 // nav-bar(含padding) + weather-row(含padding)
+    const topPanelHeight = menuTop + headerRowHeight + categoryAreaHeight
+    
+    // 计算收起时的高度:
+    // 收起状态只显示拖拽区域，使用屏幕高度百分比
+    const minHeight = sysInfo.windowHeight * 0.08
+    
+    // 计算最大高度：屏幕高度 - 顶部面板高度(不含分类菜单) - tabBar高度(50px) - 安全区域底部
+    // 保留部分顶部空间给分类菜单，避免遮挡
+    const tabBarHeight = 50
+    const topReserve = 100 // 顶部预留空间，防止遮挡分类菜单
+    const sysMaxHeight = sysInfo.windowHeight - topPanelHeight + categoryAreaHeight - tabBarHeight - (sysInfo.safeAreaBottom || 0) - topReserve
+    
+    // 计算弹窗底部偏移（tabBar高度 + 安全区域底部）
+    const sheetBottom = tabBarHeight + (sysInfo.safeAreaBottom || 0)
+    
+    // 计算半屏高度
+    const midHeight = sysInfo.windowHeight * 0.45
+    
+    this.setData({ 
+      statusBarHeight: sysInfo.statusBarHeight || 44,
+      menuTop: menuTop,
+      menuHeight: menuHeight,
+      menuButtonWidth: menuButtonWidth,
+      menuRightInset,
+      topPanelHeight: topPanelHeight,
+      sheetBottom: sheetBottom,
+      sysMinHeight: minHeight,
+      sysMidHeight: midHeight,
+      sysMaxHeight: sysMaxHeight,
+      sheetHeight: minHeight, // 默认收起状态
+      isSheetExpanded: false, // 默认收起状态
+      tabBarHeight: tabBarHeight,
+      safeAreaBottom: sysInfo.safeAreaBottom || 0
     })
-    // 构建景点地图标记
-    this._buildSpotMarkers()
-    // 等待定位就绪，自动将地图中心移到用户位置
-    app.whenLocationReady((loc) => {
-      this.setData({ mapCenter: { lat: loc.lat, lng: loc.lng } })
-      // 更新位置后重新计算店铺距离
+
+    this.initCityOptions()
+
+    this.loadItems()
+    this.loadUserData()
+    
+    markerIcons.ensureIcons(() => {
+      // 确保筛选后再更新标记
       this.applyFilters()
     })
-    // 等待区划信息就绪，显示当前城市和位置描述
+    
+    app.whenLocationReady((loc) => {
+      this.setData({ mapCenter: { lat: loc.lat, lng: loc.lng } })
+      this.applyFilters()
+    })
+    
     app.whenDistrictReady((info, locationDesc) => {
       this.setData({ 
-        currentCity: info.city,
-        myLocationDesc: locationDesc || info.district
+        currentCity: info.city
       })
     })
   },
 
-  onShow() {
-    // 每次显示页面时刷新用户数据
-    this.loadUserData()
-    this.updateShopStatus()
+  initCityOptions() {
+    const coverPool = buildCityCoverPool()
+    const cityOptions = GUANGDONG_CITIES.map((city, index) => ({
+      ...city,
+      coverImage: coverPool[index % coverPool.length] || '/images/app-logo.jpg'
+    }))
+    this.setData({ cityOptions })
   },
 
-  // 点击"定位"按钮 - 重新获取当前位置并移动地图
+  onShow() {
+    this.loadUserData()
+    this.updateItemStatus()
+  },
+
+  // 加载数据 (混合美食和景点)
+  loadItems() {
+    const userShops = util.loadData('userAddedShops', [])
+    
+    // 先把美食数据整理成探索页统一用的字段格式。
+    const foods = [...shopData.shops, ...shopData.foods, ...userShops].map(shop => {
+      // 标签里像“南山区”这种行政区信息不展示，只保留前 2 个业务标签。
+      const filteredTags = (shop.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2);
+      return {
+        ...shop,
+        tags: filteredTags,
+        type: 'food',
+        // 封面角标统一走公共方法，只显示大类，不显示细分类。
+        displayCategory: resolveDisplayCategory({ ...shop, type: 'food' }),
+        lat: shop.lat || shop.latitude,
+        lng: shop.lng || shop.longitude,
+        displayImage: shop.logo || shop.image || shop.thumb // 统一图片字段，页面里只读这一个字段
+      };
+    })
+    
+    // 再把景点数据也整理成同一套字段，这样模板就能复用一套卡片结构。
+    const spots = spotData.spotData.map(spot => {
+      // 景点标签同样只保留前 2 个，避免一行塞太满。
+      const filteredTags = (spot.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2);
+      return {
+        ...spot,
+        tags: filteredTags,
+        type: 'spot',
+        displayCategory: resolveDisplayCategory({ ...spot, type: 'spot' }),
+        displayImage: spot.image || spot.logo || spot.thumb // 统一图片字段
+      };
+    })
+    
+    // 下面这几组是补充出来的演示数据，用来让探索页的大类更完整。
+    // 它们会和真实数据一起参与筛选、排序和渲染。
+    // 添加假数据：文化展馆
+    const cultureData = [
+      { id: 901, name: '深圳美术馆', category: '文化展馆', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, tags: ['展览', '艺术'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
+      { id: 902, name: '关山月美术馆', category: '文化展馆', type: 'culture', lat: 22.541, lng: 114.038, rating: 4.6, tags: ['国画', '收藏'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
+      { id: 903, name: '深圳音乐厅', category: '文化展馆', type: 'culture', lat: 22.544, lng: 114.042, rating: 4.7, tags: ['演出', '音乐'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
+      { id: 904, name: '何香凝美术馆', category: '文化展馆', type: 'culture', lat: 22.532, lng: 113.986, rating: 4.4, tags: ['美术', '展览'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
+    ]
+    
+    // 添加假数据：自然户外
+    const outdoorData = [
+      { id: 911, name: '梧桐山国家森林公园', category: '自然户外', type: 'outdoor', lat: 22.624, lng: 114.198, rating: 4.8, tags: ['登山', '观景'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
+      { id: 912, name: '塘朗山郊野公园', category: '自然户外', type: 'outdoor', lat: 22.542, lng: 113.958, rating: 4.5, tags: ['徒步', '骑行'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
+      { id: 913, name: '深圳湾公园', category: '自然户外', type: 'outdoor', lat: 22.498, lng: 113.914, rating: 4.7, tags: ['滨海', '跑步'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
+      { id: 914, name: '梅林水库', category: '自然户外', type: 'outdoor', lat: 22.568, lng: 114.032, rating: 4.6, tags: ['水库', '徒步'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
+    ]
+    
+    // 添加假数据：购物
+    const shoppingData = [
+      { id: 921, name: '华润万象城', category: '购物', type: 'shopping', lat: 22.541, lng: 114.063, rating: 4.8, tags: ['高端', '奢侈品'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
+      { id: 922, name: '海岸城', category: '购物', type: 'shopping', lat: 22.489, lng: 113.921, rating: 4.6, tags: ['餐饮', '娱乐'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
+      { id: 923, name: '东门老街', category: '购物', type: 'shopping', lat: 22.543, lng: 114.078, rating: 4.5, tags: ['老街', '小吃'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
+      { id: 924, name: '益田假日广场', category: '购物', type: 'shopping', lat: 22.535, lng: 113.988, rating: 4.7, tags: ['品牌', '餐饮'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
+    ]
+    
+    // 添加假数据：酒店
+    const hotelData = [
+      { id: 931, name: '深圳华侨城洲际大酒店', category: '酒店', type: 'hotel', lat: 22.538, lng: 113.989, rating: 4.8, tags: ['五星', '豪华'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg', price: 1280 },
+      { id: 932, name: '深圳湾安达仕酒店', category: '酒店', type: 'hotel', lat: 22.501, lng: 113.912, rating: 4.9, tags: ['海景', '高端'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg', price: 1580 },
+      { id: 933, name: '深圳柏悦酒店', category: '酒店', type: 'hotel', lat: 22.542, lng: 114.061, rating: 4.7, tags: ['商务', '舒适'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg', price: 980 },
+      { id: 934, name: '深圳大鹏古城民宿', category: '酒店', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', price: 380 },
+    ]
+    
+    // 最终合并成探索页的总列表，再统一做筛选和排序。
+    const allItems = [...spots, ...foods, ...cultureData, ...outdoorData, ...shoppingData, ...hotelData]
+    this.setData({ allItems })
+    this.applyFilters()
+  },
+
+  // 读取用户状态：
+  // 这里主要拿“想去”和“足迹”的本地缓存。
+  loadUserData() {
+    const wantFoods = util.loadData('userWantFoods', [])
+    const wantSpots = util.loadData('userWantSpots', [])
+    const checkedIn = util.getFootprintItems()
+    
+    // 合并所有的想去 ID，方便在混合列表中判断
+    const likedShops = [...wantFoods, ...wantSpots]
+
+    this.setData({
+      likedShops: likedShops,
+      visitedShops: checkedIn.map(item => String(item.id))
+    })
+    this.updateItemStatus()
+  },
+
+  // 把“是否想去”和“想去人数展示文案”刷新到列表数据里。
+  updateItemStatus() {
+    const { allItems, likedShops } = this.data
+    const updatedItems = allItems.map(item => {
+      // util 中的存储都统一转为了 String，所以这里比较时也转为 String
+      const isLiked = likedShops.includes(String(item.id)) || likedShops.includes(Number(item.id))
+      const baseWant = item.wantCount || 1024
+      const actualWant = isLiked ? baseWant + 1 : baseWant
+      
+      // 格式化想去人数
+      let displayWantCount = actualWant
+      if (actualWant >= 10000) {
+        displayWantCount = (actualWant / 10000).toFixed(1).replace('.0', '') + 'w'
+      } else if (actualWant >= 1000) {
+        displayWantCount = (actualWant / 1000).toFixed(1).replace('.0', '') + 'k'
+      }
+
+      return { 
+        ...item, 
+        isLiked,
+        displayWantCount
+      }
+    })
+    this.setData({ allItems: updatedItems })
+    this.applyFilters()
+  },
+
+  // 按当前分类、排序和地图中心点，重新生成当前可见列表。
+  applyFilters() {
+    let { allItems, currentCategory, sortType, currentDistance, mapCenter } = this.data
+    
+    let filtered = allItems
+    
+    // 分类筛选
+    if (currentCategory === '景点') {
+      filtered = filtered.filter(i => i.type === 'spot')
+    } else if (currentCategory === '美食') {
+      filtered = filtered.filter(i => i.type === 'food')
+    } else if (currentCategory === '饮品') {
+      filtered = filtered.filter(i => i.type === 'food' && (i.category === '饮品' || i.category === '咖啡' || i.tags?.includes('糖水')))
+    } else if (currentCategory === '购物') {
+      filtered = filtered.filter(i => i.type === 'shopping')
+    } else if (currentCategory === '酒店') {
+      filtered = filtered.filter(i => i.type === 'hotel')
+    } else if (currentCategory === '自然户外') {
+      filtered = filtered.filter(i => i.type === 'outdoor')
+    } else if (currentCategory === '文化展馆') {
+      filtered = filtered.filter(i => i.type === 'culture')
+    }
+    // '全部' 时不筛选，显示所有数据
+    
+    // 距离计算与排序
+    const centerLat = mapCenter?.lat || 22.4846
+    const centerLng = mapCenter?.lng || 113.9046
+    
+    filtered = filtered.map(item => {
+      const dist = this.calculateDistance(centerLat, centerLng, item.lat, item.lng)
+      return {
+        ...item,
+        distanceRaw: dist,
+        distance: this.formatDistance(dist)
+      }
+    })
+    
+    // 排序
+    if (sortType === 'distance') {
+      filtered.sort((a, b) => a.distanceRaw - b.distanceRaw)
+    } else if (sortType === 'rating') {
+      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    }
+    
+    this.setData({ 
+      filteredItems: filtered,
+      hasMore: filtered.length > this.data.pageSize
+    })
+    
+    this.updateMarkers()
+  },
+
+  // 根据当前列表更新地图上的点位。
+  updateMarkers() {
+    const items = this.data.filteredItems
+    if (!items || items.length === 0) {
+      this.setData({ allMarkers: [] })
+      return
+    }
+
+    const markers = items.map(item => {
+      const isSpot = item.type === 'spot'
+      let markerCategory
+      switch(item.type) {
+        case 'spot':
+          markerCategory = '景点'
+          break
+        case 'food':
+          markerCategory = '美食'
+          break
+        case 'culture':
+          markerCategory = '文化展馆'
+          break
+        case 'outdoor':
+          markerCategory = '自然户外'
+          break
+        case 'shopping':
+          markerCategory = '购物'
+          break
+        case 'hotel':
+          markerCategory = '酒店'
+          break
+        default:
+          markerCategory = '美食'
+      }
+      
+      const catColor = markerIcons.getCategoryColor(markerCategory)
+      const catEmoji = markerIcons.getCategoryEmoji(markerCategory)
+      const markerIconPath = markerIcons.getIconPath(markerCategory)
+
+      return {
+        id: item.id,
+        latitude: item.lat,
+        longitude: item.lng,
+        iconPath: markerIconPath,
+        width: 28,
+        height: 28,
+        callout: {
+          content: isSpot 
+            ? `${catEmoji} ${item.name}\n★ ${item.rating}  ${item.free ? '免费' : '收费'}`
+            : `${catEmoji} ${item.name}\n★ ${item.rating || '暂无'}  ¥${item.price || '--'}/人`,
+          color: '#1A1A2E',
+          fontSize: 12,
+          borderRadius: 10,
+          padding: 8,
+          display: 'BYCLICK',
+          bgColor: '#ffffff',
+          borderColor: catColor,
+          borderWidth: 1.5
+        }
+      }
+    })
+
+    this.setData({ allMarkers: markers })
+  },
+
+  // ─── Bottom Sheet 拖拽逻辑：开始拖动 ───
+  onSheetTouchStart(e) {
+    this.startY = e.touches[0].clientY
+    this.startHeight = this.data.sheetHeight
+    this.setData({ isDragging: true })
+  },
+
+  // Bottom Sheet 拖动过程：实时改变列表面板高度
+  onSheetTouchMove(e) {
+    if (!this.data.isDragging) return
+    const currentY = e.touches[0].clientY
+    const deltaY = this.startY - currentY // 向上滑动距离为正
+    let newHeight = this.startHeight + deltaY
+    
+    const minHeight = this.data.sysMinHeight // 使用精确计算的高度
+    const maxHeight = this.data.sysMaxHeight
+    
+    if (newHeight < minHeight) newHeight = minHeight
+    if (newHeight > maxHeight) newHeight = maxHeight
+    
+    this.setData({ sheetHeight: newHeight })
+  },
+
+  // Bottom Sheet 松手后：自动吸附到收起 / 半屏 / 全屏 其中一个状态
+  onSheetTouchEnd(e) {
+    this.setData({ isDragging: false })
+    
+    const sysInfo = wx.getSystemInfoSync()
+    const wh = sysInfo.windowHeight
+    const minH = this.data.sysMinHeight // 使用精确计算的高度
+    const midH = wh * 0.45
+    const maxH = this.data.sysMaxHeight
+    
+    const h = this.data.sheetHeight
+    let finalHeight = midH
+    
+    if (h < midH - 60) {
+      finalHeight = minH
+    } else if (h > midH + 60) {
+      finalHeight = maxH
+    } else {
+      finalHeight = midH
+    }
+    
+    this.setData({ 
+      sheetHeight: finalHeight, 
+      isSheetExpanded: finalHeight > minH
+    })
+  },
+
+  // 切换顶部分类，例如美食、景点、购物
+  onCategoryChange(e) {
+    const category = e.currentTarget.dataset.category
+    this.setData({ 
+      currentCategory: category, 
+      currentPage: 1,
+      scrollToCategory: '' // 先清空触发重新滚动
+    })
+    // 异步设置滚动目标，确保scroll-view重新渲染
+    setTimeout(() => {
+      this.setData({ scrollToCategory: 'cat-' + category })
+    }, 10)
+    this.applyFilters()
+  },
+
+  // 切换排序方式，例如按距离、按评分
+  onSortChange(e) {
+    const sortType = e.currentTarget.dataset.sort
+    this.setData({ sortType, currentPage: 1 })
+    this.applyFilters()
+  },
+
+  // 点击列表卡片：根据类型进入景点详情或美食详情
+  onItemTap(e) {
+    const item = e.currentTarget.dataset.item
+    if (item.type === 'spot') {
+      wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${item.id}` })
+    } else {
+      wx.navigateTo({ url: `/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(item))}` })
+    }
+  },
+
+  // 点击地图上的标记点，等同于点击对应的列表卡片
+  onMarkerTap(e) {
+    const markerId = e.detail.markerId
+    const item = this.data.allItems.find(s => s.id === markerId)
+    if (item) {
+      this.onItemTap({ currentTarget: { dataset: { item } } })
+    }
+  },
+
+  // 重新定位到当前用户位置
   onMyLocation() {
     wx.showLoading({ title: '定位中...' })
     wx.getLocation({
@@ -135,360 +517,60 @@ Page({
         app.globalData.location = loc
         this.setData({ 
           mapCenter: loc,
-          currentDistrict: '',  // 清空区域
-          locationMode: 'my'    // 设置为"我的位置"模式
+          currentDistrict: '',
+          currentCity: (app.globalData.districtInfo && app.globalData.districtInfo.city) || this.data.currentCity,
+          locationMode: 'my'
         })
-        // 重新计算店铺距离
         this.applyFilters()
         wx.showToast({ title: '已定位到当前位置', icon: 'success', duration: 1500 })
       },
       fail: () => {
         wx.hideLoading()
-        wx.showModal({
-          title: '定位失败',
-          content: '请检查是否授权位置权限，或手动选择位置',
-          confirmText: '去设置',
-          cancelText: '取消',
-          success: (res) => {
-            if (res.confirm) {
-              wx.openSetting()
-            }
-          }
-        })
+        wx.showToast({ title: '定位失败', icon: 'none' })
       }
     })
   },
 
-  onPullDownRefresh() {
-    this.loadShops()
-    wx.stopPullDownRefresh()
-  },
-
-  // 加载店铺数据
-  loadShops() {
-    // 合并：蛇口24家（shopData.shops）+ 深圳V2美食65家（shopData.foods）+ 用户添加的店铺
-    const userShops = util.loadData('userAddedShops', [])
-    // 为每个店铺添加图片加载状态
-    const allShops = [...shopData.shops, ...shopData.foods, ...userShops].map(shop => ({
-      ...shop,
-      imgError: false
-    }))
-    
-    this.setData({ allShops })
-    this.applyFilters()
-  },
-
-  // 加载用户数据
-  loadUserData() {
-    const userData = util.getUserShops()
-    this.setData({
-      likedShops: userData.likedShops || [],
-      visitedShops: userData.checkedInShops || {}
-    })
-    this.updateShopStatus()
-  },
-
-  // 更新店铺状态
-  updateShopStatus() {
-    const { allShops, likedShops, visitedShops } = this.data
-    
-    const updatedShops = allShops.map(shop => {
-      const isLiked = likedShops.includes(shop.id)
-      const baseWant = shop.wantCount || 0
-      return {
-        ...shop,
-        isLiked,
-        displayWantCount: isLiked ? baseWant + 1 : baseWant
-      }
-    })
-    
-    this.setData({ 
-      allShops: updatedShops,
-      likedCount: likedShops.length
-    })
-    this.applyFilters()
-  },
-
-  // 应用筛选和排序
-  applyFilters() {
-    let { allShops, currentCategory, searchKeyword, sortType, currentDistance, mapCenter } = this.data
-    
-    // 分类筛选（当前美食类型）
-    let filtered = currentCategory === '全部' 
-      ? allShops 
-      : allShops.filter(s => s.category === currentCategory)
-    
-    // 搜索筛选
-    if (searchKeyword) {
-      const kw = searchKeyword.toLowerCase()
-      filtered = filtered.filter(s => 
-        s.name.toLowerCase().includes(kw) ||
-        (s.tags && s.tags.some(t => t.toLowerCase().includes(kw))) ||
-        (s.dishes && s.dishes.some(d => d.toLowerCase().includes(kw)))
-      )
+  // 地图放大一级
+  onMapZoomIn() {
+    const currentScale = this.data.mapScale
+    if (currentScale < 20) {
+      const newScale = Math.min(currentScale + 1, 20)
+      this.setData({ mapScale: newScale })
     }
-    
-    // 基于当前位置计算距离
-    const centerLat = mapCenter?.lat || 22.4846
-    const centerLng = mapCenter?.lng || 113.9046
-    
-    // 为每家店铺计算距离
-    filtered = filtered.map(shop => {
-      const dist = this.calculateDistance(centerLat, centerLng, shop.lat || shop.latitude, shop.lng || shop.longitude)
-      return {
-        ...shop,
-        distance: this.formatDistance(dist)
-      }
-    })
-    
-    // 距离筛选
-    if (currentDistance > 0) {
-      filtered = filtered.filter(shop => {
-        const dist = this.calculateDistance(centerLat, centerLng, shop.lat || shop.latitude, shop.lng || shop.longitude)
-        return dist <= currentDistance
-      })
+  },
+
+  // 地图缩小一级
+  onMapZoomOut() {
+    const currentScale = this.data.mapScale
+    if (currentScale > 3) {
+      const newScale = Math.max(currentScale - 1, 3)
+      this.setData({ mapScale: newScale })
     }
-    
-    // 排序
-    if (sortType === 'distance') {
-      // 按真实距离升序（需重新计算原始km数）
-      filtered.sort((a, b) => {
-        const da = this.calculateDistance(centerLat, centerLng, a.lat || a.latitude, a.lng || a.longitude)
-        const db = this.calculateDistance(centerLat, centerLng, b.lat || b.latitude, b.lng || b.longitude)
-        return da - db
-      })
-    } else if (sortType === 'rating') {
-      filtered.sort((a, b) => b.rating - a.rating)
-    }
-    
-    this.setData({ 
-      filteredShops: filtered,
-      hasMore: filtered.length > this.data.pageSize
-    })
-    
-    // 地图标记也同步更新：只显示筛选后的店铺
-    this.updateMarkers()
   },
 
-  // 更新地图标记 - 圆周旅迹风格（精致小圆点）
-  updateMarkers() {
-    const shops = this.data.filteredShops
-    if (!shops || shops.length === 0) {
-      this.setData({ markers: [] })
-      return
-    }
-
-    const markers = shops.map((shop) => {
-      const catColor = markerIcons.getCategoryColor(shop.category)
-      const catEmoji = markerIcons.getCategoryEmoji(shop.category)
-      const iconPath = markerIcons.getIconPath(shop.category)
-      const priceInfo = shop.price ? `¥${shop.price}/人` : ''
-      const ratingInfo = shop.rating ? `★ ${shop.rating}` : ''
-      const lines = [
-        `${catEmoji}  ${shop.name}`,
-        `${ratingInfo}  ${priceInfo}`
-      ].filter(l => l.trim())
-
-      return {
-        id: shop.id,
-        latitude: shop.lat || shop.latitude,
-        longitude: shop.lng || shop.longitude,
-        // 自定义图标（40x40彩色小圆点，无iconPath时用默认红点）
-        iconPath: iconPath,
-        width: iconPath ? markerIcons.ICON_SIZE : 30,
-        height: iconPath ? markerIcons.ICON_SIZE : 30,
-        // 点击气泡：分类色边框 + 店铺信息
-        callout: {
-          content: lines.join('\n'),
-          color: '#1A1A2E',
-          fontSize: 13,
-          borderRadius: 10,
-          padding: 10,
-          display: 'BYCLICK',
-          bgColor: '#ffffff',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-          borderColor: catColor,
-          borderWidth: 1.5
-        }
-      }
-    })
-
-    this.setData({ markers })
-    this._refreshMapLayer()
-  },
-
-  // 构建景点标记
-  _buildSpotMarkers() {
-    const spots = spotData.spotData
-    const markers = spots.map(s => ({
-      id: s.id,
-      latitude: s.lat,
-      longitude: s.lng,
-      title: s.name,
-      iconPath: '/images/tabbar-spots-active.png',
-      width: 36,
-      height: 36,
-      callout: {
-        content: `🏔️ ${s.name}\n⭐ ${s.rating}  ${s.free ? '免费' : '收费'}`,
-        color: '#1A1A2E',
-        fontSize: 12,
-        borderRadius: 10,
-        padding: 8,
-        display: 'BYCLICK',
-        bgColor: '#ffffff',
-        borderColor: '#00B5A6',
-        borderWidth: 1.5
-      }
-    }))
-    this.setData({ spotMarkers: markers })
-    this._refreshMapLayer()
-  },
-
-  // 根据图层刷新 allMarkers
-  _refreshMapLayer() {
-    const { mapLayer, markers, spotMarkers } = this.data
-    let allMarkers = []
-    if (mapLayer === 'food') {
-      allMarkers = markers
-    } else if (mapLayer === 'spots') {
-      allMarkers = spotMarkers
-    } else {
-      allMarkers = [...markers, ...spotMarkers]
-    }
-    this.setData({ allMarkers })
-  },
-
-  // 图层切换
-  onMapLayerChange(e) {
-    const layer = e.currentTarget.dataset.layer
-    this.setData({ mapLayer: layer }, () => {
-      this._refreshMapLayer()
-    })
-  },
-
-  // 分类切换
-  onCategoryChange(e) {
-    const category = e.currentTarget.dataset.category
-    this.setData({ currentCategory: category, currentPage: 1 })
-    this.applyFilters()
-  },
-
-  // 搜索输入
-  onSearchInput(e) {
-    this.setData({ searchKeyword: e.detail.value })
-  },
-
-  // 搜索确认
-  onSearchConfirm(e) {
-    this.setData({ searchKeyword: e.detail.value, currentPage: 1 })
-    this.applyFilters()
-  },
-
-  // 排序切换
-  onSortChange(e) {
-    const sortType = e.currentTarget.dataset.sort
-    this.setData({ sortType, currentPage: 1 })
-    this.applyFilters()
-  },
-
-  // ─── 地理位置选择（小红书风格） ───
-
-  // 打开位置选择器
-  onOpenLocationPicker() {
-    this.setData({ showLocationPicker: true })
-  },
-
-  // 关闭位置选择器
-  onCloseLocationPicker() {
-    this.setData({ showLocationPicker: false })
-  },
-
-  // 选择区域
-  onSelectDistrict(e) {
-    const districtName = e.currentTarget.dataset.district
-    const item = e.currentTarget.dataset.item
-    
-    // 如果是"我的位置"
-    if (item && item.isLocation) {
-      wx.getLocation({
-        type: 'gcj02',
-        isHighAccuracy: true,
-        success: (res) => {
-          const loc = { lat: res.latitude, lng: res.lng }
-          app.globalData.location = loc
-          
-          // 逆地址解析获取位置描述
-          const key = app.globalData.qqMapKey
-          wx.request({
-            url: `https://apis.map.qq.com/ws/geocoder/v1/?location=${loc.lat},${loc.lng}&key=${key}&get_poi=0`,
-            success: (geoRes) => {
-              let locationDesc = '附近'
-              if (geoRes.data && geoRes.data.status === 0) {
-                const addr = geoRes.data.result.address_component
-                const street = addr.street || ''
-                locationDesc = street || addr.district || '附近'
-              }
-              this.setData({ 
-                mapCenter: loc,
-                currentDistrict: '',
-                locationMode: 'my',
-                currentCity: '深圳市',
-                myLocationDesc: locationDesc,
-                showLocationPicker: false
-              })
-              this.applyFilters()
-              wx.showToast({ title: '已定位到' + locationDesc, icon: 'success', duration: 1500 })
-            },
-            fail: () => {
-              this.setData({ 
-                mapCenter: loc,
-                currentDistrict: '',
-                locationMode: 'my',
-                currentCity: '深圳市',
-                myLocationDesc: '附近',
-                showLocationPicker: false
-              })
-              this.applyFilters()
-              wx.showToast({ title: '已定位到我的位置', icon: 'success', duration: 1500 })
-            }
-          })
-        },
-        fail: () => {
-          wx.showToast({ title: '定位失败，请检查权限', icon: 'none' })
-        }
-      })
+  // 点击右侧心形，加入或移出“想去”
+  onToggleLike(e) {
+    // 统一走公共登录校验，避免每个页面提示文案不一致。
+    if (!util.requireLogin()) {
       return
     }
     
-    this.setData({ 
-      currentDistrict: districtName,
-      locationMode: 'district',
-      showLocationPicker: false
+    const shopId = e.currentTarget.dataset.shopid
+    const type = e.currentTarget.dataset.type || 'food'
+    const isLiked = util.toggleLike(shopId, type)
+    
+    this.loadUserData()
+    
+    wx.showToast({
+      title: isLiked ? '已添加到想去' : '已移出想去',
+      icon: 'none',
+      duration: 1000
     })
-    this.applyFilters()
   },
-
-  // 美食类型切换（从区域标签）
-  onDistrictChange(e) {
-    const category = e.currentTarget.dataset.district
-    this.setData({ 
-      currentCategory: category === '全部' ? '全部' : category,
-      currentPage: 1
-    })
-    this.applyFilters()
-  },
-
-  // 距离筛选
-  onDistanceChange(e) {
-    const distance = e.currentTarget.dataset.distance
-    this.setData({ currentDistance: distance })
-    this.applyFilters()
-  },
-
-  // ─── 店铺距离计算 ───
+  // 计算两点之间的直线距离（单位：米）
   calculateDistance(lat1, lng1, lat2, lng2) {
-    // Haversine公式计算两点间距离（米）
-    const R = 6371000 // 地球半径（米）
+    const R = 6371000 
     const dLat = (lat2 - lat1) * Math.PI / 180
     const dLng = (lng2 - lng1) * Math.PI / 180
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -498,83 +580,106 @@ Page({
     return R * c
   },
 
-  // 格式化距离
+  // 把米数格式化成页面展示文案，例如 883m、1.2km
   formatDistance(meters) {
-    if (meters < 1000) {
-      return Math.round(meters) + 'm'
-    } else {
-      return (meters / 1000).toFixed(1) + 'km'
-    }
+    if (meters < 1000) return Math.round(meters) + 'm'
+    return (meters / 1000).toFixed(1) + 'km'
   },
 
-  // 店铺点击
-  onShopTap(e) {
-    const shop = e.currentTarget.dataset.shop
-    wx.navigateTo({
-      url: `/pages/sub/shop-detail/shop-detail?shop=${encodeURIComponent(JSON.stringify(shop))}`
+  // 图片加载失败时，用默认图片兜底
+  onImageError(e) {
+    const index = e.currentTarget.dataset.index
+    const key = `filteredItems[${index}].image`
+    this.setData({ [key]: '/images/app-logo.jpg' })
+  },
+
+  // 列表滚动到底部时的预留入口，目前暂时没有更多数据逻辑
+  onLoadMore() {
+    // 暂无更多数据处理
+  },
+
+  // 位置选择器：打开 / 关闭 / 阻止冒泡 / 切换城市
+  onOpenLocationPicker() { this.setData({ showLocationPicker: true }) },
+  onCloseLocationPicker() { this.setData({ showLocationPicker: false }) },
+  preventBubble() { },
+  onSelectCity(e) {
+    const item = e.currentTarget.dataset.item
+    if (!item) return
+    this.setData({ 
+      currentCity: item.fullName,
+      currentDistrict: '',
+      mapCenter: {
+        lat: item.lat,
+        lng: item.lng
+      },
+      locationMode: 'city',
+      showLocationPicker: false
     })
+    this.applyFilters()
   },
 
-  // 标记点击
-  onMarkerTap(e) {
-    const markerId = e.detail.markerId
-    // 景点标记 id >= 101
-    if (markerId >= 101) {
-      wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${markerId}` })
-      return
-    }
-    const shop = this.data.allShops.find(s => s.id === markerId)
-    if (shop) {
-      this.onShopTap({ currentTarget: { dataset: { shop } } })
-    }
-  },
-
-  // 想去/取消想去
-  onToggleLike(e) {
-    const shopId = e.currentTarget.dataset.shopid
-    const isLiked = util.toggleLike(shopId)
-    
-    // 更新本地状态
-    let likedShops = [...this.data.likedShops]
-    if (isLiked) {
-      likedShops.push(shopId)
-    } else {
-      likedShops = likedShops.filter(id => id !== shopId)
-    }
-    
-    this.setData({ likedShops, likedCount: likedShops.length })
-    this.updateShopStatus()
-    
-    wx.showToast({
-      title: isLiked ? '已添加到想去' : '已取消',
-      icon: 'none',
-      duration: 1000
-    })
-  },
-
-  // 打开想去清单（可在清单内一键规划路线）
+  // 底部按钮：跳去“想去”页
   onOpenRoute() {
-    wx.navigateTo({
+    wx.switchTab({
       url: '/pages/wantgo/wantgo'
     })
   },
 
-  // 加载更多
-  onLoadMore() {
-    if (!this.data.hasMore) return
-    
-    const nextPage = this.data.currentPage + 1
-    this.setData({ currentPage: nextPage })
-    // 可以在这里实现分页加载
+  // 把列表面板收起，只露出地图
+  onToggleMap() {
+    // 切换收起状态，显示地图
+    this.setData({
+      isSheetExpanded: false,
+      sheetHeight: this.data.sysMinHeight
+    })
   },
 
-  // 图片加载失败处理
-  onImageError(e) {
-    const index = e.currentTarget.dataset.index
-    if (index !== undefined) {
-      const shops = [...this.data.filteredShops]
-      shops[index] = { ...shops[index], imgError: true }
-      this.setData({ filteredShops: shops })
+  // 直接展开到半屏列表
+  onExpandSheet() {
+    const sysInfo = wx.getSystemInfoSync()
+    this.setData({
+      isSheetExpanded: true,
+      sheetHeight: sysInfo.windowHeight * 0.45
+    })
+  },
+
+  // 列表按钮：第一次到半屏，第二次到全屏
+  onListBtnTap() {
+    const sysInfo = wx.getSystemInfoSync()
+    const wh = sysInfo.windowHeight
+    const minH = this.data.sysMinHeight
+    const midH = wh * 0.45
+    const maxH = this.data.sysMaxHeight
+
+    const currentH = this.data.sheetHeight
+
+    if (currentH < midH - 60) {
+      // 当前在收起状态，第一次点击 -> 半屏
+      this.setData({
+        isSheetExpanded: true,
+        sheetHeight: midH
+      })
+    } else {
+      // 当前在半屏状态，第二次点击 -> 全屏
+      this.setData({
+        isSheetExpanded: true,
+        sheetHeight: maxH
+      })
     }
+  },
+
+  // 搜索入口暂时未接功能
+  onSearchTap() {
+    wx.showToast({
+      title: '搜索功能开发中',
+      icon: 'none'
+    })
+  },
+
+  // 头像入口：跳到“我的”页
+  onProfileTap() {
+    wx.switchTab({
+      url: '/pages/my/my'
+    })
   }
 })

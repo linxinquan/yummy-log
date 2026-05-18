@@ -1,0 +1,82 @@
+<!-- 公共地图预览卡片：
+用于我的路线、攻略详情、路线规划详情三个页面统一显示地图卡片。 -->
+<view class="route-map-preview-card" wx:if="{{currentItem}}">
+  <!-- 顶部 Tab：行程总览 / 每一天 -->
+  <view class="preview-tabs-panel">
+    <scroll-view class="preview-tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
+      <view class="preview-tab-row">
+        <view
+          wx:for="{{previewTabs}}"
+          wx:key="index"
+          class="preview-tab-item {{((currentMapDay < 0 && item.index === 0) || currentMapDay === item.index) ? 'active' : ''}}"
+          bindtap="onSelectDay"
+          data-index="{{item.index}}"
+        >
+          {{item.label}}
+        </view>
+      </view>
+    </scroll-view>
+    <view class="preview-tab-divider"></view>
+  </view>
+
+  <!-- 中间详情：封面、标题、标签、简介、切换站点按钮 -->
+  <view class="preview-card-stage">
+    <view class="preview-detail-card">
+      <view class="preview-side-inner">
+        <view class="preview-card-head">
+          <image class="preview-cover-image" src="{{currentItem.image || currentItem.coverImage}}" mode="aspectFill"></image>
+          <view class="preview-head-main">
+            <text class="preview-name">{{currentItem.name}}</text>
+            <view class="preview-meta-row" wx:if="{{previewDisplayMeta.length > 0}}">
+              <view
+                wx:for="{{previewDisplayMeta}}"
+                wx:key="index"
+                wx:for-item="chip"
+                class="preview-chip {{chip.type === 'score' ? 'score' : ''}}"
+              >
+                {{chip.text}}
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view class="preview-desc-row">
+          <text class="preview-desc-left">{{previewDescriptionText}}</text>
+          <text class="preview-desc-right">{{previewFeeText}}</text>
+        </view>
+      </view>
+
+      <view class="preview-btn-row">
+        <view
+          class="preview-btn {{previewDisablePrev ? 'disabled' : ''}}"
+          bindtap="onStep"
+          data-index="{{previewPrevIndex}}"
+        >
+          <text>上一站</text>
+        </view>
+        <view
+          class="preview-btn {{previewDisableNext ? 'disabled' : ''}}"
+          bindtap="onStep"
+          data-index="{{previewNextIndex}}"
+        >
+          <text>下一站</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部交通信息：左侧统计，中间交通方式，右侧站点统计 -->
+  <view class="preview-footer">
+    <view class="preview-footer-side">
+      <text>{{previewStationText}}</text>
+    </view>
+    <travel-meta-line
+      variant="compact"
+      travel-meta="{{currentItem.travelMeta}}"
+      bindtapmeta="onTapTravelMeta"
+    ></travel-meta-line>
+    <view class="preview-footer-side right">
+      <text>{{previewCountText}}</text>
+    </view>
+  </view>
+</view>

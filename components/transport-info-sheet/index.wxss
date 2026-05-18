@@ -1,0 +1,156 @@
+.transport-sheet-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.28s ease;
+}
+
+.transport-sheet-mask.show {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.transport-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 211;
+  padding: 0 0 calc(24rpx + env(safe-area-inset-bottom));
+  border-radius: 32rpx 32rpx 0 0;
+  background: #FFFFFF;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.transport-sheet.show {
+  transform: translateY(0);
+}
+
+.transport-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 128rpx;
+  padding: 0 48rpx;
+  box-sizing: border-box;
+}
+
+.transport-sheet-title {
+  color: #242529;
+  font-size: 40rpx;
+  font-weight: 500;
+  line-height: 100%;
+}
+
+.transport-sheet-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #242529;
+}
+
+.transport-sheet-close i {
+  font-size: 48rpx;
+}
+
+.transport-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+  padding: 0 48rpx;
+  box-sizing: border-box;
+}
+
+.transport-option {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  height: 104rpx;
+  padding: 0 32rpx;
+  background: #FFFFFF;
+  border: 2rpx solid #E5E7EB;
+  border-radius: 24rpx;
+}
+
+.transport-option.active {
+  border-color: #242529;
+}
+
+.transport-option-main {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  min-width: 0;
+  flex: 1;
+}
+
+.transport-option-side {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8rpx; /* 分隔点两边保留一点呼吸感 */
+  flex-shrink: 0;
+  min-width: 0;
+  margin-left: 16rpx;
+}
+
+.transport-option-icon {
+  flex-shrink: 0;
+  color: #242529;
+  font-size: 40rpx;
+  line-height: 40rpx;
+}
+
+.transport-option-label {
+  color: #242529;
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+.transport-option-distance,
+.transport-option-dot,
+.transport-option-time {
+  font-size: 32rpx;
+  line-height: 32rpx;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.transport-option-distance {
+  color: #6E727A;
+}
+
+.transport-option-dot {
+  color: #6E727A;
+}
+
+.transport-option-time {
+  color: #242529;
+}
+
+.transport-sheet-footer {
+  padding: 48rpx 48rpx 0;
+}
+
+.transport-confirm-btn {
+  height: 96rpx;
+  border-radius: 999rpx;
+  background: #242529;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transport-confirm-btn text {
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 32rpx;
+}

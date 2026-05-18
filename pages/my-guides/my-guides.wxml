@@ -1,0 +1,69 @@
+<!-- 觅食图 - 我的攻略页面 -->
+<view class="container">
+  <view class="header">
+    <view class="district-title">我的发布</view>
+  </view>
+
+  <scroll-view class="guide-list" scroll-y wx:if="{{myGuides.length > 0}}">
+    <block wx:for="{{myGuides}}" wx:key="id">
+      <view class="guide-swipe-item">
+        <view class="guide-delete-action" catchtap="onDeleteGuide" data-id="{{item.id}}">
+          <view class="guide-delete-inner">
+            <i class="mgc_delete_2_line guide-delete-icon"></i>
+            <text class="guide-delete-text">删除</text>
+          </view>
+        </view>
+        <view
+          class="guide-card"
+          bindtap="onGuideTap"
+          bindtouchstart="onCardTouchStart"
+          bindtouchmove="onCardTouchMove"
+          bindtouchend="onCardTouchEnd"
+          bindtouchcancel="onCardTouchEnd"
+          data-guide="{{item}}"
+          data-index="{{index}}"
+          style="transform: translateX({{item.swipeOffset || 0}}px);"
+        >
+          <view class="guide-cover-wrap">
+            <image
+              class="guide-cover"
+              src="{{item.coverImage}}"
+              mode="aspectFill"
+              binderror="onImageError"
+              data-index="{{index}}"
+            />
+          </view>
+          <view class="guide-info">
+            <text class="guide-title">{{item.title}}</text>
+            <text class="guide-city">{{item.cityText}}</text>
+            <text class="guide-stats">{{item.duration}} · {{item.shopCount}} 个地点</text>
+          </view>
+          <view class="guide-divider"></view>
+          <view class="guide-footer">
+            <view class="guide-meta">
+              <view class="guide-author-wrap">
+                <view class="guide-time-icon">
+                  <i class="mgc_time_line"></i>
+                </view>
+                <text class="guide-author">{{item.publishedAtText}}</text>
+              </view>
+              <text class="guide-likes">{{item.useRouteCount}} 人使用路线</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view class="safe-area-bottom"></view>
+  </scroll-view>
+
+  <view class="empty-state" wx:else>
+    <view class="empty-illustration">
+      <i class="mgc_send_plane_line empty-icon"></i>
+    </view>
+    <text class="empty-title">我的发布</text>
+    <text class="empty-hint">去我的路线发布攻略吧</text>
+    <view class="empty-btn" bindtap="onGoGuidePage">去我的路线</view>
+  </view>
+
+</view>

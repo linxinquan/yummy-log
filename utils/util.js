@@ -23,7 +23,7 @@ function getDistance(lat1, lng1, lat2, lng2) {
  */
 function formatDistance(meters) {
   if (meters < 1000) {
-    return meters + 'm'
+    return Math.round(meters) + 'm'
   } else {
     return (meters / 1000).toFixed(1) + 'km'
   }
@@ -32,10 +32,10 @@ function formatDistance(meters) {
 /**
  * 估算出行时间
  * @param {number} meters - 距离（米）
- * @param {string} mode - 出行方式：drive/drive 或 transit/地铁
+ * @param {string} mode - 出行方式：drive/drive 或 transit/公共交通
  */
 function estimateTime(meters, mode = 'drive') {
-  // 驾车：3分钟/公里，地铁：5分钟/公里，步行：12分钟/公里
+  // 驾车：3分钟/公里，公共交通：5分钟/公里，步行：12分钟/公里
   let speed = 3
   if (mode === 'transit') speed = 5
   if (mode === 'walk') speed = 12
@@ -352,6 +352,139 @@ function openNavigation(shop) {
   })
 }
 
+// 把名称、地址这类字符串做一层统一清洗，
+// 方便后面做“同一个地点”的模糊匹配。
+function normalizeCompareText(text = '') {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[（(][^）)]*[）)]/g, '')
+    .replace(/[·•,，。！!？?、\-—_]/g, '')
+    .trim()
+}
+
+// 读取系统里所有“可识别的地点”。
+// 这里统一合并：内置美食、扩展美食、用户导入美食、内置景点。
+function getAllKnownPlaces() {
+  const shopData = require('./shopData')
+  const foods = [...(shopData.shops || []), ...(shopData.foods || []), ...(loadData('userAddedShops', []) || [])]
+    .map(item => ({ ...item, type: item.type || 'food' }))
+  const spots = getSpotData().map(item => ({ ...item, type: 'spot' }))
+  return foods.concat(spots)
+}
+
+// 根据打卡记录里的名称、地址、类型，尽量匹配到系统已知地点。
+// 匹配成功后，足迹页和详情跳转就可以继续复用已有页面。
+function findKnownPlace(payload = {}, preferredType = '') {
+  const allPlaces = getAllKnownPlaces()
+  const type = preferredType || payload.type || ''
+  const sourceName = normalizeCompareText(payload.name || payload.spotName || '')
+  const sourceAddress = normalizeCompareText(payload.address || '')
+  const sourceId = payload.relatedPlaceId || payload.placeId || payload.id
+
+  if (sourceId !== undefined && sourceId !== null && sourceId !== '') {
+    const byId = allPlaces.find(item => String(item.id) === String(sourceId))
+    if (byId) return byId
+  }
+
+  const candidates = type
+    ? allPlaces.filter(item => item.type === type)
+    : allPlaces
+
+  const exactMatch = candidates.find(item => normalizeCompareText(item.name) === sourceName)
+  if (exactMatch) return exactMatch
+
+  const fuzzyMatch = candidates.find(item => {
+    const itemName = normalizeCompareText(item.name)
+    const itemAddress = normalizeCompareText(item.address || '')
+    if (!itemName || !sourceName) return false
+    const hitByName = itemName.includes(sourceName) || sourceName.includes(itemName)
+    const hitByAddress = sourceAddress && itemAddress
+      ? (sourceAddress.includes(itemAddress) || itemAddress.includes(sourceAddress))
+      : false
+    return hitByName || hitByAddress
+  })
+
+  return fuzzyMatch || null
+}
+
+// 把一条打卡记录转成“足迹页/已去过”可直接显示的统一地点结构。
+function buildFootprintItem(record = {}) {
+  const matchedPlace = findKnownPlace(record, record.type)
+  const fallbackType = record.type === 'spot' ? 'spot' : 'food'
+  const fallbackName = record.spotName || record.name || '未命名地点'
+  const fallbackAddress = record.address || ''
+  const fallbackImage = '/images/covers/01.jpeg'
+
+  if (matchedPlace) {
+    return {
+      ...matchedPlace,
+      type: matchedPlace.type || fallbackType,
+      coverImage: matchedPlace.coverImage || matchedPlace.image || matchedPlace.logo || matchedPlace.thumb || fallbackImage,
+      image: matchedPlace.image || matchedPlace.coverImage || matchedPlace.logo || matchedPlace.thumb || fallbackImage,
+      address: matchedPlace.address || fallbackAddress,
+      lat: matchedPlace.lat || matchedPlace.latitude || record.latitude || 0,
+      lng: matchedPlace.lng || matchedPlace.longitude || record.longitude || 0,
+      checkedInAt: record.date || '',
+      checkedInRecordId: record.id,
+      detailSource: 'catalog'
+    }
+  }
+
+  return {
+    id: `footprint-${record.id || Date.now()}`,
+    name: fallbackName,
+    type: fallbackType,
+    category: fallbackType === 'spot' ? '景点' : '美食',
+    coverImage: fallbackImage,
+    image: fallbackImage,
+    address: fallbackAddress,
+    lat: record.latitude || 0,
+    lng: record.longitude || 0,
+    rating: '',
+    tags: ['已去过'],
+    desc: record.description || '',
+    openHours: '',
+    free: fallbackType === 'spot',
+    price: '',
+    checkedInAt: record.date || '',
+    checkedInRecordId: record.id,
+    detailSource: 'record'
+  }
+}
+
+// 统一读取“足迹/已去过”的真实数据源。
+// 这里以 checkin_records 为准，并按地点去重，避免同一个地方多次采集重复展示。
+function getFootprintItems() {
+  const records = loadData('checkin_records', []) || []
+  const seenKeys = new Set()
+  const items = []
+
+  records.forEach(record => {
+    const place = buildFootprintItem(record)
+    const uniqueKey = place.detailSource === 'catalog'
+      ? `${place.type}:${place.id}`
+      : `${place.type}:${normalizeCompareText(place.name)}:${normalizeCompareText(place.address)}`
+
+    if (seenKeys.has(uniqueKey)) return
+    seenKeys.add(uniqueKey)
+    items.push(place)
+  })
+
+  return items
+}
+
+// 兼容旧页面：把“已去过”的历史存储同步成当前足迹结果。
+// 旧逻辑只支持存地点 id，所以这里只同步系统里能识别到的地点。
+function syncLegacyCheckedInFromRecords() {
+  const footprintItems = getFootprintItems()
+  const legacyIds = footprintItems
+    .filter(item => item.detailSource === 'catalog')
+    .map(item => String(item.id))
+  saveData('userCheckedIn', legacyIds)
+  return legacyIds
+}
+
 /**
  * 存储数据到本地
  */
@@ -370,11 +503,32 @@ function saveData(key, data) {
  */
 function loadData(key, defaultValue = null) {
   try {
-    return wx.getStorageSync(key) || defaultValue
+    const storageInfo = wx.getStorageInfoSync ? wx.getStorageInfoSync() : { keys: [] }
+    if (!storageInfo.keys || storageInfo.keys.indexOf(key) === -1) {
+      return defaultValue
+    }
+    return wx.getStorageSync(key)
   } catch (e) {
     console.error('读取失败:', e)
     return defaultValue
   }
+}
+
+// 统一登录校验：
+// 想去、收藏这些“用户动作”都先走这里，避免每个页面各写一套提示。
+function requireLogin(options = {}) {
+  const {
+    toastText = '请先登录',
+    duration = 1500
+  } = options
+  const userInfo = loadData('userInfo', null)
+  if (userInfo) return true
+  wx.showToast({
+    title: toastText,
+    icon: 'none',
+    duration
+  })
+  return false
 }
 
 /**
@@ -506,6 +660,29 @@ function isLiked(id, type = 'food') {
 }
 
 // ============================================================
+// 收藏功能（支持美食和景点）
+// ============================================================
+
+function toggleCollect(id, type = 'food') {
+  const key = type === 'food' ? 'userCollectedFoods' : 'userCollectedSpots'
+  const list = loadData(key, [])
+  const strId = String(id)
+  const idx = list.findIndex(v => String(v) === strId)
+  if (idx > -1) {
+    list.splice(idx, 1)
+  } else {
+    list.push(strId)
+  }
+  saveData(key, list)
+  return list.includes(strId)
+}
+
+function isCollected(id, type = 'food') {
+  const key = type === 'food' ? 'userCollectedFoods' : 'userCollectedSpots'
+  return loadData(key, []).some(v => String(v) === String(id))
+}
+
+// ============================================================
 // 路线规划（统一支持美食和景点）
 // ============================================================
 
@@ -594,6 +771,7 @@ module.exports = {
   parseBlockBasedGuide,
   getNavigationUrl,
   openWechatNavigation,
+  openGaodeNavigation,
   openDirectNavigation,
   getBaiduPanoramaUrl,
   getTencentStaticUrl,
@@ -605,8 +783,14 @@ module.exports = {
   showSuccess,
   showError,
   getUserShops,
+  findKnownPlace,
+  getFootprintItems,
+  syncLegacyCheckedInFromRecords,
+  requireLogin,
   toggleLike,
   isLiked,
+  toggleCollect,
+  isCollected,
   getWantSpots,
   toggleSpotLike,
   isSpotLiked,
