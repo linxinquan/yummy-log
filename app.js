@@ -2,6 +2,9 @@
 // 版本：V1.0.2（2026-04-01）
 // 更新：路线规划页支持起点/终点自定义选择；首页想去浮动按钮跳转清单页
 
+// 引入云数据访问层
+const cloudData = require('./utils/cloudData')
+
 App({
   globalData: {
     userInfo: null,
@@ -35,11 +38,61 @@ App({
         traceUser: true
       })
       console.log('[CloudBase] 初始化完成')
+      
+      // 预加载数据（提升首次访问速度）
+      this.preloadData()
     }
     // ───────────────────────────────────────────
 
     // 启动时获取用户位置
     this.getUserLocation()
+  },
+  
+  // 预加载云数据库数据（使用持久化缓存）
+  preloadData() {
+    console.log('[App] 开始预加载数据...')
+    
+    // 使用新的缓存机制：优先从本地缓存读取，后台静默更新
+    cloudData.preloadData()
+    
+    // 可选：监听缓存更新完成
+    setTimeout(() => {
+      const status = cloudData.getCacheStatus()
+      console.log('[App] 缓存状态:', status)
+    }, 2000)
+  },
+
+  // 强制刷新所有数据（如下拉刷新时调用）
+  async refreshAllData() {
+    try {
+      wx.showLoading({ title: '刷新数据中...' })
+      const { spots, restaurants } = await cloudData.refreshAllData()
+      console.log('[App] 数据刷新完成 - 景点:', spots.length, '餐厅:', restaurants.length)
+      wx.hideLoading()
+      return { spots, restaurants }
+    } catch (e) {
+      console.error('[App] 数据刷新失败:', e)
+      wx.hideLoading()
+      wx.showToast({
+        title: '刷新失败，使用缓存数据',
+        icon: 'none'
+      })
+      throw e
+    }
+  },
+
+  // 获取缓存状态（调试用）
+  getCacheStatus() {
+    return cloudData.getCacheStatus()
+  },
+
+  // 清除所有缓存
+  clearAllCache() {
+    cloudData.clearCache()
+    wx.showToast({
+      title: '缓存已清除',
+      icon: 'success'
+    })
   },
 
   // 获取用户位置（返回 Promise）

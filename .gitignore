@@ -11,3 +11,4 @@ cloud/*/node_modules/
 skills-lock.json
 
 /dataScript
+/migration

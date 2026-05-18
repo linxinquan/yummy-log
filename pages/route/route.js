@@ -2,22 +2,24 @@
 const app = getApp()
 const shopData = require('../../utils/shopData')
 const util = require('../../utils/util')
+const mapConfig = require('../../config/map-config')
+const locationUtil = require('../../utils/location')
 
 Page({
   data: {
     // 地图
-    mapCenter: { lat: 22.4846, lng: 113.9046 },
+    mapCenter: mapConfig.DEFAULT_CENTER,
     mapScale: 14,
     markers: [],
     polyline: [],
 
     // 起点（默认使用当前位置）
     startPoints: shopData.startPoints,
-    currentStart: { name: '当前位置', type: 'current', lat: 22.4798, lng: 113.9125 },
+    currentStart: { name: '当前位置', type: 'current', lat: mapConfig.DEFAULT_START.lat, lng: mapConfig.DEFAULT_START.lng },
     startExpanded: false,
 
     // 终点（默认返回起点）
-    currentEnd: { name: '返回起点', type: 'return', lat: 22.4798, lng: 113.9125 },
+    currentEnd: { name: '返回起点', type: 'return', lat: mapConfig.DEFAULT_START.lat, lng: mapConfig.DEFAULT_START.lng },
     endExpanded: false,
 
     // 出行方式
@@ -70,33 +72,29 @@ Page({
     }
   },
 
+
   // ─── 获取定位 ─────────────────────────────────
-  getCurrentLocation() {
-    wx.getLocation({
-      type: 'gcj02',
-      isHighAccuracy: true,
-      success: (res) => {
-        const location = { lat: res.latitude, lng: res.longitude, name: '当前位置' }
-        app.globalData.location = location
-        this.setData({ currentLocation: location })
+  async getCurrentLocation() {
+    try {
+      const location = await locationUtil.getCurrentLocation()
+      this.setData({ currentLocation: location })
+      if (this.data.currentStart.type === 'current') {
+        this.setData({ currentStart: { ...this.data.currentStart, ...location } })
+      }
+      if (this.data.currentEnd.type === 'return') {
+        this.setData({ currentEnd: { name: '返回起点', type: 'return', lat: location.lat, lng: location.lng } })
+      }
+      this.loadRoute()
+    } catch (err) {
+      console.warn('[获取定位] 失败，使用缓存位置', err)
+      const fallback = app.globalData.location || app.globalData.centerLocation
+      if (fallback) {
+        this.setData({ currentLocation: fallback })
         if (this.data.currentStart.type === 'current') {
-          this.setData({ currentStart: { ...this.data.currentStart, ...location } })
-        }
-        if (this.data.currentEnd.type === 'return') {
-          this.setData({ currentEnd: { name: '返回起点', type: 'return', lat: res.latitude, lng: res.longitude } })
-        }
-        this.loadRoute()
-      },
-      fail: () => {
-        const fallback = app.globalData.location || app.globalData.centerLocation
-        if (fallback) {
-          this.setData({ currentLocation: fallback })
-          if (this.data.currentStart.type === 'current') {
-            this.setData({ currentStart: { ...this.data.currentStart, lat: fallback.lat, lng: fallback.lng } })
-          }
+          this.setData({ currentStart: { ...this.data.currentStart, lat: fallback.lat, lng: fallback.lng } })
         }
       }
-    })
+    }
   },
 
   // ─── 加载路线 ─────────────────────────────────
@@ -177,11 +175,11 @@ Page({
     }
 
     this.updateMap()
-    
+
     // 延迟重置标志，确保updateMap完成
     setTimeout(() => {
       this._isLoadingRoute = false
-    }, 100)
+    }, mapConfig.ROUTE_CONFIG.LOADING_RESET_DELAY)
   },
 
   // ─── 贪心排序并注入距离 ───────────────────────
@@ -213,7 +211,7 @@ Page({
     const { routeShops, currentStart, currentEnd, travelMode } = this.data
     let startPoint = currentStart
     if (currentStart.type === 'current') {
-      startPoint = app.globalData.location || { lat: 22.4846, lng: 113.9046 }
+      startPoint = app.globalData.location || mapConfig.DEFAULT_CENTER
     }
     // 终点：如果 type === 'return' 则终点 = 起点
     let endPoint = currentEnd
@@ -232,7 +230,7 @@ Page({
         color: '#ffffff',
         fontSize: 14,
         borderRadius: 12,
-        bgColor: '#00D9C0',
+        bgColor: mapConfig.THEME_COLORS.primary,
         padding: 5,
         anchorX: 0,
         anchorY: -40
@@ -260,7 +258,7 @@ Page({
         color: '#ffffff',
         fontSize: 12,
         borderRadius: 10,
-        bgColor: '#4CAF50',
+        bgColor: mapConfig.THEME_COLORS.start,
         padding: 4,
         anchorX: 0,
         anchorY: -32
@@ -280,7 +278,7 @@ Page({
           color: '#ffffff',
           fontSize: 12,
           borderRadius: 10,
-          bgColor: '#FF5722',
+          bgColor: mapConfig.THEME_COLORS.end,
           padding: 4,
           anchorX: 0,
           anchorY: -32
@@ -290,11 +288,11 @@ Page({
 
     // 根据出行方式设置路线颜色
     const modeColors = {
-      drive: '#4A90D9',   // 驾车 - 蓝色
-      transit: '#9B59B6', // 地铁 - 紫色
-      walk: '#27AE60'     // 步行 - 绿色
+      drive: mapConfig.THEME_COLORS.drive,
+      transit: mapConfig.THEME_COLORS.transit,
+      walk: mapConfig.THEME_COLORS.walk
     }
-    const routeColor = modeColors[travelMode] || '#00D9C0'
+    const routeColor = modeColors[travelMode] || mapConfig.THEME_COLORS.primary
 
     // 构建所有途经点
     const allPoints = [
@@ -346,14 +344,9 @@ Page({
   _fetchRealRoute(allPoints, routeColor, markers, startPoint, routeShops) {
     const key = app.globalData.qqMapKey
     const { travelMode, currentEnd } = this.data
-    
-    // 腾讯地图路径规划模式: driving(驾车), transit(公交), walking(步行)
-    const modeMap = {
-      drive: 'driving',
-      transit: 'transit',
-      walk: 'walking'
-    }
-    const mode = modeMap[travelMode] || 'driving'
+
+    // 腾讯地图路径规划模式（从配置获取）
+    const mode = mapConfig.TRAVEL_MODE_MAP[travelMode] || mapConfig.TRAVEL_MODE_MAP.drive
 
     // 处理终点是"返回起点"的情况
     let effectivePoints = [...allPoints]
@@ -383,9 +376,9 @@ Page({
     const from = allPoints[0]
     const to = allPoints[allPoints.length - 1]
     const waypoints = allPoints.slice(1, -1).map(p => `${p.latitude},${p.longitude}`).join(';')
-    
-    const url = `https://apis.map.qq.com/ws/direction/v1/driving/?from=${from.latitude},${from.longitude}&to=${to.latitude},${to.longitude}&waypoints=${waypoints}&key=${key}`
-    
+
+    const url = `${mapConfig.QQ_MAP_API_BASE}/driving/?from=${from.latitude},${from.longitude}&to=${to.latitude},${to.longitude}&waypoints=${waypoints}&key=${key}`
+
     console.log('[驾车路线] 请求URL:', url)
 
     wx.request({
@@ -451,8 +444,8 @@ Page({
       }
 
       const seg = segments[index]
-      const url = `https://apis.map.qq.com/ws/direction/v1/${mode}/?from=${seg.from.latitude},${seg.from.longitude}&to=${seg.to.latitude},${seg.to.longitude}&key=${key}`
-      
+      const url = `${mapConfig.QQ_MAP_API_BASE}/${mode}/?from=${seg.from.latitude},${seg.from.longitude}&to=${seg.to.latitude},${seg.to.longitude}&key=${key}`
+
       console.log(`[分段路线] 请求第${index + 1}/${segments.length}段:`, url)
 
       wx.request({
@@ -478,8 +471,8 @@ Page({
         },
         complete: () => {
           completedCount++
-          // 延迟1100ms请求下一段，避免限流
-          setTimeout(() => requestSegment(index + 1), 1100)
+          // 延迟请求下一段，避免限流
+          setTimeout(() => requestSegment(index + 1), mapConfig.ROUTE_CONFIG.API_DELAY)
         }
       })
     }
@@ -525,18 +518,10 @@ Page({
   // ─── 生成模拟真实路线（带弯曲效果）─────────────
   _generateSimulatedRoute(from, to, mode) {
     const points = []
-    const steps = 20 // 插值点数
-    
-    // 计算中点，添加随机偏移模拟道路弯曲
-    const midLat = (from.latitude + to.latitude) / 2
-    const midLng = (from.longitude + to.longitude) / 2
-    
+    const steps = mapConfig.ROUTE_CONFIG.SIMULATION_STEPS // 插值点数
+
     // 根据出行方式调整弯曲程度
-    const bendFactor = {
-      drive: 0.0003,    // 驾车弯曲度小
-      transit: 0.0005,  // 地铁弯曲度中等
-      walk: 0.0002      // 步行弯曲度最小
-    }[mode] || 0.0003
+    const bendFactor = mapConfig.BEND_FACTOR[mode] || mapConfig.BEND_FACTOR.drive
     
     // 添加垂直于直线的偏移
     const dx = to.longitude - from.longitude
@@ -661,7 +646,7 @@ Page({
 
     let startPoint = currentStart
     if (currentStart.type === 'current') {
-      startPoint = app.globalData.location || { lat: 22.4846, lng: 113.9046 }
+      startPoint = app.globalData.location || mapConfig.DEFAULT_CENTER
     }
     let endPoint = currentEnd
     if (currentEnd.type === 'return') {
@@ -679,12 +664,15 @@ Page({
     const latSpan = maxLat - minLat
     const lngSpan = maxLng - minLng
     const span = Math.max(latSpan, lngSpan)
-    let scale = 14
-    if (span > 0.1) scale = 11
-    else if (span > 0.05) scale = 12
-    else if (span > 0.02) scale = 13
-    else if (span > 0.01) scale = 14
-    else scale = 15
+    let scale = mapConfig.DEFAULT_MAP_SCALE
+
+    // 根据配置化的阈值确定缩放级别
+    for (const item of mapConfig.MAP_SCALE_THRESHOLDS) {
+      if (span > item.threshold) {
+        scale = item.scale
+        break
+      }
+    }
 
     this.setData({ mapCenter: { lat: centerLat, lng: centerLng }, mapScale: scale })
   },
@@ -754,35 +742,35 @@ Page({
     this.setData({ startExpanded: !this.data.startExpanded })
   },
 
-  onSelectStart(e) {
+  async onSelectStart(e) {
     const start = e.currentTarget.dataset.start
     if (start.type === 'current') {
-      wx.showLoading({ title: '定位中...' })
-      wx.getLocation({
-        type: 'gcj02',
-        isHighAccuracy: true,
-        success: (res) => {
-          wx.hideLoading()
-          const loc = { lat: res.latitude, lng: res.longitude }
-          app.globalData.location = loc
-          this.setData({
-            currentStart: { ...start, lat: loc.lat, lng: loc.lng },
-            startExpanded: false
-          })
-          this.loadRoute()
-        },
-        fail: () => {
-          wx.hideLoading()
-          const fallback = app.globalData.location || app.globalData.centerLocation
+      try {
+        locationUtil.showLocationLoading()
+        const loc = await locationUtil.getCurrentLocation()
+        this.setData({
+          currentStart: { ...start, lat: loc.lat, lng: loc.lng },
+          startExpanded: false
+        })
+        this.loadRoute()
+        locationUtil.hideLocationLoading()
+        wx.showToast({ title: '定位成功', icon: 'success' })
+      } catch (err) {
+        locationUtil.hideLocationLoading()
+        // 使用缓存位置
+        try {
+          const fallback = await locationUtil.getLocationWithFallback()
           this.setData({
             currentStart: { ...start, lat: fallback.lat, lng: fallback.lng },
             startExpanded: false
           })
           this.loadRoute()
           wx.showToast({ title: '使用上次位置', icon: 'none' })
+        } catch (e) {
+          wx.showToast({ title: '定位失败，请检查权限', icon: 'none' })
         }
-      })
-      } else {
+      }
+    } else {
       this.setData({ currentStart: start, startExpanded: false })
       // 如果终点是"返回起点"，同步更新
       if (this.data.currentEnd.type === 'return') {
@@ -819,7 +807,7 @@ Page({
     this.setData({ endExpanded: !this.data.endExpanded })
   },
 
-  onSelectEnd(e) {
+  async onSelectEnd(e) {
     const endtype = e.currentTarget.dataset.endtype
     const end = e.currentTarget.dataset.end
 
@@ -839,32 +827,31 @@ Page({
 
     if (end.type === 'current') {
       // 获取当前位置作为终点
-      wx.showLoading({ title: '定位中...' })
-      wx.getLocation({
-        type: 'gcj02',
-        isHighAccuracy: true,
-        success: (res) => {
-          wx.hideLoading()
-          const loc = { lat: res.latitude, lng: res.longitude }
-          app.globalData.location = loc
-          this.setData({
-            currentEnd: { ...end, lat: loc.lat, lng: loc.lng },
-            endExpanded: false
-          })
-          this.updateMap()
-          wx.showToast({ title: '终点已设置', icon: 'success' })
-        },
-        fail: () => {
-          wx.hideLoading()
-          const fallback = app.globalData.location || app.globalData.centerLocation
+      try {
+        locationUtil.showLocationLoading()
+        const loc = await locationUtil.getCurrentLocation()
+        this.setData({
+          currentEnd: { ...end, lat: loc.lat, lng: loc.lng },
+          endExpanded: false
+        })
+        this.updateMap()
+        locationUtil.hideLocationLoading()
+        wx.showToast({ title: '终点已设置', icon: 'success' })
+      } catch (err) {
+        locationUtil.hideLocationLoading()
+        // 使用缓存位置
+        try {
+          const fallback = await locationUtil.getLocationWithFallback()
           this.setData({
             currentEnd: { ...end, lat: fallback.lat, lng: fallback.lng },
             endExpanded: false
           })
           this.updateMap()
           wx.showToast({ title: '使用上次位置', icon: 'none' })
+        } catch (e) {
+          wx.showToast({ title: '定位失败，请检查权限', icon: 'none' })
         }
-      })
+      }
     } else {
       this.setData({ currentEnd: end, endExpanded: false })
       this.updateMap()
@@ -926,7 +913,7 @@ Page({
       this.updateMap()
       wx.hideLoading()
       wx.showToast({ title: '贪心优化完成', icon: 'success' })
-    }, 400)
+    }, mapConfig.ROUTE_CONFIG.OPTIMIZE_DELAY)
   },
 
   // ─── 🎯 全局最优（DP）────────────────────────
@@ -935,8 +922,8 @@ Page({
       ? this.data.allLikedShops
       : this.data.allLikedShops.filter(s => s.selected)
 
-    if (shops.length > 15) {
-      wx.showToast({ title: '地点超过15个，使用贪心算法', icon: 'none', duration: 2500 })
+    if (shops.length > mapConfig.ROUTE_CONFIG.MAX_DP_SHOPS) {
+      wx.showToast({ title: `地点超过${mapConfig.ROUTE_CONFIG.MAX_DP_SHOPS}个，使用贪心算法`, icon: 'none', duration: 2500 })
     }
 
     if (shops.length === 0) {
@@ -944,7 +931,7 @@ Page({
       return
     }
 
-    wx.showLoading({ title: shops.length > 15 ? '贪心优化中...' : '全局最优计算中...' })
+    wx.showLoading({ title: shops.length > mapConfig.ROUTE_CONFIG.MAX_DP_SHOPS ? '贪心优化中...' : '全局最优计算中...' })
 
     // DP计算需要一些时间，使用setTimeout避免阻塞UI
     setTimeout(() => {
@@ -977,13 +964,14 @@ Page({
         optimizeMode: 'dp'
       })
 
+
       this.updateMap()
       wx.hideLoading()
       wx.showToast({
-        title: shops.length > 15 ? '贪心优化完成' : '全局最优路线',
+        title: shops.length > mapConfig.ROUTE_CONFIG.MAX_DP_SHOPS ? '贪心优化完成' : '全局最优路线',
         icon: 'success'
       })
-    }, 100)
+    }, mapConfig.ROUTE_CONFIG.DP_CALC_DELAY)
   },
 
   // ─── 顺序调整 ─────────────────────────────────
@@ -1063,7 +1051,7 @@ Page({
           color: '#ffffff',
           fontSize: 16,
           borderRadius: 14,
-          bgColor: '#00D9C0',
+          bgColor: mapConfig.THEME_COLORS.primary,
           padding: 6,
           anchorX: 0,
           anchorY: -50
@@ -1075,7 +1063,7 @@ Page({
         { latitude: currentLoc.lat, longitude: currentLoc.lng },
         { latitude: currentShop.lat || currentShop.latitude, longitude: currentShop.lng || currentShop.longitude }
       ],
-      color: '#00D9C0',
+      color: mapConfig.THEME_COLORS.primary,
       width: 6,
       dottedLine: true
     }]
@@ -1144,28 +1132,25 @@ Page({
     })
   },
 
+
   // ─── 定位 ─────────────────────────────────────
-  onLocateMe() {
-    wx.showLoading({ title: '定位中...' })
-    wx.getLocation({
-      type: 'gcj02',
-      isHighAccuracy: true,
-      success: (res) => {
-        wx.hideLoading()
-        const location = { lat: res.latitude, lng: res.longitude, name: '我的位置' }
-        app.globalData.location = location
-        this.setData({ currentLocation: location })
-        if (this.data.currentStart.type === 'current') {
-          this.setData({ currentStart: { ...this.data.currentStart, ...location } })
-          this.loadRoute()
-        }
-        wx.showToast({ title: '定位成功', icon: 'success' })
-      },
-      fail: () => {
-        wx.hideLoading()
-        wx.showToast({ title: '定位失败，请检查权限', icon: 'none' })
+  async onLocateMe() {
+    try {
+      locationUtil.showLocationLoading()
+      const location = await locationUtil.getCurrentLocation()
+      location.name = '我的位置' // 添加名称
+      this.setData({ currentLocation: location })
+      if (this.data.currentStart.type === 'current') {
+        this.setData({ currentStart: { ...this.data.currentStart, ...location } })
+        this.loadRoute()
       }
-    })
+      locationUtil.hideLocationLoading()
+      wx.showToast({ title: '定位成功', icon: 'success' })
+    } catch (err) {
+      locationUtil.hideLocationLoading()
+      console.warn('[定位] 失败', err)
+      wx.showToast({ title: '定位失败，请检查权限', icon: 'none' })
+    }
   },
 
   onBackToHome() {
