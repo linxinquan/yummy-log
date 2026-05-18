@@ -47,7 +47,7 @@
       <text>分享</text>
     </button>
     <!-- 编辑按钮：补上编辑图标，保持主按钮样式 -->
-    <view class="action-btn action-btn-dark action-btn-edit" bindtap="onOpenEditSheet">
+    <view class="action-btn action-btn-dark action-btn-main action-btn-edit" bindtap="onOpenEditSheet">
       <i class="mgc_pencil_3_line action-btn-inline-icon"></i>
       <text>编辑</text>
     </view>

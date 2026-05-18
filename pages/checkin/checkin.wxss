@@ -289,6 +289,7 @@ page {
   padding: 0 16rpx;
   border-radius: 999rpx;
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   gap: 8rpx;
@@ -317,6 +318,12 @@ page {
   color: #060606;
 }
 
+.action-btn-text-secondary {
+  width: 188rpx;
+  flex: none;
+  padding: 0 16rpx;
+}
+
 .action-btn-icon {
   width: 96rpx;
   padding: 0;
@@ -330,8 +337,8 @@ page {
 
 /* 文字按钮内的小图标：和文案横向排布 */
 .action-btn-inline-icon {
-  font-size: 32rpx;
-  line-height: 32rpx;
+  font-size: 40rpx;
+  line-height: 40rpx;
   flex-shrink: 0;
 }
 
@@ -339,6 +346,10 @@ page {
   flex: 1;
   min-width: 0;
   background: #242529;
+}
+
+.action-btn-main {
+  gap: 8rpx;
 }
 
 .action-btn-dark text {
