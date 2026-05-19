@@ -1,6 +1,5 @@
 const util = require('../../utils/util')
-const { shops, shopNameMap } = require('../../utils/shopData')
-const { spotData } = require('../../utils/spotData')
+const placesData = require('../../utils/placesData')
 const { applyTravelMeta, buildTravelOptions } = require('../../utils/travel')
 const { buildMapPreviewViewData } = require('../../utils/map-preview')
 const { resolveDisplayCategory } = require('../../utils/displayCategory')
@@ -133,21 +132,16 @@ function findMatchedPlace(name) {
   const normalized = normalizeName(name)
   if (!normalized) return null
 
-  const matchedShop = shops.find(item => normalizeName(item.name) === normalized)
-  if (matchedShop) return matchedShop
+  const allPlaces = placesData.getAllPlaces()
+  const matchedPlace = allPlaces.find(item => normalizeName(item.name) === normalized)
+  if (matchedPlace) return matchedPlace
 
-  const aliasTarget = Object.keys(shopNameMap).find(alias => {
-    const normalizedAlias = normalizeName(alias)
-    return normalized.includes(normalizedAlias) || normalizedAlias.includes(normalized)
+  // 尝试匹配别名（简化逻辑：直接在allPlaces中查找）
+  const matchedPlace2 = allPlaces.find(item => {
+    const itemName = normalizeName(item.name)
+    return normalized.includes(itemName) || itemName.includes(normalized)
   })
-  if (aliasTarget) {
-    const shopName = shopNameMap[aliasTarget]
-    const aliasShop = shops.find(item => item.name === shopName)
-    if (aliasShop) return aliasShop
-  }
-
-  const matchedSpot = (spotData || []).find(item => normalizeName(item.name) === normalized)
-  if (matchedSpot) return matchedSpot
+  if (matchedPlace2) return matchedPlace2
 
   const xianPoi = Object.keys(XIAN_POI_MAP).find(key => normalizeName(key) === normalized)
   return xianPoi ? XIAN_POI_MAP[xianPoi] : null
@@ -404,9 +398,9 @@ Page({
 
   // 页面初始化：解析攻略数据，并同步列表、地图和预览卡片。
   onLoad(options) {
-    const sysInfo = wx.getSystemInfoSync()
+    const windowInfo = wx.getWindowInfo()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
-    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (windowInfo.statusBarHeight || 44) + 4
     const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
     const modeSwitchTop = menuTop
     const tabStickyTop = menuTop + menuHeight + 24
@@ -517,11 +511,11 @@ Page({
       return
     }
 
-    const sysInfo = wx.getSystemInfoSync()
+    const windowInfo = wx.getWindowInfo()
     const mapCtx = wx.createMapContext('guideDetailMap', this)
     mapCtx.includePoints({
       points,
-      padding: [96, 24, Math.round((sysInfo.windowHeight || 812) * 0.34), 24]
+      padding: [96, 24, Math.round((windowInfo.windowHeight || 812) * 0.34), 24]
     })
   },
 

@@ -7,9 +7,9 @@ Page({
   },
 
   onLoad(query) {
-    const sysInfo = wx.getSystemInfoSync()
+    const windowInfo = wx.getWindowInfo()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
-    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (windowInfo.statusBarHeight || 44) + 4
     const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
     this.setData({
       type: query.type === 'spot' ? 'spot' : 'food',

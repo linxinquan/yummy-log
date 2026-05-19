@@ -1,6 +1,6 @@
 // 觅食图 - 我的页面 v5.1 觅食迹版
 const app = getApp()
-const shopData = require('../../utils/shopData')
+const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
 let checkinUtil = null
 try {
@@ -101,7 +101,7 @@ Page({
     this.loadCheckinStats()
   },
 
-  // 读取打卡统计、最近邮票、地图点位这些“足迹”相关数据。
+  // 读取打卡统计、最近邮票、地图点位这些"足迹"相关数据。
   loadCheckinStats() {
     if (!checkinUtil) return
     try {
@@ -213,7 +213,7 @@ Page({
     }
   },
 
-  // 统一采集入口：先让用户选“美食采集”还是“景点采集”
+  // 统一采集入口：先让用户选"美食采集"还是"景点采集"
   onGoCheckin() {
     wx.showActionSheet({
       itemList: ['美食采集', '景点采集'],
@@ -430,12 +430,12 @@ Page({
     }
   },
 
-  // 读取“想去 / 到访 / 自己添加的地点”等统计数据。
+  // 读取"想去 / 到访 / 自己添加的地点"等统计数据。
   loadData() {
     const userAddedShops = util.loadData('userAddedShops', [])
-    const foodItems = [...shopData.shops, ...(shopData.foods || []), ...userAddedShops]
+    const foodItems = [...placesData.getFoods(), ...userAddedShops]
       .map(item => ({ ...item, type: 'food' }))
-    const spotItems = util.getSpotData().map(item => ({ ...item, type: 'spot' }))
+    const spotItems = placesData.getSpots().map(item => ({ ...item, type: 'spot' }))
     const allItems = [...foodItems, ...spotItems]
     const itemMap = {}
     allItems.forEach(item => {
@@ -494,7 +494,7 @@ Page({
     openPlaceDetail(shop)
   },
 
-  // 从“想去”里移除一个地点。
+  // 从"想去"里移除一个地点。
   onRemoveLiked(e) {
     const shopId = e.currentTarget.dataset.shopid
     const type = e.currentTarget.dataset.type || 'food'
@@ -528,7 +528,7 @@ Page({
     })
   },
 
-  // 跳到“想去”页。
+  // 跳到"想去"页。
   onGoWantgo() {
     wx.switchTab({ url: '/pages/wantgo/wantgo' })
   },
@@ -590,7 +590,7 @@ Page({
   // 双地图横向滚动时，同步当前页码指示。
   onJourneyScroll(e) {
     const scrollLeft = e.detail.scrollLeft
-    const cardWidth = wx.getSystemInfoSync().windowWidth - 80 // 减去边距
+    const cardWidth = wx.getWindowInfo().windowWidth - 80 // 减去边距
     const index = Math.round(scrollLeft / cardWidth)
     if (index !== this.data.journeyIndex) {
       this.setData({ journeyIndex: index })

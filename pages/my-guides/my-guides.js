@@ -1,7 +1,6 @@
 // 觅食图 - 我的攻略页面
 const util = require('../../utils/util')
-const shopData = require('../../utils/shopData')
-const spotData = require('../../utils/spotData')
+const placesData = require('../../utils/placesData')
 const { normalizeTripDurationText } = require('../../utils/trip-duration')
 const { backfillStoredGuides } = require('../../utils/guide-backfill')
 
@@ -93,10 +92,10 @@ Page({
 
   // 初始化导航栏高度和左滑删除宽度。
   initNavigationBar() {
-    const sysInfo = wx.getSystemInfoSync()
+    const windowInfo = wx.getWindowInfo()
     this.setData({
-      statusBarHeight: sysInfo.statusBarHeight || 44,
-      deleteActionWidthPx: sysInfo.windowWidth * DELETE_ACTION_WIDTH_RPX / 750
+      statusBarHeight: windowInfo.statusBarHeight || 44,
+      deleteActionWidthPx: windowInfo.windowWidth * DELETE_ACTION_WIDTH_RPX / 750
     })
   },
 
@@ -117,8 +116,8 @@ Page({
 
           if (!nextGuide.coverImage && nextGuide.content && nextGuide.content.length > 0) {
             const firstItem = nextGuide.content[0]
-            const allShops = [...(shopData.shops || []), ...(shopData.foods || [])]
-            const allSpots = spotData.spotData || []
+            const allShops = placesData.getFoods()
+            const allSpots = placesData.getSpots()
 
             const shop = allShops.find(s => String(s.id) === String(firstItem.id))
             if (shop) {

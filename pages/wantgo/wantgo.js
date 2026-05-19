@@ -1,7 +1,7 @@
 // 觅食图 V1 - 想去清单页（支持美食/景点/到访，拖拽排序）
 const app = getApp()
 const util = require('../../utils/util')
-const shopData = require('../../utils/shopData')
+const placesData = require('../../utils/placesData')
 const { applyTravelMeta, buildTravelOptions } = require('../../utils/travel')
 const { resolveDisplayCategory } = require('../../utils/displayCategory')
 const { formatTripDuration, normalizeTripSummaryText } = require('../../utils/trip-duration')
@@ -138,11 +138,11 @@ function normalizePlaceCardItems(items) {
 
 // 给路线卡片准备一组本地封面兜底池。
 function buildRouteCoverPool() {
-  const foodCovers = [...(shopData.shops || []), ...(shopData.foods || []), ...(util.loadData('userAddedShops', []) || [])]
-    .map(item => item.logo || item.image || item.thumb || item.coverImage)
+  const foodCovers = [...placesData.getFoods(), ...(util.loadData('userAddedShops', []) || [])]
+    .map(item => item.coverImage || item.displayImage || item.logo || item.image || item.thumb)
     .filter(Boolean)
-  const spotCovers = (util.getSpotData() || [])
-    .map(item => item.image || item.logo || item.thumb || item.coverImage)
+  const spotCovers = placesData.getSpots()
+    .map(item => item.coverImage || item.displayImage || item.image || item.logo || item.thumb)
     .filter(Boolean)
   return [...foodCovers, ...spotCovers, DEFAULT_COVER]
 }
@@ -410,12 +410,11 @@ Page({
       const foodIds = util.loadData('userWantFoods', [])
       const spotIds = util.loadData('userWantSpots', [])
       
-      const foods = shopData.foods || []
-      const shops = shopData.shops || []
+      const foods = placesData.getFoods()
+      const spots = placesData.getSpots()
       const userShops = util.loadData('userAddedShops', [])
-      const spots = util.getSpotData()
       
-      const allFoodItems = [...shops, ...foods, ...userShops]
+      const allFoodItems = [...foods, ...userShops]
       
       const foodItems = foodIds
         .map(id => allFoodItems.find(s => String(s.id) === String(id)))

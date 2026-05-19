@@ -1,6 +1,5 @@
 const util = require('../../utils/util')
-const shopData = require('../../utils/shopData')
-const { spotData } = require('../../utils/spotData')
+const placesData = require('../../utils/placesData')
 const {
   applyTravelMeta,
   MODE_CONFIG,
@@ -63,11 +62,11 @@ const TRANSPORT_PREFERENCE_OPTIONS = [
 
 // 给城市卡片准备图片池。
 function buildCityCoverPool() {
-  const foodCovers = [...(shopData.shops || []), ...(shopData.foods || [])]
-    .map(item => item.logo || item.image || item.thumb)
+  const foodCovers = placesData.getFoods()
+    .map(item => item.coverImage || item.displayImage || item.logo || item.image || item.thumb)
     .filter(Boolean)
-  const spotCovers = (spotData || [])
-    .map(item => item.image)
+  const spotCovers = placesData.getSpots()
+    .map(item => item.coverImage || item.displayImage || item.image)
     .filter(Boolean)
   return [...foodCovers, ...spotCovers]
 }

@@ -1,24 +1,23 @@
 // 觅食图 - 店铺详情页
-// 这个页面复用了景点详情页的模板，所以这里主要负责把“店铺数据”
+// 这个页面复用了景点详情页的模板，所以这里主要负责把"店铺数据"
 // 转成那个模板能直接使用的格式。
-const shopData = require('../../utils/shopData')
-const spotData = require('../../utils/spotData')
+const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
 
-// 读取系统里所有可作为“美食详情”来源的店铺。
+// 读取系统里所有可作为"美食详情"来源的店铺。
 function buildAllFoodItems() {
   const userAddedShops = util.loadData('userAddedShops', [])
-  return [...(shopData.shops || []), ...(shopData.foods || []), ...userAddedShops]
+  return [...placesData.getFoods(), ...userAddedShops]
 }
 
-// 给“推荐菜”准备封面图池。
+// 给"推荐菜"准备封面图池。
 // 如果菜品本身没有图，就从现有美食/景点图片里兜底取。
 function buildCoverPool(currentCover) {
   const foodCovers = buildAllFoodItems()
-    .map(item => item.logo || item.image || item.thumb)
+    .map(item => item.coverImage || item.displayImage || item.logo || item.image || item.thumb)
     .filter(Boolean)
-  const spotCovers = (spotData.spotData || [])
-    .map(item => item.image)
+  const spotCovers = placesData.getSpots()
+    .map(item => item.coverImage || item.displayImage || item.image)
     .filter(Boolean)
 
   const uniqueCovers = [...new Set([currentCover, ...foodCovers, ...spotCovers].filter(Boolean))]
@@ -43,12 +42,12 @@ Page({
   // 2. 转成详情模板通用字段
   // 3. 加载地图、收藏状态、推荐菜
   onLoad(options) {
-    const sysInfo = wx.getSystemInfoSync()
+    const windowInfo = wx.getWindowInfo()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
-    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (windowInfo.statusBarHeight || 44) + 4
     const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
     const menuRightInset = menuButtonInfo
-      ? Math.max(sysInfo.windowWidth - menuButtonInfo.left + 8, 24)
+      ? Math.max(windowInfo.windowWidth - menuButtonInfo.left + 8, 24)
       : 103
 
     // 兼容多种进入方式：直接传对象、传 shopData、只传 id。
@@ -138,7 +137,7 @@ Page({
   // 这里预留图片报错回调，当前不需要特殊处理。
   onImageError() {},
 
-  // 美食详情页底部显示的是“推荐菜”，不是附近美食。
+  // 美食详情页底部显示的是"推荐菜"，不是附近美食。
   // 所以这里把 dishes 数组转换成卡片数据。
   _loadNearbyShops(spot) {
     const coverPool = buildCoverPool(spot.image || spot.coverImage || '/images/app-logo.jpg')
@@ -166,7 +165,7 @@ Page({
     wx.showToast({ title: '请点击右上角分享', icon: 'none' })
   },
 
-  // 地址卡片点击后，打开“请选择导航地图”底部弹窗。
+  // 地址卡片点击后，打开"请选择导航地图"底部弹窗。
   onOpenNavMapSheet() {
     const { spot } = this.data
     if (!spot) return

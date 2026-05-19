@@ -1,5 +1,5 @@
 const util = require('./util')
-const shopData = require('./shopData')
+const placesData = require('./placesData')
 const { resolveDisplayCategory } = require('./displayCategory')
 const { buildPlaceCardTags } = require('./route-place-card')
 const { normalizeTripDurationText } = require('./trip-duration')
@@ -17,9 +17,9 @@ function findMatchedPlace(name = '') {
   const normalized = normalizeName(name)
   if (!normalized) return null
 
-  const foods = [...(shopData.shops || []), ...(shopData.foods || []), ...(util.loadData('userAddedShops', []) || [])]
+  const foods = [...placesData.getFoods(), ...(util.loadData('userAddedShops', []) || [])]
     .map(item => ({ ...item, type: item.type || 'food' }))
-  const spots = (util.getSpotData() || []).map(item => ({ ...item, type: item.type || 'spot' }))
+  const spots = placesData.getSpots().map(item => ({ ...item, type: item.type || 'spot' }))
   const allPlaces = foods.concat(spots)
 
   return allPlaces.find(item => {

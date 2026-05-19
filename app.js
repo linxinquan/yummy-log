@@ -2,6 +2,9 @@
 // 版本：V1.0.2（2026-04-01）
 // 更新：路线规划页支持起点/终点自定义选择；首页想去浮动按钮跳转清单页
 
+// 引入云数据访问层
+const cloudData = require('./utils/cloudData')
+
 App({
   globalData: {
     userInfo: null,
@@ -14,12 +17,12 @@ App({
       lng: 113.9046
     },
     // 地图 Key
-    qqMapKey: 'YLBBZ-VLNWJ-HFSFO-5QBUJ-SJ633-CTBFF',
+    qqMapKey: 'SWGBZ-7P2CB-LK2UO-JZYYV-6BZYQ-KEBUG',
     // 百度地图 Key（用于全景图）
     baiduMapKey: 'KuGlOjdoC0kmGUbU1Tw2OQyK6LKQ6gGa',
     // 用户行政区划信息
     districtInfo: {
-      city: '深圳市',      // 城市
+      city: '深圳',      // 城市（不带"市"后缀，与 districtMap key 一致）
       district: '南山区'   // 区
     },
     // 用户详细位置描述
@@ -35,11 +38,61 @@ App({
         traceUser: true
       })
       console.log('[CloudBase] 初始化完成')
+      
+      // 预加载数据（提升首次访问速度）
+      this.preloadData()
     }
     // ───────────────────────────────────────────
 
     // 启动时获取用户位置
     this.getUserLocation()
+  },
+  
+  // 预加载云数据库数据（使用持久化缓存）
+  preloadData() {
+    console.log('[App] 开始预加载数据...')
+    
+    // 使用新的缓存机制：优先从本地缓存读取，后台静默更新
+    cloudData.preloadData()
+    
+    // 可选：监听缓存更新完成
+    setTimeout(() => {
+      const status = cloudData.getCacheStatus()
+      console.log('[App] 缓存状态:', status)
+    }, 2000)
+  },
+
+  // 强制刷新所有数据（如下拉刷新时调用）
+  async refreshAllData() {
+    try {
+      wx.showLoading({ title: '刷新数据中...' })
+      const { spots, restaurants } = await cloudData.refreshAllData()
+      console.log('[App] 数据刷新完成 - 景点:', spots.length, '餐厅:', restaurants.length)
+      wx.hideLoading()
+      return { spots, restaurants }
+    } catch (e) {
+      console.error('[App] 数据刷新失败:', e)
+      wx.hideLoading()
+      wx.showToast({
+        title: '刷新失败，使用缓存数据',
+        icon: 'none'
+      })
+      throw e
+    }
+  },
+
+  // 获取缓存状态（调试用）
+  getCacheStatus() {
+    return cloudData.getCacheStatus()
+  },
+
+  // 清除所有缓存
+  clearAllCache() {
+    cloudData.clearCache()
+    wx.showToast({
+      title: '缓存已清除',
+      icon: 'success'
+    })
   },
 
   // 获取用户位置（返回 Promise）
@@ -89,7 +142,9 @@ App({
       success: (res) => {
         if (res.data && res.data.status === 0 && res.data.result) {
           const addr = res.data.result.address_component
-          const city = addr.city || '深圳市'
+          const cityRaw = addr.city || '深圳市'
+          // 去掉「市/自治州/盟」等后缀，与 districtMap key 保持一致
+          const city = cityRaw.replace(/市$|自治州$|盟$/, '')
           const district = addr.district || '南山区'
           const street = addr.street || ''  // 街道
           const street_number = addr.street_number || ''  // 门牌号

@@ -2,8 +2,7 @@
 // 这个页面负责：展示景点详情、底部附近美食、收藏/想去、导航和去规划路线。
 const app = getApp()
 const util = require('../../utils/util')
-const shopData = require('../../utils/shopData')
-const spotData = require('../../utils/spotData')
+const placesData = require('../../utils/placesData')
 
 // 统一解析景点详情入参：
 // 既支持传统 id，也支持足迹里传进来的完整 spotData。
@@ -16,7 +15,7 @@ function resolveSpot(options = {}) {
   }
   const id = parseInt(options.id, 10)
   if (!Number.isNaN(id)) {
-    return spotData.spotData.find(item => item.id === id) || null
+    return placesData.getPlaceById(id) || null
   }
   return null
 }
@@ -41,16 +40,16 @@ Page({
   // 2. 组装详情页需要的数据
   // 3. 加载附近美食和用户状态
   onLoad(options) {
-    const sysInfo = wx.getSystemInfoSync()
+    const windowInfo = wx.getWindowInfo()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
-    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (windowInfo.statusBarHeight || 44) + 4
     const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
     const menuRightInset = menuButtonInfo
-      ? Math.max(sysInfo.windowWidth - menuButtonInfo.left + 8, 24)
+      ? Math.max(windowInfo.windowWidth - menuButtonInfo.left + 8, 24)
       : 103
 
     // 优先读取真实入参；没有入参时，才回退到默认景点。
-    const sourceSpot = resolveSpot(options) || spotData.spotData[0]
+    const sourceSpot = resolveSpot(options) || placesData.getSpots()[0]
     const spot = sourceSpot ? {
       ...sourceSpot,
       wantCount: sourceSpot.wantCount || 4232
@@ -87,7 +86,7 @@ Page({
   _loadNearbyShops(spot) {
     // 把系统内置美食和用户自己添加的店一起纳入附近美食候选池。
     const userAddedShops = util.loadData('userAddedShops', [])
-    const allShops = [...(shopData.shops || []), ...(shopData.foods || []), ...userAddedShops]
+    const allShops = [...placesData.getFoods(), ...userAddedShops]
     const nearby = allShops
       .filter(s => (s.lat || s.latitude) && (s.lng || s.longitude))
       .map(s => {

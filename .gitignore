@@ -1,3 +1,6 @@
 /cloud
 /migration
 node_modules
+
+/.workbuddy
+/images/places

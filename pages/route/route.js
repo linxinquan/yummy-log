@@ -1,6 +1,6 @@
 // 觅食图 - 路线规划页 v6.0 地图+双模式+Timeline
 const app = getApp()
-const shopData = require('../../utils/shopData')
+const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
 const { MODE_CONFIG, applyTravelMeta, buildTravelOptions, formatDurationShort } = require('../../utils/travel')
 const { buildMapPreviewViewData } = require('../../utils/map-preview')
@@ -76,11 +76,11 @@ function getItemTagText(item) {
 
 // 构建本地图片池，给路线封面兜底。
 function buildLocalCoverPool() {
-  const foodCovers = [...(shopData.shops || []), ...(shopData.foods || [])]
-    .map(item => item.logo || item.image || item.thumb)
+  const foodCovers = placesData.getFoods()
+    .map(item => item.coverImage || item.displayImage || item.logo || item.image || item.thumb)
     .filter(Boolean)
-  const spotCovers = util.getSpotData()
-    .map(item => item.image || item.logo || item.thumb)
+  const spotCovers = placesData.getSpots()
+    .map(item => item.coverImage || item.displayImage || item.image || item.logo || item.thumb)
     .filter(Boolean)
   return [...foodCovers, ...spotCovers, ...DEFAULT_COVERS]
 }
@@ -156,13 +156,13 @@ function decorateRouteCardItem(item = {}) {
 // 读取所有美食数据源。
 function buildFoodItems() {
   const userShops = util.loadData('userAddedShops', [])
-  return [...(shopData.shops || []), ...(shopData.foods || []), ...userShops]
+  return [...placesData.getFoods(), ...userShops]
     .map(item => ({ ...item, type: 'food' }))
 }
 
 // 读取所有景点数据源。
 function buildSpotItems() {
-  return util.getSpotData().map(item => ({ ...item, type: 'spot' }))
+  return placesData.getSpots().map(item => ({ ...item, type: 'spot' }))
 }
 
 // 生成“第几天”文案。
@@ -537,9 +537,9 @@ Page({
     // 接收 type=food/spot 和 ids=1,2,3 参数
     const { type, ids, dayCount } = options
     const routeType = type === 'spot' ? 'spot' : type === 'plan' ? 'mixed' : 'food'
-    const sysInfo = wx.getSystemInfoSync()
+    const windowInfo = wx.getWindowInfo()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
-    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (windowInfo.statusBarHeight || 44) + 4
     const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
     const modeSwitchTop = menuTop
 
@@ -840,11 +840,11 @@ Page({
       return
     }
 
-    const sysInfo = wx.getSystemInfoSync()
+    const windowInfo = wx.getWindowInfo()
     const mapCtx = wx.createMapContext('routeMap', this)
     mapCtx.includePoints({
       points,
-      padding: [96, 24, Math.round((sysInfo.windowHeight || 812) * 0.34), 24]
+      padding: [96, 24, Math.round((windowInfo.windowHeight || 812) * 0.34), 24]
     })
   },
 

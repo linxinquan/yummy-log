@@ -38,12 +38,12 @@ Page({
   // 页面初始化：计算顶部安全区、问候语和日期条。
   onLoad() {
     const now = new Date()
-    const sysInfo = wx.getSystemInfoSync()
+    const windowInfo = wx.getWindowInfo()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
-    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (windowInfo.statusBarHeight || 44) + 4
     const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
     const menuRightInset = menuButtonInfo
-      ? Math.max(sysInfo.windowWidth - menuButtonInfo.left + 8, 24)
+      ? Math.max(windowInfo.windowWidth - menuButtonInfo.left + 8, 24)
       : 103
     const contentTop = menuTop + menuHeight + 12
     const listTop = contentTop

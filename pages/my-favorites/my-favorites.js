@@ -1,7 +1,6 @@
 // pages/my-favorites/my-favorites.js
 const app = getApp()
-const shopData = require('../../utils/shopData')
-const spotData = require('../../utils/spotData')
+const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
 const { resolveDisplayCategory } = require('../../utils/displayCategory')
 
@@ -43,13 +42,13 @@ Page({
 
   // 初始化导航栏
   initNavigationBar() {
-    const sysInfo = wx.getSystemInfoSync()
+    const windowInfo = wx.getWindowInfo()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
-    const menuTop = menuButtonInfo ? menuButtonInfo.top : (sysInfo.statusBarHeight || 44) + 4
+    const menuTop = menuButtonInfo ? menuButtonInfo.top : (windowInfo.statusBarHeight || 44) + 4
     const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
 
     this.setData({
-      statusBarHeight: sysInfo.statusBarHeight || 44,
+      statusBarHeight: windowInfo.statusBarHeight || 44,
       menuTop,
       menuHeight
     })
@@ -64,10 +63,10 @@ Page({
 
     // 构建所有美食数据
     const userAddedShops = util.loadData('userAddedShops', [])
-    const allFoods = [...(shopData.shops || []), ...(shopData.foods || []), ...userAddedShops]
+    const allFoods = [...placesData.getFoods(), ...userAddedShops]
     
     // 构建所有景点数据
-    const allSpots = spotData.spotData || []
+    const allSpots = placesData.getSpots()
 
     // 这几组是补充用的演示数据，作用和探索页一致，
     // 这样收藏页里也能完整显示文化展馆、自然户外、购物、酒店。
@@ -115,8 +114,9 @@ Page({
           return {
             ...item,
             tags: filteredTags,
-            displayImage: item.logo || item.image || item.thumb,
-            displayCategory: resolveDisplayCategory(item),
+            // 直接使用统一数据中的字段，如果没有再兼容旧数据
+            displayImage: item.coverImage || item.displayImage || item.logo || item.image || item.thumb,
+            displayCategory: item.displayCategory || resolveDisplayCategory(item),
             displayWantCount: formatWantCount(item.wantCount),
             distance,
             distanceText: util.formatDistance(distance),

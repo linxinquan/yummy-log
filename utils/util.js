@@ -59,8 +59,12 @@ function parseBlockBasedGuide(text) {
   const foundShops = []
   const notFoundShops = []
 
-  const shopData = require('./shopData')
-  const { shops, shopNameMap } = shopData
+  const placesData = require('./placesData')
+  const shops = placesData.getFoods()
+  const shopNameMap = {}
+  shops.forEach(shop => {
+    shopNameMap[shop.id] = shop.name
+  })
 
   // 清理文本
   text = text.trim()
@@ -353,7 +357,7 @@ function openNavigation(shop) {
 }
 
 // 把名称、地址这类字符串做一层统一清洗，
-// 方便后面做“同一个地点”的模糊匹配。
+// 方便后面做"同一个地点"的模糊匹配。
 function normalizeCompareText(text = '') {
   return String(text || '')
     .toLowerCase()
@@ -363,13 +367,13 @@ function normalizeCompareText(text = '') {
     .trim()
 }
 
-// 读取系统里所有“可识别的地点”。
+// 读取系统里所有"可识别的地点"。
 // 这里统一合并：内置美食、扩展美食、用户导入美食、内置景点。
 function getAllKnownPlaces() {
-  const shopData = require('./shopData')
-  const foods = [...(shopData.shops || []), ...(shopData.foods || []), ...(loadData('userAddedShops', []) || [])]
+  const placesData = require('./placesData')
+  const foods = [...placesData.getFoods(), ...(loadData('userAddedShops', []) || [])]
     .map(item => ({ ...item, type: item.type || 'food' }))
-  const spots = getSpotData().map(item => ({ ...item, type: 'spot' }))
+  const spots = placesData.getSpots().map(item => ({ ...item, type: 'spot' }))
   return foods.concat(spots)
 }
 
@@ -408,7 +412,7 @@ function findKnownPlace(payload = {}, preferredType = '') {
   return fuzzyMatch || null
 }
 
-// 把一条打卡记录转成“足迹页/已去过”可直接显示的统一地点结构。
+// 把一条打卡记录转成"足迹页/已去过"可直接显示的统一地点结构。
 function buildFootprintItem(record = {}) {
   const matchedPlace = findKnownPlace(record, record.type)
   const fallbackType = record.type === 'spot' ? 'spot' : 'food'
@@ -453,7 +457,7 @@ function buildFootprintItem(record = {}) {
   }
 }
 
-// 统一读取“足迹/已去过”的真实数据源。
+// 统一读取"足迹/已去过"的真实数据源。
 // 这里以 checkin_records 为准，并按地点去重，避免同一个地方多次采集重复展示。
 function getFootprintItems() {
   const records = loadData('checkin_records', []) || []
@@ -474,7 +478,7 @@ function getFootprintItems() {
   return items
 }
 
-// 兼容旧页面：把“已去过”的历史存储同步成当前足迹结果。
+// 兼容旧页面：把"已去过"的历史存储同步成当前足迹结果。
 // 旧逻辑只支持存地点 id，所以这里只同步系统里能识别到的地点。
 function syncLegacyCheckedInFromRecords() {
   const footprintItems = getFootprintItems()
@@ -515,7 +519,7 @@ function loadData(key, defaultValue = null) {
 }
 
 // 统一登录校验：
-// 想去、收藏这些“用户动作”都先走这里，避免每个页面各写一套提示。
+// 想去、收藏这些"用户动作"都先走这里，避免每个页面各写一套提示。
 function requireLogin(options = {}) {
   const {
     toastText = '请先登录',
@@ -603,9 +607,10 @@ let _spotData = null
 
 function getSpotData() {
   if (!_spotData) {
-    _spotData = require('./spotData')
+    const placesData = require('./placesData')
+    _spotData = placesData.getSpots()
   }
-  return _spotData.spotData || []
+  return _spotData || []
 }
 
 // ============================================================
