@@ -11,7 +11,7 @@ try {
 
 // 登录用户没有上传头像时，随机从美食 / 景点封面里挑一张，避免回退到项目 Logo。
 function getRandomProfileImage() {
-  const foodImages = (shopData.shops || [])
+  const foodImages = (placesData.getFoods() || [])
     .map((item) => item.logo || item.image || item.coverImage)
     .filter(Boolean)
   const spotImages = (util.getSpotData() || [])
