@@ -26,6 +26,13 @@ Page({
   onLoad() {
     this._markerIconCache = {}
     this._markerIdMap = {}
+    this._markerClusterMap = {}
+    this._markerMetaMap = {}
+    this._baseMapMarkers = []
+    this._baseMarkerIdMap = {}
+    this._baseMarkerClusterMap = {}
+    this._baseMarkerMetaMap = {}
+    this._expandedClusterMarkerId = null
     this._loadToken = 0
   },
 
@@ -98,38 +105,192 @@ Page({
   },
 
   // 地图改成真实 marker：
-  // 先把邮票和蓝点绘成 marker 图，再用经纬度绑定到地图上
+  // 同一地点如果有多张采集，默认直接按扇形排开显示，不再先合并成 1 张。
   async buildMapMarkers(items = []) {
     const markers = []
     this._markerIdMap = {}
+    this._markerClusterMap = {}
+    this._markerMetaMap = {}
+    // 第一步：把同一位置的多张采集合并成一个 marker，并记录数量。
+    const clusters = this.buildMarkerClusters(items)
+    // 第二步：如果多个 cluster 之间距离太近，再做轻微错位，避免 marker 互相压住。
+    const displayPoints = this.buildClusterDisplayPoints(clusters)
 
-    for (let index = 0; index < (items || []).length; index += 1) {
-      const item = items[index]
-      const markerId = index + 1
-      const iconPath = await this.generateMapMarkerIcon(item)
-      this._markerIdMap[markerId] = item.id
+    for (let index = 0; index < clusters.length; index += 1) {
+      const cluster = clusters[index]
+      const point = displayPoints[index] || {}
+      const clusterItems = cluster.items || []
+      const total = clusterItems.length
 
-      markers.push({
-        id: markerId,
-        latitude: parseFloat(item.latitude),
-        longitude: parseFloat(item.longitude),
-        iconPath,
-        width: 85,
-        height: 132,
-        anchor: {
-          x: 0.5,
-          y: 1
+      // 同一地点多张采集：直接按扇形展开显示。
+      const fanPoints = total > 1
+        ? clusterItems.map((_, itemIndex) => {
+          const startAngle = total === 2 ? -Math.PI * 0.78 : -Math.PI * 0.92
+          const endAngle = total === 2 ? -Math.PI * 0.22 : -Math.PI * 0.08
+          const angle = total === 1
+            ? -Math.PI / 2
+            : startAngle + ((endAngle - startAngle) / (total - 1)) * itemIndex
+          return this.getFanPoint(point.latitude, point.longitude, angle, 120)
+        })
+        : [{ latitude: point.latitude, longitude: point.longitude }]
+
+      for (let itemIndex = 0; itemIndex < clusterItems.length; itemIndex += 1) {
+        const item = clusterItems[itemIndex]
+        const markerId = markers.length + 1
+        const iconPath = await this.generateMapMarkerIcon(item, 1, false)
+        const markerPoint = fanPoints[itemIndex] || { latitude: point.latitude, longitude: point.longitude }
+
+        this._markerIdMap[markerId] = item.id
+        this._markerClusterMap[markerId] = [item]
+        this._markerMetaMap[markerId] = {
+          type: 'single',
+          item
         }
-      })
+
+        markers.push({
+          id: markerId,
+          latitude: markerPoint.latitude,
+          longitude: markerPoint.longitude,
+          iconPath,
+          width: 85,
+          height: 132,
+          anchor: {
+            x: 0.5,
+            y: 1
+          }
+        })
+      }
     }
 
+    this._baseMapMarkers = markers.map((item) => Object.assign({}, item))
+    this._baseMarkerIdMap = Object.assign({}, this._markerIdMap)
+    this._baseMarkerClusterMap = Object.assign({}, this._markerClusterMap)
+    this._baseMarkerMetaMap = Object.assign({}, this._markerMetaMap)
+    this._expandedClusterMarkerId = null
     return markers
   },
 
+  // 把“同一位置”的采集合并成一个 marker：
+  // 白点里的数字代表这个位置有几张采集邮票。
+  buildMarkerClusters(items = []) {
+    const clusters = []
+
+    ;(items || []).forEach((item) => {
+      const latitude = parseFloat(item.latitude)
+      const longitude = parseFloat(item.longitude)
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        return
+      }
+
+      const cluster = clusters.find((group) => this.isSameLocation(
+        latitude,
+        longitude,
+        group.latitude,
+        group.longitude
+      ))
+
+      if (!cluster) {
+        clusters.push({
+          latitude,
+          longitude,
+          items: [item],
+          coverItem: item,
+          primaryItem: item,
+          count: 1
+        })
+        return
+      }
+
+      cluster.items.push(item)
+      cluster.count += 1
+    })
+
+    return clusters
+  },
+
+  // 判断是否属于“同一位置”：
+  // 这里阈值更小，只把几乎重合的采集合并为一个数字 marker。
+  isSameLocation(lat1, lng1, lat2, lng2) {
+    const latDiff = Math.abs(lat1 - lat2)
+    const lngDiff = Math.abs(lng1 - lng2)
+    return latDiff < 0.00008 && lngDiff < 0.00008
+  },
+
+  // 判断两个 cluster 是否太近：
+  // 太近时再做一圈轻微错位，避免 marker 图本身压在一起。
+  isNearbyCluster(lat1, lng1, lat2, lng2) {
+    const latDiff = Math.abs(lat1 - lat2)
+    const lngDiff = Math.abs(lng1 - lng2)
+    return latDiff < 0.00035 && lngDiff < 0.00035
+  },
+
+  // 为 cluster 生成显示坐标：
+  // 同一簇的第一个 marker 保持原位，后面的 marker 沿圆周轻微错开。
+  // 这里把白点之间的视觉间距加大到约 32rpx，尽量避免看起来挤在一起。
+  buildClusterDisplayPoints(clusters = []) {
+    const displayGroups = []
+    const displayPoints = []
+
+    ;(clusters || []).forEach((cluster, index) => {
+      const latitude = cluster.latitude
+      const longitude = cluster.longitude
+
+      const group = displayGroups.find((item) => this.isNearbyCluster(
+        latitude,
+        longitude,
+        item.originLat,
+        item.originLng
+      ))
+
+      if (!group) {
+        displayGroups.push({
+          originLat: latitude,
+          originLng: longitude,
+          indexes: [index]
+        })
+        displayPoints[index] = { latitude, longitude }
+        return
+      }
+
+      group.indexes.push(index)
+      const offsetIndex = group.indexes.length - 1
+      displayPoints[index] = this.offsetCoordinate(
+        group.originLat,
+        group.originLng,
+        offsetIndex
+      )
+    })
+
+    return displayPoints
+  },
+
+  // 把附近的 marker 稍微错开：
+  // 目的是让底部白点之间至少留出更明显的可辨识间距。
+  offsetCoordinate(lat, lng, offsetIndex) {
+    if (!offsetIndex) {
+      return { latitude: lat, longitude: lng }
+    }
+
+    const angleStep = Math.PI / 3
+    const ringIndex = Math.floor((offsetIndex - 1) / 6)
+    const positionInRing = (offsetIndex - 1) % 6
+    const angle = positionInRing * angleStep
+    const radiusMeters = 56 + ringIndex * 32
+    const latOffset = (radiusMeters * Math.sin(angle)) / 111000
+    const lngOffset = (radiusMeters * Math.cos(angle)) / (111000 * Math.cos(lat * Math.PI / 180) || 1)
+
+    return {
+      latitude: lat + latOffset,
+      longitude: lng + lngOffset
+    }
+  },
+
   // 使用隐藏 canvas 生成半尺寸地图邮票图标，保证 marker 能跟着地图缩放和拖动。
-  generateMapMarkerIcon(item) {
+  // 底部白点里的数字表示这个位置聚合了多少张采集。
+  generateMapMarkerIcon(item, markerCount, showCount) {
     return new Promise((resolve) => {
-      const cacheKey = `${item.id}_${item.photoPath || ''}`
+      const cacheKey = `${item.id}_${item.photoPath || ''}_${markerCount || ''}_${showCount ? 'count' : 'plain'}`
       if (this._markerIconCache[cacheKey]) {
         resolve(this._markerIconCache[cacheKey])
         return
@@ -139,7 +300,7 @@ Page({
       const photoPath = item.photoPath
       const ctx = wx.createCanvasContext('mapMarkerCanvas', this)
 
-      ctx.clearRect(0, 0, 170, 264)
+      ctx.clearRect(0, 0, 170, 318)
       ctx.setShadow(0, 8, 36, 'rgba(0, 0, 0, 0.10)')
       ctx.drawImage(shellPath, 0, 0, 170, 221)
       ctx.setShadow(0, 0, 0, 'rgba(0, 0, 0, 0)')
@@ -148,25 +309,15 @@ Page({
         ctx.drawImage(photoPath, 16, 16, 138, 184)
       }
 
-      ctx.beginPath()
-      ctx.setFillStyle('#47BFFE')
-      ctx.arc(85, 240, 16, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.beginPath()
-      ctx.setLineWidth(4)
-      ctx.setStrokeStyle('#FFFFFF')
-      ctx.arc(85, 240, 16, 0, Math.PI * 2)
-      ctx.stroke()
-
       ctx.draw(false, () => {
         wx.canvasToTempFilePath({
           canvasId: 'mapMarkerCanvas',
           x: 0,
           y: 0,
           width: 170,
-          height: 264,
+          height: 221,
           destWidth: 170,
-          destHeight: 264,
+          destHeight: 221,
           fileType: 'png',
           success: (res) => {
             this._markerIconCache[cacheKey] = res.tempFilePath
@@ -184,15 +335,104 @@ Page({
     this.setData({ viewMode: e.currentTarget.dataset.view })
   },
 
-  // 地图 marker 点击后，进入对应采集详情页。
-  onMarkerTap(e) {
-    const markerId = e.detail.markerId
-    const checkinId = this._markerIdMap[markerId]
-    if (!checkinId) return
+  // 如果一个聚合点里有多张采集，就在地图上扇形展开这些邮票。
+  async expandCluster(markerId) {
+    const meta = this._baseMarkerMetaMap[markerId]
+    if (!meta || meta.type !== 'cluster') return
+    const clusterItems = meta.cluster.items || []
+    if (clusterItems.length <= 1) return
 
-    wx.navigateTo({
-      url: '/pages/checkin-detail/checkin-detail?id=' + encodeURIComponent(checkinId)
+    const basePoint = meta.basePoint || {
+      latitude: meta.cluster.latitude,
+      longitude: meta.cluster.longitude
+    }
+    const otherMarkers = (this._baseMapMarkers || []).filter((item) => item.id !== markerId)
+    const nextMarkers = otherMarkers.map((item) => Object.assign({}, item))
+    this._markerIdMap = Object.assign({}, this._baseMarkerIdMap)
+    this._markerClusterMap = Object.assign({}, this._baseMarkerClusterMap)
+    this._markerMetaMap = Object.assign({}, this._baseMarkerMetaMap)
+
+    const total = clusterItems.length
+    const startAngle = total === 2 ? -Math.PI * 0.78 : -Math.PI * 0.92
+    const endAngle = total === 2 ? -Math.PI * 0.22 : -Math.PI * 0.08
+    const radiusMeters = 120
+
+    for (let index = 0; index < total; index += 1) {
+      const item = clusterItems[index]
+      const angle = total === 1
+        ? -Math.PI / 2
+        : startAngle + ((endAngle - startAngle) / (total - 1)) * index
+      const point = this.getFanPoint(basePoint.latitude, basePoint.longitude, angle, radiusMeters)
+      const expandedMarkerId = 1000 + markerId * 100 + index
+      const iconPath = await this.generateMapMarkerIcon(item, 1, false)
+
+      nextMarkers.push({
+        id: expandedMarkerId,
+        latitude: point.latitude,
+        longitude: point.longitude,
+        iconPath,
+        width: 85,
+        height: 132,
+        anchor: {
+          x: 0.5,
+          y: 1
+        }
+      })
+      this._markerIdMap[expandedMarkerId] = item.id
+      this._markerClusterMap[expandedMarkerId] = [item]
+      this._markerMetaMap[expandedMarkerId] = {
+        type: 'expanded-item',
+        item,
+        parentMarkerId: markerId
+      }
+    }
+
+    this._expandedClusterMarkerId = markerId
+    this.setData({
+      mapMarkers: nextMarkers
     })
+  },
+
+  // 把多个展开邮票按扇形排开。
+  getFanPoint(lat, lng, angle, radiusMeters) {
+    const latOffset = (radiusMeters * Math.sin(angle)) / 111000
+    const lngOffset = (radiusMeters * Math.cos(angle)) / (111000 * Math.cos(lat * Math.PI / 180) || 1)
+    return {
+      latitude: lat + latOffset,
+      longitude: lng + lngOffset
+    }
+  },
+
+  // 恢复地图默认 marker 状态，收起扇形展开的邮票。
+  collapseExpandedCluster() {
+    if (!this._expandedClusterMarkerId) return
+    this._expandedClusterMarkerId = null
+    this._markerIdMap = Object.assign({}, this._baseMarkerIdMap)
+    this._markerClusterMap = Object.assign({}, this._baseMarkerClusterMap)
+    this._markerMetaMap = Object.assign({}, this._baseMarkerMetaMap)
+    this.setData({
+      mapMarkers: (this._baseMapMarkers || []).map((item) => Object.assign({}, item))
+    })
+  },
+
+  // 地图 marker 点击后，直接进入当前这张采集详情。
+  async onMarkerTap(e) {
+    const markerId = e.detail.markerId
+    const meta = this._markerMetaMap[markerId]
+    if (!meta) return
+
+    const clusterItems = this._markerClusterMap[markerId] || []
+    const checkinId = this._markerIdMap[markerId]
+    const targetId = (clusterItems[0] && clusterItems[0].id) || checkinId
+    if (!targetId) return
+    wx.navigateTo({
+      url: '/pages/checkin-detail/checkin-detail?id=' + encodeURIComponent(targetId)
+    })
+  },
+
+  // 当前改成默认展开后，点击地图空白区域不再做额外处理。
+  onMapTapBackground() {
+    return
   },
 
   onCheckinTap(e) {

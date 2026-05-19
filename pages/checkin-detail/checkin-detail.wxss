@@ -119,7 +119,7 @@ page {
   z-index: 30;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 16rpx;
   padding: 16rpx 48rpx calc(16rpx + env(safe-area-inset-bottom));
   background: #FFFFFF;
@@ -163,12 +163,14 @@ page {
 .action-btn-text-secondary {
   width: 188rpx;
   flex: none;
+  padding: 0 16rpx;
 }
 
 .action-btn-share {
-  width: 156rpx;
-  flex: 0 0 156rpx;
-  padding: 0;
+  width: 188rpx !important;
+  flex: 0 0 188rpx !important;
+  padding: 0 16rpx;
+  gap: 8rpx;
 }
 
 .action-btn-icon {
@@ -191,17 +193,17 @@ page {
 }
 
 .action-btn-dark {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
   background: #242529;
 }
 
 .action-btn-main {
-  gap: 8rpx;
+  gap: 10rpx;
 }
 
 .action-btn-edit {
-  flex: 1 0 0;
+  flex: 1 1 0 !important;
   min-width: 0;
 }
 

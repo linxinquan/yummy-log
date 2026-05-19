@@ -65,7 +65,7 @@ page {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 20rpx;
+  gap: 16rpx;
   width: 216rpx;
   height: 136rpx;
   padding-left: 24rpx;
@@ -83,9 +83,9 @@ page {
 
 .stat-value {
   color: #242529;
-  font-size: 44rpx;
+  font-size: 40rpx;
   font-weight: 700;
-  line-height: 44rpx;
+  line-height: 40rpx;
   font-family: 'DIN Alternate', 'PingFang SC', sans-serif;
 }
 
@@ -154,13 +154,15 @@ page {
 }
 
 .empty-actions {
-  width: 100%;
+  display: flex;
+  justify-content: center;
   margin-top: 40rpx;
 }
 
 .empty-btn {
-  width: 100%;
+  min-width: 176rpx;
   height: 80rpx;
+  padding: 0 32rpx;
   border-radius: 999rpx;
   display: flex;
   align-items: center;
@@ -277,7 +279,7 @@ page {
   left: -9999px;
   top: -9999px;
   width: 170px;
-  height: 264px;
+  height: 221px;
   opacity: 0;
   pointer-events: none;
 }
