@@ -54,7 +54,7 @@ Page({
     currentStart: { name: '当前位置', lat: 22.5431, lng: 114.0579, type: 'current' },
 
     // 出行方式
-    travelMode: 'ride',
+    travelMode: 'drive',
 
     // 当前定位
     currentLocation: null,
@@ -221,14 +221,18 @@ Page({
         const hit = allLikedShops.find(a => a.id === s.id)
         if (hit) hit.orderNum = i + 1
       })
-      this.setData({
-        allLikedShops,
-        routeShops,
-        selectedCount: rawItems.length,
-        isAllSelected: true
-      })
-      this.refreshPreviewRoute(routeShops)
-    } else {
+    this.setData({
+      allLikedShops,
+      routeShops,
+      selectedCount: rawItems.length,
+      isAllSelected: true
+    })
+    
+    // 调试：打印 routeShops 数据
+    console.log('[loadRoute] routeShops:', routeShops.map(s => ({ id: s.id, name: s.name, lat: s.lat, lng: s.lng })))
+    
+    this.refreshPreviewRoute(routeShops)
+  } else {
       const prev = this.data.allLikedShops
       const prevMap = {}
       prev.forEach(s => prevMap[s.id] = s)
@@ -354,16 +358,21 @@ Page({
   // 切换整条路线的默认交通方式。
   onSelectMode(e) {
     const mode = e.currentTarget.dataset.mode
+    console.log('[onSelectMode] 切换到模式:', mode, '当前 travelMode:', this.data.travelMode)
     const routeShops = decorateRouteItems(this.data.routeShops, mode)
     this.setData({ travelMode: mode, routeShops })
+    console.log('[onSelectMode] setData 后 travelMode:', this.data.travelMode)
     this.refreshPreviewRoute(routeShops)
     let totalDist = 0
     routeShops.forEach(s => { totalDist += s.distanceFromPrev || 0 })
     this.setData({ totalTime: estimateRouteDuration(totalDist, mode) })
+    console.log('[onSelectMode] 完成，准备调用 updateMap')
+    this.updateMap()
   },
 
   // 打开某一段交通方式弹窗。
   openTransportSheet(dayIndex, itemIndex, previewIndex) {
+    console.log('[route] openTransportSheet, dayIndex:', dayIndex, 'itemIndex:', itemIndex, 'previewIndex:', previewIndex)
     const day = (this.data.routeDaySections || [])[dayIndex]
     const item = ((day || {}).items || [])[itemIndex]
     if (!item) return
@@ -374,10 +383,12 @@ Page({
       transportTargetIndex: previewIndex,
       transportTarget: { dayIndex, itemIndex, previewIndex }
     })
+    console.log('[route] transportSheetVisible:', true)
   },
 
   // 列表模式里点击交通方式入口
   onOpenPlaceTransportSheet(e) {
+    console.log('[route] onOpenPlaceTransportSheet, dataset:', e.currentTarget.dataset)
     const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10)
     const itemIndex = parseInt(e.currentTarget.dataset.index, 10)
     this.openTransportSheet(dayIndex, itemIndex, getPreviewIndexByDay(this.data.routeDaySections, dayIndex) + itemIndex)
@@ -385,6 +396,7 @@ Page({
 
   // 地图模式里点击交通方式入口
   onOpenMapTransportSheet() {
+    console.log('[route] onOpenMapTransportSheet')
     const currentShop = this.data.mapPreviewShop
     if (!currentShop) return
     this.openTransportSheet(currentShop.dayIndex, currentShop.itemIndex, this.data.mapPreviewIndex)
@@ -405,14 +417,20 @@ Page({
   // 在交通方式弹窗里切换当前选项
   onSelectTransportMode(e) {
     const mode = e.detail && e.detail.mode
+    console.log('[route] onSelectTransportMode, mode:', mode)
     if (!mode) return
     this.setData({ pendingTransportMode: mode })
   },
 
   // 确认交通方式后，把结果写回对应地点
   onConfirmTransportMode() {
+    console.log('[route] onConfirmTransportMode 开始')
     const { transportTarget, transportTargetIndex, pendingTransportMode, routeShops, currentNavIndex, isNavigating } = this.data
-    if (!transportTarget || transportTargetIndex < 0 || !routeShops[transportTargetIndex]) return
+    console.log('[route] transportTarget:', transportTarget, 'transportTargetIndex:', transportTargetIndex, 'pendingTransportMode:', pendingTransportMode)
+    if (!transportTarget || transportTargetIndex < 0 || !routeShops[transportTargetIndex]) {
+      console.log('[route] onConfirmTransportMode 提前返回')
+      return
+    }
 
     const nextRouteShops = (routeShops || []).map((item, index) => {
       if (index !== transportTargetIndex) return item
@@ -422,16 +440,19 @@ Page({
       routeShops: nextRouteShops,
       transportSheetVisible: false,
       transportTargetIndex: -1,
-      transportTarget: null
+      transportTarget: null,
+      travelMode: pendingTransportMode // 同时更新整条路线的默认交通方式
     }
     if (isNavigating && currentNavIndex === transportTargetIndex) {
       nextData.currentNavShop = nextRouteShops[transportTargetIndex]
     }
+    console.log('[route] onConfirmTransportMode 准备 setData, travelMode:', pendingTransportMode)
     this.setData(nextData)
     this.refreshPreviewRoute(nextRouteShops, { markDirty: true })
     if (this.data.viewMode === 'map' || isNavigating) {
       this.focusPreviewByIndex(this.data.mapPreviewIndex)
     }
+    console.log('[route] onConfirmTransportMode 完成')
   },
 
   // 清空整条路线，并移除相关"想去"记录。

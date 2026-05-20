@@ -239,11 +239,11 @@ Page({
     draftDayCount: 3,
     transportPreferences: {
       shortDistanceMode: 'walk',
-      longDistanceMode: 'ride'
+      longDistanceMode: 'drive'
     },
     draftTransportPreferences: {
       shortDistanceMode: 'walk',
-      longDistanceMode: 'ride'
+      longDistanceMode: 'drive'
     },
     transportPreferenceText: ''
   },

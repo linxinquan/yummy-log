@@ -19,7 +19,19 @@
 // 读取统一数据源
 // 注意：使用 unified-places-data.js（由 unified-places.json 转换而来）
 // 因为微信小程序不支持直接用 require() 加载 .json 文件（非配置文件）
-const realPlaces = require('./unified-places-data')
+const rawPlaces = require('./unified-places-data')
+
+// 将数据转换为统一格式：确保每条数据都有 lat 和 lng 字段
+const realPlaces = rawPlaces.map(place => {
+  const newPlace = { ...place }
+  // 如果从 location.coordinates 格式转换（[longitude, latitude]）
+  if (place.location && place.location.coordinates && place.location.coordinates.length >= 2) {
+    newPlace.lng = place.location.coordinates[0]
+    newPlace.lat = place.location.coordinates[1]
+  }
+  // 如果已经有 lat/lng 或 latitude/longitude，保持不变
+  return newPlace
+})
 
 // 演示数据：用来让探索页的大类更完整
 const demoPlaces = [
@@ -28,6 +40,7 @@ const demoPlaces = [
   { id: 902, name: '关山月美术馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.541, lng: 114.038, rating: 4.6, tags: ['国画', '收藏'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg', displayCategory: '文化展馆' },
   { id: 903, name: '深圳音乐厅', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.544, lng: 114.042, rating: 4.7, tags: ['演出', '音乐'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg', displayCategory: '文化展馆' },
   { id: 904, name: '何香凝美术馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.532, lng: 113.986, rating: 4.4, tags: ['美术', '展览'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', displayCategory: '文化展馆' },
+  { id: 905, name: '南山图书馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.534915, lng: 113.922459, rating: 4.4, tags: ['图书', '阅读'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', displayCategory: '文化展馆' },
   
   // 自然户外
   { id: 911, name: '梧桐山国家森林公园', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.624, lng: 114.198, rating: 4.8, tags: ['登山', '观景'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg', displayCategory: '自然户外' },

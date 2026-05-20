@@ -14,7 +14,7 @@ module.exports = Behavior({
   methods: {
     // 刷新地图上的点位和折线。
     updateMap() {
-      console.log('[updateMap] 开始更新, 出行方式:', this.data.travelMode)
+      console.log('[updateMap] 开始更新, 出行方式:', this.data.travelMode, 'routeShops.length:', (this.data.routeShops || []).length)
       
       // 根据 currentMapDay 决定显示哪一天的路线
       const effectiveDayIndex = this.data.currentMapDay >= 0 ? this.data.currentMapDay : 0
@@ -34,6 +34,10 @@ module.exports = Behavior({
       
       // 终点：默认返回起点
       const endPoint = { ...startPoint, name: '返回起点' }
+      
+      // 调试：打印 routeShops 和 allPoints 数据
+      console.log('[updateMap] routeShops:', routeShops.map(s => ({ id: s.id, name: s.name, lat: s.lat, lng: s.lng })))
+      console.log('[updateMap] startPoint:', startPoint, 'endPoint:', endPoint)
 
       const markers = routeShops.map((shop, index) => ({
         id: Number(shop.id),
@@ -96,6 +100,9 @@ module.exports = Behavior({
         ...routeShops.map(shop => ({ latitude: shop.lat || shop.latitude, longitude: shop.lng || shop.longitude })),
         { latitude: endPoint.lat, longitude: endPoint.lng }
       ]
+      
+      // 调试：打印 allPoints 数据
+      console.log('[updateMap] allPoints:', allPoints.map(p => ({ lat: p.latitude, lng: p.longitude })))
 
       // 如果只有起点和终点（或更少），直接画直线
       if (allPoints.length <= 2) {
@@ -178,6 +185,9 @@ module.exports = Behavior({
 
       // 腾讯地图路径规划模式（从配置获取）
       const mode = mapConfig.TRAVEL_MODE_MAP[travelMode] || mapConfig.TRAVEL_MODE_MAP.drive
+      
+      // 调试：打印 mode 和 travelMode
+      console.log('[_fetchRealRoute] travelMode:', travelMode, 'mode:', mode, 'allPoints.length:', allPoints.length)
 
       // 构建有效的途经点（去掉重复的终点）
       let effectivePoints = [...allPoints]
@@ -193,6 +203,7 @@ module.exports = Behavior({
       }
 
       // 驾车模式支持waypoints，可以一次请求
+      console.log('[_fetchRealRoute] 检查是否调用驾车路线: mode=', mode, 'effectivePoints.length=', effectivePoints.length, '条件=', mode === 'driving' && effectivePoints.length > 2)
       if (mode === 'driving' && effectivePoints.length > 2) {
         this._fetchDrivingRoute(effectivePoints, routeColor, markers, startPoint, routeShops, key)
       } else {
