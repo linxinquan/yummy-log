@@ -1,10 +1,17 @@
 // pages/checkin-detail/checkin-detail.js
-// 采集详情页：承接“我的采集”里的邮票点击，只在这里展示时间和完整信息
+// 采集详情页：承接"我的采集"里的邮票点击，只在这里展示时间和完整信息
 let checkinUtil = null
 try {
   checkinUtil = require('../../utils/checkinUtil')
 } catch (e) {
   console.warn('checkinUtil load fail', e)
+}
+
+let recognizePhotoUtil = null
+try {
+  recognizePhotoUtil = require('../../utils/recognizePhoto')
+} catch (e) {
+  console.warn('recognizePhotoUtil load fail', e)
 }
 
 Page({
@@ -233,11 +240,7 @@ Page({
       editGeneratingDescription: true
     })
 
-    const aiResult = await this._generateAIContent({
-      spotName,
-      address,
-      type: detail.type || 'food'
-    })
+    const aiResult = await this._generateAIContent(detail.photoPath, detail.type || 'food')
     const fallback = checkinUtil
       ? checkinUtil.generateDescription(spotName, address, detail.type || 'food')
       : '记录下这一刻，下次再看仍然会想起当时的心情'
@@ -289,32 +292,23 @@ Page({
     })
   },
 
-  // 详情页的 AI 生成保持和确认页同一套调用路径，失败时退回本地文案。
-  _generateAIContent({ spotName, address, type }) {
+  // 详情页的 AI 生成使用公共函数 generateAIContent
+  _generateAIContent(photoPath, type) {
     return new Promise((resolve) => {
-      const app = getApp()
-      const districtInfo = app.globalData.districtInfo || {}
-      const city = districtInfo.city || '深圳市'
-      const region = app.globalData.locationDesc || ''
+      if (!recognizePhotoUtil || !recognizePhotoUtil.generateAIContent) {
+        console.warn('[CheckinDetail] recognizePhotoUtil 不可用')
+        resolve({ success: false })
+        return
+      }
 
-      wx.cloud.callFunction({
-        name: 'generateAICheckin',
-        data: {
-          spotName,
-          address,
-          type,
-          city: city.replace('市', ''),
-          region
-        },
-        success: (res) => {
-          if (res.result && res.result.success !== false) {
-            resolve(res.result)
-            return
-          }
+      recognizePhotoUtil.generateAIContent(photoPath, type)
+        .then(result => {
+          resolve(result) // result: {success, title, description}
+        })
+        .catch(err => {
+          console.error('[CheckinDetail] generateAIContent 失败:', err)
           resolve({ success: false })
-        },
-        fail: () => resolve({ success: false })
-      })
+        })
     })
   },
 

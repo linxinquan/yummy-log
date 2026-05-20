@@ -142,25 +142,41 @@ Page({
       safeAreaBottom: windowInfo.safeAreaBottom || 0
     })
 
-    this.initCityOptions()
+    // 延迟加载非关键数据，避免阻塞页面渲染
+    setTimeout(() => {
+      this.initCityOptions()
+    }, 0)
 
+    // 加载数据（同步操作，但避免重复调用 getAllPlaces）
     this.loadItems()
-    this.loadUserData()
     
+    // 延迟加载用户数据，避免阻塞
+    setTimeout(() => {
+      this.loadUserData()
+    }, 0)
+    
+    // 确保图标加载完成后再更新标记（避免重复调用 applyFilters）
     markerIcons.ensureIcons(() => {
-      // 确保筛选后再更新标记
-      this.applyFilters()
+      // 使用统一调度，避免重复计算
+      this._scheduleApplyFilters()
     })
     
     app.whenLocationReady((loc) => {
       this.setData({ mapCenter: { lat: loc.lat, lng: loc.lng } })
-      this.applyFilters()
+      // 使用统一调度，避免重复计算
+      this._scheduleApplyFilters()
     })
     
     app.whenDistrictReady((info, locationDesc) => {
       this.setData({ 
         currentCity: info.city
       })
+    })
+    
+    // 监听图标加载完成事件
+    this._iconsReady = false
+    markerIcons.ensureIcons(() => {
+      this._iconsReady = true
     })
   },
 
@@ -178,12 +194,33 @@ Page({
     this.updateItemStatus()
   },
 
+  // 统一调度 applyFilters，避免重复调用
+  _scheduleApplyFilters() {
+    if (this._applyFiltersTimer) {
+      clearTimeout(this._applyFiltersTimer)
+    }
+    this._applyFiltersTimer = setTimeout(() => {
+      this.applyFilters()
+      this._applyFiltersTimer = null
+    }, 0)
+  },
+
   // 加载数据 (混合美食和景点)
   loadItems() {
     const userShops = util.loadData('userAddedShops', [])
+    const currentCity = this.data.currentCity || '深圳市'
+    
+    // 为用户添加的数据补充 city 字段
+    const userShopsWithCity = userShops.map(shop => {
+      if (!shop.city) {
+        const cityShort = util.getCityShortName(currentCity)
+        return { ...shop, city: cityShort }
+      }
+      return shop
+    })
     
     // 直接从 placesData 获取所有数据（已包含真实数据+演示数据）
-    const allPlaces = [...placesData.getAllPlaces(), ...userShops].map(item => {
+    const allPlaces = [...placesData.getAllPlaces(), ...userShopsWithCity].map(item => {
       // 标签里像"南山区"这种行政区信息不展示，只保留前 2 个业务标签。
       const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2);
       
@@ -195,7 +232,7 @@ Page({
     
     // 直接设置为总列表，不再需要合并演示数据
     this.setData({ allItems: allPlaces })
-    this.applyFilters()
+    this._scheduleApplyFilters()
   },
 
   // 读取用户状态：
@@ -239,14 +276,20 @@ Page({
       }
     })
     this.setData({ allItems: updatedItems })
-    this.applyFilters()
+    this._scheduleApplyFilters()
   },
 
   // 按当前分类、排序和地图中心点，重新生成当前可见列表。
   applyFilters() {
-    let { allItems, currentCategory, sortType, currentDistance, mapCenter } = this.data
+    let { allItems, currentCategory, sortType, currentDistance, mapCenter, currentCity } = this.data
     
     let filtered = allItems
+    
+    // 城市筛选：根据当前选中的城市进行筛选
+    if (currentCity) {
+      const cityShort = util.getCityShortName(currentCity)
+      filtered = filtered.filter(i => i.city === cityShort)
+    }
     
     // 分类筛选
     if (currentCategory === '景点') {
@@ -420,14 +463,14 @@ Page({
     setTimeout(() => {
       this.setData({ scrollToCategory: 'cat-' + category })
     }, 10)
-    this.applyFilters()
+    this._scheduleApplyFilters()
   },
 
   // 切换排序方式，例如按距离、按评分
   onSortChange(e) {
     const sortType = e.currentTarget.dataset.sort
     this.setData({ sortType, currentPage: 1 })
-    this.applyFilters()
+    this._scheduleApplyFilters()
   },
 
   // 点击列表卡片：根据类型进入景点详情或美食详情
@@ -465,7 +508,7 @@ Page({
           currentCity: (app.globalData.districtInfo && app.globalData.districtInfo.city) || this.data.currentCity,
           locationMode: 'my'
         })
-        this.applyFilters()
+        this._scheduleApplyFilters()
         wx.showToast({ title: '已定位到当前位置', icon: 'success', duration: 1500 })
       },
       fail: () => {
@@ -559,7 +602,7 @@ Page({
       locationMode: 'city',
       showLocationPicker: false
     })
-    this.applyFilters()
+    this._scheduleApplyFilters()
   },
 
   // 底部按钮：跳去"想去"页

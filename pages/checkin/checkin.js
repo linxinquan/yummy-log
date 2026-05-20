@@ -1,10 +1,17 @@
 // pages/checkin/checkin.js
-// 采集打卡页：重构为“拍照 -> 确认采集 -> 保存”的两步流程
+// 采集打卡页：重构为"拍照 -> 确认采集 -> 保存"的两步流程
 let checkinUtil = null
 try {
   checkinUtil = require('../../utils/checkinUtil')
 } catch (e) {
   console.error('[Checkin] checkinUtil 加载失败:', e)
+}
+
+let recognizePhotoUtil = null
+try {
+  recognizePhotoUtil = require('../../utils/recognizePhoto')
+} catch (e) {
+  console.error('[Checkin] recognizePhotoUtil 加载失败:', e)
 }
 
 Page({
@@ -52,13 +59,13 @@ Page({
       app.globalData.pendingCheckinPhoto = ''
     }
 
-    // 记录这两个标记，分别处理“自动拉相机”和“带图直接进确认页”。
+    // 记录这两个标记，分别处理"自动拉相机"和"带图直接进确认页"。
     this._pendingAutoCamera = query.autoCamera === '1'
     this._pendingAutoConfirm = Boolean(pendingPhoto)
     this._flowToken = 0
     this._timers = []
 
-    // 这个页面现在只负责“确认采集”；
+    // 这个页面现在只负责"确认采集"；
     // 如果没有照片，直接跳独立拍照页，不再展示中间页。
     if (!pendingPhoto) {
       wx.redirectTo({
@@ -215,7 +222,7 @@ Page({
 
     const address = this.data.editAddress || this.data.address || ''
     const spotName = this.data.spotName || '当前位置'
-    const aiResult = await this._generateAIContent({ spotName, address })
+    const aiResult = await this._generateAIContent()
     const fallback = this._getFallbackContent(spotName, address)
     const nextDescription = aiResult.success
       ? (aiResult.description || fallback.description)
@@ -290,10 +297,7 @@ Page({
       description: ''
     })
 
-    const aiResult = await this._generateAIContent({
-      spotName: this.data.spotName || '当前位置',
-      address: this.data.address || ''
-    })
+    const aiResult = await this._generateAIContent()
     if (token !== this._flowToken) return
 
     const fallback = this._getFallbackContent(
@@ -377,10 +381,7 @@ Page({
       descriptionRunning: true
     })
 
-    const aiResult = await this._generateAIContent({
-      spotName,
-      address
-    })
+    const aiResult = await this._generateAIContent()
     if (token !== this._flowToken) return
 
     const fallback = this._getFallbackContent(spotName, address)
@@ -466,74 +467,28 @@ Page({
     })
   },
 
-  // 调用 AI 生成打卡内容，保留云函数和本地备选两套路径。
-  _generateAIContent({ spotName, address }) {
+  // 调用 AI 生成打卡内容，使用公共函数 generateAIContent
+  _generateAIContent() {
     return new Promise((resolve) => {
-      const app = getApp()
-      const districtInfo = app.globalData.districtInfo || {}
-      const city = districtInfo.city || '深圳市'
-      const region = app.globalData.locationDesc || ''
-
-      wx.cloud.callFunction({
-        name: 'generateAICheckin',
-        data: {
-          spotName,
-          address,
-          type: this.data.type,
-          city: city.replace('市', ''),
-          region
-        },
-        success: (res) => {
-          if (res.result && res.result.success !== false) {
-            resolve(res.result)
-            return
-          }
-          resolve({ success: false })
-        },
-        fail: () => {
-          this._callHunyuanDirect(spotName).then(resolve).catch(() => resolve({ success: false }))
-        }
-      })
-    })
-  },
-
-  // 云函数不可用时，直接走混元兜底。
-  _callHunyuanDirect(spotName) {
-    return new Promise((resolve) => {
-      if (!wx.cloud) {
+      if (!recognizePhotoUtil || !recognizePhotoUtil.generateAIContent) {
+        console.warn('[Checkin] recognizePhotoUtil 不可用')
         resolve({ success: false })
         return
       }
 
-      try {
-        const model = wx.cloud.extend.AI.createModel('hunyuan-exp')
-        const type = this.data.type === 'spot' ? '景点' : '美食'
-        const prompt = `请为"${spotName || '当前位置'}"这个${type}生成一段打卡文案，要求：
-1. 标题15字以内，有记忆点
-2. 正文60字以内，有画面感，像朋友发朋友圈一样自然
-3. 格式：{"title":"标题","description":"正文"}
-只返回JSON，不要其他内容。`
-
-        model.generateText({
-          model: 'hunyuan-2.0-instruct-20251111',
-          messages: [{ role: 'user', content: prompt }]
-        }).then((res) => {
-          const raw = res?.choices?.[0]?.message?.content || ''
-          const clean = raw.trim().replace(/^```json\n?/, '').replace(/```$/, '').trim()
-          const parsed = JSON.parse(clean)
-          resolve({
-            success: true,
-            title: parsed.title || `${spotName}打卡`,
-            description: parsed.description || ''
-          })
-        }).catch(() => resolve({ success: false }))
-      } catch (e) {
-        resolve({ success: false })
-      }
+      recognizePhotoUtil.generateAIContent(this.data.photoPath, this.data.type)
+        .then(result => {
+          resolve(result) // result: {success, title, description}
+        })
+        .catch(err => {
+          console.error('[Checkin] generateAIContent 失败:', err)
+          resolve({ success: false })
+        })
     })
   },
 
   // 本地兜底内容：保证在 AI 异常时确认页也能继续保存。
+
   _getFallbackContent(spotName, address) {
     return {
       title: spotName || '当前位置',

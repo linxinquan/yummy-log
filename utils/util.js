@@ -768,6 +768,27 @@ function getSpotCategoryColor(category) {
   return SPOT_CATEGORY_COLORS[category] || '#95A5A6'
 }
 
+/**
+ * 将城市全称转换为简称
+ * @param {string} fullCityName - 城市全称，如"深圳市"
+ * @returns {string} 城市简称，如"深圳"
+ */
+function getCityShortName(fullCityName) {
+  const cityMap = {
+    '北京市': '北京', '上海市': '上海', '广州市': '广州', '深圳市': '深圳',
+    '天津市': '天津', '重庆市': '重庆', '成都市': '成都', '杭州市': '杭州',
+    '南京市': '南京', '武汉市': '武汉', '西安市': '西安', '长沙市': '长沙',
+    '青岛市': '青岛', '大连市': '大连', '厦门市': '厦门', '苏州市': '苏州',
+    '宁波市': '宁波', '无锡市': '无锡', '佛山市': '佛山', '东莞市': '东莞',
+    '汕头市': '汕头', '湛江市': '湛江', '汕尾市': '汕尾', '清远市': '清远',
+    '珠海市': '珠海', '中山市': '中山', '江门市': '江门', '惠州市': '惠州',
+    '肇庆市': '肇庆', '茂名市': '茂名', '阳江市': '阳江', '梅州市': '梅州',
+    '河源市': '河源', '韶关市': '韶关', '揭阳市': '揭阳', '潮州市': '潮州',
+    '云浮市': '云浮'
+  }
+  return cityMap[fullCityName] || fullCityName.replace('市', '')
+}
+
 module.exports = {
   getDistance,
   planRoute,
@@ -802,5 +823,6 @@ module.exports = {
   getSpotData,
   getNearbySpots,
   getSpotCategoryColor,
-  SPOT_CATEGORY_COLORS
+  SPOT_CATEGORY_COLORS,
+  getCityShortName
 }

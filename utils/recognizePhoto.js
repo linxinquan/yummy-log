@@ -110,5 +110,25 @@ async function recognizePhoto(photoPath, type) {
   }
 }
 
-module.exports = { recognizePhoto }
+/**
+ * 生成AI打卡内容（包装 recognizePhoto，返回标准化格式）
+ * @param {string} photoPath - 照片路径
+ * @param {'food'|'spot'} type - 识别类型
+ * @returns {Promise<{success: boolean, title: string, description: string}>}
+ */
+async function generateAIContent(photoPath, type) {
+  try {
+    const result = await recognizePhoto(photoPath, type)
+    return {
+      success: true,
+      title: result.name || '',
+      description: result.desc || ''
+    }
+  } catch (err) {
+    console.error('[generateAIContent] 失败:', err)
+    return { success: false, title: '', description: '' }
+  }
+}
+
+module.exports = { recognizePhoto, generateAIContent }
 
