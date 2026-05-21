@@ -3,7 +3,6 @@
 // 包含：打开地点简介、导航、关闭弹窗等功能
 
 const util = require('../../utils/util')
-const {  DEFAULT_COVERS } = require('../routeHelper')
 const {
   buildPlaceIntroData
 } = require('../../utils/route-place-card')
@@ -32,7 +31,7 @@ methods: {
         if (!item) return
         this.setData({
           placeIntroVisible: true,
-          placeIntroData: buildPlaceIntroData(item, this.data.cityText, DEFAULT_COVERS[0])
+          placeIntroData: buildPlaceIntroData(item, this.data.cityText, '/images/app-logo.jpg')
         })
       },
     

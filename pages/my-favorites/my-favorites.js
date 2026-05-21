@@ -68,45 +68,10 @@ Page({
     // 构建所有景点数据
     const allSpots = placesData.getSpots()
 
-    // 这几组是补充用的演示数据，作用和探索页一致，
-    // 这样收藏页里也能完整显示文化展馆、自然户外、购物、酒店。
-    // 添加假数据（文化展馆、自然户外、购物、酒店）
-    const cultureData = [
-      { id: 901, name: '深圳美术馆', category: '文化展馆', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, tags: ['展览', '艺术'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
-      { id: 902, name: '关山月美术馆', category: '文化展馆', type: 'culture', lat: 22.541, lng: 114.038, rating: 4.6, tags: ['国画', '收藏'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
-      { id: 903, name: '深圳音乐厅', category: '文化展馆', type: 'culture', lat: 22.544, lng: 114.042, rating: 4.7, tags: ['演出', '音乐'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
-      { id: 904, name: '何香凝美术馆', category: '文化展馆', type: 'culture', lat: 22.532, lng: 113.986, rating: 4.4, tags: ['美术', '展览'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
-    ]
-    const outdoorData = [
-      { id: 911, name: '梧桐山国家森林公园', category: '自然户外', type: 'outdoor', lat: 22.624, lng: 114.198, rating: 4.8, tags: ['登山', '观景'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
-      { id: 912, name: '塘朗山郊野公园', category: '自然户外', type: 'outdoor', lat: 22.542, lng: 113.958, rating: 4.5, tags: ['徒步', '骑行'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
-      { id: 913, name: '深圳湾公园', category: '自然户外', type: 'outdoor', lat: 22.498, lng: 113.914, rating: 4.7, tags: ['滨海', '跑步'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
-      { id: 914, name: '梅林水库', category: '自然户外', type: 'outdoor', lat: 22.568, lng: 114.032, rating: 4.6, tags: ['水库', '徒步'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
-    ]
-    const shoppingData = [
-      { id: 921, name: '华润万象城', category: '购物', type: 'shopping', lat: 22.541, lng: 114.063, rating: 4.8, tags: ['高端', '奢侈品'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
-      { id: 922, name: '海岸城', category: '购物', type: 'shopping', lat: 22.489, lng: 113.921, rating: 4.6, tags: ['餐饮', '娱乐'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
-      { id: 923, name: '东门老街', category: '购物', type: 'shopping', lat: 22.543, lng: 114.078, rating: 4.5, tags: ['老街', '小吃'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
-      { id: 924, name: '益田假日广场', category: '购物', type: 'shopping', lat: 22.535, lng: 113.988, rating: 4.7, tags: ['品牌', '餐饮'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
-    ]
-    const hotelData = [
-      { id: 931, name: '深圳华侨城洲际大酒店', category: '酒店', type: 'hotel', lat: 22.538, lng: 113.989, rating: 4.8, tags: ['五星', '豪华'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg', price: 1280 },
-      { id: 932, name: '深圳湾安达仕酒店', category: '酒店', type: 'hotel', lat: 22.501, lng: 113.912, rating: 4.9, tags: ['海景', '高端'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg', price: 1580 },
-      { id: 933, name: '深圳柏悦酒店', category: '酒店', type: 'hotel', lat: 22.542, lng: 114.061, rating: 4.7, tags: ['商务', '舒适'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg', price: 980 },
-      { id: 934, name: '深圳大鹏古城民宿', category: '酒店', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', price: 380 },
-    ]
-
-    // 先把“偏商业类”的数据合在一起，后面按收藏 id 去匹配。
-    // 合并所有商业类数据（美食、饮品、购物、酒店）
-    const businessCategoryData = [...allFoods, ...shoppingData, ...hotelData]
-    // 再把“偏景点类”的数据合在一起。
-    // 合并所有景点类数据（景点、文化展馆、自然户外）
-    const attractionCategoryData = [...allSpots, ...cultureData, ...outdoorData]
-
     // 筛选已收藏的商业类（美食、饮品、购物、酒店）
     const businessCategoryList = collectedFoodIds
       .map(id => {
-        const item = businessCategoryData.find(f => String(f.id) === String(id))
+        const item = allFoods.find(f => String(f.id) === String(id))
         if (item) {
           const distance = util.getDistance(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng, item.lat || DEFAULT_CENTER.lat, item.lng || DEFAULT_CENTER.lng)
           // 标签最多只显示 2 个，避免撑破卡片布局。
@@ -130,7 +95,7 @@ Page({
     // 筛选已收藏的景点类（景点、文化展馆、自然户外）
     const attractionCategoryList = collectedSpotIds
       .map(id => {
-        const item = attractionCategoryData.find(s => String(s.id) === String(id))
+        const item = allSpots.find(s => String(s.id) === String(id))
         if (item) {
           const distance = util.getDistance(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng, item.lat || DEFAULT_CENTER.lat, item.lng || DEFAULT_CENTER.lng)
           // 标签最多只显示 2 个，和探索页保持一致。

@@ -2,6 +2,8 @@
 const app = getApp()
 const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
+const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
+
 let checkinUtil = null
 try {
   checkinUtil = require('../../utils/checkinUtil')
@@ -17,10 +19,10 @@ function getRandomProfileImage() {
   const spotImages = (util.getSpotData() || [])
     .map((item) => item.image || item.coverImage || item.logo)
     .filter(Boolean)
-  const imagePool = [...foodImages, ...spotImages]
+  const imagePool = DEFAULT_COVER_POOL
 
   if (!imagePool.length) {
-    return '/images/covers/01.jpeg'
+    return '/images/app-logo.jpg'
   }
 
   const randomIndex = Math.floor(Math.random() * imagePool.length)

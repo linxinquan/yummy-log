@@ -5,6 +5,60 @@ page {
   background: #FFFFFF;
 }
 
+/* 调整每天标题区域布局：标题和起点按钮分两行 */
+.day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0 48rpx 48rpx;
+}
+
+.day-header-main {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 12rpx;
+}
+
+.day-start-container {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-top: 8rpx;
+}
+
+.day-start-label {
+  font-size: 24rpx;
+  color: #6E727A;
+  line-height: 24rpx;
+}
+
+.day-start-point {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  background: #F7F8FA;
+  font-size: 24rpx;
+  color: #6E727A;
+  line-height: 24rpx;
+}
+
+.day-start-point i {
+  font-size: 28rpx;
+  color: #A0A4AE;
+}
+
+.day-start-current {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.day-start-current i {
+  color: #2E7D32;
+}
+
 /* 页面整体容器 */
 .page {
   position: relative;

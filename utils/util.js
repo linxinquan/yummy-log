@@ -418,7 +418,7 @@ function buildFootprintItem(record = {}) {
   const fallbackType = record.type === 'spot' ? 'spot' : 'food'
   const fallbackName = record.spotName || record.name || '未命名地点'
   const fallbackAddress = record.address || ''
-  const fallbackImage = '/images/covers/01.jpeg'
+  const fallbackImage = '/images/app-logo.jpg'
 
   if (matchedPlace) {
     return {

@@ -21,6 +21,7 @@ function buildImportedDayCount(placeCount) {
 
 // 把未收录地点转换成项目本地可识别的“临时美食地点”。
 // 这样即使系统里没有这家店，也能先把路线跑通。
+// TODO: 用AI搜索图片
 function buildImportedFoodItems(items = []) {
   const basePoint = getApp().globalData.location || getApp().globalData.centerLocation || { lat: 22.5431, lng: 114.0579 }
   const timestamp = Date.now()
@@ -39,8 +40,8 @@ function buildImportedFoodItems(items = []) {
       lng: synthetic.lng,
       hours: item.hours || '',
       dishes: Array.isArray(item.dishes) ? item.dishes : [],
-      image: '/images/covers/01.jpeg',
-      logo: '/images/covers/01.jpeg',
+      image: '/images/app-logo.jpg',
+      logo: '/images/app-logo.jpg',
       isUserAdded: true,
       importSource: 'route-text'
     }

@@ -8,7 +8,7 @@ const { formatTripDuration, normalizeTripSummaryText } = require('../../utils/tr
 
 // 每项高度(px) = 卡片高度120rpx + gap 16rpx 换算
 const ITEM_H = 60 // px，每项高度用于计算排序
-const DEFAULT_COVER = '/images/covers/01.jpeg'
+const DEFAULT_COVER = '/images/app-logo.jpg'
 const DAY_OPTIONS = Array.from({ length: 30 }, (_, index) => index + 1)
 const DELETE_ACTION_WIDTH_RPX = 144
 const DEFAULT_ROUTE_AVATAR = '/images/app-logo.jpg'

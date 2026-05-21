@@ -2,40 +2,7 @@
 // 预览相关行为的 Behavior
 // 包含：预览路线、焦点切换、预览卡片更新等功能
 const { buildMapPreviewViewData } = require('../../utils/map-preview')
-const {  getPreviewIndexByDay, getCityInfo, buildDayLabel, buildTabs, buildSummaryText, buildPreviewTitle } = require('../routeHelper')
-
-
-
-// 把一串地点按天数拆成"每天的路线"。
-function buildPreviewDaySections(routeShops, preferredDayCount = 1) {
-  const items = (routeShops || []).map((item, index) => ({
-    ...item,
-    id: item.id || `preview-place-${index}`,
-    coverImage: item.coverImage || getCoverImage(item),
-    tagText: item.tagText || getItemTagText(item)
-  }))
-  if (!items.length) return []
-
-  const dayCount = Math.max(1, Math.min(parseInt(preferredDayCount, 10) || 1, items.length))
-  const sections = []
-  let startIndex = 0
-
-  for (let dayIndex = 0; dayIndex < dayCount; dayIndex += 1) {
-    const remainingItems = items.length - startIndex
-    const remainingDays = dayCount - dayIndex
-    const currentCount = Math.max(1, Math.ceil(remainingItems / remainingDays))
-    const dayItems = items.slice(startIndex, startIndex + currentCount)
-    sections.push({
-      id: `preview-day-${dayIndex}`,
-      title: buildDayLabel(dayIndex + 1),
-      countText: `${dayItems.length} 个地点`,
-      items: dayItems
-    })
-    startIndex += currentCount
-  }
-
-  return sections
-}
+const { getPreviewIndexByDay, getCityInfo, buildDayLabel, buildTabs, buildSummaryText, buildPreviewTitle, buildPreviewDaySections } = require('../routeHelper')
 
 // 根据预览下标反推属于第几天。
 function getDayIndexByPreview(routeDaySections, previewIndex) {
@@ -69,18 +36,31 @@ methods: {
     ].filter(Boolean).join(' ')
     const cityInfo = getCityInfo(citySource)
     const routeDaySections = routeShops.length ? buildPreviewDaySections(routeShops, this.data.preferredDayCount) : []
-    const tabs = routeDaySections.length ? buildTabs(routeDaySections.length) : []
+    
+    // 保留之前的 startPointText（如果有）
+    const prevDaySections = this.data.routeDaySections || []
+    const dayStartPointTexts = this.data.dayStartPointTexts || []
+    const updatedSections = routeDaySections.map((section, dayIndex) => {
+      const prevSection = prevDaySections[dayIndex]
+      const defaultText = dayIndex === 0 ? '当前位置' : '设置起点'
+      return {
+        ...section,
+        startPointText: (prevSection && prevSection.startPointText) || dayStartPointTexts[dayIndex] || defaultText
+      }
+    })
+    
+    const tabs = updatedSections.length ? buildTabs(updatedSections.length) : []
     this.setData({
-      routeDaySections,
+      routeDaySections: updatedSections,
       tabs,
       currentTab: 0,
       currentMapDay: -1,
       sheetScrollTarget: '',
-      summaryText: routeDaySections.length ? buildSummaryText(routeDaySections) : '',
+      summaryText: updatedSections.length ? buildSummaryText(updatedSections) : '',
       cityText: cityInfo.name,
-      routeTitle: buildPreviewTitle(cityInfo.name, routeDaySections.length, routeDaySections),
+      routeTitle: buildPreviewTitle(cityInfo.name, updatedSections.length, updatedSections),
       // 只有真正发生了新的路线改动时，才标记为"未保存"。
-      hasUnsavedPreview: routeDaySections.length > 0 ? shouldMarkDirty : false,
+      hasUnsavedPreview: updatedSections.length > 0 ? shouldMarkDirty : false,
       mapPreviewShop: routeShops && routeShops.length ? routeShops[0] : null,
       mapPreviewIndex: 0
     })
@@ -125,6 +105,8 @@ methods: {
       dayIndex >= 0 ? getPreviewIndexByDay(this.data.routeDaySections, dayIndex) : 0,
       dayIndex
     )
+    // 更新地图显示当天的路线
+    this.updateMap()
   },
 
   // 切换地图预览中的当前地点
@@ -136,6 +118,8 @@ methods: {
     if (Number.isNaN(nextIndex)) return
     const nextDayIndex = getDayIndexByPreview(this.data.routeDaySections, nextIndex)
     this.focusPreviewByIndex(nextIndex, nextDayIndex)
+    // 更新地图显示当前站点
+    this.updateMap()
   },
 
   // 点击上一站 / 下一站

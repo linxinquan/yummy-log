@@ -7,32 +7,32 @@ Component({
       {
         pagePath: "/pages/index/index",
         text: "探索",
-        iconPath: "/images/tabbar-home.png",
-        selectedIconPath: "/images/tabbar-home-active.png"
+        iconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-home.png",
+        selectedIconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-home-active.png"
       },
       {
         pagePath: "/pages/wantgo/wantgo",
         text: "想去",
-        iconPath: "/images/tabbar-spots.png",
-        selectedIconPath: "/images/tabbar-spots-active.png"
+        iconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-spots.png",
+        selectedIconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-spots-active.png"
       },
       {
         pagePath: "/pages/route-entry/route-entry",
         text: "",
-        iconPath: "/images/tabbar-add.png",
-        selectedIconPath: "/images/tabbar-add.png"
+        iconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-add.png",
+        selectedIconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-add.png"
       },
       {
         pagePath: "/pages/discover/discover",
         text: "攻略",
-        iconPath: "/images/tabbar-discover.png",
-        selectedIconPath: "/images/tabbar-discover-active.png"
+        iconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-discover.png",
+        selectedIconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-discover-active.png"
       },
       {
         pagePath: "/pages/my/my",
         text: "我的",
-        iconPath: "/images/tabbar-my.png",
-        selectedIconPath: "/images/tabbar-my-active.png"
+        iconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-my.png",
+        selectedIconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-my-active.png"
       }
     ]
   },

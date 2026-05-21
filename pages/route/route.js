@@ -10,7 +10,8 @@ const {
   decorateRouteCardItem,
   buildPreviewRouteData,
   getPreviewIndexByDay,
-  getLikeType
+  getLikeType,
+  buildPreviewDaySections
 } = require('../../utils/routeHelper')
 
 const routeMapBehavior = require('../../utils/route/route-map-behavior')
@@ -103,6 +104,15 @@ Page({
     totalDistance: '0m',
     totalTime: '0分钟',
     isMixedRoute: false,
+    
+    // 每天起点：dayStartPoints[dayIndex] = { lat, lng, name }
+    dayStartPoints: [],
+    // 每天起点的显示文本
+    dayStartPointTexts: [],
+    // 设置起点弹窗
+    showDayStartSheet: false,
+    dayStartSheetDayIndex: -1,
+    dayStartOptions: [],
 
     // 导览
     menuTop: 44,
@@ -176,6 +186,8 @@ Page({
 
   // 读取想去数据或传入的地点 id，生成当前路线。
   loadRoute() {
+    // 清除路线缓存
+    this._routeCache = {}
     const { routeType, presetIds, selectMode } = this.data
 
     // 确定要加载的ID列表
@@ -216,7 +228,7 @@ Page({
     // 支持景点(lat/lng)和美食(latitude/longitude)两种格式
     if (selectMode === 'all') {
       const allLikedShops = decorateSelectableItems(rawItems.map(s => ({ ...s, selected: true, orderNum: '' })))
-      const routeShops = this._planAndAnnotate(rawItems, presetIds ? true : false)
+      const routeShops = this._planRouteByDays(rawItems, presetIds ? true : false)
       routeShops.forEach((s, i) => {
         const hit = allLikedShops.find(a => a.id === s.id)
         if (hit) hit.orderNum = i + 1
@@ -224,6 +236,7 @@ Page({
     this.setData({
       allLikedShops,
       routeShops,
+      rawItems,
       selectedCount: rawItems.length,
       isAllSelected: true
     })
@@ -243,7 +256,7 @@ Page({
       }))
 
       const selectedShops = allLikedShops.filter(s => s.selected)
-      const routeShops = this._planAndAnnotate(selectedShops)
+      const routeShops = this._planRouteByDays(selectedShops)
       allLikedShops.forEach(s => { s.orderNum = '' })
       routeShops.forEach((s, i) => {
         const hit = allLikedShops.find(a => a.id === s.id)
@@ -253,39 +266,84 @@ Page({
       this.setData({
         allLikedShops,
         routeShops,
+        rawItems,
         selectedCount: selectedShops.length,
         isAllSelected: selectedShops.length === allLikedShops.length
       })
       this.refreshPreviewRoute(routeShops)
     }
 
-    this.updateMap()
+    // 只在地图模式或导航模式下才更新地图，列表模式不需要
+    const { viewMode, isNavigating } = this.data
+    if (viewMode === 'map' || isNavigating) {
+      this.updateMap()
+    }
   },
 
-  // 对地点做路径规划，并补上距离、时间、总里程这些信息。
-  _planAndAnnotate(shops, preserveOrder = false) {
+  // 对地点做路径规划（按天独立规划），并补上距离、时间、总里程这些信息。
+  // 每天使用当天的起点独立调用 planRoute，然后合并结果。
+  _planRouteByDays(shops, preserveOrder = false) {
     if (shops.length === 0) return []
 
-    let startPoint = this.data.currentStart
-    if (startPoint.type === 'current') {
-      startPoint = app.globalData.location || app.globalData.centerLocation || startPoint
-    }
-
-    const routeShops = util.planRoute(shops, startPoint, preserveOrder)
-    if (routeShops.length > 0) routeShops[0].isFirst = true
-
+    const { preferredDayCount, dayStartPoints, currentStart } = this.data
+    
+    // 先按天分组（使用当前的 routeDaySections 分组逻辑）
+    const routeDaySections = buildPreviewDaySections(shops, preferredDayCount)
+    
+    // 对每一天独立规划路线
+    const allRouteShops = []
     let totalDist = 0
-    routeShops.forEach(s => { totalDist += s.distanceFromPrev || 0 })
-
+    
+    routeDaySections.forEach((daySection, dayIndex) => {
+      // 确定当天的起点
+      let dayStartPoint = null
+      if (dayIndex === 0) {
+        // 第1天：使用全局起点
+        dayStartPoint = currentStart.type === 'current' 
+          ? (app.globalData.location || app.globalData.centerLocation || currentStart)
+          : currentStart
+      } else {
+        // 第2天及以后：使用设置的起点，或默认前一天最后一个地点
+        const customStart = dayStartPoints[dayIndex]
+        if (customStart) {
+          dayStartPoint = customStart
+        } else {
+          // 默认：前一天最后一个地点
+          const prevDaySection = routeDaySections[dayIndex - 1]
+          const prevDayItems = prevDaySection ? (prevDaySection.items || []) : []
+          const prevDayLastShop = prevDayItems.length > 0 ? prevDayItems[prevDayItems.length - 1] : null
+          dayStartPoint = prevDayLastShop 
+            ? { lat: prevDayLastShop.lat || prevDayLastShop.latitude, lng: prevDayLastShop.lng || prevDayLastShop.longitude, name: prevDayLastShop.name }
+            : (app.globalData.location || app.globalData.centerLocation || currentStart)
+        }
+      }
+      
+      // 对当天的地点做路径规划
+      const dayShops = util.planRoute(daySection.items, dayStartPoint, preserveOrder)
+      if (dayShops.length > 0) {
+        dayShops[0].isFirst = true
+        dayShops[0].dayIndex = dayIndex
+        dayShops[0].dayStartPoint = dayStartPoint
+      }
+      
+      // 标记每个地点属于第几天
+      dayShops.forEach(s => { s.dayIndex = dayIndex })
+      
+      // 累加总距离
+      dayShops.forEach(s => { totalDist += s.distanceFromPrev || 0 })
+      
+      allRouteShops.push(...dayShops)
+    })
+    
     this.setData({
       totalDistance: util.formatDistance(totalDist)
     })
 
-    const decoratedRouteShops = decorateRouteItems(routeShops)
+    const decoratedRouteShops = decorateRouteItems(allRouteShops)
     let totalMinutes = 0
     decoratedRouteShops.forEach(item => {
       const modeKey = (item.travelMeta && item.travelMeta.mode) || item.travelMode
-      const modeConfig = MODE_CONFIG[modeKey] || MODE_CONFIG.ride
+      const modeConfig = MODE_CONFIG[modeKey] || MODE_CONFIG.drive
       totalMinutes += (Math.max(0, item.distanceFromPrev || 0) / 1000) * modeConfig.minutesPerKm
     })
 
@@ -609,4 +667,189 @@ Page({
     }
     this.setData({ exitConfirmVisible: true })
   },
+
+  // 设置某天的起点
+  onSetDayStart(e) {
+    const dayIndex = e.currentTarget.dataset.dayIndex
+    if (dayIndex === undefined || dayIndex < 0) return
+
+    const options = ['使用当前位置']
+    if (dayIndex > 0) {
+      options.push('使用前一天终点')
+    }
+    options.push('搜索地点', '取消')
+
+    wx.showActionSheet({
+      itemList: options,
+      success: (res) => {
+        const selectedIndex = res.tapIndex
+        if (selectedIndex === options.length - 1) return // 取消
+
+        if (selectedIndex === 0) {
+          // 使用当前位置
+          this._setDayStartToCurrent(dayIndex)
+        } else if (selectedIndex === 1 && dayIndex > 0) {
+          // 使用前一天终点
+          this._setDayStartToPrevDayEnd(dayIndex)
+        } else if ((selectedIndex === 1 && dayIndex === 0) || (selectedIndex === 2 && dayIndex > 0)) {
+          // 搜索地点
+          this._searchDayStartPoint(dayIndex)
+        }
+      }
+    })
+  },
+
+  // 设置起点为当前位置
+  _setDayStartToCurrent(dayIndex) {
+    const currentStart = this.data.currentStart
+    const startPoint = currentStart.type === 'current' 
+      ? (app.globalData.location || app.globalData.centerLocation || currentStart)
+      : currentStart
+
+    const dayStartPoints = [...this.data.dayStartPoints]
+    dayStartPoints[dayIndex] = {
+      lat: startPoint.lat,
+      lng: startPoint.lng,
+      name: startPoint.name || '当前位置'
+    }
+
+    const dayStartPointTexts = [...this.data.dayStartPointTexts]
+    dayStartPointTexts[dayIndex] = startPoint.name || '当前位置'
+
+    this.setData({
+      dayStartPoints,
+      dayStartPointTexts
+    })
+
+    // 更新 routeDaySections 中的 startPointText
+    this._updateDayStartPointTexts()
+
+    // 重新规划路线
+    this._replanRoute()
+  },
+
+  // 设置起点为前一天最后一个地点
+  _setDayStartToPrevDayEnd(dayIndex) {
+    const routeDaySections = this.data.routeDaySections
+    if (!routeDaySections || dayIndex <= 0 || dayIndex >= routeDaySections.length) return
+
+    const prevDaySection = routeDaySections[dayIndex - 1]
+    const prevDayLastShop = prevDaySection.items[prevDaySection.items.length - 1]
+    if (!prevDayLastShop) return
+
+    const startPoint = {
+      lat: prevDayLastShop.lat || prevDayLastShop.latitude,
+      lng: prevDayLastShop.lng || prevDayLastShop.longitude,
+      name: prevDayLastShop.name
+    }
+
+    const dayStartPoints = [...this.data.dayStartPoints]
+    dayStartPoints[dayIndex] = startPoint
+
+    const dayStartPointTexts = [...this.data.dayStartPointTexts]
+    dayStartPointTexts[dayIndex] = prevDayLastShop.name
+
+    this.setData({
+      dayStartPoints,
+      dayStartPointTexts
+    })
+
+    // 更新 routeDaySections 中的 startPointText
+    this._updateDayStartPointTexts()
+
+    // 重新规划路线
+    this._replanRoute()
+  },
+
+  // 搜索地点作为起点
+  _searchDayStartPoint(dayIndex) {
+    wx.chooseLocation({
+      success: (res) => {
+        const startPoint = {
+          lat: res.latitude,
+          lng: res.longitude,
+          name: res.name || '选中的地点'
+        }
+
+        const dayStartPoints = [...this.data.dayStartPoints]
+        dayStartPoints[dayIndex] = startPoint
+
+        const dayStartPointTexts = [...this.data.dayStartPointTexts]
+        dayStartPointTexts[dayIndex] = res.name || '选中的地点'
+
+        this.setData({
+          dayStartPoints,
+          dayStartPointTexts
+        })
+
+        // 更新 routeDaySections 中的 startPointText
+        this._updateDayStartPointTexts()
+
+        // 重新规划路线
+        this._replanRoute()
+      },
+      fail: () => {
+        wx.showToast({ title: '已取消', icon: 'none' })
+      }
+    })
+  },
+
+  // 更新 routeDaySections 中的 startPointText
+  _updateDayStartPointTexts() {
+    const { routeDaySections, dayStartPointTexts } = this.data
+    if (!routeDaySections || !routeDaySections.length) return
+
+    const updatedSections = routeDaySections.map((section, dayIndex) => {
+      const defaultText = dayIndex === 0 ? '当前位置' : '设置起点'
+      return {
+        ...section,
+        startPointText: dayStartPointTexts[dayIndex] || defaultText
+      }
+    })
+
+    this.setData({
+      routeDaySections: updatedSections
+    })
+  },
+
+  // 重新规划路线（使用当前的 dayStartPoints）
+  _replanRoute() {
+    const { selectMode, rawItems, presetIds } = this.data
+    
+    if (selectMode === 'all') {
+      const routeShops = this._planRouteByDays(rawItems, presetIds ? true : false)
+      // 更新 orderNum
+      const allLikedShops = this.data.allLikedShops
+      allLikedShops.forEach(s => { s.orderNum = '' })
+      routeShops.forEach((s, i) => {
+        const hit = allLikedShops.find(a => a.id === s.id)
+        if (hit) hit.orderNum = i + 1
+      })
+      this.setData({
+        routeShops,
+        allLikedShops: [...allLikedShops]
+      })
+      this.refreshPreviewRoute(routeShops)
+    } else {
+      const allLikedShops = this.data.allLikedShops
+      const selectedShops = allLikedShops.filter(s => s.selected)
+      const routeShops = this._planRouteByDays(selectedShops)
+      allLikedShops.forEach(s => { s.orderNum = '' })
+      routeShops.forEach((s, i) => {
+        const hit = allLikedShops.find(a => a.id === s.id)
+        if (hit) hit.orderNum = i + 1
+      })
+      this.setData({
+        routeShops,
+        allLikedShops: [...allLikedShops]
+      })
+      this.refreshPreviewRoute(routeShops)
+    }
+
+    // 如果在地图模式，更新地图
+    const { viewMode, isNavigating } = this.data
+    if (viewMode === 'map' || isNavigating) {
+      this.updateMap()
+    }
+  }
 })

@@ -8,22 +8,6 @@ const {
 } = require('../../utils/travel')
 const { formatTripSummary } = require('../../utils/trip-duration')
 
-// 默认封面图池：城市或路线没有图时，从这里兜底。
-const DEFAULT_COVERS = [
-  '/images/covers/01.jpeg',
-  '/images/covers/02.jpeg',
-  '/images/covers/03.jpeg',
-  '/images/covers/04.jpeg',
-  '/images/covers/05.jpeg',
-  '/images/covers/06.jpeg',
-  '/images/covers/07.jpeg',
-  '/images/covers/08.jpeg',
-  '/images/covers/09.jpeg',
-  '/images/covers/10.jpeg',
-  '/images/covers/11.jpeg',
-  '/images/covers/12.jpeg'
-]
-
 // 城市列表：基础信息页的城市选择弹窗用这个数据。
 const GUANGDONG_CITIES = [
   { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD' },
@@ -76,7 +60,7 @@ function buildCityOptions() {
   const coverPool = buildCityCoverPool()
   return GUANGDONG_CITIES.map((city, index) => ({
     ...city,
-    coverImage: coverPool[index % coverPool.length] || DEFAULT_COVERS[index % DEFAULT_COVERS.length]
+    coverImage: coverPool[index % coverPool.length] || '/images/app-logo.jpg'
   }))
 }
 
@@ -103,12 +87,12 @@ function resolveRouteCoverImage(route, daySections) {
     .map(item => item && item.image)
     .filter(Boolean)
 
-  const routeImage = route && route.image && !DEFAULT_COVERS.includes(route.image)
+  const routeImage = route && route.image && route.image !== '/images/app-logo.jpg'
     ? [route.image]
     : []
 
   const coverPool = [...routeItemCovers, ...summaryCovers, ...routeImage, ...buildCityCoverPool()]
-  return pickRandomItem(coverPool) || DEFAULT_COVERS[0]
+  return pickRandomItem(coverPool) || '/images/app-logo.jpg'
 }
 
 // 去掉编辑态临时字段，避免保存进正式数据。
@@ -141,7 +125,7 @@ function buildLegacyRouteData(daySections) {
   const daySummaries = cleanSections.map((day, index) => ({
     location: '',
     route: (day.items || []).map(item => item.name).join(' --- '),
-    image: (day.items && day.items[0] && day.items[0].image) || DEFAULT_COVERS[index % DEFAULT_COVERS.length]
+    image: (day.items && day.items[0] && day.items[0].image) || '/images/app-logo.jpg'
   }))
 
   const dayDetails = cleanSections.map(day => (day.items || []).map(item => ({
@@ -465,8 +449,8 @@ Page({
       daySummaries,
       dayDetails,
       subtitle: buildSummaryText(nextSections),
-      image: this.data.coverImage || baseRoute.coverImage || baseRoute.image || daySummaries[0]?.image || DEFAULT_COVERS[0],
-      coverImage: this.data.coverImage || baseRoute.coverImage || baseRoute.image || daySummaries[0]?.image || DEFAULT_COVERS[0],
+      image: this.data.coverImage || baseRoute.coverImage || baseRoute.image || daySummaries[0]?.image || '/images/app-logo.jpg',
+      coverImage: this.data.coverImage || baseRoute.coverImage || baseRoute.image || daySummaries[0]?.image || '/images/app-logo.jpg',
       transportPreferences: { ...transportPreferences },
       transportPreferenceText: buildTransportPreferenceSummary(transportPreferences),
       isDraft: this.data.isTempPreview,

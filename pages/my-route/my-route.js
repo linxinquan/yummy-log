@@ -10,22 +10,6 @@ const {
   buildPlaceIntroData
 } = require('../../utils/route-place-card')
 
-// 默认封面池：当路线或地点没有图片时，从这里兜底取图。
-const DEFAULT_COVERS = [
-  '/images/covers/01.jpeg',
-  '/images/covers/02.jpeg',
-  '/images/covers/03.jpeg',
-  '/images/covers/04.jpeg',
-  '/images/covers/05.jpeg',
-  '/images/covers/06.jpeg',
-  '/images/covers/07.jpeg',
-  '/images/covers/08.jpeg',
-  '/images/covers/09.jpeg',
-  '/images/covers/10.jpeg',
-  '/images/covers/11.jpeg',
-  '/images/covers/12.jpeg'
-]
-
 // 城市预设：根据路线标题或城市文案，尽量反推路线所在城市和中心坐标。
 const CITY_PRESETS = [
   { match: /西安|长安/, name: '西安市', lat: 34.3416, lng: 108.9398 },
@@ -52,30 +36,7 @@ const XIAN_POI_MAP = {
 }
 
 const MAX_DELETE_OFFSET = -72
-const DRAG_STEP = 88
-const GUANGDONG_CITIES = [
-  { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644 },
-  { id: 2, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579 },
-  { id: 3, name: '汕头', fullName: '汕头市', lat: 23.3541, lng: 116.6819 },
-  { id: 4, name: '湛江', fullName: '湛江市', lat: 21.2707, lng: 110.3594 },
-  { id: 5, name: '汕尾', fullName: '汕尾市', lat: 22.7862, lng: 115.3751 },
-  { id: 6, name: '清远', fullName: '清远市', lat: 23.6817, lng: 113.056 },
-  { id: 7, name: '佛山', fullName: '佛山市', lat: 23.0215, lng: 113.1214 },
-  { id: 8, name: '东莞', fullName: '东莞市', lat: 23.0207, lng: 113.7518 },
-  { id: 9, name: '珠海', fullName: '珠海市', lat: 22.271, lng: 113.5767 },
-  { id: 10, name: '中山', fullName: '中山市', lat: 22.5176, lng: 113.3928 },
-  { id: 11, name: '江门', fullName: '江门市', lat: 22.5787, lng: 113.0819 },
-  { id: 12, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168 },
-  { id: 13, name: '肇庆', fullName: '肇庆市', lat: 23.0472, lng: 112.4651 },
-  { id: 14, name: '茂名', fullName: '茂名市', lat: 21.6633, lng: 110.9255 },
-  { id: 15, name: '阳江', fullName: '阳江市', lat: 21.8579, lng: 111.9822 },
-  { id: 16, name: '梅州', fullName: '梅州市', lat: 24.2886, lng: 116.1176 },
-  { id: 17, name: '河源', fullName: '河源市', lat: 23.7437, lng: 114.7004 },
-  { id: 18, name: '韶关', fullName: '韶关市', lat: 24.8104, lng: 113.5972 },
-  { id: 19, name: '揭阳', fullName: '揭阳市', lat: 23.5498, lng: 116.3728 },
-  { id: 20, name: '潮州', fullName: '潮州市', lat: 23.6567, lng: 116.6226 },
-  { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445 }
-]
+
 
 // 生成"第几天"的展示文字。
 function buildDayLabel(dayNumber) {
@@ -181,7 +142,7 @@ function syncDaySections(daySections, cityInfo) {
         id: item.id || `day-${dayIndex}-item-${itemIndex}`,
         name: item.name || '待补充地点',
         tag: item.tag || inferTag(item.name),
-        image: item.image || matched?.image || matched?.logo || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length],
+        image: item.image || matched?.image || matched?.logo || '/images/app-logo.jpg',
         type: itemType,
         rating: item.rating || matched?.rating || matched?.score || '',
         tags: rawTags,
@@ -234,7 +195,7 @@ function buildLegacyRouteData(daySections) {
   const daySummaries = cleanSections.map((day, index) => ({
     location: '',
     route: (day.items || []).map(item => item.name).join(' --- '),
-    image: (day.items && day.items[0] && day.items[0].image) || DEFAULT_COVERS[index % DEFAULT_COVERS.length]
+    image: (day.items && day.items[0] && day.items[0].image) || '/images/app-logo.jpg',
   }))
 
   const dayDetails = cleanSections.map(day => (day.items || []).map(item => ({
@@ -339,34 +300,13 @@ function buildDaySectionsFromLegacy(route) {
   return sections
 }
 
-// 补充探索页里的扩展地点，供"添加地点弹窗"复用。
-function buildExploreExtraItems() {
-  return [
-    { id: 901, name: '深圳美术馆', category: '文化展馆', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, tags: ['展览', '艺术'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
-    { id: 902, name: '关山月美术馆', category: '文化展馆', type: 'culture', lat: 22.541, lng: 114.038, rating: 4.6, tags: ['国画', '收藏'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
-    { id: 903, name: '深圳音乐厅', category: '文化展馆', type: 'culture', lat: 22.544, lng: 114.042, rating: 4.7, tags: ['演出', '音乐'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
-    { id: 904, name: '何香凝美术馆', category: '文化展馆', type: 'culture', lat: 22.532, lng: 113.986, rating: 4.4, tags: ['美术', '展览'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
-    { id: 911, name: '梧桐山国家森林公园', category: '自然户外', type: 'outdoor', lat: 22.624, lng: 114.198, rating: 4.8, tags: ['登山', '观景'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
-    { id: 912, name: '塘朗山郊野公园', category: '自然户外', type: 'outdoor', lat: 22.542, lng: 113.958, rating: 4.5, tags: ['徒步', '骑行'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
-    { id: 913, name: '深圳湾公园', category: '自然户外', type: 'outdoor', lat: 22.498, lng: 113.914, rating: 4.7, tags: ['滨海', '跑步'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
-    { id: 914, name: '梅林水库', category: '自然户外', type: 'outdoor', lat: 22.568, lng: 114.032, rating: 4.6, tags: ['水库', '徒步'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
-    { id: 921, name: '华润万象城', category: '购物', type: 'shopping', lat: 22.541, lng: 114.063, rating: 4.8, tags: ['高端', '奢侈品'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg' },
-    { id: 922, name: '海岸城', category: '购物', type: 'shopping', lat: 22.489, lng: 113.921, rating: 4.6, tags: ['餐饮', '娱乐'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg' },
-    { id: 923, name: '东门老街', category: '购物', type: 'shopping', lat: 22.543, lng: 114.078, rating: 4.5, tags: ['老街', '小吃'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg' },
-    { id: 924, name: '益田假日广场', category: '购物', type: 'shopping', lat: 22.535, lng: 113.988, rating: 4.7, tags: ['品牌', '餐饮'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg' },
-    { id: 931, name: '深圳华侨城洲际大酒店', category: '酒店', type: 'hotel', lat: 22.538, lng: 113.989, rating: 4.8, tags: ['五星', '豪华'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg', price: 1280 },
-    { id: 932, name: '深圳湾安达仕酒店', category: '酒店', type: 'hotel', lat: 22.501, lng: 113.912, rating: 4.9, tags: ['海景', '高端'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg', price: 1580 },
-    { id: 933, name: '深圳柏悦酒店', category: '酒店', type: 'hotel', lat: 22.542, lng: 114.061, rating: 4.7, tags: ['商务', '舒适'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg', price: 980 },
-    { id: 934, name: '深圳大鹏古城民宿', category: '酒店', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', price: 380 }
-  ]
-}
 
 // 把"想去 / 收藏 / 全部"来源的地点，统一整理成添加地点弹窗可用的数据格式。
 // 这样弹窗里就不用分别兼容很多不同字段名了。
 function buildPlaceCandidate(item, type, source) {
   if (!item) return null
   const resolvedType = item.type || type || 'spot'
-  const displayImage = item.displayImage || item.image || item.logo || item.thumb || DEFAULT_COVERS[0]
+  const displayImage = item.displayImage || item.image || item.logo || item.thumb || '/images/app-logo.jpg'
   const sourceTextMap = {
     want: '来自想去',
     collect: '来自收藏',
@@ -397,8 +337,7 @@ function buildPlacePickerData() {
   const userAddedShops = util.loadData('userAddedShops', [])
   const allFoods = [...placesData.getFoods(), ...userAddedShops]
   const allSpots = placesData.getSpots()
-  const extraPlaces = buildExploreExtraItems()
-  const allNonFoodPlaces = [...allSpots, ...extraPlaces]
+  const allNonFoodPlaces = allSpots
   const wantFoodIds = util.loadData('userWantFoods', []).map(item => String(item))
   const wantSpotIds = util.loadData('userWantSpots', []).map(item => String(item))
   const collectFoodIds = util.loadData('userCollectedFoods', []).map(item => String(item))
@@ -461,7 +400,7 @@ function buildMapPickedPlace(location) {
     id: `map-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     name: location.name || location.address || '地图选点',
     tag: '地点',
-    image: DEFAULT_COVERS[0],
+    image: '/images/app-logo.jpg',
     type: 'spot',
     lat: latitude,
     lng: longitude
@@ -764,7 +703,7 @@ Page({
       daySections: cleanSections,
       daySummaries,
       dayDetails,
-      image: route.image || daySummaries[0]?.image || DEFAULT_COVERS[0],
+      image: route.image || daySummaries[0]?.image || '/images/app-logo.jpg',
       isDraft: Boolean(route.isDraft),
       updatedAt: Date.now()
     }

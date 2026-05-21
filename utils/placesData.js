@@ -36,29 +36,37 @@ const realPlaces = rawPlaces.map(place => {
 // 演示数据：用来让探索页的大类更完整
 const demoPlaces = [
   // 文化展馆
-  { id: 901, name: '深圳美术馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, tags: ['展览', '艺术'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg', displayCategory: '文化展馆' },
-  { id: 902, name: '关山月美术馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.541, lng: 114.038, rating: 4.6, tags: ['国画', '收藏'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg', displayCategory: '文化展馆' },
-  { id: 903, name: '深圳音乐厅', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.544, lng: 114.042, rating: 4.7, tags: ['演出', '音乐'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg', displayCategory: '文化展馆' },
-  { id: 904, name: '何香凝美术馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.532, lng: 113.986, rating: 4.4, tags: ['美术', '展览'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', displayCategory: '文化展馆' },
-  { id: 905, name: '南山图书馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.534915, lng: 113.922459, rating: 4.4, tags: ['图书', '阅读'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', displayCategory: '文化展馆' },
+  { id: 901, name: '深圳美术馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, 
+    tags: ['展览', '艺术'],
+     image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szmeishuguan.jpg', 
+     displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szmeishuguan.jpg', displayCategory: '文化展馆' },
+  { id: 902, name: '关山月美术馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.541, lng: 114.038, rating: 4.6, tags: ['国画', '收藏'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szguanshanyue.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szguanshanyue.jpg', displayCategory: '文化展馆' },
+  { id: 903, name: '深圳音乐厅', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.544, lng: 114.042, rating: 4.7, tags: ['演出', '音乐'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szyinyueting.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szyinyueting.jpg', displayCategory: '文化展馆' },
+  { id: 904, name: '何香凝美术馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.532, lng: 113.986, rating: 4.4, tags: ['美术', '展览'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhexiangning.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhexiangning.jpg', displayCategory: '文化展馆' },
   
   // 自然户外
-  { id: 911, name: '梧桐山国家森林公园', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.624, lng: 114.198, rating: 4.8, tags: ['登山', '观景'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg', displayCategory: '自然户外' },
-  { id: 912, name: '塘朗山郊野公园', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.542, lng: 113.958, rating: 4.5, tags: ['徒步', '骑行'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg', displayCategory: '自然户外' },
-  { id: 913, name: '深圳湾公园', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.498, lng: 113.914, rating: 4.7, tags: ['滨海', '跑步'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg', displayCategory: '自然户外' },
-  { id: 914, name: '梅林水库', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.568, lng: 114.032, rating: 4.6, tags: ['水库', '徒步'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', displayCategory: '自然户外' },
+  { id: 911, name: '梧桐山国家森林公园', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.624, lng: 114.198, rating: 4.8, tags: ['登山', '观景'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwutongshan.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwutongshan.jpg', displayCategory: '自然户外' },
+  { id: 912, name: '塘朗山郊野公园', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.542, lng: 113.958, rating: 4.5, tags: ['徒步', '骑行'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/sztanglangshan.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/sztanglangshan.jpg', displayCategory: '自然户外' },
+  { id: 913, name: '深圳湾公园', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.498, lng: 113.914, rating: 4.7, tags: ['滨海', '跑步'], 
+    image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwangongyuan.jfif', 
+    displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwangongyuan.jfif', displayCategory: '自然户外' },
+  { id: 914, name: '梅林水库', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.568, lng: 114.032, rating: 4.6, tags: ['水库', '徒步'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szmeilinshuiku.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szmeilinshuiku.jpg', displayCategory: '自然户外' },
   
   // 购物
-  { id: 921, name: '华润万象城', city: '深圳', category: '购物', type: 'shopping', lat: 22.541, lng: 114.063, rating: 4.8, tags: ['高端', '奢侈品'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg', displayCategory: '购物' },
-  { id: 922, name: '海岸城', city: '深圳', category: '购物', type: 'shopping', lat: 22.489, lng: 113.921, rating: 4.6, tags: ['餐饮', '娱乐'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg', displayCategory: '购物' },
-  { id: 923, name: '东门老街', city: '深圳', category: '购物', type: 'shopping', lat: 22.543, lng: 114.078, rating: 4.5, tags: ['老街', '小吃'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg', displayCategory: '购物' },
-  { id: 924, name: '益田假日广场', city: '深圳', category: '购物', type: 'shopping', lat: 22.535, lng: 113.988, rating: 4.7, tags: ['品牌', '餐饮'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', displayCategory: '购物' },
+  { id: 921, name: '华润万象城', city: '深圳', category: '购物', type: 'shopping', lat: 22.541, lng: 114.063, rating: 4.8, tags: ['高端', '奢侈品'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwanxiangcheng.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwanxiangcheng.jpg', displayCategory: '购物' },
+  { id: 922, name: '海岸城', city: '深圳', category: '购物', type: 'shopping', lat: 22.489, lng: 113.921, rating: 4.6, tags: ['餐饮', '娱乐'], 
+    image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhaiancheng.jpeg', 
+    displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhaiancheng.jpeg', displayCategory: '购物' },
+  { id: 923, name: '东门老街', city: '深圳', category: '购物', type: 'shopping', lat: 22.543, lng: 114.078, rating: 4.5, tags: ['老街', '小吃'], 
+    image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szdongmenlaojie.jpg',
+     displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szdongmenlaojie.jpg', displayCategory: '购物' },
+  { id: 924, name: '益田假日广场', city: '深圳', category: '购物', type: 'shopping', lat: 22.535, lng: 113.988, rating: 4.7, tags: ['品牌', '餐饮'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szyitianjiari.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szyitianjiari.jpg', displayCategory: '购物' },
   
   // 酒店
-  { id: 931, name: '深圳华侨城洲际大酒店', city: '深圳', category: '酒店', type: 'hotel', lat: 22.538, lng: 113.989, rating: 4.8, tags: ['五星', '豪华'], image: '/images/covers/01.jpeg', displayImage: '/images/covers/01.jpeg', displayCategory: '酒店', price: 1280 },
-  { id: 932, name: '深圳湾安达仕酒店', city: '深圳', category: '酒店', type: 'hotel', lat: 22.501, lng: 113.912, rating: 4.9, tags: ['海景', '高端'], image: '/images/covers/02.jpeg', displayImage: '/images/covers/02.jpeg', displayCategory: '酒店', price: 1580 },
-  { id: 933, name: '深圳柏悦酒店', city: '深圳', category: '酒店', type: 'hotel', lat: 22.542, lng: 114.061, rating: 4.7, tags: ['商务', '舒适'], image: '/images/covers/03.jpeg', displayImage: '/images/covers/03.jpeg', displayCategory: '酒店', price: 980 },
-  { id: 934, name: '深圳大鹏古城民宿', city: '深圳', category: '酒店', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: '/images/covers/04.jpeg', displayImage: '/images/covers/04.jpeg', displayCategory: '酒店', price: 380 },
+  { id: 931, name: '深圳华侨城洲际大酒店', city: '深圳', category: '酒店', type: 'hotel', lat: 22.538, lng: 113.989, rating: 4.8, tags: ['五星', '豪华'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhuaqiaochengzhouji.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhuaqiaochengzhouji.jpg', displayCategory: '酒店', price: 1280 },
+  { id: 932, name: '深圳湾安达仕酒店', city: '深圳', category: '酒店', type: 'hotel', lat: 22.501, lng: 113.912, rating: 4.9, tags: ['海景', '高端'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szanshida.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szanshida.jpg', displayCategory: '酒店', price: 1580 },
+  { id: 933, name: '深圳柏悦酒店', city: '深圳', category: '酒店', type: 'hotel', lat: 22.542, lng: 114.061, rating: 4.7, tags: ['商务', '舒适'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szborui.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szborui.jpg', displayCategory: '酒店', price: 980 },
+  { id: 934, name: '深圳大鹏古城民宿', city: '深圳', category: '酒店', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szdapengminsu.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szdapengminsu.jpg', displayCategory: '酒店', price: 380 },
 ]
 
 // 合并真实数据和演示数据

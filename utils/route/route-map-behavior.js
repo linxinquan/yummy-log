@@ -14,7 +14,8 @@ module.exports = Behavior({
   methods: {
     // 刷新地图上的点位和折线。
     updateMap() {
-      console.log('[updateMap] 开始更新, 出行方式:', this.data.travelMode, 'routeShops.length:', (this.data.routeShops || []).length)
+      // 初始化缓存对象
+      if (!this._routeCache) this._routeCache = {}
       
       // 根据 currentMapDay 决定显示哪一天的路线
       const effectiveDayIndex = this.data.currentMapDay >= 0 ? this.data.currentMapDay : 0
@@ -26,18 +27,36 @@ module.exports = Behavior({
         return
       }
       
-      const { currentStart, travelMode } = this.data
-      let startPoint = currentStart
-      if (currentStart.type === 'current') {
-        startPoint = app.globalData.location || mapConfig.DEFAULT_CENTER
+      const { currentStart, travelMode, dayStartPoints } = this.data
+      
+      // 使用当天设置的起点，如果没有设置则使用 currentStart
+      let startPoint = null
+      if (dayStartPoints && dayStartPoints[effectiveDayIndex]) {
+        startPoint = dayStartPoints[effectiveDayIndex]
+      } else {
+        startPoint = currentStart
+        if (currentStart.type === 'current') {
+          startPoint = app.globalData.location || mapConfig.DEFAULT_CENTER
+        }
       }
       
       // 终点：默认返回起点
       const endPoint = { ...startPoint, name: '返回起点' }
-      
-      // 调试：打印 routeShops 和 allPoints 数据
-      console.log('[updateMap] routeShops:', routeShops.map(s => ({ id: s.id, name: s.name, lat: s.lat, lng: s.lng })))
-      console.log('[updateMap] startPoint:', startPoint, 'endPoint:', endPoint)
+
+      // 检查缓存：如果已有缓存的路线数据，直接使用
+      const cacheKey = `${effectiveDayIndex}-${travelMode}-${startPoint.lat}-${startPoint.lng}`
+      if (this._routeCache[cacheKey]) {
+        const cachedData = this._routeCache[cacheKey]
+        const polyline = [{
+          points: cachedData.points,
+          color: cachedData.color + 'CC',
+          width: 5,
+          dottedLine: false,
+          arrowLine: true
+        }]
+        this._setMapData(cachedData.markers, polyline, startPoint, routeShops)
+        return
+      }
 
       const markers = routeShops.map((shop, index) => ({
         id: Number(shop.id),
@@ -114,11 +133,16 @@ module.exports = Behavior({
           arrowLine: true
         }]
         this._setMapData(markers, polyline, startPoint, routeShops)
+        // 保存到缓存
+        if (cacheKey) {
+          if (!this._routeCache) this._routeCache = {}
+          this._routeCache[cacheKey] = { points: allPoints, markers, color: routeColor }
+        }
         return
       }
 
       // 调用腾讯地图路径规划API获取真实路线
-      this._fetchRealRoute(allPoints, routeColor, markers, startPoint, routeShops)
+      this._fetchRealRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey)
     },
 
     // 让地图自动缩放到能看见当前路线的全部点位。
@@ -179,7 +203,7 @@ module.exports = Behavior({
     },
 
     // ─── 获取真实路线（腾讯地图路径规划）───────────
-    _fetchRealRoute(allPoints, routeColor, markers, startPoint, routeShops) {
+    _fetchRealRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey) {
       const key = app.globalData.qqMapKey
       const { travelMode } = this.data
 
@@ -205,15 +229,15 @@ module.exports = Behavior({
       // 驾车模式支持waypoints，可以一次请求
       console.log('[_fetchRealRoute] 检查是否调用驾车路线: mode=', mode, 'effectivePoints.length=', effectivePoints.length, '条件=', mode === 'driving' && effectivePoints.length > 2)
       if (mode === 'driving' && effectivePoints.length > 2) {
-        this._fetchDrivingRoute(effectivePoints, routeColor, markers, startPoint, routeShops, key)
+        this._fetchDrivingRoute(effectivePoints, routeColor, markers, startPoint, routeShops, key, cacheKey)
       } else {
         // 步行/公交不支持waypoints，需要分段请求
-        this._fetchSegmentedRoute(effectivePoints, routeColor, markers, startPoint, routeShops, key, mode)
+        this._fetchSegmentedRoute(effectivePoints, routeColor, markers, startPoint, routeShops, key, mode, cacheKey)
       }
     },
 
     // ─── 驾车路线（支持waypoints）──────────────────
-    _fetchDrivingRoute(allPoints, routeColor, markers, startPoint, routeShops, key) {
+    _fetchDrivingRoute(allPoints, routeColor, markers, startPoint, routeShops, key, cacheKey) {
       const from = allPoints[0]
       const to = allPoints[allPoints.length - 1]
       const waypoints = allPoints.slice(1, -1).map(p => `${p.latitude},${p.longitude}`).join(';')
@@ -236,20 +260,25 @@ module.exports = Behavior({
               arrowLine: true
             }]
             this._setMapData(markers, polyline, startPoint, routeShops)
+            // 保存到缓存
+            if (cacheKey) {
+              if (!this._routeCache) this._routeCache = {}
+              this._routeCache[cacheKey] = { points, markers, color: routeColor }
+            }
           } else {
             console.warn('[驾车路线] API失败，使用模拟路线:', res.data)
-            this._useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops)
+            this._useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey)
           }
         },
         fail: (err) => {
           console.error('[驾车路线] 请求失败:', err)
-          this._useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops)
+          this._useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey)
         }
       })
     },
 
     // ─── 分段路线（步行/公交，不支持waypoints）─────
-    _fetchSegmentedRoute(allPoints, routeColor, markers, startPoint, routeShops, key, mode) {
+    _fetchSegmentedRoute(allPoints, routeColor, markers, startPoint, routeShops, key, mode, cacheKey) {
       console.log(`[分段路线] ${mode}模式，共${allPoints.length}个点，${allPoints.length - 1}段路线`)
       
       const segments = []
@@ -278,8 +307,13 @@ module.exports = Behavior({
               arrowLine: true
             }]
             this._setMapData(markers, polyline, startPoint, routeShops)
+            // 保存到缓存
+            if (cacheKey) {
+              if (!this._routeCache) this._routeCache = {}
+              this._routeCache[cacheKey] = { points: allRoutePoints, markers, color: routeColor }
+            }
           } else {
-            this._useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops)
+            this._useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey)
           }
           return
         }
@@ -323,7 +357,7 @@ module.exports = Behavior({
     },
 
     // ─── 使用模拟路线（降级方案）───────────────────
-    _useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops) {
+    _useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey) {
       console.log('[模拟路线] 使用模拟路线')
       const points = this._generateSimulatedRouteForAll(allPoints, this.data.travelMode)
       const polyline = [{
@@ -334,6 +368,11 @@ module.exports = Behavior({
         arrowLine: true
       }]
       this._setMapData(markers, polyline, startPoint, routeShops)
+      // 保存到缓存
+      if (cacheKey) {
+        if (!this._routeCache) this._routeCache = {}
+        this._routeCache[cacheKey] = { points, markers, color: routeColor }
+      }
     },
 
     // ─── 生成完整模拟路线（所有点）─────────────────

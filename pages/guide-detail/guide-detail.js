@@ -10,22 +10,6 @@ const {
   buildPlaceIntroData: buildPlaceIntroSheetData
 } = require('../../utils/route-place-card')
 
-// 默认封面池：详情里某些地点没图时，用它兜底。
-const DEFAULT_COVERS = [
-  '/images/covers/01.jpeg',
-  '/images/covers/02.jpeg',
-  '/images/covers/03.jpeg',
-  '/images/covers/04.jpeg',
-  '/images/covers/05.jpeg',
-  '/images/covers/06.jpeg',
-  '/images/covers/07.jpeg',
-  '/images/covers/08.jpeg',
-  '/images/covers/09.jpeg',
-  '/images/covers/10.jpeg',
-  '/images/covers/11.jpeg',
-  '/images/covers/12.jpeg'
-]
-
 // 根据攻略标题、城市等字段推断城市和中心点。
 const CITY_PRESETS = [
   { match: /西安|长安/, name: '西安市', lat: 34.3416, lng: 108.9398 },
@@ -149,7 +133,7 @@ function findMatchedPlace(name) {
 
 // 给详情页准备封面图池。
 function buildCoverPool(guide) {
-  return [...new Set([guide.coverImage].concat(DEFAULT_COVERS).filter(Boolean))]
+  return [guide.coverImage].filter(Boolean)
 }
 
 // 根据攻略信息推断城市和中心点。
@@ -198,7 +182,7 @@ function syncDaySections(daySections, cityInfo) {
         id: item.id || `day-${dayIndex}-item-${itemIndex}`,
         name: item.name || '待补充地点',
         tag,
-        image: item.image || matched?.image || matched?.logo || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length],
+        image: item.image || matched?.image || matched?.logo || '/images/app-logo.jpg',
         type: item.type || matched?.type || (tag === '美食' ? 'food' : 'spot'),
         rating: item.rating || matched?.rating || matched?.score || '',
         tags: item.tags || matched?.tags || [],
@@ -229,7 +213,7 @@ function syncDaySections(daySections, cityInfo) {
         const nextItem = applyTravelMeta(item, item.travelMode)
         return decorateGuidePlaceItem({
           ...nextItem,
-          image: nextItem.image || DEFAULT_COVERS[(dayIndex + itemIndex) % DEFAULT_COVERS.length]
+          image: nextItem.image || '/images/app-logo.jpg'
         })
       })
     }
@@ -303,7 +287,7 @@ function buildGenericSections(guide, covers) {
         id: `day-${dayIndex}-item-${itemIndex}`,
         name,
         tag,
-        image: covers[(cursor + itemIndex) % covers.length],
+        image: covers.length ? covers[(cursor + itemIndex) % covers.length] : '/images/app-logo.jpg',
         type: tag === '美食' ? 'food' : 'spot'
       }
     })
@@ -332,7 +316,7 @@ function buildLegacyRouteData(daySections) {
   const daySummaries = daySections.map((day, index) => ({
     location: '',
     route: (day.items || []).map(item => item.name).join(' --- '),
-    image: (day.items && day.items[0] && day.items[0].image) || DEFAULT_COVERS[index % DEFAULT_COVERS.length]
+    image: (day.items && day.items[0] && day.items[0].image) || '/images/app-logo.jpg',
   }))
 
   const dayDetails = daySections.map(day => (day.items || []).map(item => ({
@@ -607,7 +591,7 @@ Page({
       id: guide.id,
       title: guide.title,
       subtitle: summaryText,
-      image: guide.coverImage || daySummaries[0]?.image || DEFAULT_COVERS[0],
+      image: guide.coverImage || daySummaries[0]?.image || '/images/app-logo.jpg',
       author: guide.author || '匿名',
       city: this.data.cityText,
       guideId: guide.id,
@@ -762,7 +746,7 @@ Page({
     if (!item) return
     this.setData({
       placeIntroVisible: true,
-      placeIntroData: buildPlaceIntroSheetData(item, this.data.cityText, DEFAULT_COVERS[0])
+      placeIntroData: buildPlaceIntroSheetData(item, this.data.cityText, '/images/app-logo.jpg')
     })
   },
 

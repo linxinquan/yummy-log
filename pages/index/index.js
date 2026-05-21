@@ -3,7 +3,7 @@ const app = getApp()
 const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
 const markerIcons = require('../../utils/markerIcons')
-const { resolveDisplayCategory } = require('../../utils/displayCategory')
+const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 
 const GUANGDONG_CITIES = [
   { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 1070 },
@@ -28,16 +28,6 @@ const GUANGDONG_CITIES = [
   { id: 20, name: '潮州', fullName: '潮州市', lat: 23.6567, lng: 116.6226, bgColor: '#D7E2E6', wantCount: 1070 },
   { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445, bgColor: '#E2DEE0', wantCount: 1070 }
 ]
-
-// 给城市选择器准备封面图。
-// 这里会把现有的美食和景点图片拿来循环复用，避免城市卡片没有图。
-function buildCityCoverPool() {
-  const allPlaces = placesData.getAllPlaces()
-  const covers = allPlaces
-    .map(item => item.coverImage || item.displayImage || item.image || item.logo || item.thumb)
-    .filter(Boolean)
-  return covers
-}
 
 Page({
   data: {
@@ -181,7 +171,7 @@ Page({
   },
 
   initCityOptions() {
-    const coverPool = buildCityCoverPool()
+    const coverPool = DEFAULT_COVER_POOL
     const cityOptions = GUANGDONG_CITIES.map((city, index) => ({
       ...city,
       coverImage: coverPool[index % coverPool.length] || '/images/app-logo.jpg'

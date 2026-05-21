@@ -6,24 +6,8 @@ const {
   buildRouteTravelDisplay,
 } = require('./route-place-card')
 const { MODE_CONFIG, formatDurationShort, applyTravelMeta } = require('./travel')
-const placesData = require('./placesData')
 const util = require('./util')
-
-// 默认的路线封面图池。
-const DEFAULT_COVERS = [
-  '/images/covers/01.jpeg',
-  '/images/covers/02.jpeg',
-  '/images/covers/03.jpeg',
-  '/images/covers/04.jpeg',
-  '/images/covers/05.jpeg',
-  '/images/covers/06.jpeg',
-  '/images/covers/07.jpeg',
-  '/images/covers/08.jpeg',
-  '/images/covers/09.jpeg',
-  '/images/covers/10.jpeg',
-  '/images/covers/11.jpeg',
-  '/images/covers/12.jpeg'
-]
+const { DEFAULT_COVER_POOL } = require('../config/cover-pool')
 
 // 根据路线标题或地点文案，推断城市和中心坐标。
 const CITY_PRESETS = [
@@ -46,7 +30,7 @@ function isSpotItem(item) {
 
 // 统一拿封面图字段。
 function getCoverImage(item) {
-  return item.logo || item.image || item.thumb || '/images/covers/01.jpeg'
+  return item.logo || item.image || item.thumb || '/images/app-logo.jpg'
 }
 
 // 把交通方式 key 转成可读文案。
@@ -71,17 +55,6 @@ function getItemTagText(item) {
   return '美食'
 }
 
-// 构建本地图片池，给路线封面兜底。
-function buildLocalCoverPool() {
-  const foodCovers = placesData.getFoods()
-    .map(item => item.coverImage || item.displayImage || item.logo || item.image || item.thumb)
-    .filter(Boolean)
-  const spotCovers = placesData.getSpots()
-    .map(item => item.coverImage || item.displayImage || item.image || item.logo || item.thumb)
-    .filter(Boolean)
-  return [...foodCovers, ...spotCovers, ...DEFAULT_COVERS]
-}
-
 // 从路线里的地点图、回退图池中挑一张路线封面。
 function resolveRouteCoverImage(routeDaySections, fallbackImage = '') {
   const itemCovers = (routeDaySections || []).reduce((result, day) => {
@@ -92,8 +65,7 @@ function resolveRouteCoverImage(routeDaySections, fallbackImage = '') {
     return result
   }, [])
 
-  const localCoverPool = buildLocalCoverPool()
-  return itemCovers[0] || fallbackImage || localCoverPool[0] || DEFAULT_COVERS[0]
+  return itemCovers[0] || fallbackImage || DEFAULT_COVER_POOL[0] || '/images/app-logo.jpg'
 }
 
 // 生成地点卡片的补充信息，例如价格、评分、分类。
@@ -229,7 +201,7 @@ function buildLegacyRouteData(daySections) {
   const daySummaries = (daySections || []).map((day, index) => ({
     location: '',
     route: (day.items || []).map(item => item.name).join(' --- '),
-    image: (day.items && day.items[0] && (day.items[0].coverImage || day.items[0].image)) || DEFAULT_COVERS[index % DEFAULT_COVERS.length]
+    image: (day.items && day.items[0] && (day.items[0].coverImage || day.items[0].image)) || '/images/app-logo.jpg'
   }))
 
   const dayDetails = (daySections || []).map(day => (day.items || []).map(item => ({
@@ -285,6 +257,37 @@ function getPreviewIndexByDay(routeDaySections, dayIndex) {
   return offset
 }
 
+// 把一串地点按天数拆成"每天的路线"。
+function buildPreviewDaySections(routeShops, preferredDayCount = 1) {
+  const items = (routeShops || []).map((item, index) => ({
+    ...item,
+    id: item.id || `preview-place-${index}`,
+    coverImage: item.coverImage || getCoverImage(item),
+    tagText: item.tagText || getItemTagText(item)
+  }))
+  if (!items.length) return []
+
+  const dayCount = Math.max(1, Math.min(parseInt(preferredDayCount, 10) || 1, items.length))
+  const sections = []
+  let startIndex = 0
+
+  for (let dayIndex = 0; dayIndex < dayCount; dayIndex += 1) {
+    const remainingItems = items.length - startIndex
+    const remainingDays = dayCount - dayIndex
+    const currentCount = Math.max(1, Math.ceil(remainingItems / remainingDays))
+    const dayItems = items.slice(startIndex, startIndex + currentCount)
+    sections.push({
+      id: `preview-day-${dayIndex}`,
+      title: buildDayLabel(dayIndex + 1),
+      countText: `${dayItems.length} 个地点`,
+      items: dayItems
+    })
+    startIndex += currentCount
+  }
+
+  return sections
+}
+
 // 根据当前路线类型，判断 toggleLike 时该写 food 还是 spot。
 function getLikeType(item, routeType) {
   if (routeType === 'spot') return 'spot'
@@ -295,13 +298,12 @@ function getLikeType(item, routeType) {
 module.exports = {
   CITY_PRESETS,
   TRIP_DESCRIPTORS,
-  DEFAULT_COVERS,
   isSpotItem,
   getCoverImage,
   getModeLabel,
   estimateRouteDuration,
   getItemTagText,
-  buildLocalCoverPool,
+  DEFAULT_COVER_POOL,
   resolveRouteCoverImage,
   getItemMetaText,
   decorateSelectableItems,
@@ -317,5 +319,6 @@ module.exports = {
   buildLegacyRouteData,
   buildPreviewRouteData,
   getPreviewIndexByDay,
-  getLikeType
+  getLikeType,
+  buildPreviewDaySections
 }
