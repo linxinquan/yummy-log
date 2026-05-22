@@ -64,6 +64,7 @@ module.exports = Behavior({
 
     const markers = routeShops.map((shop, index) => {
       const markerCategory = shop.displayCategory || resolveDisplayCategory(shop)
+      console.log(getMapIconPath(markerCategory))
       return {
         id: shop.id,
         latitude: shop.lat || shop.latitude,

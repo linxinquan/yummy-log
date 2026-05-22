@@ -733,25 +733,26 @@ Page({
       : daySections
     const flattened = flattenDaySections(sections)
 
-    const markers = flattened.map((item, index) => ({
-      id: index,
-      latitude: item.lat,
-      longitude: item.lng,
-      iconPath: index === 0
-        ? '/images/markers/marker_start.png'
-        : index === flattened.length - 1
-          ? '/images/markers/marker_end.png'
-          : '/images/markers/marker_food.png',
-      width: 32,
-      height: 32,
-      label: {
-        content: String(index + 1),
-        fontSize: 10,
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-        anchorY: -42
+    const markers = flattened.map((item, index) => {
+      const markerCategory = item.displayCategory || resolveDisplayCategory(item)
+      return {
+        id: index,
+        latitude: item.lat,
+        longitude: item.lng,
+        iconPath: markerIcons.getMapIconPath(markerCategory),
+        // 与探索页地图统一：
+        // 使用同一套 map 地点图标，并按 64rpx 对应的 32px 显示。
+        width: 32,
+        height: 32,
+        label: {
+          content: String(index + 1),
+          fontSize: 10,
+          color: '#FFFFFF',
+          fontWeight: 'bold',
+          anchorY: -42
+        }
       }
-    }))
+    })
 
     const polyline = markers.length > 1 ? [{
       points: markers.map(marker => ({ latitude: marker.latitude, longitude: marker.longitude })),

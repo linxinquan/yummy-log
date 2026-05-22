@@ -408,7 +408,7 @@ Page({
       
       // 地图点位单独使用带白色圆底的 marker 图标，
       // 不影响顶部分类 Tab 现在使用的普通分类图标。
-      const markerIconPath = markerIcons.getIconPath(markerCategory)
+      const markerIconPath = markerIcons.getMapIconPath(markerCategory)
 
       return {
         id: item.id,
