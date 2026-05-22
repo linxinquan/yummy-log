@@ -1,5 +1,8 @@
 /migration
 node_modules
 
+.DS_Store
+.figma/
+
 /.workbuddy
 /images/places

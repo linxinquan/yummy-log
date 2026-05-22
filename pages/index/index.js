@@ -1,9 +1,12 @@
-﻿// 觅食图 - 探索页逻辑 (合并景点与美食)
+// 觅食图 - 探索页逻辑 (合并景点与美食)
 const app = getApp()
 const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
 const markerIcons = require('../../utils/markerIcons')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
+
+// 重新定位后，把地图拉近到当前位置附近，避免只更新中心点却看起来没变化。
+const MY_LOCATION_FOCUS_SCALE = 17
 
 const GUANGDONG_CITIES = [
   { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 1070 },
@@ -516,6 +519,8 @@ Page({
         app.globalData.location = loc
         this.setData({ 
           mapCenter: loc,
+          // 重新定位后同步拉近地图，让当前位置区域更明确。
+          mapScale: MY_LOCATION_FOCUS_SCALE,
           currentDistrict: '',
           currentCity: (app.globalData.districtInfo && app.globalData.districtInfo.city) || this.data.currentCity,
           locationMode: 'my'
