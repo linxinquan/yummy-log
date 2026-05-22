@@ -1,4 +1,4 @@
-// 一周展示文案：用于首页问候下面那一排日期标签。
+﻿// 一周展示文案：用于首页问候下面那一排日期标签。
 const WEEKDAY_LABELS = ['一', '二', '三', '四', '五', '六', '日']
 const { parseRouteTextToIds, resolveRouteImportText } = require('../../utils/route-import')
 
@@ -139,7 +139,7 @@ Page({
       })
       setTimeout(() => {
         wx.navigateTo({
-          url: `/pages/route/route?type=plan&ids=${parseResult.routeIds.join(',')}&dayCount=${parseResult.dayCount}`
+          url: `/subpackages/route/pages/route/route?type=plan&ids=${parseResult.routeIds.join(',')}&dayCount=${parseResult.dayCount}`
         })
       }, 300)
     } finally {
@@ -151,14 +151,14 @@ Page({
   // 点击“创建路线”后进入基础信息页
   onCreateRoute() {
     wx.navigateTo({
-      url: '/pages/route-basic-edit/route-basic-edit?create=1'
+      url: '/subpackages/route/pages/route-basic-edit/route-basic-edit?create=1'
     })
   },
 
   // 打开独立拍照页：先进入相机页，不再先经过“记录美食”页面。
   onOpenCheckin() {
     wx.navigateTo({
-      url: '/pages/checkin-camera/checkin-camera?type=food&source=routeEntry'
+      url: '/subpackages/checkin/pages/checkin-camera/checkin-camera?type=food&source=routeEntry'
     })
   }
 })

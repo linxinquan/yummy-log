@@ -700,6 +700,24 @@
   margin-top: 48rpx;
 }
 
+.load-more-status {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 32rpx 64rpx;
+  gap: 16rpx;
+  margin-top: 48rpx;
+}
+
+.load-more-text {
+  font-family: 'PingFang SC';
+  font-weight: 400;
+  font-size: 24rpx;
+  line-height: 100%;
+  color: #A0A4AE;
+}
+
 .no-more-line {
   width: 160rpx;
   height: 1rpx;

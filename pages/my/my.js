@@ -1,4 +1,4 @@
-// 觅食图 - 我的页面 v5.1 觅食迹版
+﻿// 觅食图 - 我的页面 v5.1 觅食迹版
 const app = getApp()
 const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
@@ -36,14 +36,14 @@ function openPlaceDetail(shop) {
   if (shop.type === 'spot') {
     if (shop.detailSource === 'record') {
       const spotStr = encodeURIComponent(JSON.stringify(shop))
-      wx.navigateTo({ url: `/pages/spot-detail/spot-detail?spotData=${spotStr}` })
+      wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?spotData=${spotStr}` })
       return
     }
-    wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${shop.id}` })
+    wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${shop.id}` })
     return
   }
   wx.navigateTo({
-    url: `/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(shop))}`
+    url: `/subpackages/extra/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(shop))}`
   })
 }
 
@@ -241,9 +241,9 @@ Page({
       itemList: ['美食采集', '景点采集'],
       success: (res) => {
         if (res.tapIndex === 0) {
-          wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
+          wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=food' })
         } else {
-          wx.navigateTo({ url: '/pages/checkin/checkin?type=spot' })
+          wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=spot' })
         }
       }
     })
@@ -453,13 +453,13 @@ Page({
     
     if (type === 'favorites') {
       // 跳转到我的收藏页面
-      wx.navigateTo({ url: '/pages/my-favorites/my-favorites' })
+      wx.navigateTo({ url: '/subpackages/extra/pages/my-favorites/my-favorites' })
       return
     }
     
     if (type === 'guides') {
       // 跳转到我的攻略页面
-      wx.navigateTo({ url: '/pages/my-guides/my-guides' })
+      wx.navigateTo({ url: '/subpackages/guide/pages/my-guides/my-guides' })
       return
     }
     
@@ -579,22 +579,22 @@ Page({
 
   // 跳到路线相关页面。
   onGoRoute() {
-    wx.navigateTo({ url: '/pages/route/route' })
+    wx.navigateTo({ url: '/subpackages/route/pages/route/route' })
   },
 
   // 跳到采集本页面。
   onGoCollection() {
-    wx.navigateTo({ url: '/pages/collection/collection' })
+    wx.navigateTo({ url: '/subpackages/extra/pages/collection/collection' })
   },
 
   // 快捷进入美食采集。
   onGoCheckinFood() {
-    wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
+    wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=food' })
   },
 
   // 快捷进入景点采集。
   onGoCheckinSpot() {
-    wx.navigateTo({ url: '/pages/checkin/checkin?type=spot' })
+    wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=spot' })
   },
 
   // 点击总地图卡片：没数据时引导去采集。
@@ -608,7 +608,7 @@ Page({
         cancelText: '取消',
         success: (res) => {
           if (res.confirm) {
-            wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
+            wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=food' })
           }
         }
       })
@@ -620,14 +620,14 @@ Page({
   // 点击景点地图卡片。
   onSpotMapTap() {
     if (this.data.spotMarkers.length === 0) {
-      wx.navigateTo({ url: '/pages/checkin/checkin?type=spot' })
+      wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=spot' })
     }
   },
 
   // 点击美食地图卡片。
   onFoodMapTap() {
     if (this.data.foodMarkers.length === 0) {
-      wx.navigateTo({ url: '/pages/checkin/checkin?type=food' })
+      wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=food' })
     }
   },
 

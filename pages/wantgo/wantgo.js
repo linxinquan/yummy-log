@@ -1,4 +1,4 @@
-// 觅食图 V1 - 想去清单页（支持美食/景点/到访，拖拽排序）
+﻿// 觅食图 V1 - 想去清单页（支持美食/景点/到访，拖拽排序）
 const app = getApp()
 const util = require('../../utils/util')
 const placesData = require('../../utils/placesData')
@@ -286,15 +286,15 @@ function openPlaceDetail(item) {
   if (item.type === 'spot') {
     if (item.detailSource === 'record') {
       const spotStr = encodeURIComponent(JSON.stringify(item))
-      wx.navigateTo({ url: `/pages/spot-detail/spot-detail?spotData=${spotStr}` })
+      wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?spotData=${spotStr}` })
       return
     }
-    wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${item.id}` })
+    wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${item.id}` })
     return
   }
 
   const shopStr = encodeURIComponent(JSON.stringify(item))
-  wx.navigateTo({ url: `/pages/shop-detail/shop-detail?shopData=${shopStr}&id=${item.id}` })
+  wx.navigateTo({ url: `/subpackages/extra/pages/shop-detail/shop-detail?shopData=${shopStr}&id=${item.id}` })
 }
 
 Page({
@@ -458,7 +458,7 @@ Page({
     if (Date.now() - (this._lastRouteLongPressTime || 0) < 350) return
     const route = e.currentTarget.dataset.route
     const routeStr = encodeURIComponent(JSON.stringify(route))
-    wx.navigateTo({ url: `/pages/my-route/my-route?route=${routeStr}` })
+    wx.navigateTo({ url: `/subpackages/route/pages/my-route/my-route?route=${routeStr}` })
   },
 
   // 长按路线卡片：打开路线操作弹窗
@@ -553,7 +553,7 @@ Page({
     } else if (selectedRouteAction === 'edit') {
       const routeStr = encodeURIComponent(JSON.stringify(routeActionTarget))
       wx.navigateTo({
-        url: `/pages/route-basic-edit/route-basic-edit?route=${routeStr}`
+        url: `/subpackages/route/pages/route-basic-edit/route-basic-edit?route=${routeStr}`
       })
     }
 
@@ -830,7 +830,7 @@ Page({
     const ids = items.map(i => i.id).join(',')
     const dayCount = Math.max(1, parseInt(selectedPlanDayCount, 10) || 1)
     this.setData({ planDaySheetVisible: false })
-    wx.navigateTo({ url: `/pages/route/route?type=plan&ids=${ids}&dayCount=${dayCount}` })
+    wx.navigateTo({ url: `/subpackages/route/pages/route/route?type=plan&ids=${ids}&dayCount=${dayCount}` })
   },
 
   // 底部空状态按钮：回首页

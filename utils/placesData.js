@@ -1,269 +1,392 @@
 /**
  * 统一数据访问层
- * 替代原来的 shopData.js、foodData.js、spotData.js
- * 使用 utils/unified-places.json 作为统一数据源
+ * 云端 places 集合 + localStorage 缓存
+ * 
+ * 加载策略：
+ *   Phase 0: 读本地缓存 → 命中则秒开
+ *   Phase 1: 无缓存时，拉默认城市 20 条
+ *   Phase 2: 后台拉全量 → 合并 → 存缓存 → 通知页面
  * 
  * 使用方式：
- * const placesData = require('./placesData')
- * 
- * // 获取所有景点
- * const spots = placesData.getSpots()
- * 
- * // 获取所有美食
- * const foods = placesData.getFoods()
- * 
- * // 根据ID获取
- * const place = placesData.getPlaceById(100)
+ *   const placesData = require('./placesData')
+ *   await placesData.init()            // 启动时初始化
+ *   placesData.onUpdate(() => { ... })  // 监听数据变更
+ *   const spots = placesData.getSpots() // 同步调用
  */
 
-// 读取统一数据源
-// 注意：使用 unified-places-data.js（由 unified-places.json 转换而来）
-// 因为微信小程序不支持直接用 require() 加载 .json 文件（非配置文件）
-const rawPlaces = require('./unified-places-data')
+const cloudData = require('./cloudData')
 
-// 将数据转换为统一格式：确保每条数据都有 lat 和 lng 字段
-const realPlaces = rawPlaces.map(place => {
-  const newPlace = { ...place }
-  // 如果从 location.coordinates 格式转换（[longitude, latitude]）
+// 转换为统一格式：确保每条数据都有 lat/lng 字段
+function normalizeLocation(place) {
+  const p = { ...place }
   if (place.location && place.location.coordinates && place.location.coordinates.length >= 2) {
-    newPlace.lng = place.location.coordinates[0]
-    newPlace.lat = place.location.coordinates[1]
+    p.lng = place.location.coordinates[0]
+    p.lat = place.location.coordinates[1]
   }
-  // 如果已经有 lat/lng 或 latitude/longitude，保持不变
-  return newPlace
-})
-
-// 演示数据：用来让探索页的大类更完整
-const demoPlaces = [
-  // 文化展馆
-  { id: 901, name: '深圳美术馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.5436, lng: 114.079, rating: 4.5, 
-    tags: ['展览', '艺术'],
-     image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szmeishuguan.jpg', 
-     displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szmeishuguan.jpg', displayCategory: '文化展馆' },
-  { id: 902, name: '关山月美术馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.541, lng: 114.038, rating: 4.6, tags: ['国画', '收藏'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szguanshanyue.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szguanshanyue.jpg', displayCategory: '文化展馆' },
-  { id: 903, name: '深圳音乐厅', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.544, lng: 114.042, rating: 4.7, tags: ['演出', '音乐'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szyinyueting.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szyinyueting.jpg', displayCategory: '文化展馆' },
-  { id: 904, name: '何香凝美术馆', city: '深圳', category: '文化展馆', type: 'culture', lat: 22.532, lng: 113.986, rating: 4.4, tags: ['美术', '展览'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhexiangning.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhexiangning.jpg', displayCategory: '文化展馆' },
-  
-  // 自然户外
-  { id: 911, name: '梧桐山国家森林公园', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.624, lng: 114.198, rating: 4.8, tags: ['登山', '观景'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwutongshan.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwutongshan.jpg', displayCategory: '自然户外' },
-  { id: 912, name: '塘朗山郊野公园', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.542, lng: 113.958, rating: 4.5, tags: ['徒步', '骑行'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/sztanglangshan.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/sztanglangshan.jpg', displayCategory: '自然户外' },
-  { id: 913, name: '深圳湾公园', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.498, lng: 113.914, rating: 4.7, tags: ['滨海', '跑步'], 
-    image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwangongyuan.jfif', 
-    displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwangongyuan.jfif', displayCategory: '自然户外' },
-  { id: 914, name: '梅林水库', city: '深圳', category: '自然户外', type: 'outdoor', lat: 22.568, lng: 114.032, rating: 4.6, tags: ['水库', '徒步'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szmeilinshuiku.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szmeilinshuiku.jpg', displayCategory: '自然户外' },
-  
-  // 购物
-  { id: 921, name: '华润万象城', city: '深圳', category: '购物', type: 'shopping', lat: 22.541, lng: 114.063, rating: 4.8, tags: ['高端', '奢侈品'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwanxiangcheng.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szwanxiangcheng.jpg', displayCategory: '购物' },
-  { id: 922, name: '海岸城', city: '深圳', category: '购物', type: 'shopping', lat: 22.489, lng: 113.921, rating: 4.6, tags: ['餐饮', '娱乐'], 
-    image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhaiancheng.jpeg', 
-    displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhaiancheng.jpeg', displayCategory: '购物' },
-  { id: 923, name: '东门老街', city: '深圳', category: '购物', type: 'shopping', lat: 22.543, lng: 114.078, rating: 4.5, tags: ['老街', '小吃'], 
-    image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szdongmenlaojie.jpg',
-     displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szdongmenlaojie.jpg', displayCategory: '购物' },
-  { id: 924, name: '益田假日广场', city: '深圳', category: '购物', type: 'shopping', lat: 22.535, lng: 113.988, rating: 4.7, tags: ['品牌', '餐饮'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szyitianjiari.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szyitianjiari.jpg', displayCategory: '购物' },
-  
-  // 酒店
-  { id: 931, name: '深圳华侨城洲际大酒店', city: '深圳', category: '酒店', type: 'hotel', lat: 22.538, lng: 113.989, rating: 4.8, tags: ['五星', '豪华'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhuaqiaochengzhouji.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szhuaqiaochengzhouji.jpg', displayCategory: '酒店', price: 1280 },
-  { id: 932, name: '深圳湾安达仕酒店', city: '深圳', category: '酒店', type: 'hotel', lat: 22.501, lng: 113.912, rating: 4.9, tags: ['海景', '高端'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szanshida.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szanshida.jpg', displayCategory: '酒店', price: 1580 },
-  { id: 933, name: '深圳柏悦酒店', city: '深圳', category: '酒店', type: 'hotel', lat: 22.542, lng: 114.061, rating: 4.7, tags: ['商务', '舒适'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szborui.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szborui.jpg', displayCategory: '酒店', price: 980 },
-  { id: 934, name: '深圳大鹏古城民宿', city: '深圳', category: '酒店', type: 'hotel', lat: 22.628, lng: 114.335, rating: 4.6, tags: ['民宿', '古村'], image: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szdapengminsu.jpg', displayImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/spots/szdapengminsu.jpg', displayCategory: '酒店', price: 380 },
-]
-
-// 合并真实数据和演示数据
-const allPlaces = [...realPlaces, ...demoPlaces]
+  return p
+}
 
 // ============================================================
-// 内存缓存（提升性能）
+// 缓存配置
 // ============================================================
 
+const CACHE_KEY = 'places_cache'       // localStorage key
+const CACHE_VERSION = 1                // 缓存版本，结构变更时递增使旧缓存失效
+const DEFAULT_CITY = '深圳'            // 首屏城市
+
+/**
+ * 序列化前剥离不可 JSON 化的 GeoPoint 对象（已有 lat/lng 兜底）
+ */
+function _stripGeoPoint(place) {
+  const p = { ...place }
+  delete p.location  // GeoPoint 对象不可序列化
+  return p
+}
+
+/**
+ * 保存全量数据到本地缓存
+ */
+function _saveCache(places) {
+  try {
+    const payload = {
+      version: CACHE_VERSION,
+      timestamp: Date.now(),
+      data: places.map(_stripGeoPoint)
+    }
+    wx.setStorageSync(CACHE_KEY, payload)
+    console.log('[placesData] 缓存已保存, 条数:', places.length)
+  } catch (err) {
+    console.warn('[placesData] 缓存保存失败（可能超限）:', err.message)
+  }
+}
+
+/**
+ * 读取本地缓存，返回 null 表示无可用缓存
+ */
+function _loadCache() {
+  try {
+    const payload = wx.getStorageSync(CACHE_KEY)
+    if (!payload || !payload.data) return null
+    if (payload.version !== CACHE_VERSION) {
+      console.log('[placesData] 缓存版本不匹配，已失效')
+      return null
+    }
+    const age = Date.now() - payload.timestamp
+    console.log('[placesData] 命中本地缓存, 条数:', payload.data.length, '年龄:', Math.round(age / 1000) + 's')
+    return payload.data
+  } catch (err) {
+    console.warn('[placesData] 缓存读取失败:', err.message)
+    return null
+  }
+}
+
+/**
+ * 清除本地缓存
+ */
+function _clearCache() {
+  try {
+    wx.removeStorageSync(CACHE_KEY)
+  } catch (e) { /* ignore */ }
+}
+
+// ============================================================
+// 内存状态
+// ============================================================
+
+let _allPlacesCache = null
 let _spotsCache = null
 let _foodsCache = null
 let _placesMapCache = null  // id -> place
+let _initialized = false
+let _fullReady = false          // 全量数据是否就绪
+let _readyResolve = null        // whenReady() 的 resolve
+let _fullReadyResolve = null    // whenFullyReady() 的 resolve
+let _fullReadyCallbacks = []    // 全量就绪回调队列
+let _onUpdateCallbacks = []     // 数据变更回调（每次 merge 后触发）
+let _initPromise = null         // 防止重复 init
 
 // ============================================================
-// 核心函数
+// 初始化（三阶段：缓存 → 首屏 → 全量）
+// ============================================================
+
+async function init(force = false) {
+  // 防止并发重复调用
+  if (_initPromise && !force) return _initPromise
+  _initPromise = _doInit(force)
+  return _initPromise
+}
+
+async function _doInit(force) {
+  if (_initialized && !force) return
+
+  // force 刷新时清除缓存和状态
+  if (force) {
+    _clearCache()
+    _initialized = false
+    _fullReady = false
+    _readyResolve = null
+    _fullReadyResolve = null
+    _fullReadyCallbacks = []
+  }
+
+  // ── Phase 0: 尝试读本地缓存 ──
+  const cached = !force && _loadCache()
+  if (cached && cached.length > 0) {
+    const normalized = cached.map(normalizeLocation)
+    _fillCache(normalized)
+    _initialized = true
+    _fullReady = true
+
+    console.log('[placesData] Phase 0 (缓存) 完成 - 全部:', _allPlacesCache.length,
+                '景点:', _spotsCache.length, '美食:', _foodsCache.length)
+
+    // 缓存已有全量数据，两个 ready 都立即触发
+    _resolveReady()
+    _resolveFullReady()
+
+    // 后台刷新全量数据（跳过 Phase 1）
+    _backgroundRefresh()
+    return
+  }
+
+  // ── Phase 1: 无缓存，拉默认城市 20 条 ──
+  console.log('[placesData] Phase 1：加载', DEFAULT_CITY, '数据...')
+  try {
+    const cityData = await cloudData.getPlacesByCity(DEFAULT_CITY, 20)
+    const normalized = (cityData || []).map(normalizeLocation)
+    _fillCache(normalized)
+    _initialized = true
+
+    console.log('[placesData] Phase 1 完成 -', DEFAULT_CITY + ':', _allPlacesCache.length,
+                '景点:', _spotsCache.length, '美食:', _foodsCache.length)
+
+    _resolveReady()
+
+    // ── Phase 2: 后台拉全量 ──
+    await _fetchFullAndMerge()
+
+  } catch (err) {
+    console.error('[placesData] 数据加载失败', err)
+    if (!_initialized) {
+      _allPlacesCache = []
+      _spotsCache = []
+      _foodsCache = []
+      _initialized = true
+      _resolveReady()
+    }
+  }
+}
+
+/**
+ * 后台拉取全量数据并合并（不阻塞 Phase 0/1 的 ready）
+ */
+async function _backgroundRefresh() {
+  try {
+    await _fetchFullAndMerge()
+  } catch (err) {
+    console.warn('[placesData] 后台刷新失败:', err.message)
+  }
+}
+
+/**
+ * 拉取全量 → 合并 → 存缓存 → 通知
+ */
+async function _fetchFullAndMerge() {
+  console.log('[placesData] Phase 2：加载全量数据...')
+  const all = await cloudData.getAllPlaces()
+  const allNormalized = (all || []).map(normalizeLocation)
+  _mergeCache(allNormalized)
+  _fullReady = true
+
+  console.log('[placesData] Phase 2 完成 - 全部:', _allPlacesCache.length,
+              '景点:', _spotsCache.length, '美食:', _foodsCache.length)
+
+  // 持久化缓存
+  _saveCache(_allPlacesCache)
+
+  // 唤醒等待
+  _resolveFullReady()
+
+  // 通知所有监听数据变更的页面
+  _fireOnUpdate()
+}
+
+// ============================================================
+// 内部辅助
+// ============================================================
+
+function _fillCache(normalized) {
+  _allPlacesCache = normalized
+  _spotsCache = normalized.filter(p => p.type === 'spot')
+  _foodsCache = normalized.filter(p => p.type === 'food')
+  _placesMapCache = null
+}
+
+function _mergeCache(allNormalized) {
+  const merged = [...allNormalized]
+  _allPlacesCache.forEach(p => {
+    if (!allNormalized.find(n => n.id === p.id)) {
+      merged.push(p)
+    }
+  })
+  _fillCache(merged)
+}
+
+function _resolveReady() {
+  if (_readyResolve) { _readyResolve(); _readyResolve = null }
+}
+
+function _resolveFullReady() {
+  if (_fullReadyResolve) { _fullReadyResolve(); _fullReadyResolve = null }
+  _fullReadyCallbacks.forEach(cb => cb())
+  _fullReadyCallbacks = []
+}
+
+function _fireOnUpdate() {
+  _onUpdateCallbacks.forEach(cb => {
+    try { cb() } catch (e) { console.warn('[placesData] onUpdate 回调异常:', e) }
+  })
+}
+
+// ============================================================
+// 就绪等待 & 事件监听
 // ============================================================
 
 /**
- * 获取所有数据
+ * 等待首屏数据就绪（Phase 0/1 完成即触发）
  */
+function whenReady() {
+  if (_initialized) return Promise.resolve()
+  return new Promise(resolve => { _readyResolve = resolve })
+}
+
+/**
+ * 等待全量数据就绪（Phase 2 完成或缓存命中）
+ */
+function whenFullyReady(callback) {
+  if (_fullReady) {
+    if (callback) callback()
+    return Promise.resolve()
+  }
+  const p = new Promise(resolve => { _fullReadyResolve = resolve })
+  if (callback) _fullReadyCallbacks.push(callback)
+  return p
+}
+
+/**
+ * 监听数据变更（每次全量合并后触发，包括后台刷新）
+ * 页面级监听，页面卸载时应 offUpdate 取消
+ */
+function onUpdate(callback) {
+  _onUpdateCallbacks.push(callback)
+}
+
+function offUpdate(callback) {
+  _onUpdateCallbacks = _onUpdateCallbacks.filter(cb => cb !== callback)
+}
+
+function isReady() {
+  return _initialized && !!_allPlacesCache
+}
+
+function isFullyReady() {
+  return _fullReady
+}
+
+// ============================================================
+// 同步 getter（需先 init / whenReady）
+// ============================================================
+
 function getAllPlaces() {
-  return allPlaces
+  return _allPlacesCache || []
 }
 
-/**
- * 获取所有景点
- * @param {string} city - 可选，筛选城市
- * @returns {Array} 景点数组
- */
 function getSpots(city) {
-  if (!_spotsCache) {
-    _spotsCache = allPlaces.filter(p => p.type === 'spot')
-  }
-  
-  if (city) {
-    return _spotsCache.filter(s => s.city === city)
-  }
-  
-  return _spotsCache
+  const spots = _spotsCache || []
+  if (city) return spots.filter(s => s.city === city)
+  return spots
 }
 
-/**
- * 获取所有美食
- * @param {string} city - 可选，筛选城市
- * @returns {Array} 美食数组
- */
 function getFoods(city) {
-  if (!_foodsCache) {
-    _foodsCache = allPlaces.filter(p => p.type === 'food')
-  }
-  
-  if (city) {
-    return _foodsCache.filter(f => f.city === city)
-  }
-  
-  return _foodsCache
+  const foods = _foodsCache || []
+  if (city) return foods.filter(f => f.city === city)
+  return foods
 }
 
-/**
- * 根据ID获取地点
- * @param {number} id - 地点ID
- * @returns {Object|null} 地点对象
- */
 function getPlaceById(id) {
   if (!_placesMapCache) {
     _placesMapCache = {}
-    allPlaces.forEach(p => {
-      _placesMapCache[p.id] = p
-    })
+    const all = _allPlacesCache || []
+    all.forEach(p => { _placesMapCache[p.id] = p })
   }
-  
   return _placesMapCache[id] || null
 }
 
-/**
- * 根据名称获取地点
- * @param {string} name - 地点名称
- * @returns {Object|null} 地点对象
- */
 function getPlaceByName(name) {
-  return allPlaces.find(p => p.name === name) || null
+  const all = _allPlacesCache || []
+  return all.find(p => p.name === name) || null
 }
 
-/**
- * 搜索地点（按名称、标签、描述）
- * @param {string} keyword - 搜索关键词
- * @param {string} type - 可选，筛选类型 'spot' 或 'food'
- * @returns {Array} 匹配的地点数组
- */
 function searchPlaces(keyword, type) {
   const lowerKeyword = keyword.toLowerCase()
-  
-  return allPlaces.filter(p => {
-    // 类型筛选
+  const all = _allPlacesCache || []
+  return all.filter(p => {
     if (type && p.type !== type) return false
-    
-    // 名称匹配
     if (p.name && p.name.toLowerCase().includes(lowerKeyword)) return true
-    
-    // 标签匹配
     if (p.tags && p.tags.some(t => t.toLowerCase().includes(lowerKeyword))) return true
-    
-    // 描述匹配
     if (p.desc && p.desc.toLowerCase().includes(lowerKeyword)) return true
-    
-    // 分类匹配
     if (p.category && p.category.toLowerCase().includes(lowerKeyword)) return true
-    
     return false
   })
 }
 
-/**
- * 获取地点分类列表
- * @param {string} type - 'spot' 或 'food'
- * @returns {Array} 分类数组
- */
 function getCategories(type) {
   const places = type === 'spot' ? getSpots() : getFoods()
   const categories = new Set()
-  
-  places.forEach(p => {
-    if (p.category) {
-      categories.add(p.category)
-    }
-  })
-  
+  places.forEach(p => { if (p.category) categories.add(p.category) })
   return Array.from(categories)
 }
 
-/**
- * 获取城市列表
- * @param {string} type - 可选，筛选类型 'spot' 或 'food'
- * @returns {Array} 城市数组
- */
 function getCities(type) {
-  const places = type ? (type === 'spot' ? getSpots() : getFoods()) : allPlaces
+  const all = _allPlacesCache || []
+  const places = type ? (type === 'spot' ? getSpots() : getFoods()) : all
   const cities = new Set()
-  
-  places.forEach(p => {
-    if (p.city) {
-      cities.add(p.city)
-    }
-  })
-  
+  places.forEach(p => { if (p.city) cities.add(p.city) })
   return Array.from(cities)
 }
 
 // ============================================================
-// 兼容旧接口的包装函数
+// 兼容旧接口
 // ============================================================
 
-/**
- * 兼容旧接口：获取蛇口美食（shopData.shops）
- * @deprecated 请使用 getFoods('深圳') 代替
- */
 function getSnakePortShops() {
-  return getFoods('深圳').filter(f => 
-    f.district === '蛇口' || 
-    (f.address && f.address.includes('蛇口'))
+  return getFoods('深圳').filter(f =>
+    f.district === '蛇口' || (f.address && f.address.includes('蛇口'))
   )
 }
 
-/**
- * 兼容旧接口：获取美食名称映射（shopData.shopNameMap）
- * @deprecated 请使用 getPlaceByName() 代替
- */
 function getShopNameMap() {
   const map = {}
-  getFoods().forEach(f => {
-    map[f.id] = f.name
-  })
+  getFoods().forEach(f => { map[f.id] = f.name })
   return map
 }
 
-/**
- * 兼容旧接口：获取深圳美食（foodData.foods）
- * @deprecated 请使用 getFoods('深圳') 代替
- */
-function getShenzhenFoods() {
-  return getFoods('深圳')
-}
-
-/**
- * 兼容旧接口：获取深圳景点（spotData）
- * @deprecated 请使用 getSpots('深圳') 代替
- */
-function getShenzhenSpots() {
-  return getSpots('深圳')
-}
+function getShenzhenFoods() { return getFoods('深圳') }
+function getShenzhenSpots() { return getSpots('深圳') }
 
 // ============================================================
 // 导出
 // ============================================================
 
 module.exports = {
-  // 核心函数
+  init,
+  whenReady,
+  whenFullyReady,
+  onUpdate,
+  offUpdate,
+  isReady,
+  isFullyReady,
+  
   getAllPlaces,
   getSpots,
   getFoods,
@@ -273,13 +396,11 @@ module.exports = {
   getCategories,
   getCities,
   
-  // 兼容旧接口（逐步废弃）
   getSnakePortShops,
   getShopNameMap,
   getShenzhenFoods,
   getShenzhenSpots,
   
-  // 直接导出数据（兼容旧代码）
   get spots() { return getSpots() },
   get foods() { return getFoods() },
   get shops() { return getSnakePortShops() },

@@ -181,10 +181,16 @@
           </view>
         </view>
         
-        <view class="no-more" wx:if="{{filteredItems.length > 0}}">
-          <view class="no-more-line"></view>
-          <text class="no-more-text">已经没有更多了</text>
-          <view class="no-more-line"></view>
+        <!-- 滚动加载状态 -->
+        <view class="load-more-status" wx:if="{{filteredItems.length > 0}}">
+          <block wx:if="{{hasMore}}">
+            <text class="load-more-text">上拉加载更多</text>
+          </block>
+          <block wx:else>
+            <view class="no-more-line"></view>
+            <text class="no-more-text">已经没有更多了</text>
+            <view class="no-more-line"></view>
+          </block>
         </view>
         
         <view class="bottom-spacer"></view>

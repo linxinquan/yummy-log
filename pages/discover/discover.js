@@ -1,4 +1,4 @@
-// 觅食图 - 攻略页
+﻿// 觅食图 - 攻略页
 const app = getApp()
 const { normalizeTripDurationText } = require('../../utils/trip-duration')
 const { backfillStoredGuides } = require('../../utils/guide-backfill')
@@ -412,7 +412,7 @@ Page({
     const district = e.currentTarget.dataset.district
     const districtName = e.currentTarget.dataset.name
     wx.navigateTo({
-      url: `/pages/district-guide/district-guide?district=${district}&name=${encodeURIComponent(districtName)}`
+      url: `/subpackages/guide/pages/district-guide/district-guide?district=${district}&name=${encodeURIComponent(districtName)}`
     })
   },
 
@@ -426,7 +426,7 @@ Page({
   onGuideTap(e) {
     const guide = e.currentTarget.dataset.guide
     wx.navigateTo({
-      url: `/pages/guide-detail/guide-detail?guide=${encodeURIComponent(JSON.stringify(guide))}`
+      url: `/subpackages/guide/pages/guide-detail/guide-detail?guide=${encodeURIComponent(JSON.stringify(guide))}`
     })
   }
 })

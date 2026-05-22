@@ -3,24 +3,68 @@
     "pages/index/index",
     "pages/wantgo/wantgo",
     "pages/discover/discover",
-    "pages/district-guide/district-guide",
-    "pages/guide-detail/guide-detail",
-    "pages/my/my",
-    "pages/shop-detail/shop-detail",
-    "pages/spot-detail/spot-detail",
-    "pages/route/route",
     "pages/route-entry/route-entry",
-    "pages/link-import/link-import",
-    "pages/webview/webview",
-    "pages/checkin-camera/checkin-camera",
-    "pages/checkin/checkin",
-    "pages/checkin-detail/checkin-detail",
-    "pages/collection/collection",
-    "pages/my-favorites/my-favorites",
-    "pages/my-guides/my-guides",
-    "pages/my-route/my-route",
-    "pages/route-basic-edit/route-basic-edit"
+    "pages/my/my"
   ],
+  "subpackages": [
+    {
+      "root": "subpackages/guide",
+      "name": "guide",
+      "pages": [
+        "pages/district-guide/district-guide",
+        "pages/guide-detail/guide-detail",
+        "pages/my-guides/my-guides"
+      ]
+    },
+    {
+      "root": "subpackages/checkin",
+      "name": "checkin",
+      "pages": [
+        "pages/checkin/checkin",
+        "pages/checkin-camera/checkin-camera",
+        "pages/checkin-detail/checkin-detail"
+      ]
+    },
+    {
+      "root": "subpackages/route",
+      "name": "route",
+      "pages": [
+        "pages/route/route",
+        "pages/route-basic-edit/route-basic-edit",
+        "pages/my-route/my-route"
+      ]
+    },
+    {
+      "root": "subpackages/extra",
+      "name": "extra",
+      "pages": [
+        "pages/shop-detail/shop-detail",
+        "pages/spot-detail/spot-detail",
+        "pages/collection/collection",
+        "pages/link-import/link-import",
+        "pages/webview/webview",
+        "pages/my-favorites/my-favorites"
+      ]
+    }
+  ],
+  "preloadRule": {
+    "pages/my/my": {
+      "packages": ["checkin"],
+      "network": "all"
+    },
+    "pages/route-entry/route-entry": {
+      "packages": ["checkin"],
+      "network": "all"
+    },
+    "pages/discover/discover": {
+      "packages": ["guide"],
+      "network": "all"
+    },
+    "pages/wantgo/wantgo": {
+      "packages": ["route"],
+      "network": "all"
+    }
+  },
   "lazyCodeLoading": "requiredComponents",
   "window": {
     "backgroundTextStyle": "light",

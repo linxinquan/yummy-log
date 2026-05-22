@@ -1,4 +1,4 @@
-// 觅食图 - 探索页逻辑 (合并景点与美食)
+﻿// 觅食图 - 探索页逻辑 (合并景点与美食)
 const app = getApp()
 const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
@@ -137,8 +137,15 @@ Page({
       this.initCityOptions()
     }, 0)
 
-    // 加载数据（同步操作，但避免重复调用 getAllPlaces）
+    // 加载数据
     this.loadItems()
+    
+    // 监听数据变更（后台刷新合并后触发，补全其他城市数据）
+    this._onDataUpdate = () => {
+      console.log('[index] 数据已更新，刷新列表')
+      this.loadItems()
+    }
+    placesData.onUpdate(this._onDataUpdate)
     
     // 延迟加载用户数据，避免阻塞
     setTimeout(() => {
@@ -184,6 +191,14 @@ Page({
     this.updateItemStatus()
   },
 
+  onUnload() {
+    // 取消数据变更监听，避免内存泄漏
+    if (this._onDataUpdate) {
+      placesData.offUpdate(this._onDataUpdate)
+      this._onDataUpdate = null
+    }
+  },
+
   // 统一调度 applyFilters，避免重复调用
   _scheduleApplyFilters() {
     if (this._applyFiltersTimer) {
@@ -196,7 +211,10 @@ Page({
   },
 
   // 加载数据 (混合美食和景点)
-  loadItems() {
+  async loadItems() {
+    // 等待 placesData 初始化完成（解决启动时序竞争问题）
+    await placesData.whenReady()
+    console.log('loadItems')
     const userShops = util.loadData('userAddedShops', [])
     const currentCity = this.data.currentCity || '深圳市'
     
@@ -219,7 +237,7 @@ Page({
         tags: filteredTags,
       };
     })
-    
+    console.log('allPlaces', allPlaces)
     // 直接设置为总列表，不再需要合并演示数据
     this.setData({ allItems: allPlaces })
     this._scheduleApplyFilters()
@@ -270,10 +288,12 @@ Page({
   },
 
   // 按当前分类、排序和地图中心点，重新生成当前可见列表。
+  // 全量数据存入 _fullFilteredList，UI 只展示第一页
   applyFilters() {
-    let { allItems, currentCategory, sortType, currentDistance, mapCenter, currentCity } = this.data
+    let { allItems, currentCategory, sortType, currentDistance, mapCenter, currentCity, pageSize } = this.data
     
     let filtered = allItems
+    console.log('applyFilters', filtered)
     
     // 城市筛选：根据当前选中的城市进行筛选
     if (currentCity) {
@@ -311,6 +331,7 @@ Page({
         distance: this.formatDistance(dist)
       }
     })
+    console.log('applyFilters', filtered)
     
     // 排序
     if (sortType === 'distance') {
@@ -319,9 +340,14 @@ Page({
       filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
     }
     
+    // 缓存全量结果，UI 只渲染第一页
+    this._fullFilteredList = filtered
+    const firstPage = filtered.slice(0, pageSize)
+    
     this.setData({ 
-      filteredItems: filtered,
-      hasMore: filtered.length > this.data.pageSize
+      filteredItems: firstPage,
+      hasMore: filtered.length > pageSize,
+      currentPage: 1
     })
     
     this.updateMarkers()
@@ -467,9 +493,9 @@ Page({
   onItemTap(e) {
     const item = e.currentTarget.dataset.item
     if (item.type === 'spot') {
-      wx.navigateTo({ url: `/pages/spot-detail/spot-detail?id=${item.id}` })
+      wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${item.id}` })
     } else {
-      wx.navigateTo({ url: `/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(item))}` })
+      wx.navigateTo({ url: `/subpackages/extra/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(item))}` })
     }
   },
 
@@ -570,9 +596,36 @@ Page({
     this.setData({ [key]: '/images/app-logo.jpg' })
   },
 
-  // 列表滚动到底部时的预留入口，目前暂时没有更多数据逻辑
+  // 列表滚动到底部时，加载下一页数据
   onLoadMore() {
-    // 暂无更多数据处理
+    console.log('onLoadMore')
+    if (this._loadingMore) return
+    if (!this._fullFilteredList || !this.data.hasMore) return
+    
+    this._loadingMore = true
+    const { currentPage, pageSize } = this.data
+    const nextPage = currentPage + 1
+    // 已展示 0 ~ currentPage*pageSize-1，下一页从 currentPage*pageSize 开始
+    const start = currentPage * pageSize
+    const end = start + pageSize
+    const nextItems = this._fullFilteredList.slice(start, end)
+    
+    if (nextItems.length === 0) {
+      this.setData({ hasMore: false })
+      this._loadingMore = false
+      return
+    }
+    
+    const merged = [...this.data.filteredItems, ...nextItems]
+    const hasMore = start + pageSize < this._fullFilteredList.length
+    
+    this.setData({
+      filteredItems: merged,
+      currentPage: nextPage,
+      hasMore
+    }, () => {
+      this._loadingMore = false
+    })
   },
 
   // 位置选择器：打开 / 关闭 / 阻止冒泡 / 切换城市

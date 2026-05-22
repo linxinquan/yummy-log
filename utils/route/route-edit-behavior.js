@@ -1,4 +1,4 @@
-const util = require('../../utils/util')
+﻿const util = require('../../utils/util')
 const { buildMapPreviewViewData } = require('../../utils/map-preview')
 const { getLikeType, getCityInfo, buildDayLabel, buildTabs, buildSummaryText, buildPreviewTitle, buildPreviewRouteData } = require('../routeHelper')
 
@@ -134,7 +134,7 @@ module.exports = Behavior({
         if (!previewRoute) return
         this.setData({ previewRouteId: previewRoute.id, hasUnsavedPreview: true })
         wx.navigateTo({
-          url: `/pages/route-basic-edit/route-basic-edit?route=${encodeURIComponent(JSON.stringify(previewRoute))}&temp=1`,
+          url: `/subpackages/route/pages/route-basic-edit/route-basic-edit?route=${encodeURIComponent(JSON.stringify(previewRoute))}&temp=1`,
           success: (res) => {
             res.eventChannel.on('routeBasicSaved', (updatedRoute) => {
               if (!updatedRoute) return
@@ -180,7 +180,7 @@ module.exports = Behavior({
             hasUnsavedPreview: true
           })
           wx.navigateTo({
-            url: `/pages/my-route/my-route?route=${encodeURIComponent(JSON.stringify(previewRoute))}&edit=1&create=1&fromPreview=1`,
+            url: `/subpackages/route/pages/my-route/my-route?route=${encodeURIComponent(JSON.stringify(previewRoute))}&edit=1&create=1&fromPreview=1`,
             success: (res) => {
               // 手动编辑保存后，把最新路线回传给当前预览页；取消则直接回到这里。
               res.eventChannel.on('previewRouteEdited', (updatedRoute) => {
