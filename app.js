@@ -53,7 +53,6 @@ App({
     try {
       wx.showLoading({ title: '刷新数据中...' })
       await placesData.init(true)
-      console.log('[App] 数据刷新完成')
       wx.hideLoading()
     } catch (e) {
       console.error('[App] 数据刷新失败:', e)

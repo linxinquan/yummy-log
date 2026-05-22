@@ -2,6 +2,26 @@
 const app = getApp()
 const { normalizeTripDurationText } = require('../../utils/trip-duration')
 const { backfillStoredGuides } = require('../../utils/guide-backfill')
+const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
+
+// 云端头像资源路径
+const cloudFile = 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/avatar_images/'
+const authorImages = [
+  'img_00001.jpg',
+  'img_00002.jpg',
+  'img_00003.jpg',
+  'img_00004.jpg',
+  'img_00005.jpg',
+  'img_00006.jpg',
+  'img_00007.jpg',
+  'img_00008.jpg'
+]
+
+// 随机获取一个作者头像
+function getRandomAuthorAvatar() {
+  const index = Math.floor(Math.random() * authorImages.length)
+  return cloudFile + authorImages[index]
+}
 
 // 根据攻略已有字段，尽量推断出城市名称。
 function inferGuideCity(guide = {}) {
@@ -33,7 +53,7 @@ function decorateGuideCards(guides = []) {
   return guides.map(item => ({
     ...item,
     cityText: item.cityText || inferGuideCity(item),
-    authorAvatar: item.authorAvatar || item.coverImage,
+    authorAvatar: item.authorAvatar || getRandomAuthorAvatar(),
     useRouteCount: (item.baseUseCount || 0) + getSavedGuideCount(item.id),
     duration: normalizeTripDurationText(item.duration, Math.max((item.daySections || []).length, 1))
   }))
@@ -136,17 +156,7 @@ Page({
   // 组装攻略页的数据源：
   // 包括精选攻略、内置攻略、以及用户自己发布的攻略。
   loadGuides(categoryName = '全部') {
-    const coverImages = [
-      '/images/covers/01.jpeg',
-      '/images/covers/02.jpeg',
-      '/images/covers/03.jpeg',
-      '/images/covers/04.jpeg',
-      '/images/covers/05.jpeg',
-      '/images/covers/06.jpeg',
-      '/images/covers/07.jpeg',
-      '/images/covers/08.jpeg'
-    ]
-
+    const coverImages = DEFAULT_COVER_POOL
     const cardColors = [
       '#F7F7F7',
       '#F5F6F8',
@@ -161,7 +171,7 @@ Page({
         id: 1,
         name: '蛇口的海与月',
         title: '深圳蛇口必吃地道老店推荐',
-        coverImage: coverImages[0],
+        coverImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/guides/shekoubichi.jpg',
         author: '小胖又饿了',
         duration: '2天',
         shopCount: 14,
@@ -171,7 +181,7 @@ Page({
         id: 2,
         name: '春日踏青',
         title: '深圳春日赏花攻略',
-        coverImage: coverImages[1],
+        coverImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/guides/shanghua.jpg',
         author: '旅行博主',
         duration: '1天',
         shopCount: 8,
@@ -181,7 +191,7 @@ Page({
         id: 3,
         name: '周末寻味',
         title: '深圳本地人常去的美食街',
-        coverImage: coverImages[2],
+        coverImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/guides/szmeishijie.jpg',
         author: '美食达人',
         duration: '1天',
         shopCount: 12,
@@ -191,7 +201,7 @@ Page({
         id: 4,
         name: '文艺慢生活',
         title: '蛇口值得打卡的咖啡馆',
-        coverImage: coverImages[3],
+        coverImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/guides/cafei.jpg',
         author: '文艺青年',
         duration: '半天',
         shopCount: 6,
@@ -201,7 +211,7 @@ Page({
         id: 5,
         name: '海滨漫步',
         title: '深圳最值得去的海边景点',
-        coverImage: coverImages[4],
+        coverImage: 'cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/guides/haibianjingdian.jfif',
         author: '旅行家',
         duration: '1天',
         shopCount: 5,

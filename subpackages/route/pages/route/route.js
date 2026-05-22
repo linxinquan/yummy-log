@@ -14,11 +14,11 @@ const {
   buildPreviewDaySections
 } = require('../../../../utils/routeHelper')
 
-const routeMapBehavior = require('../../../../utils/route/route-map-behavior')
-const routePreviewBehavior = require('../../../../utils/route/route-preview-behavior')
-const routeEditBehavior = require('../../../../utils/route/route-edit-behavior')
-const routeNavBehavior = require('../../../../utils/route/route-nav-behavior')
-const routePlaceBehavior = require('../../../../utils/route/route-place-behavior')
+const routeMapBehavior = require('../../utils/route-map-behavior')
+const routePreviewBehavior = require('../../utils/route-preview-behavior')
+const routeEditBehavior = require('../../utils/route-edit-behavior')
+const routeNavBehavior = require('../../utils/route-nav-behavior')
+const routePlaceBehavior = require('../../utils/route-place-behavior')
 
 
 // 读取所有美食数据源。

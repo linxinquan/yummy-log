@@ -9,7 +9,7 @@ try {
 
 let recognizePhotoUtil = null
 try {
-  recognizePhotoUtil = require('../../../../utils/recognizePhoto')
+  recognizePhotoUtil = require('../../utils/recognizePhoto')
 } catch (e) {
   console.warn('recognizePhotoUtil load fail', e)
 }

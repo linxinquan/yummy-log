@@ -8,6 +8,7 @@ const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 const GUANGDONG_CITIES = [
   { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 1070 },
   { id: 2, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 1070 },
+  { id: 12, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168, bgColor: '#DCE3E8', wantCount: 1070 },
   { id: 3, name: '汕头', fullName: '汕头市', lat: 23.3541, lng: 116.6819, bgColor: '#E4D8DC', wantCount: 1070 },
   { id: 4, name: '湛江', fullName: '湛江市', lat: 21.2707, lng: 110.3594, bgColor: '#E6DBD8', wantCount: 1070 },
   { id: 5, name: '汕尾', fullName: '汕尾市', lat: 22.7862, lng: 115.3751, bgColor: '#DAE5E8', wantCount: 1070 },
@@ -17,7 +18,6 @@ const GUANGDONG_CITIES = [
   { id: 9, name: '珠海', fullName: '珠海市', lat: 22.2710, lng: 113.5767, bgColor: '#E3DBE6', wantCount: 1070 },
   { id: 10, name: '中山', fullName: '中山市', lat: 22.5176, lng: 113.3928, bgColor: '#E5DFDA', wantCount: 1070 },
   { id: 11, name: '江门', fullName: '江门市', lat: 22.5787, lng: 113.0819, bgColor: '#DCE5E3', wantCount: 1070 },
-  { id: 12, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168, bgColor: '#DCE3E8', wantCount: 1070 },
   { id: 13, name: '肇庆', fullName: '肇庆市', lat: 23.0472, lng: 112.4651, bgColor: '#E6DDE2', wantCount: 1070 },
   { id: 14, name: '茂名', fullName: '茂名市', lat: 21.6633, lng: 110.9255, bgColor: '#E6E0DA', wantCount: 1070 },
   { id: 15, name: '阳江', fullName: '阳江市', lat: 21.8579, lng: 111.9822, bgColor: '#DCE7E0', wantCount: 1070 },
@@ -214,7 +214,6 @@ Page({
   async loadItems() {
     // 等待 placesData 初始化完成（解决启动时序竞争问题）
     await placesData.whenReady()
-    console.log('loadItems')
     const userShops = util.loadData('userAddedShops', [])
     const currentCity = this.data.currentCity || '深圳市'
     
@@ -237,7 +236,6 @@ Page({
         tags: filteredTags,
       };
     })
-    console.log('allPlaces', allPlaces)
     // 直接设置为总列表，不再需要合并演示数据
     this.setData({ allItems: allPlaces })
     this._scheduleApplyFilters()
@@ -293,7 +291,6 @@ Page({
     let { allItems, currentCategory, sortType, currentDistance, mapCenter, currentCity, pageSize } = this.data
     
     let filtered = allItems
-    console.log('applyFilters', filtered)
     
     // 城市筛选：根据当前选中的城市进行筛选
     if (currentCity) {
@@ -331,7 +328,6 @@ Page({
         distance: this.formatDistance(dist)
       }
     })
-    console.log('applyFilters', filtered)
     
     // 排序
     if (sortType === 'distance') {
@@ -598,7 +594,6 @@ Page({
 
   // 列表滚动到底部时，加载下一页数据
   onLoadMore() {
-    console.log('onLoadMore')
     if (this._loadingMore) return
     if (!this._fullFilteredList || !this.data.hasMore) return
     

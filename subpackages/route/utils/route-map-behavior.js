@@ -3,7 +3,7 @@
 // 包含：地图更新、路线规划、地图预览等功能
 
 const app = getApp()
-const mapConfig = require('../../config/map-config')
+const mapConfig = require('../../../../config/map-config')
 
 module.exports = Behavior({
   data: {

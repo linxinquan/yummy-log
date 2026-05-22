@@ -108,9 +108,7 @@ function buildPreviewItems(items) {
       ...item,
       lat: nextLat,
       lng: nextLng,
-      coverImage: item.logo || item.image || item.thumb || DEFAULT_COVER,
       tagText: inferTagText(item),
-      displayCategory: resolveDisplayCategory(item),
       displayWantCount: formatWantCount(item.wantCount),
       distance,
       distanceText: util.formatDistance(distance),
@@ -413,7 +411,7 @@ Page({
       const foods = placesData.getFoods()
       const spots = placesData.getSpots()
       const userShops = util.loadData('userAddedShops', [])
-      
+      console.log('foods', foods)
       const allFoodItems = [...foods, ...userShops]
       
       const foodItems = foodIds

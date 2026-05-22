@@ -1,6 +1,7 @@
 ﻿const app = getApp()
 const { normalizeTripDurationText } = require('../../../../utils/trip-duration')
 const { backfillStoredGuides } = require('../../../../utils/guide-backfill')
+const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 
 // 根据攻略已有文案，尽量推断出城市名称。
 function inferGuideCity(guide = {}) {
@@ -102,16 +103,7 @@ Page({
 
   // 读取当前区县下的攻略数据，并合并用户已发布攻略。
   loadDistrictGuides() {
-    const coverImages = [
-      '/images/covers/01.jpeg',
-      '/images/covers/02.jpeg',
-      '/images/covers/03.jpeg',
-      '/images/covers/04.jpeg',
-      '/images/covers/05.jpeg',
-      '/images/covers/06.jpeg',
-      '/images/covers/07.jpeg',
-      '/images/covers/08.jpeg'
-    ]
+    const coverImages = DEFAULT_COVER_POOL
 
     const cardColors = [
       '#F7F7F7',

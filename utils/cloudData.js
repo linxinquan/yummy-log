@@ -7,7 +7,7 @@
 // 配置
 // ============================================================
 
-const CLOUD_COLLECTION = 'places'  // 统一集合名（景点 type='spot'，美食 type='food'）
+const CLOUD_COLLECTION = 'unified-places'
 const PAGE_SIZE = 20  // 微信云开发客户端 SDK 单次最多返回 20 条
 
 // ============================================================
@@ -30,17 +30,14 @@ function fetchAllFromCloud(collectionName, conditions) {
     }
 
     function fetchPage(offset) {
-      console.log('[cloudData] fetchPage offset:', offset)
       makeQuery()
         .skip(offset)
         .limit(PAGE_SIZE)
         .get({
           success: res => {
             const chunk = res.data || []
-            console.log('[cloudData] 本页:', chunk.length, '累计:', all.length + chunk.length)
             all.push(...chunk)
             if (chunk.length < PAGE_SIZE) {
-              console.log('[cloudData] 拉取完毕，总计:', all.length)
               resolve(all)
             } else {
               fetchPage(offset + PAGE_SIZE)
