@@ -5,6 +5,7 @@ const placesData = require('../../utils/placesData')
 const { applyTravelMeta, buildTravelOptions } = require('../../utils/travel')
 const { resolveDisplayCategory } = require('../../utils/displayCategory')
 const { formatTripDuration, normalizeTripSummaryText } = require('../../utils/trip-duration')
+const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 
 // 每项高度(px) = 卡片高度120rpx + gap 16rpx 换算
 const ITEM_H = 60 // px，每项高度用于计算排序
@@ -136,29 +137,23 @@ function normalizePlaceCardItems(items) {
 
 // 给路线卡片准备一组本地封面兜底池。
 function buildRouteCoverPool() {
-  const foodCovers = [...placesData.getFoods(), ...(util.loadData('userAddedShops', []) || [])]
-    .map(item => item.coverImage || item.displayImage || item.logo || item.image || item.thumb)
-    .filter(Boolean)
-  const spotCovers = placesData.getSpots()
-    .map(item => item.coverImage || item.displayImage || item.image || item.logo || item.thumb)
-    .filter(Boolean)
-  return [...foodCovers, ...spotCovers, DEFAULT_COVER]
+  return [...DEFAULT_COVER_POOL, DEFAULT_COVER]
 }
 
 // 优先从路线自己的地点里找封面，找不到再回退到本地图片池。
 function resolveRouteCardCover(item, index = 0) {
   const daySectionCover = (item.daySections || []).reduce((cover, day) => {
     if (cover) return cover
-    const firstItem = (day.items || []).find(place => place && (place.coverImage || place.image || place.logo || place.thumb))
+    const firstItem = (day.items || []).find(place => place && (place.coverImage || place.image || place.thumb))
     return firstItem ? (firstItem.coverImage || firstItem.image || firstItem.logo || firstItem.thumb) : ''
   }, '')
   const dayDetailCover = (item.dayDetails || []).reduce((cover, day) => {
     if (cover) return cover
-    const firstItem = (day || []).find(place => place && (place.coverImage || place.image || place.logo || place.thumb))
+    const firstItem = (day || []).find(place => place && (place.coverImage || place.image || place.thumb))
     return firstItem ? (firstItem.coverImage || firstItem.image || firstItem.logo || firstItem.thumb) : ''
   }, '')
   const localPool = buildRouteCoverPool()
-  return item.coverImage || item.image || daySectionCover || dayDetailCover || localPool[index % localPool.length] || DEFAULT_COVER
+  return item.coverImage || item.displayImage || daySectionCover || dayDetailCover || localPool[index % localPool.length] || DEFAULT_COVER
 }
 
 // 把“我的路线”里的原始数据整理成列表卡片需要的字段。
@@ -589,7 +584,7 @@ Page({
     this.setData({
       transportSheetVisible: true,
       transportOptions: buildTravelOptions(item.distanceFromPrev || 0),
-      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'walk',
+      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'driving',
       transportTargetIndex: index
     })
   },

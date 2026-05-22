@@ -30,7 +30,7 @@ function isSpotItem(item) {
 
 // 统一拿封面图字段。
 function getCoverImage(item) {
-  return item.logo || item.image || item.thumb || '/images/app-logo.jpg'
+  return item.coverImage || item.displayImage || item.thumb || '/images/app-logo.jpg'
 }
 
 // 把交通方式 key 转成可读文案。
@@ -82,7 +82,7 @@ function decorateSelectableItems(items) {
   return (items || []).map(item => ({
     ...item,
     coverImage: getCoverImage(item),
-    image: item.image || item.logo || item.thumb || getCoverImage(item),
+    image: item.image || item.displayImage || item.thumb || getCoverImage(item),
     tagText: getItemTagText(item),
     displayCategory: item.displayCategory || resolveDisplayCategory(item),
     rating: item.rating || item.score || '',

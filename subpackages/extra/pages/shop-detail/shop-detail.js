@@ -14,13 +14,10 @@ function buildAllFoodItems() {
 // 如果菜品本身没有图，就从现有美食/景点图片里兜底取。
 function buildCoverPool(currentCover) {
   const foodCovers = buildAllFoodItems()
-    .map(item => item.coverImage || item.displayImage || item.logo || item.image || item.thumb)
-    .filter(Boolean)
-  const spotCovers = placesData.getSpots()
-    .map(item => item.coverImage || item.displayImage || item.image)
+    .map(item => item.coverImage || item.displayImage || item.image || item.thumb)
     .filter(Boolean)
 
-  const uniqueCovers = [...new Set([currentCover, ...foodCovers, ...spotCovers].filter(Boolean))]
+  const uniqueCovers = [...new Set([currentCover, ...foodCovers].filter(Boolean))]
   return uniqueCovers
 }
 
@@ -52,13 +49,15 @@ Page({
 
     // 兼容多种进入方式：直接传对象、传 shopData、只传 id。
     const shop = this.resolveShop(options)
+    console.log(shop, 'shop')
+
     if (!shop) {
       wx.showToast({ title: '店铺不存在', icon: 'none' })
       setTimeout(() => wx.navigateBack({ delta: 1 }), 1200)
       return
     }
 
-    const coverImage = shop.logo || shop.image || shop.thumb || '/images/app-logo.jpg'
+    const coverImage = shop.displayImage || '/images/app-logo.jpg'
     const hoursText = shop.hours || '暂无营业时间'
     const priceText = shop.price ? `￥${shop.price}/人` : '暂无均价'
 

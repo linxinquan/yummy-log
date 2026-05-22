@@ -1,6 +1,6 @@
-﻿const util = require('../../../../utils/util')
-const { buildMapPreviewViewData } = require('../../../../utils/map-preview')
-const { getLikeType, getCityInfo, buildDayLabel, buildTabs, buildSummaryText, buildPreviewTitle, buildPreviewRouteData } = require('../../../../utils/routeHelper')
+﻿const util = require('../../../utils/util')
+const { buildMapPreviewViewData } = require('../../../utils/map-preview')
+const { getLikeType, getCityInfo, buildDayLabel, buildTabs, buildSummaryText, buildPreviewTitle, buildPreviewRouteData } = require('../../../utils/routeHelper')
 
 
 // 把临时路线重新应用回当前预览页：

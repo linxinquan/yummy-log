@@ -3,29 +3,18 @@ const app = getApp()
 const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
+const { getCheckinStats, getCheckins } = require('../../utils/checkinUtil')
 
-let checkinUtil = null
-try {
-  checkinUtil = require('../../utils/checkinUtil')
-} catch (e) {
-  console.warn('checkinUtil 加载失败:', e)
-}
 
 // 登录用户没有上传头像时，随机从美食 / 景点封面里挑一张，避免回退到项目 Logo。
 function getRandomProfileImage() {
-  const foodImages = (placesData.getFoods() || [])
-    .map((item) => item.logo || item.image || item.coverImage)
-    .filter(Boolean)
-  const spotImages = (util.getSpotData() || [])
-    .map((item) => item.image || item.coverImage || item.logo)
-    .filter(Boolean)
   const imagePool = DEFAULT_COVER_POOL
 
   if (!imagePool.length) {
     return '/images/app-logo.jpg'
   }
-
   const randomIndex = Math.floor(Math.random() * imagePool.length)
+  
   return imagePool[randomIndex]
 }
 
@@ -125,11 +114,9 @@ Page({
 
   // 读取打卡统计、最近邮票、地图点位这些"足迹"相关数据。
   loadCheckinStats() {
-    if (!checkinUtil) return
     try {
-      const stats = checkinUtil.getCheckinStats()
-      const allCheckins = checkinUtil.getCheckins()
-
+      const stats = getCheckinStats()
+      const allCheckins = getCheckins()
       // 最新邮票（第一条）
       let latestStamp = null
       if (allCheckins.length > 0) {

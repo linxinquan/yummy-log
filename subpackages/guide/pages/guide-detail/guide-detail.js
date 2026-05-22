@@ -308,6 +308,7 @@ function buildDaySections(guide, cityInfo) {
     return syncDaySections(guide.daySections, cityInfo)
   }
   const covers = buildCoverPool(guide)
+  console.log(covers)
   const content = [guide.title || '', (guide.tags || []).join(' '), (guide.desc || '')].join(' ')
   if (/西安|长安/.test(content)) {
     return syncDaySections(buildXianSections(covers), cityInfo)
@@ -757,7 +758,7 @@ Page({
     this.setData({
       transportSheetVisible: true,
       transportOptions: buildTravelOptions(item.distanceFromPrev || 0),
-      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'walk',
+      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'driving',
       transportTarget: { dayIndex, itemIndex, previewIndex }
     })
   },

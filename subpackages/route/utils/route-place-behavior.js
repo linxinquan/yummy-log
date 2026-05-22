@@ -2,10 +2,10 @@
 // 地点交互相关行为的 Behavior
 // 包含：打开地点简介、导航、关闭弹窗等功能
 
-const util = require('../../../../utils/util')
+const util = require('../../../utils/util')
 const {
   buildPlaceIntroData
-} = require('../../../../utils/route-place-card')
+} = require('../../../utils/route-place-card')
 
 
 module.exports = Behavior({

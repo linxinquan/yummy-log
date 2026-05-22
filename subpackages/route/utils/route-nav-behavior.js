@@ -1,5 +1,5 @@
 const app = getApp()
-const util = require('../../../../utils/util')
+const util = require('../../../utils/util')
 
 module.exports = Behavior({
 data: {    
