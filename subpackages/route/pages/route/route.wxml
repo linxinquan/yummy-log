@@ -191,21 +191,8 @@
                 >
                   <view class="day-anchor" id="route-day-anchor-{{index}}"></view>
                   <view class="day-header">
-                    <view class="day-header-main">
-                      <text class="day-title">{{item.title}}</text>
-                      <text class="day-count">{{item.countText}}</text>
-                    </view>
-                    <view class="day-start-container">
-                      <text class="day-start-label">起点</text>
-                      <view class="day-start-point" wx:if="{{index > 0}}" bindtap="onSetDayStart" data-day-index="{{index}}">
-                        <i class="mgc_location_line"></i>
-                        <text>{{item.startPointText || '设置起点'}}</text>
-                      </view>
-                      <view class="day-start-point day-start-current" wx:if="{{index === 0}}" bindtap="onSetDayStart" data-day-index="{{index}}">
-                        <i class="mgc_location_line"></i>
-                        <text>{{item.startPointText || '当前位置'}}</text>
-                      </view>
-                    </view>
+                    <text class="day-title">{{item.title}}</text>
+                    <text class="day-count">{{item.countText}}</text>
                   </view>
 
                   <view class="place-list" wx:if="{{item.items.length}}">
@@ -331,11 +318,14 @@
         <view class="map-floating-icon" bindtap="onSwitchMode" data-mode="list">
           <i class="mgc_left_line"></i>
         </view>
-        <view class="map-floating-icon" bindtap="onFitRoute">
-          <i class="mgc_fullscreen_line"></i>
-        </view>
-        <view class="map-floating-icon" bindtap="onLocateMe">
-          <i class="mgc_aiming_2_line"></i>
+        <view style="display: flex; flex-direction: column; gap: 24rpx; pointer-events: auto;">
+          <!-- 地图模式浮动操作：全屏图标下方新增“定位到我”按钮 -->
+          <view class="map-floating-icon" bindtap="onFitRoute">
+            <i class="mgc_fullscreen_line"></i>
+          </view>
+          <view class="map-floating-icon" bindtap="onLocateMe">
+            <i class="mgc_aiming_2_line"></i>
+          </view>
         </view>
       </view>
         <route-map-preview-card
@@ -370,8 +360,8 @@
       </view>
       <view class="reorder-sheet-option-list">
         <view
-          class="reorder-sheet-option {{pendingReorderMode === 'smart' ? 'active' : ''}}"
-          bindtap="onSelectReorderMode"
+          class="reorder-sheet-option"
+          bindtap="onConfirmReorderOption"
           data-mode="smart"
         >
           <i class="reorder-option-icon mgc_ai_line"></i>
@@ -381,8 +371,8 @@
           </view>
         </view>
         <view
-          class="reorder-sheet-option {{pendingReorderMode === 'manual' ? 'active' : ''}}"
-          bindtap="onSelectReorderMode"
+          class="reorder-sheet-option"
+          bindtap="onConfirmReorderOption"
           data-mode="manual"
         >
           <i class="reorder-option-icon mgc_pencil_3_line"></i>
@@ -390,11 +380,6 @@
             <text class="reorder-option-title">手动编辑</text>
             <text class="reorder-option-desc">进入编辑状态，按需求手动调整路线顺序</text>
           </view>
-        </view>
-      </view>
-      <view class="reorder-sheet-footer">
-        <view class="reorder-confirm-btn" bindtap="onConfirmReorderMode">
-          <text>确认</text>
         </view>
       </view>
     </view>

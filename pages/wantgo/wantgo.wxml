@@ -135,7 +135,7 @@
         <i class="mgc_close_line plan-day-close" bindtap="onClosePlanDaySheet"></i>
       </view>
       <view class="plan-day-body">
-        <picker-view class="plan-day-picker-view" indicator-style="height: 88rpx; background: transparent; border-top: 1px solid #FFFFFF; border-bottom: 1px solid #FFFFFF;" value="{{[selectedPlanDayIndex]}}" bindchange="onSelectPlanDay">
+        <picker-view class="plan-day-picker-view" indicator-style="height: 88rpx; background: transparent; border-top: 1px solid #FFFFFF; border-bottom: 1px solid #FFFFFF;" value="{{[draftPlanDayIndex]}}" bindchange="onSelectPlanDay">
           <picker-view-column>
             <view wx:for="{{dayOptions}}" wx:key="*this" class="plan-day-picker-item">
               {{item}} 天
@@ -158,7 +158,7 @@
           <view
             wx:for="{{routeActionOptions}}"
             wx:key="key"
-            class="route-action-card {{selectedRouteAction === item.key ? 'active' : ''}} {{item.danger ? 'danger' : ''}}"
+            class="route-action-card {{item.danger ? 'danger' : ''}}"
             bindtap="onSelectRouteAction"
             data-action="{{item.key}}"
           >
@@ -166,7 +166,6 @@
             <text class="route-action-label">{{item.label}}</text>
           </view>
         </view>
-        <view class="route-action-confirm" bindtap="onConfirmRouteAction">确认</view>
       </view>
     </view>
   </view>

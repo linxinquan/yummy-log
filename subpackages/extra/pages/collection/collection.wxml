@@ -46,9 +46,10 @@
         <text class="empty-title">我的采集</text>
         <text class="empty-hint">去记录你的第一张采集卡吧</text>
         <view class="empty-actions">
-          <button class="empty-btn empty-btn-primary" bindtap="onGoCheckin">
+          <!-- 空状态按钮改成 view，避免被原生 button 默认宽度 184px 干扰 -->
+          <view class="empty-btn empty-btn-primary" bindtap="onGoCheckin">
             <text>采集打卡</text>
-          </button>
+          </view>
         </view>
       </view>
 
@@ -125,7 +126,6 @@
             <text class="route-action-label">删除采集</text>
           </view>
         </view>
-        <view class="route-action-confirm" bindtap="onConfirmSelectedAction">确认</view>
       </view>
     </view>
   </view>

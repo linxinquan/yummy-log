@@ -48,7 +48,20 @@ const CAT_TO_FILE = {
   '购物':      '/images/markers/marker_shopping.png',
   '自然户外':  '/images/markers/marker_outdoor.png',
   '文化展馆':  '/images/markers/marker_culture.png',
-  '全部':      '/images/markers/marker_default.png',
+  // “全部”在顶部分类导航里使用单独的 all 图标。
+  '全部':      '/images/markers/marker_all.png',
+}
+
+// 地图点位专用图标：
+// 这套图已经带白色圆底，只给地图 marker 使用，不影响顶部分类 Tab。
+const CAT_TO_MAP_FILE = {
+  '美食':      '/images/markers/marker_map_food.png',
+  '景点':      '/images/markers/marker_map_spot.png',
+  '酒店':      '/images/markers/marker_map_hotel.png',
+  '饮品':      '/images/markers/marker_map_drink.png',
+  '购物':      '/images/markers/marker_map_shopping.png',
+  '自然户外':  '/images/markers/marker_map_outdoor.png',
+  '文化展馆':  '/images/markers/marker_map_culture.png',
 }
 
 const ICON_SIZE = 28  // PNG实际尺寸
@@ -64,8 +77,20 @@ function getMainCategory(category) {
  * 同步获取某分类的图标路径
  */
 function getIconPath(category) {
-  // 强制所有分类使用景点图标
-  return '/images/markers/marker_spot.png'
+  // 先把细分分类归到主分类，再返回对应的 marker 图标。
+  // 如果没有匹配到，就回退到默认图标，避免出现空路径。
+  const mainCat = getMainCategory(category)
+  return CAT_TO_FILE[mainCat] || CAT_TO_FILE['全部']
+}
+
+/**
+ * 地图 marker 专用图标路径
+ */
+function getMapIconPath(category) {
+  // 地图优先走带白色圆底的新图标。
+  // 如果某个分类暂时没配地图专用图，就退回普通分类图标。
+  const mainCat = getMainCategory(category)
+  return CAT_TO_MAP_FILE[mainCat] || getIconPath(mainCat)
 }
 
 /**
@@ -97,6 +122,7 @@ module.exports = {
   ICON_SIZE,
   ensureIcons,
   getIconPath,
+  getMapIconPath,
   getCategoryColor,
   getCategoryEmoji,
 }

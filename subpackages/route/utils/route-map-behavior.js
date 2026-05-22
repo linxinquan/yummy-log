@@ -4,6 +4,7 @@
 
 const app = getApp()
 const mapConfig = require('./map-config')
+const { getMapIconPath } = require('../../../utils/markerIcons')
 
 // 路线地图统一复用探索页同一张当前位置图标。
 const CURRENT_LOCATION_ICON_PATH = '/images/markers/marker_current_location.png'
@@ -61,18 +62,23 @@ module.exports = Behavior({
         return
       }
 
-      const markers = routeShops.map((shop, index) => ({
-        id: Number(shop.id),
+    const markers = routeShops.map((shop, index) => {
+      const markerCategory = shop.displayCategory || resolveDisplayCategory(shop)
+      return {
+        id: shop.id,
         latitude: shop.lat || shop.latitude,
         longitude: shop.lng || shop.longitude,
-        width: 36,
-        height: 36,
+        iconPath: getMapIconPath(markerCategory),
+        // 与探索页地图统一：
+        // 使用同一套 map 地点图标，并按 64rpx 对应的 32px 显示。
+        width: 32,
+        height: 32,
         label: {
           content: String(index + 1),
           color: '#ffffff',
           fontSize: 14,
           borderRadius: 12,
-          bgColor: mapConfig.THEME_COLORS.primary,
+          bgColor: '#00D9C0',
           padding: 5,
           anchorX: 0,
           anchorY: -40
@@ -86,7 +92,8 @@ module.exports = Behavior({
           display: 'BYCLICK',
           bgColor: '#ffffff'
         }
-      }))
+      }
+    })
 
       // 起点加绿色标记
       markers.unshift({
@@ -107,6 +114,18 @@ module.exports = Behavior({
         }
       })
 
+      // 路线地图额外显示当前位置图标，和探索页保持同一套资源。
+      if (app.globalData.location) {
+        markers.unshift({
+          id: 9998,
+          latitude: app.globalData.location.lat,
+          longitude: app.globalData.location.lng,
+          iconPath: CURRENT_LOCATION_ICON_PATH,
+          width: 36,
+          height: 36,
+          anchor: { x: 0.5, y: 0.5 }
+        })
+      }
       // 根据出行方式设置路线颜色
       const modeColors = {
         drive: mapConfig.THEME_COLORS.drive,

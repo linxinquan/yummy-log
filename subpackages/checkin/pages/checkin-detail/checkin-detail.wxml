@@ -78,7 +78,6 @@
             <text class="route-action-label">删除采集</text>
           </view>
         </view>
-        <view class="route-action-confirm" bindtap="onConfirmSelectedAction">确认</view>
       </view>
     </view>
   </view>
@@ -102,7 +101,7 @@
     </view>
   </view>
 
-  <!-- 详情编辑底部弹窗：在弹窗内修改时间、地址、打卡内容 -->
+  <!-- 详情编辑底部弹窗：作为采集编辑的统一样式基准 -->
   <view class="edit-sheet-mask" wx:if="{{editSheetVisible}}" bindtap="onCloseEditSheet"></view>
   <view class="edit-sheet" wx:if="{{editSheetVisible}}">
     <view class="edit-sheet-panel" catchtap="preventBubble">

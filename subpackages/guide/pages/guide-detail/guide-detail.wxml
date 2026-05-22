@@ -205,11 +205,14 @@
         <view class="map-floating-icon" bindtap="onSwitchMode" data-mode="list">
           <i class="mgc_left_line"></i>
         </view>
-        <view class="map-floating-icon" bindtap="onFitRoute">
-          <i class="mgc_fullscreen_line"></i>
-        </view>
-        <view class="map-floating-icon" bindtap="onLocateMe">
-          <i class="mgc_aiming_2_line"></i>
+        <view style="display: flex; flex-direction: column; gap: 24rpx; pointer-events: auto;">
+          <!-- 地图模式浮动操作：全屏图标下方新增“定位到我”按钮 -->
+          <view class="map-floating-icon" bindtap="onFitRoute">
+            <i class="mgc_fullscreen_line"></i>
+          </view>
+          <view class="map-floating-icon" bindtap="onLocateMe">
+            <i class="mgc_aiming_2_line"></i>
+          </view>
         </view>
       </view>
       <route-map-preview-card

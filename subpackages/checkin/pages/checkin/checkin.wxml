@@ -58,7 +58,7 @@
     </view>
   </view>
 
-  <!-- 编辑底部弹窗：在弹窗内编辑时间、地址、打卡内容 -->
+  <!-- 编辑底部弹窗：样式和采集详情页保持一致 -->
   <view class="edit-sheet-mask" wx:if="{{editSheetVisible}}" bindtap="onCloseEditSheet"></view>
   <view class="edit-sheet" wx:if="{{editSheetVisible}}">
     <view class="edit-sheet-panel" catchtap="preventBubble">

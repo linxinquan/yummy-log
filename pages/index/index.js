@@ -5,6 +5,10 @@ const util = require('../../utils/util')
 const markerIcons = require('../../utils/markerIcons')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 
+// 探索地图里的“当前位置”使用一个单独的 marker id，
+// 避免和正常地点数据的 id 混在一起。
+const CURRENT_LOCATION_MARKER_ID = -1001
+const CURRENT_LOCATION_ICON_PATH = '/images/markers/marker_current_location.png'
 // 重新定位后，把地图拉近到当前位置附近，避免只更新中心点却看起来没变化。
 const MY_LOCATION_FOCUS_SCALE = 17
 
@@ -31,6 +35,23 @@ const GUANGDONG_CITIES = [
   { id: 20, name: '潮州', fullName: '潮州市', lat: 23.6567, lng: 116.6226, bgColor: '#D7E2E6', wantCount: 1070 },
   { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445, bgColor: '#E2DEE0', wantCount: 1070 }
 ]
+// 顶部分类导航统一复用 marker 图标资源。
+// 这样地图上的点位图标和分类 Tab 图标就能保持同一套视觉。
+function buildExploreCategories() {
+  return [
+    { name: '全部' },
+    { name: '美食' },
+    { name: '景点' },
+    { name: '酒店' },
+    { name: '饮品' },
+    { name: '购物' },
+    { name: '自然户外' },
+    { name: '文化展馆' }
+  ].map((item) => ({
+    ...item,
+    iconPath: markerIcons.getIconPath(item.name)
+  }))
+}
 
 Page({
   data: {
@@ -50,16 +71,7 @@ Page({
     allMarkers: [],
     
     // 分类
-    exploreCategories: [
-      { name: '全部', icon: 'mgc_grid_line', color: '#9B59B6' },
-      { name: '美食', icon: 'mgc_fork_spoon_line', color: '#E67E22' },
-      { name: '景点', icon: 'mgc_map_line', color: '#27AE60' },
-      { name: '酒店', icon: 'mgc_store_line', color: '#3498DB' },
-      { name: '饮品', icon: 'mgc_drink_line', color: '#9B59B6' },
-      { name: '购物', icon: 'mgc_shopping_bag_line', color: '#E91E63' },
-      { name: '自然户外', icon: 'mgc_tree_line', color: '#2ECC71' },
-      { name: '文化展馆', icon: 'mgc_compass_line', color: '#F39C12' }
-    ],
+    exploreCategories: buildExploreCategories(),
     currentCategory: '全部',
     scrollToCategory: '',
     
@@ -189,6 +201,14 @@ Page({
     this.setData({ cityOptions })
   },
 
+  ensureCurrentLocationMarkerIcon() {
+    // 当前位置直接使用用户提供的 PNG 图标，
+    // 不再走 canvas 动态绘制，避免锯齿和样式偏差。
+    this._currentLocationMarkerIconPath = CURRENT_LOCATION_ICON_PATH
+    this.updateMarkers()
+  },
+
+  
   onShow() {
     this.loadUserData()
     this.updateItemStatus()
@@ -386,8 +406,8 @@ Page({
           markerCategory = '美食'
       }
       
-      const catColor = markerIcons.getCategoryColor(markerCategory)
-      const catEmoji = markerIcons.getCategoryEmoji(markerCategory)
+      // 地图点位单独使用带白色圆底的 marker 图标，
+      // 不影响顶部分类 Tab 现在使用的普通分类图标。
       const markerIconPath = markerIcons.getIconPath(markerCategory)
 
       return {
@@ -397,21 +417,25 @@ Page({
         iconPath: markerIconPath,
         width: 28,
         height: 28,
-        callout: {
-          content: isSpot 
-            ? `${catEmoji} ${item.name}\n★ ${item.rating}  ${item.free ? '免费' : '收费'}`
-            : `${catEmoji} ${item.name}\n★ ${item.rating || '暂无'}  ¥${item.price || '--'}/人`,
-          color: '#1A1A2E',
-          fontSize: 12,
-          borderRadius: 10,
-          padding: 8,
-          display: 'BYCLICK',
-          bgColor: '#ffffff',
-          borderColor: catColor,
-          borderWidth: 1.5
-        }
       }
     })
+
+
+    // 把当前位置作为一个独立 marker 插到最前面，替代原生蓝点。
+    if (this.data.currentLocation && this._currentLocationMarkerIconPath) {
+      markers.unshift({
+        id: CURRENT_LOCATION_MARKER_ID,
+        markerRole: 'current-location',
+        latitude: this.data.currentLocation.lat,
+        longitude: this.data.currentLocation.lng,
+        iconPath: this._currentLocationMarkerIconPath,
+        // 当前位置图标显示尺寸改成 72rpx，对应 36px。
+        width: 36,
+        height: 36,
+        anchor: { x: 0.5, y: 0.5 },
+        zIndex: 999
+      })
+    }
 
     this.setData({ allMarkers: markers })
   },

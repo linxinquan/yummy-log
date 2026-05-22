@@ -3,7 +3,7 @@ const util = require('./util')
 const GLOBAL_TRANSPORT_PREFERENCES_KEY = 'globalTransportPreferences'
 const DEFAULT_TRANSPORT_PREFERENCES = {
   shortDistanceMode: 'walk',
-  longDistanceMode: 'ride'
+  longDistanceMode: 'drive'
 }
 
 const MODE_CONFIG = {

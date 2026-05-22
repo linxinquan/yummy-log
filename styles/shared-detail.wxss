@@ -845,7 +845,8 @@ page {
   right: 0;
   bottom: calc(100% + 32rpx);
   display: flex;
-  align-items: center;
+  /* 左侧返回按钮和右侧按钮组统一按底部对齐，避免新增定位按钮后看起来居中 */
+  align-items: flex-end;
   justify-content: space-between;
   pointer-events: none;
 }

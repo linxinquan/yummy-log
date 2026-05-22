@@ -575,25 +575,6 @@
   line-height: 28rpx;
 }
 
-.reorder-sheet-footer {
-  padding: 48rpx 48rpx 0;
-}
-
-.reorder-confirm-btn {
-  height: 96rpx;
-  border-radius: 999rpx;
-  background: #242529;
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.reorder-confirm-btn text {
-  font-size: 32rpx;
-  font-weight: 500;
-  line-height: 32rpx;
-}
 
 /* 返回确认弹窗：
 路线详情编辑态也统一改成自定义弹窗。 */

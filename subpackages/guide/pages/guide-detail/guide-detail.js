@@ -445,9 +445,9 @@ Page({
       latitude: item.lat,
       longitude: item.lng,
       iconPath: index === 0
-        ? '/images/markers/marker_start.png'
+        ? '/images/markers/marker_current_location.png' // 起点
         : index === flattened.length - 1
-          ? '/images/markers/marker_end.png'
+          ? '/images/markers/marker_current_location.png' // 终点
           : '/images/markers/marker_food.png',
       width: 32,
       height: 32,
@@ -758,7 +758,7 @@ Page({
     this.setData({
       transportSheetVisible: true,
       transportOptions: buildTravelOptions(item.distanceFromPrev || 0),
-      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'driving',
+      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'drive',
       transportTarget: { dayIndex, itemIndex, previewIndex }
     })
   },

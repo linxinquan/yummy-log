@@ -85,7 +85,7 @@ Page({
     previewDisableNext: true,
     transportSheetVisible: false,
     transportOptions: [],
-    pendingTransportMode: 'walk',
+    pendingTransportMode: 'drive',
     transportTargetIndex: -1,
     transportTarget: null,
     exitConfirmVisible: false,
@@ -132,6 +132,8 @@ Page({
   onLoad(options) {
     // 接收 type=food/spot 和 ids=1,2,3 参数
     const { type, ids, dayCount } = options
+    console.log('r-dayCount', dayCount)
+
     const routeType = type === 'spot' ? 'spot' : type === 'plan' ? 'mixed' : 'food'
     const windowInfo = wx.getWindowInfo()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null

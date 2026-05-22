@@ -315,7 +315,7 @@ Page({
     dragY: 0,
     transportSheetVisible: false,
     transportOptions: [],
-    pendingTransportMode: 'walk',
+    pendingTransportMode: 'drive',
     transportTargetIndex: -1,
     planDaySheetVisible: false,
     dayOptions: DAY_OPTIONS,
@@ -406,7 +406,6 @@ Page({
       const foods = placesData.getFoods()
       const spots = placesData.getSpots()
       const userShops = util.loadData('userAddedShops', [])
-      console.log('foods', foods)
       const allFoodItems = [...foods, ...userShops]
       
       const foodItems = foodIds
@@ -419,6 +418,7 @@ Page({
         .map(item => ({ ...item, type: 'spot' }))
       
       items = withSwipeState(normalizePlaceCardItems(buildPreviewItems([...foodItems, ...spotItems])))
+      console.log('wantgo', items)
       this.setData({ items, empty: items.length === 0 })
     } else if (tab === 'plan') {
       const savedRoutes = util.loadData('savedRoutes', [])
@@ -584,7 +584,7 @@ Page({
     this.setData({
       transportSheetVisible: true,
       transportOptions: buildTravelOptions(item.distanceFromPrev || 0),
-      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'driving',
+      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'drive',
       transportTargetIndex: index
     })
   },
@@ -822,6 +822,7 @@ Page({
     }
     const ids = items.map(i => i.id).join(',')
     const dayCount = Math.max(1, parseInt(selectedPlanDayCount, 10) || 1)
+    console.log('dayCount', dayCount)
     this.setData({ planDaySheetVisible: false })
     wx.navigateTo({ url: `/subpackages/route/pages/route/route?type=plan&ids=${ids}&dayCount=${dayCount}` })
   },
