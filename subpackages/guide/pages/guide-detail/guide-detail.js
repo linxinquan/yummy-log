@@ -1,4 +1,4 @@
-﻿const util = require('../../../../utils/util')
+const util = require('../../../../utils/util')
 const placesData = require('../../../../utils/placesData')
 const { applyTravelMeta, buildTravelOptions } = require('../../../../utils/travel')
 const { buildMapPreviewViewData } = require('../../../../utils/map-preview')
@@ -9,6 +9,10 @@ const {
   buildRouteTravelDisplay,
   buildPlaceIntroData: buildPlaceIntroSheetData
 } = require('../../../../utils/route-place-card')
+
+// 地图模式统一使用当前位置 PNG 图标，和探索页保持一致。
+const CURRENT_LOCATION_ICON_PATH = '/images/markers/marker_current_location.png'
+const CURRENT_LOCATION_FOCUS_SCALE = 15
 
 // 根据攻略标题、城市等字段推断城市和中心点。
 const CITY_PRESETS = [
@@ -346,6 +350,7 @@ Page({
     sheetScrollTarget: '',
     cityText: '深圳市',
     summaryText: '',
+    currentLocation: null,
     daySections: [],
     tabs: [],
     mapPreviewPlaces: [],
@@ -414,6 +419,7 @@ Page({
 
     this.updateMapData(daySections, cityInfo, 0)
     this.refreshMapPreview(daySections, 0)
+    this.syncCurrentLocation()
   },
 
   // 刷新详情页地图：包括标记点、折线和当前选中的天数。
@@ -462,12 +468,59 @@ Page({
       borderWidth: 1
     }] : []
 
+    const mapMarkers = markers.slice()
+    if (this.data.currentLocation && typeof this.data.currentLocation.lat === 'number' && typeof this.data.currentLocation.lng === 'number') {
+      mapMarkers.unshift({
+        id: -1001,
+        latitude: this.data.currentLocation.lat,
+        longitude: this.data.currentLocation.lng,
+        iconPath: CURRENT_LOCATION_ICON_PATH,
+        width: 36,
+        height: 36,
+        anchor: { x: 0.5, y: 0.5 }
+      })
+    }
+
     this.setData({
       mapCenter: { lat: cityInfo.lat, lng: cityInfo.lng },
       mapScale: 12,
-      mapMarkers: markers,
+      mapMarkers,
       polyline,
       currentMapDay: typeof mapDayIndex === 'number' ? mapDayIndex : -1
+    })
+  },
+
+  // 同步当前位置，供地图模式显示当前位置图标和重新定位使用。
+  syncCurrentLocation(showToast = false, onDone) {
+    wx.getLocation({
+      type: 'gcj02',
+      isHighAccuracy: true,
+      success: (res) => {
+        const currentLocation = { lat: res.latitude, lng: res.longitude, name: '我的位置' }
+        app.globalData.location = currentLocation
+        this.setData({
+          currentLocation,
+          mapCenter: { lat: currentLocation.lat, lng: currentLocation.lng }
+        }, () => {
+          if (this.data.daySections.length) {
+            this.updateMapData(this.data.daySections, this.data.cityInfo, this.data.currentMapDay)
+          }
+          if (typeof onDone === 'function') {
+            onDone(currentLocation)
+          }
+        })
+        if (showToast) {
+          wx.showToast({ title: '定位成功', icon: 'success' })
+        }
+      },
+      fail: () => {
+        if (typeof onDone === 'function') {
+          onDone(null)
+        }
+        if (showToast) {
+          wx.showToast({ title: '定位失败，请检查权限', icon: 'none' })
+        }
+      }
     })
   },
 
@@ -500,6 +553,26 @@ Page({
     mapCtx.includePoints({
       points,
       padding: [96, 24, Math.round((windowInfo.windowHeight || 812) * 0.34), 24]
+    })
+  },
+
+  // 地图模式重新定位到当前位置，并拉近到当前位置附近。
+  onLocateMe() {
+    wx.showLoading({ title: '定位中...' })
+    this.syncCurrentLocation(false, (currentLocation) => {
+      wx.hideLoading()
+      if (!currentLocation) {
+        wx.showToast({ title: '定位失败，请检查权限', icon: 'none' })
+        return
+      }
+      this.setData({
+        mapCenter: {
+          lat: currentLocation.lat,
+          lng: currentLocation.lng
+        },
+        mapScale: CURRENT_LOCATION_FOCUS_SCALE
+      })
+      wx.showToast({ title: '定位成功', icon: 'success' })
     })
   },
 

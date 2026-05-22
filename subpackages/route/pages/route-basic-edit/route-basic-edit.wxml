@@ -20,7 +20,7 @@
       <text class="setting-label">旅行城市</text>
       <view class="setting-field picker-field" bindtap="onOpenCityPicker">
         <text class="setting-value {{city ? '' : 'placeholder'}}">{{city || '请选择城市'}}</text>
-        <i class="mgc_right_small_line"></i>
+        <i class="mgc_right_line"></i>
       </view>
     </view>
 
@@ -42,7 +42,7 @@
       <text class="setting-label">旅行天数</text>
       <view class="setting-field picker-field" bindtap="onOpenDayPicker">
         <text class="setting-value">{{dayCount}}</text>
-        <i class="mgc_right_small_line"></i>
+        <i class="mgc_right_line"></i>
       </view>
     </view>
 
@@ -50,7 +50,7 @@
       <text class="setting-label">交通偏好（全局）</text>
       <view class="setting-field picker-field" bindtap="onOpenTransportPicker">
         <text class="setting-value {{transportPreferenceText ? '' : 'placeholder'}}">{{transportPreferenceText || '请选择交通偏好'}}</text>
-        <i class="mgc_right_small_line"></i>
+        <i class="mgc_right_line"></i>
       </view>
     </view>
   </view>
@@ -79,12 +79,15 @@
             class="city-card {{city === item.fullName ? 'active' : ''}}"
             bindtap="onSelectCity"
             data-item="{{item}}"
-            style="background: {{item.bgColor}};"
           >
             <view class="city-cover-wrap">
               <image class="city-cover" src="{{item.coverImage}}" mode="aspectFill"></image>
             </view>
-            <text class="city-card-name">{{item.name}}</text>
+            <!-- 城市卡片改成横向结构：左图 + 右侧标题与人数 -->
+            <view class="city-card-content">
+              <text class="city-card-name">{{item.name}}</text>
+              <text class="city-card-meta">{{item.wantCount}} 人想去</text>
+            </view>
           </view>
         </view>
       </scroll-view>

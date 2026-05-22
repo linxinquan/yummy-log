@@ -151,7 +151,7 @@
             <image class="route-sheet-option-logo" src="/images/navigation/nav-map-amap.png" mode="aspectFit"></image>
             <text>高德地图</text>
           </view>
-          <i class="mgc_right_small_line route-sheet-option-arrow"></i>
+          <i class="mgc_right_line route-sheet-option-arrow"></i>
         </view>
         <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="tencent">
           <view class="route-sheet-option-main">
@@ -159,14 +159,14 @@
             <image class="route-sheet-option-logo" src="/images/navigation/nav-map-tencent.png" mode="aspectFit"></image>
             <text>腾讯地图</text>
           </view>
-          <i class="mgc_right_small_line route-sheet-option-arrow"></i>
+          <i class="mgc_right_line route-sheet-option-arrow"></i>
         </view>
         <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="copy">
           <view class="route-sheet-option-main">
             <i class="mgc_copy_2_line"></i>
             <text>复制地址</text>
           </view>
-          <i class="mgc_right_small_line route-sheet-option-arrow"></i>
+          <i class="mgc_right_line route-sheet-option-arrow"></i>
         </view>
       </view>
     </view>

@@ -5,6 +5,9 @@
 const app = getApp()
 const mapConfig = require('../../../../config/map-config')
 
+// 路线地图统一复用探索页同一张当前位置图标。
+const CURRENT_LOCATION_ICON_PATH = '/images/markers/marker_current_location.png'
+
 module.exports = Behavior({
   data: {
     // 地图相关数据
@@ -193,8 +196,22 @@ module.exports = Behavior({
         centerLng = routeShops[midIdx].lng || routeShops[midIdx].longitude
       }
 
+      const nextMarkers = Array.isArray(markers) ? markers.slice() : []
+      const currentLocation = this.data.currentLocation || app.globalData.location
+      if (currentLocation && typeof currentLocation.lat === 'number' && typeof currentLocation.lng === 'number') {
+        nextMarkers.unshift({
+          id: -1001,
+          latitude: currentLocation.lat,
+          longitude: currentLocation.lng,
+          iconPath: CURRENT_LOCATION_ICON_PATH,
+          width: 36,
+          height: 36,
+          anchor: { x: 0.5, y: 0.5 }
+        })
+      }
+
       this.setData({
-        markers,
+        markers: nextMarkers,
         polyline,
         mapCenter: { lat: centerLat, lng: centerLng }
       }, () => {

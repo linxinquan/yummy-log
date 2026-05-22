@@ -27,8 +27,8 @@
       
       <!-- 右侧：地图按钮与搜索按钮 -->
       <view class="header-right">
-        <!-- 地图图标 (全屏时显示) -->
-        <view class="header-map-btn" bindtap="onToggleMap" wx:if="{{sheetHeight >= sysMaxHeight - 10}}">
+        <!-- 地图图标：列表只要处于展开状态（半屏或全屏）就显示 -->
+        <view class="header-map-btn" bindtap="onToggleMap" wx:if="{{isSheetExpanded}}">
           <i class="mgc_map_2_line"></i>
         </view>
       </view>

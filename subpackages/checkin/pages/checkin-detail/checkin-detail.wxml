@@ -107,7 +107,7 @@
   <view class="edit-sheet" wx:if="{{editSheetVisible}}">
     <view class="edit-sheet-panel" catchtap="preventBubble">
       <view class="sheet-header">
-        <text class="sheet-title">编辑采集内容</text>
+        <text class="sheet-title">编辑采集</text>
         <i class="mgc_close_line sheet-close" bindtap="onCloseEditSheet"></i>
       </view>
       <scroll-view class="edit-sheet-content" scroll-y>
