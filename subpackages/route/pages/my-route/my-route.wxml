@@ -216,14 +216,14 @@
                   </view>
                 </view>
                 <view class="add-place-entry" wx:if="{{isEditing}}" bindtap="onOpenPlacePicker" data-day-index="{{dayIndex}}">
-                  <i class="mgc_location_2_line"></i>
+                  <i class="mgc_add_line"></i>
                   <text>添加地点</text>
                 </view>
               </view>
 
               <view class="empty-day" wx:else>
                 <view class="add-place-entry add-place-entry-empty" wx:if="{{isEditing}}" bindtap="onOpenPlacePicker" data-day-index="{{dayIndex}}">
-                  <i class="mgc_location_2_line"></i>
+                  <i class="mgc_add_line"></i>
                   <text>添加地点</text>
                 </view>
                 <view class="route-empty-card" wx:else>

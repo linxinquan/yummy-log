@@ -46,7 +46,8 @@
       <view class="address-box" bindtap="onOpenNavMapSheet">
         <view class="address-content">
           <text class="address-label">地址</text>
-          <text class="address-text">{{spot.address}}</text>
+          <!-- 页面里的地址文案改成统一兜底字段，避免部分景点没有 address 时这里只剩“地址”标题。 -->
+          <text class="address-text">{{addressText}}</text>
         </view>
         <i class="mgc_right_line arrow-icon"></i>
       </view>

@@ -69,6 +69,9 @@ Page({
     },
     mapScale: 15,
     allMarkers: [],
+    // 探索地图单独维护一份当前位置，
+    // 用来生成自定义的当前位置 PNG marker。
+    currentLocation: null,
     
     // 分类
     exploreCategories: buildExploreCategories(),
@@ -174,7 +177,15 @@ Page({
     })
     
     app.whenLocationReady((loc) => {
-      this.setData({ mapCenter: { lat: loc.lat, lng: loc.lng } })
+      this.setData({
+        mapCenter: { lat: loc.lat, lng: loc.lng },
+        // 页面首次拿到定位后，同时保存当前位置，
+        // 这样 updateMarkers 才能把当前位置 PNG 插进 markers。
+        currentLocation: { lat: loc.lat, lng: loc.lng }
+      })
+      // 当前位置图标路径在这里显式挂上，
+      // 避免只拿到坐标却没有 iconPath，导致真机上完全不显示。
+      this.ensureCurrentLocationMarkerIcon()
       // 使用统一调度，避免重复计算
       this._scheduleApplyFilters()
     })
@@ -545,10 +556,16 @@ Page({
           mapCenter: loc,
           // 重新定位后同步拉近地图，让当前位置区域更明确。
           mapScale: MY_LOCATION_FOCUS_SCALE,
+          // 重新定位时同步更新当前位置 marker 的坐标，
+          // 否则地图中心变了，但自定义当前位置图标不会跟着走。
+          currentLocation: loc,
           currentDistrict: '',
           currentCity: (app.globalData.districtInfo && app.globalData.districtInfo.city) || this.data.currentCity,
           locationMode: 'my'
         })
+        // 重新定位后重新确认当前位置 iconPath 已挂上，
+        // 避免路径未初始化时 marker 条件不成立。
+        this.ensureCurrentLocationMarkerIcon()
         this._scheduleApplyFilters()
         wx.showToast({ title: '已定位到当前位置', icon: 'success', duration: 1500 })
       },

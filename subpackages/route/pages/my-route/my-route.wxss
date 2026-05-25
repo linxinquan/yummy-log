@@ -347,11 +347,11 @@
   gap: 12rpx;
   height: 88rpx;
   margin-bottom: 48rpx;
-  border-radius: 999rpx;
+  border-radius: 24rpx;
   background: #ffffff;
   color: #242529;
   font-size: 28rpx;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F7F8FA;
 }
 
 .add-place-entry i {
@@ -876,24 +876,24 @@
 .picker-tabs {
   display: flex;
   align-items: center;
-  gap: 32rpx;
+  gap: 24rpx;
   flex: 1;
   min-width: 0;
 }
 
 .picker-tab {
-  min-width: 104rpx;
-  height: 60rpx;
-  padding: 0 24rpx;
-  border-radius: 999rpx;
-  background: #F7F8FA;
-  color: #A0A4AE;
-  font-size: 24rpx;
-  line-height: 64rpx;
-  text-align: center;
-  font-weight: 400;
-  box-sizing: border-box;
-  flex-shrink: 0;
+  min-width: 104rpx;        /* 标签最小宽度 */
+  height: 60rpx;            /* 标签固定高度 */
+  padding: 0 24rpx;         /* 左右内边距，上下无内边距 */
+  border-radius: 999rpx;    /* 超大圆角，做成胶囊样式 */
+  background: #F7F8FA;      /* 浅灰色背景色 */
+  color: #A0A4AE;           /* 默认文字浅灰色 */
+  font-size: 24rpx;         /* 文字字号大小 */
+  line-height: 60rpx;       /* 行高等同高度，文字垂直居中 */
+  text-align: center;       /* 文字水平居中 */
+  font-weight: 400;         /* 常规字体粗细，不加粗 */
+  box-sizing: border-box;   /* 内边距圆角不撑开元素尺寸 */
+  flex-shrink: 0;           /* 弹性布局禁止标签被压缩缩小 */
 }
 
 .picker-tab.active {

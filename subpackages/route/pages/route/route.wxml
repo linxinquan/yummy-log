@@ -282,6 +282,10 @@
                   <view class="empty-day" wx:else>
                     <text>当前没有可展示的地点</text>
                   </view>
+
+                  <!-- 每一天结束后补回分割条：
+                  只有最后一天不显示，保证“第一天/第二天/第三天”之间的分隔和其他详情页保持一致。 -->
+                  <view class="day-separator" wx:if="{{index < routeDaySections.length - 1}}"></view>
                 </view>
               </block>
 

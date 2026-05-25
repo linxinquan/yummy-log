@@ -1,8 +1,22 @@
-﻿// 觅食图 V1 - 景点详情页逻辑
+// 觅食图 V1 - 景点详情页逻辑
 // 这个页面负责：展示景点详情、底部附近美食、收藏/想去、导航和去规划路线。
 const app = getApp()
 const util = require('../../../../utils/util')
 const placesData = require('../../../../utils/placesData')
+
+// 统一生成景点详情页要显示的地址文案：
+// 1. 优先使用真实 address
+// 2. 兼容少量历史字段名
+// 3. 如果都没有，就回退到“城市/区域 + 名称”，避免页面只剩“地址”标题没有内容
+function resolveSpotAddress(spot = {}) {
+  return (
+    spot.address ||
+    spot.formattedAddress ||
+    spot.addr ||
+    spot.poiAddress ||
+    `${spot.city || ''}${spot.district || ''}${spot.name || ''}`.trim()
+  )
+}
 
 // 统一解析景点详情入参：
 // 既支持传统 id，也支持足迹里传进来的完整 spotData。
@@ -63,9 +77,12 @@ Page({
     // 读取当前用户对这个景点的状态：是否想去、是否收藏。
     const isLiked = util.loadData('userWantSpots', []).some(id => String(id) === String(spot.id))
     const isCollected = util.loadData('userCollectedSpots', []).some(id => String(id) === String(spot.id))
+    // 地址显示、复制地址、系统导航统一使用同一份兜底后的文案，避免页面和弹窗出现不一致。
+    const addressText = resolveSpotAddress(spot)
 
     this.setData({ 
       spot, 
+      addressText,
       mapMarkers: [],
       isLiked,
       isCollected,
@@ -169,7 +186,8 @@ Page({
         lat: spot.lat || spot.latitude || 0,
         lng: spot.lng || spot.longitude || 0,
         name: spot.name,
-        address: spot.address || spot.name
+        // 导航弹窗里也复用同一份地址兜底文案，保证复制地址和页面显示一致。
+        address: this.data.addressText || spot.name
       }
     })
   },
@@ -184,7 +202,8 @@ Page({
         latitude,
         longitude,
         name: spot.name,
-        address: spot.address,
+        // 系统地图里也带上兜底后的地址，避免出现空地址。
+        address: this.data.addressText || spot.name,
         scale: 16
       })
       return
