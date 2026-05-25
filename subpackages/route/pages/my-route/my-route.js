@@ -4,7 +4,6 @@ const placesData = require('../../../../utils/placesData')
 const { applyTravelMeta, buildTravelOptions, MODE_CONFIG } = require('../../../../utils/travel')
 const { buildMapPreviewViewData } = require('../../../../utils/map-preview')
 const { resolveDisplayCategory } = require('../../../../utils/displayCategory')
-const { getMapIconPath } = require('../../../../utils/markerIcons')
 const mapConfig = require('../../utils/map-config')
 const { fetchRealRoute } = require('../../utils/mapRouteFetcher')
 const { formatTripSummary, normalizeTripSummaryText } = require('../../../../utils/trip-duration')
@@ -738,22 +737,29 @@ Page({
     const flattened = flattenDaySections(sections)
 
     const markers = flattened.map((item, index) => {
-      const markerCategory = item.displayCategory || resolveDisplayCategory(item)
       return {
         id: index,
         latitude: item.lat,
         longitude: item.lng,
-        iconPath: getMapIconPath(markerCategory),
-        // 与探索页地图统一：
-        // 使用同一套 map 地点图标，并按 64rpx 对应的 32px 显示。
-        width: 32,
-        height: 32,
+        // 我的路线地图模式只保留数字顺序，不再显示分类图片底图，
+        // 避免分类图标和数字标签叠在一起影响识别。
         label: {
           content: String(index + 1),
-          fontSize: 10,
+          // 继续按用户确认的新参数微调成更接近正圆：
+          // 数字 14px、内容宽高 14px、水平居中、padding 8px、白色 2px 描边。
+          fontSize: 14,
+          width: 14,
+          height: 14,
+          textAlign: 'center',
           color: '#FFFFFF',
           fontWeight: 'bold',
-          anchorY: -42
+          borderRadius: 15,
+          bgColor: '#47BFFE',
+          padding: 8,
+          borderWidth: 2,
+          borderColor: '#FFFFFF',
+          // 去掉图片底图后，把数字标签贴回点位本身。
+          anchorY: 0
         }
       }
     })

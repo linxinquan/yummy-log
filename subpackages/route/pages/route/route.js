@@ -1,7 +1,8 @@
-﻿// 觅食图 - 路线规划页 v6.0 地图+双模式+Timeline
+// 觅食图 - 路线规划页 v6.0 地图+双模式+Timeline
 const app = getApp()
 const placesData = require('../../../../utils/placesData')
 const util = require('../../../../utils/util')
+const checkinUtil = require('../../../../utils/checkinUtil')
 const { MODE_CONFIG, applyTravelMeta, buildTravelOptions, formatDurationShort } = require('../../../../utils/travel')
 const {
   estimateRouteDuration,
@@ -48,11 +49,19 @@ function savePreviewRouteData(data, options = {}) {
   return savedRoute
 }
 
+// 把“当前所在位置”和真实定位地址拼成统一显示文案。
+// 有地址时显示：当前所在位置（深圳市南山区xxx）
+// 没地址时只显示：当前所在位置
+function buildCurrentLocationDisplayName(address = '') {
+  const safeAddress = String(address || '').trim()
+  return safeAddress ? `当前所在位置（${safeAddress}）` : '当前所在位置'
+}
+
 Page({
   behaviors: [routeMapBehavior, routePreviewBehavior, routeEditBehavior, routeNavBehavior, routePlaceBehavior],
   data: {
-    // 起点默认使用当前位置
-    currentStart: { name: '当前位置', lat: 22.5431, lng: 114.0579, type: 'current' },
+    // 起点默认使用“当前所在位置”，统一页面里的起点文案。
+    currentStart: { name: '当前所在位置', lat: 22.5431, lng: 114.0579, type: 'current' },
 
     // 出行方式
     travelMode: 'drive',
@@ -165,17 +174,76 @@ Page({
     this.loadRoute()
   },
 
+  // 把当前位置补成“当前所在位置（真实地址）”：
+  // 这里只在仍然使用当前定位作为起点时更新，避免覆盖用户手动选的其他起点。
+  syncCurrentStartAddress(location) {
+    if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') return
+
+    // 真正写回页面数据的公共收口，成功和失败都走这里，避免两套分支不一致。
+    const applyDisplayName = (displayName) => {
+      const currentLocationWithAddress = {
+        ...location,
+        name: displayName
+      }
+      const nextData = {
+        currentStart: {
+          ...this.data.currentStart,
+          ...currentLocationWithAddress,
+          name: displayName,
+          type: 'current'
+        }
+      }
+
+      // 全局定位对象也同步更新成带地址的版本：
+      // 这样后面无论是路线重排，还是第二天以后再次点“使用当前所在位置”，
+      // 取到的都会是“当前所在位置（真实地址）”这份最新文案。
+      app.globalData.location = {
+        ...(app.globalData.location || {}),
+        ...currentLocationWithAddress
+      }
+
+      const dayStartPointTexts = [...(this.data.dayStartPointTexts || [])]
+      // 只有第一天当前仍是“当前所在位置”体系时，才自动更新显示文案。
+      // 这样不会把用户已经手动选好的第 1 天起点覆盖掉。
+      if (!dayStartPointTexts[0] || /^当前所在位置/.test(dayStartPointTexts[0])) {
+        dayStartPointTexts[0] = displayName
+        nextData.dayStartPointTexts = dayStartPointTexts
+      }
+
+      this.setData(nextData, () => {
+        // 地址文案更新后，同步刷新分天结构里的起点显示。
+        if (this.data.routeDaySections && this.data.routeDaySections.length) {
+          this._updateDayStartPointTexts()
+        }
+      })
+    }
+
+    checkinUtil.reverseGeocode(location.lat, location.lng)
+      .then((geo) => {
+        // 优先使用逆地理返回的完整地址，没有时再退回更简短的地点名或行政区。
+        const resolvedAddress = geo.address || geo.spotName || geo.district || ''
+        applyDisplayName(buildCurrentLocationDisplayName(resolvedAddress))
+      })
+      .catch(() => {
+        // 逆地理失败时仍保留基础文案，避免页面出现空白起点。
+        applyDisplayName(buildCurrentLocationDisplayName(''))
+      })
+  },
+
   // 获取当前位置，作为路线起点。
   getCurrentLocation() {
     wx.getLocation({
       type: 'gcj02',
       isHighAccuracy: true,
       success: (res) => {
-        const location = { lat: res.latitude, lng: res.longitude, name: '我的位置' }
+        // 先写入基础文案“当前所在位置”，真实地址异步补齐到括号里。
+        const location = { lat: res.latitude, lng: res.longitude, name: '当前所在位置' }
         app.globalData.location = location
         this.setData({ currentLocation: location })
         if (this.data.currentStart.type === 'current') {
           this.setData({ currentStart: { ...this.data.currentStart, ...location } })
+          // 定位成功后，继续把真实地址补进“当前所在位置（地址）”。
+          this.syncCurrentStartAddress(location)
           this.loadRoute()
         }
       },
@@ -300,9 +368,11 @@ Page({
       // 确定当天的起点
       let dayStartPoint = null
       if (dayIndex === 0) {
-        // 第1天：使用全局起点
+        // 第1天：优先使用 currentStart。
+        // 这里不能再优先拿 app.globalData.location，
+        // 否则可能会把已经补好真实地址的文案又降回“当前所在位置”。
         dayStartPoint = currentStart.type === 'current' 
-          ? (app.globalData.location || app.globalData.centerLocation || currentStart)
+          ? (currentStart || app.globalData.location || app.globalData.centerLocation)
           : currentStart
       } else {
         // 第2天及以后：使用设置的起点，或默认前一天最后一个地点
@@ -540,11 +610,14 @@ Page({
       isHighAccuracy: true,
       success: (res) => {
         wx.hideLoading()
-        const location = { lat: res.latitude, lng: res.longitude, name: '我的位置' }
+        // 重新定位后也先使用基础文案，再异步补齐真实地址。
+        const location = { lat: res.latitude, lng: res.longitude, name: '当前所在位置' }
         app.globalData.location = location
         this.setData({ currentLocation: location })
         if (this.data.currentStart.type === 'current') {
           this.setData({ currentStart: { ...this.data.currentStart, ...location } })
+          // 重新定位后同步刷新“当前所在位置（地址）”的显示。
+          this.syncCurrentStartAddress(location)
           this.loadRoute()
         }
         wx.showToast({ title: '定位成功', icon: 'success' })
@@ -675,30 +748,61 @@ Page({
     const dayIndex = e.currentTarget.dataset.dayIndex
     if (dayIndex === undefined || dayIndex < 0) return
 
-    const options = ['使用当前位置']
+    // 起点选择改成页面内底部弹窗，沿用现有弹窗交互，不再使用微信原生 ActionSheet。
+    const options = [{
+      type: 'current',
+      icon: 'mgc_aiming_2_line',
+        // 弹窗选项文案也统一成“当前所在位置”。
+        label: '使用当前所在位置'
+    }]
     if (dayIndex > 0) {
-      options.push('使用前一天终点')
+      options.push({
+        type: 'prev',
+        icon: 'mgc_route_line',
+        label: '使用前一天终点'
+      })
     }
-    options.push('搜索地点', '取消')
-
-    wx.showActionSheet({
-      itemList: options,
-      success: (res) => {
-        const selectedIndex = res.tapIndex
-        if (selectedIndex === options.length - 1) return // 取消
-
-        if (selectedIndex === 0) {
-          // 使用当前位置
-          this._setDayStartToCurrent(dayIndex)
-        } else if (selectedIndex === 1 && dayIndex > 0) {
-          // 使用前一天终点
-          this._setDayStartToPrevDayEnd(dayIndex)
-        } else if ((selectedIndex === 1 && dayIndex === 0) || (selectedIndex === 2 && dayIndex > 0)) {
-          // 搜索地点
-          this._searchDayStartPoint(dayIndex)
-        }
-      }
+    options.push({
+      type: 'search',
+      icon: 'mgc_search_2_line',
+      label: '搜索地点'
     })
+
+    this.setData({
+      showDayStartSheet: true,
+      dayStartSheetDayIndex: dayIndex,
+      dayStartOptions: options
+    })
+  },
+
+  // 关闭起点选择底部弹窗，同时清空临时选项，避免下次打开沿用旧数据。
+  onCloseDayStartSheet() {
+    this.setData({
+      showDayStartSheet: false,
+      dayStartSheetDayIndex: -1,
+      dayStartOptions: []
+    })
+  },
+
+  // 点击起点弹窗里的某个选项后立即执行，对齐当前页面其他“点选即确认”的弹窗规则。
+  onSelectDayStartOption(e) {
+    const type = e.currentTarget.dataset.type
+    const dayIndex = this.data.dayStartSheetDayIndex
+    if (!type || dayIndex < 0) return
+
+    this.onCloseDayStartSheet()
+
+    if (type === 'current') {
+      this._setDayStartToCurrent(dayIndex)
+      return
+    }
+    if (type === 'prev') {
+      this._setDayStartToPrevDayEnd(dayIndex)
+      return
+    }
+    if (type === 'search') {
+      this._searchDayStartPoint(dayIndex)
+    }
   },
 
   // 路线规划弹窗改成“点选项即确认”：
@@ -741,18 +845,21 @@ Page({
   _setDayStartToCurrent(dayIndex) {
     const currentStart = this.data.currentStart
     const startPoint = currentStart.type === 'current' 
-      ? (app.globalData.location || app.globalData.centerLocation || currentStart)
+      // 这里优先使用 currentStart，确保第二天以后也能拿到带括号地址的最新文案。
+      ? (currentStart || app.globalData.location || app.globalData.centerLocation)
       : currentStart
 
     const dayStartPoints = [...this.data.dayStartPoints]
     dayStartPoints[dayIndex] = {
       lat: startPoint.lat,
       lng: startPoint.lng,
-      name: startPoint.name || '当前位置'
+      // 如果当前定位名称不存在，兜底成统一文案“当前所在位置”。
+      name: startPoint.name || '当前所在位置'
     }
 
     const dayStartPointTexts = [...this.data.dayStartPointTexts]
-    dayStartPointTexts[dayIndex] = startPoint.name || '当前位置'
+    // 第一天下方地址和按钮状态都基于这里的文字，所以这里也统一成“当前所在位置”。
+    dayStartPointTexts[dayIndex] = startPoint.name || '当前所在位置'
 
     this.setData({
       dayStartPoints,
@@ -838,7 +945,9 @@ Page({
     if (!routeDaySections || !routeDaySections.length) return
 
     const updatedSections = routeDaySections.map((section, dayIndex) => {
-      const defaultText = dayIndex === 0 ? '当前位置' : '设置起点'
+      // 第一天默认直接显示“当前所在位置”；
+      // 第二天及以后如果还没选，就保持空值，让模板走“选择起点”的未选择状态。
+      const defaultText = dayIndex === 0 ? '当前所在位置' : ''
       return {
         ...section,
         startPointText: dayStartPointTexts[dayIndex] || defaultText

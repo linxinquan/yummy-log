@@ -4,7 +4,6 @@
 
 const app = getApp()
 const mapConfig = require('./map-config')
-const { getMapIconPath } = require('../../../utils/markerIcons')
 const { fetchRealRoute } = require('./mapRouteFetcher')
 
 // 路线地图统一复用探索页同一张当前位置图标。
@@ -64,26 +63,33 @@ module.exports = Behavior({
       }
 
     const markers = routeShops.map((shop, index) => {
-      const markerCategory = shop.displayCategory || resolveDisplayCategory(shop)
-      console.log(getMapIconPath(markerCategory))
       return {
         id: shop.id,
         latitude: shop.lat || shop.latitude,
         longitude: shop.lng || shop.longitude,
-        iconPath: getMapIconPath(markerCategory),
-        // 与探索页地图统一：
-        // 使用同一套 map 地点图标，并按 64rpx 对应的 32px 显示。
-        width: 32,
-        height: 32,
+        // 地图模式只保留数字顺序，不再显示分类图片底图，
+        // 避免分类图标和数字标签叠在一起发生冲突。
         label: {
           content: String(index + 1),
+          // 继续按用户确认的新参数微调成更接近正圆：
+          // 1. 数字大小 14px
+          // 2. 内容宽高都按 14px 设置
+          // 3. 文本水平居中
+          // 4. padding 8px，形成约 30px 的蓝底圆点视觉
+          // 5. 白色描边仍保留 2px
           color: '#ffffff',
           fontSize: 14,
-          borderRadius: 12,
-          bgColor: '#00D9C0',
-          padding: 5,
+          width: 14,
+          height: 14,
+          textAlign: 'center',
+          borderRadius: 15,
+          bgColor: '#47BFFE',
+          padding: 8,
+          borderWidth: 2,
+          borderColor: '#FFFFFF',
           anchorX: 0,
-          anchorY: -40
+          // 去掉底部图片后，把数字标签拉回到点位本身，避免悬空显示。
+          anchorY: 0
         },
         callout: {
           content: shop.name,

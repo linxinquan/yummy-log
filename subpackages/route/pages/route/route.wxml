@@ -193,19 +193,25 @@
                   <view class="day-header">
                     <text class="day-title">{{item.title}}</text>
                     <text class="day-count">{{item.countText}}</text>
-                    <view class="day-start-container">
-                      <text class="day-start-label">起点</text>
-                      <view class="day-start-point" wx:if="{{index > 0}}" bindtap="onSetDayStart" data-day-index="{{index}}">
-                        <i class="mgc_location_line"></i>
-                        <text>{{item.startPointText || '设置起点'}}</text>
-                      </view>
-                      <view class="day-start-point day-start-current" wx:if="{{index === 0}}" bindtap="onSetDayStart" data-day-index="{{index}}">
-                        <i class="mgc_location_line"></i>
-                        <text>{{item.startPointText || '当前位置'}}</text>
+                  </view>
+                  <!-- 起点入口单独放到标题下面，避免再挤占“第几天 / 几个地点”的位置。 -->
+                  <view class="day-start-trigger" bindtap="onSetDayStart" data-day-index="{{index}}">
+                    <!-- 顶部一行：左侧标题，右侧固定操作按钮。 -->
+                    <view class="day-start-trigger-header">
+                      <text class="day-start-trigger-label">起点位置</text>
+                      <!-- 按钮文案不再显示地址：
+                      现在只要存在起点文案，就按“已选择起点”处理；
+                      所以“当前所在位置”和手动选择的地点，都会显示“重选起点”。 -->
+                      <view class="day-start-trigger-action">
+                        <i class="mgc_shoe_line"></i>
+                        <text>{{item.startPointText ? '重选起点' : '选择起点'}}</text>
                       </view>
                     </view>
+                    <!-- 底部地址文案：
+                    现在只要有起点文案就显示；
+                    第一天默认的“当前所在位置”也会展示在这里。 -->
+                    <text class="day-start-trigger-address" wx:if="{{item.startPointText}}">{{item.startPointText}}</text>
                   </view>
- 
 
                   <view class="place-list" wx:if="{{item.items.length}}">
                     <view
@@ -391,6 +397,31 @@
           <view class="reorder-option-main">
             <text class="reorder-option-title">手动编辑</text>
             <text class="reorder-option-desc">进入编辑状态，按需求手动调整路线顺序</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 起点选择：复用页面现有底部弹窗结构，点击选项后直接执行。 -->
+    <view class="sheet-mask {{showDayStartSheet ? 'show' : ''}}" bindtap="onCloseDayStartSheet">
+      <view class="sheet-panel route-action-sheet day-start-sheet" catchtap="preventBubble">
+        <view class="sheet-modal-header">
+          <text class="sheet-modal-title">选择起点</text>
+          <i class="mgc_close_line sheet-modal-close" bindtap="onCloseDayStartSheet"></i>
+        </view>
+        <view class="route-sheet-option-list">
+          <view
+            class="route-sheet-option"
+            wx:for="{{dayStartOptions}}"
+            wx:key="type"
+            bindtap="onSelectDayStartOption"
+            data-type="{{item.type}}"
+          >
+            <view class="route-sheet-option-main">
+              <i class="{{item.icon}}"></i>
+              <text>{{item.label}}</text>
+            </view>
+            <i class="mgc_right_line route-sheet-option-arrow"></i>
           </view>
         </view>
       </view>

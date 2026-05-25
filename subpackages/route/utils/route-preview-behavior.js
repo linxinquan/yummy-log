@@ -37,12 +37,14 @@ methods: {
     const cityInfo = getCityInfo(citySource)
     const routeDaySections = routeShops.length ? buildPreviewDaySections(routeShops, this.data.preferredDayCount) : []
     
-    // 保留之前的 startPointText（如果有）
+    // 保留之前的 startPointText（如果有）：
+    // 第一天默认文案统一成“当前所在位置”；
+    // 第二天及以后默认留空，避免把“设置起点”误当成真实地址显示出来。
     const prevDaySections = this.data.routeDaySections || []
     const dayStartPointTexts = this.data.dayStartPointTexts || []
     const updatedSections = routeDaySections.map((section, dayIndex) => {
       const prevSection = prevDaySections[dayIndex]
-      const defaultText = dayIndex === 0 ? '当前位置' : '设置起点'
+      const defaultText = dayIndex === 0 ? '当前所在位置' : ''
       return {
         ...section,
         startPointText: (prevSection && prevSection.startPointText) || dayStartPointTexts[dayIndex] || defaultText
