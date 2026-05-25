@@ -1,8 +1,12 @@
+const app = getApp()
 const util = require('../../../../utils/util')
 const placesData = require('../../../../utils/placesData')
 const { applyTravelMeta, buildTravelOptions, MODE_CONFIG } = require('../../../../utils/travel')
 const { buildMapPreviewViewData } = require('../../../../utils/map-preview')
 const { resolveDisplayCategory } = require('../../../../utils/displayCategory')
+const { getMapIconPath } = require('../../../../utils/markerIcons')
+const mapConfig = require('../../utils/map-config')
+const { fetchRealRoute } = require('../../utils/mapRouteFetcher')
 const { formatTripSummary, normalizeTripSummaryText } = require('../../../../utils/trip-duration')
 const {
   buildPlaceCardTags,
@@ -739,7 +743,7 @@ Page({
         id: index,
         latitude: item.lat,
         longitude: item.lng,
-        iconPath: markerIcons.getMapIconPath(markerCategory),
+        iconPath: getMapIconPath(markerCategory),
         // 与探索页地图统一：
         // 使用同一套 map 地点图标，并按 64rpx 对应的 32px 显示。
         width: 32,
@@ -754,13 +758,15 @@ Page({
       }
     })
 
-    const polyline = markers.length > 1 ? [{
-      points: markers.map(marker => ({ latitude: marker.latitude, longitude: marker.longitude })),
-      color: '#47BFFE',
-      width: 4,
+    // 初始折线：直连线作为占位，后续 API 返回真实路线后更新
+    const straightPoints = markers.map(m => ({ latitude: m.latitude, longitude: m.longitude }))
+    const routeColor = mapConfig.THEME_COLORS.drive
+    const initialPolyline = markers.length > 1 ? [{
+      points: straightPoints,
+      color: routeColor + 'CC',
+      width: 5,
       dottedLine: false,
-      borderColor: '#FFFFFF',
-      borderWidth: 1
+      arrowLine: true
     }] : []
 
     const mapMarkers = markers.slice()
@@ -780,9 +786,36 @@ Page({
       mapCenter: { lat: cityInfo.lat, lng: cityInfo.lng },
       mapScale: 12,
       mapMarkers,
-      polyline,
+      polyline: initialPolyline,
       currentMapDay: typeof mapDayIndex === 'number' ? mapDayIndex : -1
     })
+
+    // 有 2+ 个地点时才请求真实路线（与路线规划页行为一致）
+    if (markers.length > 1) {
+      const qqMapKey = app.globalData && app.globalData.qqMapKey
+      if (!qqMapKey) return
+
+      const allPoints = straightPoints.slice()
+      fetchRealRoute({
+        allPoints,
+        travelMode: 'drive',
+        qqMapKey,
+        onSuccess: (points) => {
+          this.setData({
+            polyline: [{
+              points,
+              color: routeColor + 'CC',
+              width: 5,
+              dottedLine: false,
+              arrowLine: true
+            }]
+          })
+        },
+        onFallback: () => {
+          // 降级时初始直连线已展示，无需额外处理
+        }
+      })
+    }
   },
 
   // 同步当前位置，供地图模式显示当前位置图标和重新定位使用。

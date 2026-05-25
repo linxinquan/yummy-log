@@ -5,6 +5,7 @@
 const app = getApp()
 const mapConfig = require('./map-config')
 const { getMapIconPath } = require('../../../utils/markerIcons')
+const { fetchRealRoute } = require('./mapRouteFetcher')
 
 // 路线地图统一复用探索页同一张当前位置图标。
 const CURRENT_LOCATION_ICON_PATH = '/images/markers/marker_current_location.png'
@@ -244,314 +245,40 @@ module.exports = Behavior({
       const key = app.globalData.qqMapKey
       const { travelMode } = this.data
 
-      // 腾讯地图路径规划模式（从配置获取）
-      const mode = mapConfig.TRAVEL_MODE_MAP[travelMode] || mapConfig.TRAVEL_MODE_MAP.drive
-      
-      // 调试：打印 mode 和 travelMode
-      console.log('[_fetchRealRoute] travelMode:', travelMode, 'mode:', mode, 'allPoints.length:', allPoints.length)
-
-      // 构建有效的途经点（去掉重复的终点）
-      let effectivePoints = [...allPoints]
-      const from = allPoints[0]
-      const to = allPoints[allPoints.length - 1]
-      
-      if (Math.abs(from.latitude - to.latitude) < 0.00001 && 
-          Math.abs(from.longitude - to.longitude) < 0.00001 &&
-          allPoints.length > 2) {
-        // 终点返回起点且坐标相同，去掉最后一个重复的起点
-        effectivePoints = allPoints.slice(0, -1)
-        console.log('[路线规划] 终点返回起点，去掉重复终点，有效点数:', effectivePoints.length)
-      }
-
-      // 驾车模式支持waypoints，可以一次请求
-      console.log('[_fetchRealRoute] 检查是否调用驾车路线: mode=', mode, 'effectivePoints.length=', effectivePoints.length, '条件=', mode === 'driving' && effectivePoints.length > 2)
-      if (mode === 'driving' && effectivePoints.length > 2) {
-        this._fetchDrivingRoute(effectivePoints, routeColor, markers, startPoint, routeShops, key, cacheKey)
-      } else {
-        // 步行/公交不支持waypoints，需要分段请求
-        this._fetchSegmentedRoute(effectivePoints, routeColor, markers, startPoint, routeShops, key, mode, cacheKey)
-      }
-    },
-
-    // ─── 驾车路线（支持waypoints）──────────────────
-    _fetchDrivingRoute(allPoints, routeColor, markers, startPoint, routeShops, key, cacheKey) {
-      const from = allPoints[0]
-      const to = allPoints[allPoints.length - 1]
-      const waypoints = allPoints.slice(1, -1).map(p => `${p.latitude},${p.longitude}`).join(';')
-
-      const url = `${mapConfig.QQ_MAP_API_BASE}/driving/?from=${from.latitude},${from.longitude}&to=${to.latitude},${to.longitude}&waypoints=${waypoints}&key=${key}`
-
-      console.log('[驾车路线] 请求URL:', url)
-
-      wx.request({
-        url,
-        success: (res) => {
-          console.log('[驾车路线] API返回:', res.data)
-          if (res.data?.status === 0 && res.data.result?.routes?.[0]) {
-            const points = this._parsePolyline(res.data.result.routes[0].polyline)
-            const polyline = [{
-              points,
-              color: routeColor + 'CC',
-              width: 5,
-              dottedLine: false,
-              arrowLine: true
-            }]
-            this._setMapData(markers, polyline, startPoint, routeShops)
-            // 保存到缓存
-            if (cacheKey) {
-              if (!this._routeCache) this._routeCache = {}
-              this._routeCache[cacheKey] = { points, markers, color: routeColor }
-            }
-          } else {
-            console.warn('[驾车路线] API失败，使用模拟路线:', res.data)
-            this._useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey)
+      fetchRealRoute({
+        allPoints,
+        travelMode,
+        qqMapKey: key,
+        onSuccess: (points) => {
+          const polyline = [{
+            points,
+            color: routeColor + 'CC',
+            width: 5,
+            dottedLine: false,
+            arrowLine: true
+          }]
+          this._setMapData(markers, polyline, startPoint, routeShops)
+          if (cacheKey) {
+            if (!this._routeCache) this._routeCache = {}
+            this._routeCache[cacheKey] = { points, markers, color: routeColor }
           }
         },
-        fail: (err) => {
-          console.error('[驾车路线] 请求失败:', err)
-          this._useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey)
+        onFallback: (points) => {
+          console.log('[模拟路线] 使用模拟路线')
+          const polyline = [{
+            points,
+            color: routeColor + 'CC',
+            width: 5,
+            dottedLine: false,
+            arrowLine: true
+          }]
+          this._setMapData(markers, polyline, startPoint, routeShops)
+          if (cacheKey) {
+            if (!this._routeCache) this._routeCache = {}
+            this._routeCache[cacheKey] = { points, markers, color: routeColor }
+          }
         }
       })
-    },
-
-    // ─── 分段路线（步行/公交，不支持waypoints）─────
-    _fetchSegmentedRoute(allPoints, routeColor, markers, startPoint, routeShops, key, mode, cacheKey) {
-      console.log(`[分段路线] ${mode}模式，共${allPoints.length}个点，${allPoints.length - 1}段路线`)
-      
-      const segments = []
-      for (let i = 0; i < allPoints.length - 1; i++) {
-        segments.push({
-          from: allPoints[i],
-          to: allPoints[i + 1],
-          index: i
-        })
-      }
-
-      const allRoutePoints = []
-      let completedCount = 0
-      let hasError = false
-
-      // 串行请求避免限流
-      const requestSegment = (index) => {
-        if (index >= segments.length) {
-          // 所有段完成
-          if (!hasError && allRoutePoints.length > 0) {
-            const polyline = [{
-              points: allRoutePoints,
-              color: routeColor + 'CC',
-              width: 5,
-              dottedLine: false,
-              arrowLine: true
-            }]
-            this._setMapData(markers, polyline, startPoint, routeShops)
-            // 保存到缓存
-            if (cacheKey) {
-              if (!this._routeCache) this._routeCache = {}
-              this._routeCache[cacheKey] = { points: allRoutePoints, markers, color: routeColor }
-            }
-          } else {
-            this._useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey)
-          }
-          return
-        }
-
-        const seg = segments[index]
-        const url = `${mapConfig.QQ_MAP_API_BASE}/${mode}/?from=${seg.from.latitude},${seg.from.longitude}&to=${seg.to.latitude},${seg.to.longitude}&key=${key}`
-
-        console.log(`[分段路线] 请求第${index + 1}/${segments.length}段:`, url)
-
-        wx.request({
-          url,
-          success: (res) => {
-            if (res.data?.status === 0 && res.data.result?.routes?.[0]) {
-              const points = this._parsePolyline(res.data.result.routes[0].polyline)
-              // 避免重复添加连接点（除了第一段）
-              if (index > 0 && points.length > 0) {
-                allRoutePoints.push(...points.slice(1))
-              } else {
-                allRoutePoints.push(...points)
-              }
-              console.log(`[分段路线] 第${index + 1}段成功，点数:`, points.length)
-            } else {
-              console.warn(`[分段路线] 第${index + 1}段失败:`, res.data)
-              hasError = true
-            }
-          },
-          fail: (err) => {
-            console.error(`[分段路线] 第${index + 1}段请求失败:`, err)
-            hasError = true
-          },
-          complete: () => {
-            completedCount++
-            // 延迟请求下一段，避免限流
-            setTimeout(() => requestSegment(index + 1), mapConfig.ROUTE_CONFIG.API_DELAY)
-          }
-        })
-      }
-
-      // 开始请求第一段
-      requestSegment(0)
-    },
-
-    // ─── 使用模拟路线（降级方案）───────────────────
-    _useSimulatedRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey) {
-      console.log('[模拟路线] 使用模拟路线')
-      const points = this._generateSimulatedRouteForAll(allPoints, this.data.travelMode)
-      const polyline = [{
-        points,
-        color: routeColor + 'CC',
-        width: 5,
-        dottedLine: false,
-        arrowLine: true
-      }]
-      this._setMapData(markers, polyline, startPoint, routeShops)
-      // 保存到缓存
-      if (cacheKey) {
-        if (!this._routeCache) this._routeCache = {}
-        this._routeCache[cacheKey] = { points, markers, color: routeColor }
-      }
-    },
-
-    // ─── 生成完整模拟路线（所有点）─────────────────
-    _generateSimulatedRouteForAll(allPoints, mode) {
-      let allRoutePoints = []
-      
-      for (let i = 0; i < allPoints.length - 1; i++) {
-        const from = allPoints[i]
-        const to = allPoints[i + 1]
-        const segment = this._generateSimulatedRoute(from, to, mode)
-        
-        if (i === 0) {
-          allRoutePoints = allRoutePoints.concat(segment)
-        } else {
-          // 跳过重复点
-          allRoutePoints = allRoutePoints.concat(segment.slice(1))
-        }
-      }
-      
-      return allRoutePoints
-    },
-
-    // ─── 生成模拟真实路线（带弯曲效果）─────────────
-    _generateSimulatedRoute(from, to, mode) {
-      const points = []
-      const steps = mapConfig.ROUTE_CONFIG.SIMULATION_STEPS // 插值点数
-
-      // 根据出行方式调整弯曲程度
-      const bendFactor = mapConfig.BEND_FACTOR[mode] || mapConfig.BEND_FACTOR.drive
-      
-      // 添加垂直于直线的偏移
-      const dx = to.longitude - from.longitude
-      const dy = to.latitude - from.latitude
-      const dist = Math.sqrt(dx * dx + dy * dy)
-      
-      // 垂直方向单位向量
-      const perpX = -dy / dist * bendFactor
-      const perpY = dx / dist * bendFactor
-      
-      // 生成带弯曲的路线点
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps
-        // 使用贝塞尔曲线效果：t*(1-t)*4 在0.5处达到最大值
-        const bend = Math.sin(t * Math.PI) 
-        
-        const lat = from.latitude + (to.latitude - from.latitude) * t + perpY * bend
-        const lng = from.longitude + (to.longitude - from.longitude) * t + perpX * bend
-        
-        points.push({ latitude: lat, longitude: lng })
-      }
-      
-      return points
-    },
-
-    // ─── 解析腾讯地图polyline ─────────────────────
-    _parsePolyline(polyline) {
-      // 如果是数组格式（多点路径规划返回的）
-      if (Array.isArray(polyline)) {
-        const points = []
-        
-        for (let i = 0; i < polyline.length; i += 2) {
-          if (i + 1 < polyline.length) {
-            if (i === 0) {
-              // 第一个点是绝对坐标（单位：度）
-              points.push({
-                latitude: polyline[i],
-                longitude: polyline[i + 1]
-              })
-            } else {
-              // 后面的点是相对增量（单位：百万分之一度，需要除以1000000）
-              const prev = points[points.length - 1]
-              const deltaLat = polyline[i] / 1000000
-              const deltaLng = polyline[i + 1] / 1000000
-              
-              points.push({
-                latitude: prev.latitude + deltaLat,
-                longitude: prev.longitude + deltaLng
-              })
-            }
-          }
-        }
-        
-        // 调试：打印前几个和后几个点
-        if (points.length > 0) {
-          console.log('[polyline] 首点:', points[0], '尾点:', points[points.length - 1], '总数:', points.length)
-        }
-        
-        return points
-      }
-      
-      // 如果是字符串格式（单点路径规划返回的压缩字符串）
-      if (typeof polyline === 'string') {
-        return this._decodePolylineString(polyline)
-      }
-      
-      return []
-    },
-
-    // ─── 解码压缩的polyline字符串 ──────────────────
-    _decodePolylineString(polylineStr) {
-      if (!polylineStr || typeof polylineStr !== 'string') {
-        return []
-      }
-      
-      const points = []
-      let index = 0
-      let lat = 0
-      let lng = 0
-
-      while (index < polylineStr.length) {
-        let b
-        let shift = 0
-        let result = 0
-
-        do {
-          b = polylineStr.charCodeAt(index++) - 63
-          result |= (b & 0x1f) << shift
-          shift += 5
-        } while (b >= 0x20)
-
-        const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1))
-        lat += dlat
-
-        shift = 0
-        result = 0
-
-        do {
-          b = polylineStr.charCodeAt(index++) - 63
-          result |= (b & 0x1f) << shift
-          shift += 5
-        } while (b >= 0x20)
-
-        const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1))
-        lng += dlng
-
-        points.push({
-          latitude: lat / 1e6,
-          longitude: lng / 1e6
-        })
-      }
-
-      return points
     }
   }
 })

@@ -101,7 +101,7 @@ module.exports = Behavior({
           const shops = this.data.selectMode === 'all'
             ? this.data.allLikedShops
             : this.data.allLikedShops.filter(s => s.selected)
-          const routeShops = this._planAndAnnotate(shops)
+          const routeShops = this._planRouteByDays(shops)
           this.setData({ routeShops, isEditing: false, reorderSheetVisible: false })
           this.refreshPreviewRoute(routeShops, { markDirty: true })
           this.updateMap()

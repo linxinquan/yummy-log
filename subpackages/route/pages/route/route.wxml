@@ -193,7 +193,19 @@
                   <view class="day-header">
                     <text class="day-title">{{item.title}}</text>
                     <text class="day-count">{{item.countText}}</text>
+                    <view class="day-start-container">
+                      <text class="day-start-label">起点</text>
+                      <view class="day-start-point" wx:if="{{index > 0}}" bindtap="onSetDayStart" data-day-index="{{index}}">
+                        <i class="mgc_location_line"></i>
+                        <text>{{item.startPointText || '设置起点'}}</text>
+                      </view>
+                      <view class="day-start-point day-start-current" wx:if="{{index === 0}}" bindtap="onSetDayStart" data-day-index="{{index}}">
+                        <i class="mgc_location_line"></i>
+                        <text>{{item.startPointText || '当前位置'}}</text>
+                      </view>
+                    </view>
                   </view>
+ 
 
                   <view class="place-list" wx:if="{{item.items.length}}">
                     <view

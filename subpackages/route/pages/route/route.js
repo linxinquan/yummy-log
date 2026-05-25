@@ -377,7 +377,7 @@ Page({
 
     this.setData({ allLikedShops, selectedCount, isAllSelected })
 
-    const routeShops = this._planAndAnnotate(selectedShops)
+    const routeShops = this._planRouteByDays(selectedShops)
     const updated = allLikedShops.map(s => ({ ...s, orderNum: '' }))
     routeShops.forEach((s, i) => {
       const hit = updated.find(a => a.id === s.id)
@@ -399,7 +399,7 @@ Page({
     this.setData({ allLikedShops: updated, selectedCount, isAllSelected: newSelected })
 
     if (newSelected) {
-      const routeShops = this._planAndAnnotate(updated)
+      const routeShops = this._planRouteByDays(updated)
       const withOrder = updated.map(s => ({ ...s, orderNum: '' }))
       routeShops.forEach((s, i) => {
         const hit = withOrder.find(a => a.id === s.id)
