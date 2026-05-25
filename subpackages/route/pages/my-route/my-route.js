@@ -1543,6 +1543,66 @@ Page({
     this.setData({ handleTouchStartY: touch.clientY || 0 })
   },
 
+
+  // 路线规划弹窗改成“点选项即确认”：
+  // 直接点“智能规划”或“手动编辑”就执行，不再需要底部确认按钮。
+  onConfirmReorderOption(e) {
+    const mode = e.currentTarget.dataset.mode
+    if (!mode) return
+
+    if (mode === 'manual') {
+      this.setData({ reorderSheetVisible: false })
+      this.onStartRouteEdit()
+      return
+    }
+
+    this.setData({ pendingReorderMode: '' })
+    const currentSections = stripEditState(this.data.daySections || [])
+    const hasPlaces = flattenDaySections(currentSections).length > 0
+    if (!hasPlaces) {
+      wx.showToast({ title: '当前没有可规划地点', icon: 'none' })
+      return
+    }
+
+    const optimizedSections = syncDaySections(currentSections, this.data.cityInfo)
+    const summaryText = buildSummaryText(optimizedSections)
+    const updatedRoute = {
+      ...this.buildUpdatedRoute(optimizedSections),
+      subtitle: summaryText,
+      isDraft: this.data.fromPreview
+    }
+    const nextMapDay = this.data.currentMapDay >= optimizedSections.length ? -1 : this.data.currentMapDay
+
+    if (this.data.fromPreview) {
+      this.setData({
+        reorderSheetVisible: false,
+        route: updatedRoute,
+        daySections: optimizedSections,
+        summaryText,
+        tabs: buildTabs(optimizedSections.length),
+        originalDaySections: JSON.parse(JSON.stringify(stripEditState(optimizedSections))),
+        hasRoutePlaces: flattenDaySections(optimizedSections).length > 0
+      })
+      this.refreshMapPreview(optimizedSections, this.data.mapPreviewIndex)
+      this.updateMapData(optimizedSections, this.data.cityInfo, nextMapDay)
+      this.handoffPreviewRoute(updatedRoute, '已智能规划')
+      return
+    }
+
+    this.saveRouteToStorage(updatedRoute, '已智能规划')
+    this.setData({
+      reorderSheetVisible: false,
+      route: updatedRoute,
+      daySections: optimizedSections,
+      summaryText,
+      tabs: buildTabs(optimizedSections.length),
+      originalDaySections: JSON.parse(JSON.stringify(stripEditState(optimizedSections))),
+      hasRoutePlaces: flattenDaySections(optimizedSections).length > 0
+    })
+    this.refreshMapPreview(optimizedSections, this.data.mapPreviewIndex)
+    this.updateMapData(optimizedSections, this.data.cityInfo, nextMapDay)
+  },
+
   // 读取页面里每一天、每个地点当前的位置，
   // 供拖拽排序时判断"应该放到哪里"。
   captureDragLayout(callback) {

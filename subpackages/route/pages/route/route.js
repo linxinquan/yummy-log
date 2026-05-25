@@ -701,6 +701,42 @@ Page({
     })
   },
 
+  // 路线规划弹窗改成“点选项即确认”：
+  // 用户直接点“智能规划”或“手动编辑”就立刻执行，不再需要底部确认按钮。
+  onConfirmReorderOption(e) {
+    const mode = e.currentTarget.dataset.mode
+    if (!mode) return
+    if (mode === 'manual') {
+      const previewRoute = buildPreviewRouteData(this.data, { isDraft: true })
+      if (!previewRoute) return
+      console.log(mode)
+      this.setData({
+        reorderSheetVisible: false,
+        previewRouteId: previewRoute.id,
+        hasUnsavedPreview: true,
+        pendingReorderMode: ''
+      })
+      wx.navigateTo({
+        url: `/subpackages/route/pages/my-route/my-route?route=${encodeURIComponent(JSON.stringify(previewRoute))}&edit=1&create=1&fromPreview=1`,
+        success: (res) => {
+          // 手动编辑保存后，把最新路线回传给当前预览页；取消则直接回到这里。
+          res.eventChannel.on('previewRouteEdited', (updatedRoute) => {
+            if (!updatedRoute) return
+            this.setData(buildPreviewStateFromRoute(updatedRoute, this.data.currentStart))
+            this.updateMap()
+            if (updatedRoute.daySections && updatedRoute.daySections.length) {
+              this.focusPreviewByIndex(0, -1)
+            }
+          })
+        }
+      })
+      return
+    }
+
+    this.setData({ pendingReorderMode: '' })
+    this.onOptimizeRoute()
+  },
+  
   // 设置起点为当前位置
   _setDayStartToCurrent(dayIndex) {
     const currentStart = this.data.currentStart
