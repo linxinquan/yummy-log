@@ -124,11 +124,10 @@ Page({
 
   // 读取当前用户对这家店的想去/收藏状态
   loadUserData(shopId) {
-    const likedIds = util.loadData('userWantFoods', [])
     const collectedIds = util.loadData('userCollectedFoods', [])
     
     this.setData({
-      isLiked: likedIds.some(id => String(id) === String(shopId)),
+      isLiked: util.isWant(shopId),
       isCollected: collectedIds.some(id => String(id) === String(shopId))
     })
   },

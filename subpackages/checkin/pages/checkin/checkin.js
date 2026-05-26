@@ -414,9 +414,18 @@ Page({
         resolve(payload)
       }
 
+      // 获取 app 实例，用于读取全局位置描述
+      const app = getApp()
+
+      // 构建 fallback 的 spotName：优先用全局 locationDesc，其次用 district，最后用"当前位置"
+      const getFallbackSpotName = () => {
+        const globalData = app.globalData || {}
+        return (globalData.locationDesc || (globalData.districtInfo && globalData.districtInfo.district) || '当前位置')
+      }
+
       const timeoutTimer = setTimeout(() => {
         finish({
-          spotName: '当前位置',
+          spotName: getFallbackSpotName(),
           address: '',
           latitude: this.data.latitude,
           longitude: this.data.longitude
@@ -429,7 +438,7 @@ Page({
           const { latitude, longitude } = res
           if (!checkinUtil) {
             finish({
-              spotName: '当前位置',
+              spotName: getFallbackSpotName(),
               address: '',
               latitude,
               longitude
@@ -448,7 +457,7 @@ Page({
             })
             .catch(() => {
               finish({
-                spotName: '当前位置',
+                spotName: getFallbackSpotName(),
                 address: '',
                 latitude,
                 longitude
@@ -457,7 +466,7 @@ Page({
         },
         fail: () => {
           finish({
-            spotName: '当前位置',
+            spotName: getFallbackSpotName(),
             address: '',
             latitude: this.data.latitude,
             longitude: this.data.longitude

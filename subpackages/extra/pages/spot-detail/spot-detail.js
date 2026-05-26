@@ -75,7 +75,7 @@ Page({
     }
 
     // 读取当前用户对这个景点的状态：是否想去、是否收藏。
-    const isLiked = util.loadData('userWantSpots', []).some(id => String(id) === String(spot.id))
+    const isLiked = util.isWant(spot.id)
     const isCollected = util.loadData('userCollectedSpots', []).some(id => String(id) === String(spot.id))
     // 地址显示、复制地址、系统导航统一使用同一份兜底后的文案，避免页面和弹窗出现不一致。
     const addressText = resolveSpotAddress(spot)
@@ -99,23 +99,54 @@ Page({
   },
 
   // 读取景点附近的美食卡片。
-  // 这里会从全量美食数据里按距离筛选最近的一批。
+  // 优化：先按城市和区域粗筛，再计算距离，减少计算量。
   _loadNearbyShops(spot) {
     // 把系统内置美食和用户自己添加的店一起纳入附近美食候选池。
     const userAddedShops = util.loadData('userAddedShops', [])
     const allShops = [...placesData.getFoods(), ...userAddedShops]
-    const nearby = allShops
-      .filter(s => (s.lat || s.latitude) && (s.lng || s.longitude))
-      .map(s => {
-        const lat = s.lat || s.latitude
-        const lng = s.lng || s.longitude
-        return {
-          ...s,
-          dist: util.getDistance(spot.lat, spot.lng, lat, lng),
-          distText: '',
-          coverImage: s.logo || s.image || s.thumb || '/images/app-logo.jpg'
-        }
+    
+    // 第一步：城市和区域粗筛（快速过滤，减少后续距离计算量）
+    let candidates = allShops
+    
+    // 优先使用城市+区域筛选，无结果则降级为仅城市筛选
+    if (spot.city || spot.district) {
+      // 尝试1：城市+区域筛选
+      let filtered = allShops.filter(s => {
+        if (spot.city && s.city && s.city !== spot.city) return false
+        if (spot.district && s.district && s.district !== spot.district) return false
+        return true
       })
+      
+      // 尝试2：如果城市+区域无结果，降级为仅城市筛选
+      if (filtered.length === 0 && spot.city) {
+        filtered = allShops.filter(s => {
+          if (s.city && s.city !== spot.city) return false
+          return true
+        })
+      }
+      
+      // 如果筛选后有结果，使用筛选结果；否则直接返回空（跳过距离计算）
+      if (filtered.length > 0) {
+        candidates = filtered
+      } else {
+        // 城市和区域都无匹配，直接返回空结果
+        this.setData({
+          nearbyShops: [],
+          displayAvatars: [spot.image || '/images/app-logo.jpg'].slice(0, 6)
+        })
+        return
+      }
+    }
+    
+    // 第二步：计算距离并精筛
+    const nearby = candidates
+      .filter(s => (s.lat || s.latitude) && (s.lng || s.longitude))
+      .map(s => ({
+        ...s,
+        dist: util.getDistance(spot.lat, spot.lng, s.lat || s.latitude, s.lng || s.longitude),
+        distText: '',
+        coverImage: s.logo || s.image || s.thumb || '/images/app-logo.jpg'
+      }))
       .filter(s => s.dist <= 5000) // 只保留 5 公里内的地点
       .sort((a, b) => a.dist - b.dist) // 离得近的排前面
       .slice(0, 8) // 最多显示 8 个
@@ -167,7 +198,7 @@ Page({
     const { spot } = this.data
     if (!spot) return
     if (!util.requireLogin()) return
-    const isLiked = util.toggleLike(spot.id, 'spot')
+    const isLiked = util.toggleWant(spot.id)
     this.setData({ isLiked })
     wx.showToast({
       title: isLiked ? '已添加到想去' : '已移出想去',
@@ -272,15 +303,6 @@ Page({
       app.globalData.nearbySpot = spot
     }
     wx.switchTab({ url: '/pages/index/index' })
-  },
-
-  // 把当前景点直接带去路线规划页
-  onPlanRoute() {
-    const { spot } = this.data
-    if (!spot) return
-    wx.navigateTo({
-      url: `/subpackages/route/pages/route/route?type=spot&ids=${spot.id}`
-    })
   },
 
   // 小程序右上角分享文案

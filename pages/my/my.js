@@ -473,10 +473,7 @@ Page({
       itemMap[String(item.id)] = item
     })
 
-    const likedIds = [
-      ...util.loadData('userWantFoods', []),
-      ...util.loadData('userWantSpots', [])
-    ]
+    const likedIds = util.getWantList()
     const likedShops = likedIds
       .map(id => itemMap[String(id)])
       .filter(Boolean)

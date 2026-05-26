@@ -614,55 +614,71 @@ function getSpotData() {
 }
 
 // ============================================================
-// 景点想去（收藏）功能
+// 想去功能（统一美食和景点，不区分类型）
+// 存储格式：userWantList 存储 ID 列表（String[]）
+// 迁移：首次访问时自动合并旧格式 userWantFoods + userWantSpots
 // ============================================================
 
-function getWantSpots() {
-  const list = loadData('userWantSpots', [])
-  // 统一转为字符串
-  return list.map(v => String(v))
+/**
+ * 迁移旧数据：将 userWantFoods + userWantSpots 合并为 userWantList
+ * 返回合并后的 ID 列表（去重）
+ */
+function _migrateWantList() {
+  const oldFoods = loadData('userWantFoods', [])
+  const oldSpots = loadData('userWantSpots', [])
+  const merged = [...oldFoods, ...oldSpots].map(v => String(v))
+  // 去重
+  const unique = [...new Set(merged)]
+  if (unique.length > 0) {
+    saveData('userWantList', unique)
+  }
+  return unique
 }
 
-function toggleSpotLike(spotId) {
-  const list = getWantSpots()
-  const strId = String(spotId)
+/**
+ * 获取想去列表（ID 数组）
+ * 自动迁移旧数据格式
+ */
+function getWantList() {
+  // 优先读新格式
+  let list = loadData('userWantList', null)
+  if (list !== null) {
+    return list.map(v => String(v))
+  }
+  // 旧格式：迁移
+  return _migrateWantList()
+}
+
+/**
+ * 切换想去状态（添加/移除）
+ * @param {string|number} id - 地点 ID
+ * @returns {boolean} - 当前是否已想去
+ */
+function toggleWant(id) {
+  const list = getWantList()
+  const strId = String(id)
   const idx = list.indexOf(strId)
   if (idx > -1) {
     list.splice(idx, 1)
   } else {
     list.push(strId)
   }
-  saveData('userWantSpots', list)
-  return list.indexOf(strId) > -1
-}
-
-function isSpotLiked(spotId) {
-  return getWantSpots().indexOf(String(spotId)) > -1
-}
-
-// ============================================================
-// 通用想去（支持美食和景点）
-// ============================================================
-
-function toggleLike(id, type = 'food') {
-  const key = type === 'food' ? 'userWantFoods' : 'userWantSpots'
-  const list = loadData(key, [])
-  // 统一转为字符串比较和存储，避免类型不一致
-  const strId = String(id)
-  const idx = list.findIndex(v => String(v) === strId)
-  if (idx > -1) {
-    list.splice(idx, 1)
-  } else {
-    list.push(strId)
-  }
-  saveData(key, list)
+  saveData('userWantList', list)
   return list.includes(strId)
 }
 
-function isLiked(id, type = 'food') {
-  const key = type === 'food' ? 'userWantFoods' : 'userWantSpots'
-  return (loadData(key, [])).indexOf(id) > -1
+/**
+ * 检查是否已想去
+ * @param {string|number} id - 地点 ID
+ * @returns {boolean}
+ */
+function isWant(id) {
+  return getWantList().indexOf(String(id)) > -1
 }
+
+// 导出统一接口（不再区分类型）
+const toggleLike = toggleWant
+const isLiked = isWant
 
 // ============================================================
 // 收藏功能（支持美食和景点）
@@ -696,6 +712,8 @@ function isCollected(id, type = 'food') {
  * @param {Array} items - 地点数组
  * @param {Object} startPoint - 起点 {lat, lng}
  * @param {boolean} preserveOrder - true按原顺序，false贪心优化
+ * @returns {Array} 规划后的地点数组，每项附加 distanceFromPrev（距上一个点的距离，单位米）；
+ *                  空数组返回 []，单元素直接返回原数组
  */
 function planRoute(items, startPoint, preserveOrder = false) {
   if (!items || items.length === 0) return []
@@ -817,12 +835,12 @@ module.exports = {
   isLiked,
   toggleCollect,
   isCollected,
-  getWantSpots,
-  toggleSpotLike,
-  isSpotLiked,
   getSpotData,
   getNearbySpots,
   getSpotCategoryColor,
   SPOT_CATEGORY_COLORS,
-  getCityShortName
+  getCityShortName,
+  getWantList,
+  toggleWant,
+  isWant,
 }

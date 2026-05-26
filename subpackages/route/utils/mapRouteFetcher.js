@@ -20,23 +20,13 @@ function fetchRealRoute(options) {
   const { allPoints, travelMode, qqMapKey, onSuccess, onFallback } = options
   const mode = mapConfig.TRAVEL_MODE_MAP[travelMode] || mapConfig.TRAVEL_MODE_MAP.drive
 
-  // 去掉重复的终点
-  let effectivePoints = [...allPoints]
-  const from = allPoints[0]
-  const to = allPoints[allPoints.length - 1]
-  if (Math.abs(from.latitude - to.latitude) < 0.00001 &&
-      Math.abs(from.longitude - to.longitude) < 0.00001 &&
-      allPoints.length > 2) {
-    effectivePoints = allPoints.slice(0, -1)
-  }
-
-  if (mode === 'driving' && effectivePoints.length > 2) {
-    _fetchDrivingRoute(effectivePoints, qqMapKey, onSuccess, () => {
-      _useSimulatedRouteForAll(effectivePoints, travelMode, onFallback)
+  if (mode === 'driving' && allPoints.length > 2) {
+    _fetchDrivingRoute(allPoints, qqMapKey, onSuccess, () => {
+      _useSimulatedRouteForAll(allPoints, travelMode, onFallback)
     })
   } else {
-    _fetchSegmentedRoute(effectivePoints, qqMapKey, mode, onSuccess, () => {
-      _useSimulatedRouteForAll(effectivePoints, travelMode, onFallback)
+    _fetchSegmentedRoute(allPoints, qqMapKey, mode, onSuccess, () => {
+      _useSimulatedRouteForAll(allPoints, travelMode, onFallback)
     })
   }
 }
@@ -193,6 +183,75 @@ function _extractTransitPolyline(routeResult) {
   return allPoints
 }
 
+// ─── 混和模式路线（每段各自独立模式 + 颜色）──────
+// segments: [{from, to, mode}, ...]  mode 为 'drive'|'transit'|'walk'|'ride'
+// 每段用自身模式调用 API，结果合并，每段返回 {points, mode} 用于多色折线
+function fetchMixedRoute(segments, qqMapKey, onSuccess, onFallback) {
+  if (!segments || segments.length === 0) {
+    onFallback([])
+    return
+  }
+
+  const results = []  // [{points, mode}, ...]
+  let hasError = false
+
+  const requestSegment = (index) => {
+    if (index >= segments.length) {
+      if (!hasError && results.length > 0) {
+        onSuccess(results)
+      } else {
+        onFallback(generateMixedSimulatedRoute(segments))
+      }
+      return
+    }
+
+    const seg = segments[index]
+    const mode = mapConfig.TRAVEL_MODE_MAP[seg.mode] || mapConfig.TRAVEL_MODE_MAP.drive
+
+    // 判断是否需要使用驾车 waypoints（仅在单一模式下可能，这里皆单段无需 waypoints）
+    const url = `${mapConfig.QQ_MAP_API_BASE}/${mode}/?from=${seg.from.latitude},${seg.from.longitude}&to=${seg.to.latitude},${seg.to.longitude}&output=json&key=${qqMapKey}`
+
+    wx.request({
+      url,
+      success: (res) => {
+        if (res.data && res.data.status === 0 && res.data.result && res.data.result.routes && res.data.result.routes[0]) {
+          let points
+          if (mode === 'transit') {
+            points = _extractTransitPolyline(res.data.result.routes[0])
+          } else {
+            points = parsePolyline(res.data.result.routes[0].polyline)
+          }
+          if (points.length > 0) {
+            results.push({ points, mode: seg.mode })
+          } else {
+            hasError = true
+          }
+        } else {
+          console.warn('[mapRouteFetcher] 混合路线单段 API 失败:', res.data)
+          hasError = true
+        }
+      },
+      fail: (err) => {
+        console.error('[mapRouteFetcher] 混合路线单段请求失败:', err)
+        hasError = true
+      },
+      complete: () => {
+        setTimeout(() => requestSegment(index + 1), mapConfig.ROUTE_CONFIG.API_DELAY)
+      }
+    })
+  }
+
+  requestSegment(0)
+}
+
+// 混合模式模拟路线降级
+function generateMixedSimulatedRoute(segments) {
+  return segments.map(seg => ({
+    points: generateSimulatedRoute(seg.from, seg.to, seg.mode),
+    mode: seg.mode
+  }))
+}
+
 // ─── 解析腾讯地图 polyline ─────────────────────
 function parsePolyline(polyline) {
   // 数组格式（多点路径规划）
@@ -260,6 +319,7 @@ function _decodePolylineString(polylineStr) {
 
 module.exports = {
   fetchRealRoute,
+  fetchMixedRoute,
   parsePolyline,
   generateSimulatedRouteForAll,
   generateSimulatedRoute

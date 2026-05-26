@@ -288,12 +288,6 @@ function buildPreviewDaySections(routeShops, preferredDayCount = 1) {
   return sections
 }
 
-// 根据当前路线类型，判断 toggleLike 时该写 food 还是 spot。
-function getLikeType(item, routeType) {
-  if (routeType === 'spot') return 'spot'
-  if (routeType === 'food') return 'food'
-  return item.type === 'spot' ? 'spot' : 'food'
-}
 
 module.exports = {
   CITY_PRESETS,
@@ -319,6 +313,5 @@ module.exports = {
   buildLegacyRouteData,
   buildPreviewRouteData,
   getPreviewIndexByDay,
-  getLikeType,
   buildPreviewDaySections
 }

@@ -1,6 +1,6 @@
 ﻿const util = require('../../../utils/util')
 const { buildMapPreviewViewData } = require('../../../utils/map-preview')
-const { getLikeType, getCityInfo, buildDayLabel, buildTabs, buildSummaryText, buildPreviewTitle, buildPreviewRouteData } = require('../../../utils/routeHelper')
+const { getCityInfo, buildDayLabel, buildTabs, buildSummaryText, buildPreviewTitle, buildPreviewRouteData } = require('../../../utils/routeHelper')
 
 
 // 把临时路线重新应用回当前预览页：
@@ -87,8 +87,6 @@ module.exports = Behavior({
 
     // 编辑模式
     reorderSheetVisible: false,
-    // 路线规划弹窗默认不选中任何方式，需用户手动选择
-    pendingReorderMode: '',
     routeShopsBackup: [],
     routeDaySectionsBackup: []
   },
@@ -123,8 +121,6 @@ module.exports = Behavior({
       onOpenReorderSheet() {
         this.setData({
           reorderSheetVisible: true,
-          // 每次打开都重置为未选择状态
-          pendingReorderMode: ''
         })
       },
     
@@ -152,53 +148,9 @@ module.exports = Behavior({
       onCloseReorderSheet() {
         this.setData({
           reorderSheetVisible: false,
-          // 关闭时清空选择，避免下次打开沿用上一次状态
-          pendingReorderMode: ''
         })
       },
-    
-      // 在弹窗里选择"智能重排"还是"手动编辑"
-      onSelectReorderMode(e) {
-        const { mode } = e.currentTarget.dataset
-        if (!mode) return
-        this.setData({ pendingReorderMode: mode })
-      },
-    
-      // 确认重排方式：智能重排直接优化，手动编辑跳到我的路线编辑页。
-      onConfirmReorderMode() {
-        if (!this.data.pendingReorderMode) {
-          wx.showToast({ title: '请先选择操作', icon: 'none' })
-          return
-        }
-    
-        if (this.data.pendingReorderMode === 'manual') {
-          const previewRoute = buildPreviewRouteData(this.data, { isDraft: true })
-          if (!previewRoute) return
-          this.setData({
-            reorderSheetVisible: false,
-            previewRouteId: previewRoute.id,
-            hasUnsavedPreview: true
-          })
-          wx.navigateTo({
-            url: `/subpackages/route/pages/my-route/my-route?route=${encodeURIComponent(JSON.stringify(previewRoute))}&edit=1&create=1&fromPreview=1`,
-            success: (res) => {
-              // 手动编辑保存后，把最新路线回传给当前预览页；取消则直接回到这里。
-              res.eventChannel.on('previewRouteEdited', (updatedRoute) => {
-                if (!updatedRoute) return
-                this.setData(buildPreviewStateFromRoute(updatedRoute, this.data.currentStart))
-                this.updateMap()
-                if (updatedRoute.daySections && updatedRoute.daySections.length) {
-                  this.focusPreviewByIndex(0, -1)
-                }
-              })
-            }
-          })
-          return
-        }
-    
-        this.onOptimizeRoute()
-      },
-    
+        
       // 取消页内顺序编辑，恢复备份数据。
       onCancelEdit() {
         const routeShops = JSON.parse(JSON.stringify(this.data.routeShopsBackup || []))
@@ -251,8 +203,7 @@ module.exports = Behavior({
       // 从当前路线里移除某个地点，同时取消它的"想去"状态。
       onRemoveShop(e) {
         const shopId = e.currentTarget.dataset.shopid
-        const shop = this.data.allLikedShops.find(item => String(item.id) === String(shopId))
-        util.toggleLike(shopId, getLikeType(shop || {}, this.data.routeType))
+        util.toggleWant(shopId)
         this.loadRoute()
         wx.showToast({ title: '已从路线移除', icon: 'none' })
       },

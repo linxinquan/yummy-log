@@ -345,8 +345,22 @@ function buildPlacePickerData() {
   const allFoods = [...placesData.getFoods(), ...userAddedShops]
   const allSpots = placesData.getSpots()
   const allNonFoodPlaces = allSpots
-  const wantFoodIds = util.loadData('userWantFoods', []).map(item => String(item))
-  const wantSpotIds = util.loadData('userWantSpots', []).map(item => String(item))
+  
+  // 新格式：从 userWantList 获取所有想去 ID，然后分离 food 和 spot
+  const allWantIds = util.getWantList()
+  const wantFoodIds = []
+  const wantSpotIds = []
+  allWantIds.forEach(id => {
+    const place = placesData.getPlaceById(id)
+    if (place) {
+      if (place.type === 'food') {
+        wantFoodIds.push(String(id))
+      } else if (place.type === 'spot') {
+        wantSpotIds.push(String(id))
+      }
+    }
+  })
+  
   const collectFoodIds = util.loadData('userCollectedFoods', []).map(item => String(item))
   const collectSpotIds = util.loadData('userCollectedSpots', []).map(item => String(item))
 
@@ -503,8 +517,6 @@ Page({
     pendingTransportMode: 'walk',
     transportTarget: null,
     reorderSheetVisible: false,
-    // 路线规划弹窗默认不选中任何方式，需用户手动选择
-    pendingReorderMode: '',
     navMapSheetVisible: false,
     navMapTarget: null,
     placeIntroVisible: false,
@@ -1130,8 +1142,6 @@ Page({
   onOpenReorderSheet() {
     this.setData({
       reorderSheetVisible: true,
-      // 每次打开都重置为未选择状态
-      pendingReorderMode: ''
     })
   },
 
@@ -1139,77 +1149,7 @@ Page({
   onCloseReorderSheet() {
     this.setData({
       reorderSheetVisible: false,
-      // 关闭时清空选择，避免下次打开沿用上一次状态
-      pendingReorderMode: ''
     })
-  },
-
-  // 切换底部弹窗里的编辑方式
-  onSelectReorderMode(e) {
-    const mode = e.currentTarget.dataset.mode
-    if (!mode) return
-    this.setData({ pendingReorderMode: mode })
-  },
-
-  // 确认编辑方式：
-  // 1. 手动编辑：进入原来的编辑态
-  // 2. 智能规划：直接按当前城市中心重新排序并保存
-  onConfirmReorderMode() {
-    if (!this.data.pendingReorderMode) {
-      wx.showToast({ title: '请先选择操作', icon: 'none' })
-      return
-    }
-
-    if (this.data.pendingReorderMode === 'manual') {
-      this.setData({ reorderSheetVisible: false })
-      this.onStartRouteEdit()
-      return
-    }
-
-    const currentSections = stripEditState(this.data.daySections || [])
-    const hasPlaces = flattenDaySections(currentSections).length > 0
-    if (!hasPlaces) {
-      wx.showToast({ title: '当前没有可规划地点', icon: 'none' })
-      return
-    }
-
-    const optimizedSections = syncDaySections(currentSections, this.data.cityInfo)
-    const summaryText = buildSummaryText(optimizedSections)
-    const updatedRoute = {
-      ...this.buildUpdatedRoute(optimizedSections),
-      subtitle: summaryText,
-      isDraft: this.data.fromPreview
-    }
-    const nextMapDay = this.data.currentMapDay >= optimizedSections.length ? -1 : this.data.currentMapDay
-
-    if (this.data.fromPreview) {
-      this.setData({
-        reorderSheetVisible: false,
-        route: updatedRoute,
-        daySections: optimizedSections,
-        summaryText,
-        tabs: buildTabs(optimizedSections.length),
-        originalDaySections: JSON.parse(JSON.stringify(stripEditState(optimizedSections))),
-        hasRoutePlaces: flattenDaySections(optimizedSections).length > 0
-      })
-      this.refreshMapPreview(optimizedSections, this.data.mapPreviewIndex)
-      this.updateMapData(optimizedSections, this.data.cityInfo, nextMapDay)
-      this.handoffPreviewRoute(updatedRoute, '已智能规划')
-      return
-    }
-
-    this.saveRouteToStorage(updatedRoute, '已智能规划')
-    this.setData({
-      reorderSheetVisible: false,
-      route: updatedRoute,
-      daySections: optimizedSections,
-      summaryText,
-      tabs: buildTabs(optimizedSections.length),
-      originalDaySections: JSON.parse(JSON.stringify(stripEditState(optimizedSections))),
-      hasRoutePlaces: flattenDaySections(optimizedSections).length > 0
-    })
-    this.refreshMapPreview(optimizedSections, this.data.mapPreviewIndex)
-    this.updateMapData(optimizedSections, this.data.cityInfo, nextMapDay)
   },
 
   // 进入编辑态：允许拖拽、删除、加地点
@@ -1562,7 +1502,6 @@ Page({
       return
     }
 
-    this.setData({ pendingReorderMode: '' })
     const currentSections = stripEditState(this.data.daySections || [])
     const hasPlaces = flattenDaySections(currentSections).length > 0
     if (!hasPlaces) {

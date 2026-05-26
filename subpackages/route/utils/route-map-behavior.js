@@ -4,7 +4,7 @@
 
 const app = getApp()
 const mapConfig = require('./map-config')
-const { fetchRealRoute } = require('./mapRouteFetcher')
+const { fetchRealRoute, fetchMixedRoute } = require('./mapRouteFetcher')
 
 // 路线地图统一复用探索页同一张当前位置图标。
 const CURRENT_LOCATION_ICON_PATH = '/images/markers/marker_current_location.png'
@@ -23,8 +23,8 @@ module.exports = Behavior({
       
       // 根据 currentMapDay 决定显示哪一天的路线
       const effectiveDayIndex = this.data.currentMapDay >= 0 ? this.data.currentMapDay : 0
-      const currentDay = (this.data.routeDaySections || [])[effectiveDayIndex] || {}
-      const routeShops = (currentDay.items || []).length ? currentDay.items : (this.data.routeShops || [])
+      const currentDaySection = (this.data.routeDaySections || [])[effectiveDayIndex] || {}
+      const routeShops = (currentDaySection.items || []).length ? currentDaySection.items : (this.data.routeShops || [])
       
       if (routeShops.length === 0) {
         this.setData({ markers: [], polyline: [] })
@@ -44,21 +44,29 @@ module.exports = Behavior({
         }
       }
       
-      // 终点：默认返回起点
-      const endPoint = { ...startPoint, name: '返回起点' }
+      // 根据出行方式设置路线颜色
+      const modeColors = {
+        drive: mapConfig.THEME_COLORS.drive,
+        transit: mapConfig.THEME_COLORS.transit,
+        walk: mapConfig.THEME_COLORS.walk,
+        ride: mapConfig.THEME_COLORS.ride
+      }
 
-      // 检查缓存：如果已有缓存的路线数据，直接使用
-      const cacheKey = `${effectiveDayIndex}-${travelMode}-${startPoint.lat}-${startPoint.lng}`
+      // 逐段获取交通方式
+      const segmentModes = routeShops.map(shop => {
+        return (shop.travelMeta && shop.travelMeta.mode) || shop.travelMode || travelMode
+      })
+      const uniqueModes = [...new Set(segmentModes)]
+      const isMixedMode = uniqueModes.length > 1
+
+      // 构建缓存键
+      const modeKey = isMixedMode ? segmentModes.join(',') : uniqueModes[0]
+      const cacheKey = `${effectiveDayIndex}-${modeKey}-${startPoint.lat}-${startPoint.lng}`
+      
+      // 检查缓存
       if (this._routeCache[cacheKey]) {
         const cachedData = this._routeCache[cacheKey]
-        const polyline = [{
-          points: cachedData.points,
-          color: cachedData.color + 'CC',
-          width: 5,
-          dottedLine: false,
-          arrowLine: true
-        }]
-        this._setMapData(cachedData.markers, polyline, startPoint, routeShops)
+        this._setMapData(cachedData.markers, cachedData.polyline, startPoint, routeShops)
         return
       }
 
@@ -134,27 +142,20 @@ module.exports = Behavior({
           anchor: { x: 0.5, y: 0.5 }
         })
       }
-      // 根据出行方式设置路线颜色
-      const modeColors = {
-        drive: mapConfig.THEME_COLORS.drive,
-        transit: mapConfig.THEME_COLORS.transit,
-        walk: mapConfig.THEME_COLORS.walk,
-        ride: mapConfig.THEME_COLORS.ride
-      }
-      const routeColor = modeColors[travelMode] || mapConfig.THEME_COLORS.primary
 
-      // 构建所有途经点
+      // 构建所有途经点（起点 + 各店铺，不返回起点）
       const allPoints = [
         { latitude: startPoint.lat, longitude: startPoint.lng },
-        ...routeShops.map(shop => ({ latitude: shop.lat || shop.latitude, longitude: shop.lng || shop.longitude })),
-        { latitude: endPoint.lat, longitude: endPoint.lng }
+        ...routeShops.map(shop => ({ latitude: shop.lat || shop.latitude, longitude: shop.lng || shop.longitude }))
       ]
       
       // 调试：打印 allPoints 数据
       console.log('[updateMap] allPoints:', allPoints.map(p => ({ lat: p.latitude, lng: p.longitude })))
+      console.log('[updateMap] isMixedMode:', isMixedMode, 'segmentModes:', segmentModes)
 
-      // 如果只有起点和终点（或更少），直接画直线
+      // 如果只有起点和一个店铺（或更少），直接画直线
       if (allPoints.length <= 2) {
+        const routeColor = modeColors[segmentModes[0]] || mapConfig.THEME_COLORS.primary
         const polyline = [{
           points: allPoints,
           color: routeColor + 'CC',
@@ -166,20 +167,26 @@ module.exports = Behavior({
         // 保存到缓存
         if (cacheKey) {
           if (!this._routeCache) this._routeCache = {}
-          this._routeCache[cacheKey] = { points: allPoints, markers, color: routeColor }
+          this._routeCache[cacheKey] = { polyline, markers }
         }
         return
       }
 
-      // 调用腾讯地图路径规划API获取真实路线
-      this._fetchRealRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey)
+      if (isMixedMode) {
+        // 混合模式：逐段按各自出行方式请求路线
+        this._fetchMixedModeRoute(allPoints, segmentModes, modeColors, markers, startPoint, routeShops, cacheKey)
+      } else {
+        // 单一模式：使用现有逻辑
+        const routeColor = modeColors[uniqueModes[0]] || mapConfig.THEME_COLORS.primary
+        this._fetchRealRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey)
+      }
     },
 
     // 让地图自动缩放到能看见当前路线的全部点位。
     onFitRoute() {
       const effectiveDayIndex = this.data.currentMapDay >= 0 ? this.data.currentMapDay : 0
-      const currentDay = (this.data.routeDaySections || [])[effectiveDayIndex] || {}
-      const currentItems = (currentDay.items || []).length ? currentDay.items : (this.data.routeShops || [])
+      const currentDaySection = (this.data.routeDaySections || [])[effectiveDayIndex] || {}
+      const currentItems = (currentDaySection.items || []).length ? currentDaySection.items : (this.data.routeShops || [])
       if (currentItems.length === 0) return
       const points = currentItems
         .map(item => ({
@@ -213,15 +220,6 @@ module.exports = Behavior({
     // ─── 设置地图数据 ─────────────────────────────
     _setMapData(markers, polyline, startPoint, routeShops) {
       console.log('[_setMapData] markers:', markers.length, 'polyline点数:', polyline[0]?.points?.length, '颜色:', polyline[0]?.color)
-      
-      // 地图中心取路线中间点
-      let centerLat = startPoint.lat
-      let centerLng = startPoint.lng
-      if (routeShops.length > 0) {
-        const midIdx = Math.floor(routeShops.length / 2)
-        centerLat = routeShops[midIdx].lat || routeShops[midIdx].latitude
-        centerLng = routeShops[midIdx].lng || routeShops[midIdx].longitude
-      }
 
       const nextMarkers = Array.isArray(markers) ? markers.slice() : []
       const currentLocation = this.data.currentLocation || app.globalData.location
@@ -237,19 +235,31 @@ module.exports = Behavior({
         })
       }
 
-      this.setData({
+      // 如果有焦点店铺，地图中心对准它；否则不设置 mapCenter（让地图自己决定）
+      const focusShop = this.data.mapPreviewShop
+      const setDataPayload = {
         markers: nextMarkers,
-        polyline,
-        mapCenter: { lat: centerLat, lng: centerLng }
-      }, () => {
-        console.log('[_setMapData] 地图数据已设置')
+        polyline
+      }
+      if (focusShop) {
+        setDataPayload.mapCenter = {
+          lat: focusShop.lat || focusShop.latitude,
+          lng: focusShop.lng || focusShop.longitude
+        }
+      }
+
+      this.setData(setDataPayload, () => {
+        console.log('[_setMapData] 地图数据已设置', focusShop ? '中心对准焦点店铺' : '未设置中心')
       })
     },
 
     // ─── 获取真实路线（腾讯地图路径规划）───────────
     _fetchRealRoute(allPoints, routeColor, markers, startPoint, routeShops, cacheKey) {
       const key = app.globalData.qqMapKey
-      const { travelMode } = this.data
+      // 单模式时所有段交通方式相同，取第一个 shop 的 mode 即可
+      const travelMode = routeShops.length > 0
+        ? ((routeShops[0].travelMeta && routeShops[0].travelMeta.mode) || routeShops[0].travelMode || this.data.travelMode)
+        : this.data.travelMode
 
       fetchRealRoute({
         allPoints,
@@ -266,7 +276,7 @@ module.exports = Behavior({
           this._setMapData(markers, polyline, startPoint, routeShops)
           if (cacheKey) {
             if (!this._routeCache) this._routeCache = {}
-            this._routeCache[cacheKey] = { points, markers, color: routeColor }
+            this._routeCache[cacheKey] = { polyline, markers }
           }
         },
         onFallback: (points) => {
@@ -281,10 +291,63 @@ module.exports = Behavior({
           this._setMapData(markers, polyline, startPoint, routeShops)
           if (cacheKey) {
             if (!this._routeCache) this._routeCache = {}
-            this._routeCache[cacheKey] = { points, markers, color: routeColor }
+            this._routeCache[cacheKey] = { polyline, markers }
           }
         }
       })
+    },
+
+    // ─── 混合模式路线获取（每段各自出行方式，多色折线）──
+    _fetchMixedModeRoute(allPoints, segmentModes, modeColors, markers, startPoint, routeShops, cacheKey) {
+      const key = app.globalData.qqMapKey
+
+      // 构建逐段请求参数
+      const segments = []
+      for (let i = 0; i < allPoints.length - 1; i++) {
+        segments.push({
+          from: allPoints[i],
+          to: allPoints[i + 1],
+          mode: segmentModes[i] || 'drive'
+        })
+      }
+
+      console.log('[混合模式路线] segments:', segments.length)
+
+      fetchMixedRoute(segments, key,
+        (results) => {
+          // results: [{points, mode}, ...]
+          // 拼接为多色折线数组
+          const polyline = results.map((seg, i) => ({
+            points: seg.points,
+            color: (modeColors[seg.mode] || mapConfig.THEME_COLORS.primary) + 'CC',
+            width: 5,
+            dottedLine: false,
+            arrowLine: (i === results.length - 1)  // 只有最后一段显示箭头
+          }))
+          console.log('[混合模式路线] 成功，折线段数:', polyline.length)
+          this._setMapData(markers, polyline, startPoint, routeShops)
+          if (cacheKey) {
+            if (!this._routeCache) this._routeCache = {}
+            this._routeCache[cacheKey] = { polyline, markers }
+          }
+        },
+        (fallbackResults) => {
+          // fallbackResults: [{points, mode}, ...]
+          console.log('[混合模式路线] 降级使用模拟路线')
+          const polyline = fallbackResults.map((seg, i) => ({
+            points: seg.points,
+            color: (modeColors[seg.mode] || mapConfig.THEME_COLORS.primary) + 'CC',
+            width: 5,
+            dottedLine: false,
+            arrowLine: (i === fallbackResults.length - 1)
+          }))
+          this._setMapData(markers, polyline, startPoint, routeShops)
+          if (cacheKey) {
+            if (!this._routeCache) this._routeCache = {}
+            this._routeCache[cacheKey] = { polyline, markers }
+          }
+        }
+      )
     }
   }
 })

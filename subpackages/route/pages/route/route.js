@@ -11,7 +11,6 @@ const {
   decorateRouteCardItem,
   buildPreviewRouteData,
   getPreviewIndexByDay,
-  getLikeType,
   buildPreviewDaySections
 } = require('../../../../utils/routeHelper')
 
@@ -21,18 +20,6 @@ const routeEditBehavior = require('../../utils/route-edit-behavior')
 const routeNavBehavior = require('../../utils/route-nav-behavior')
 const routePlaceBehavior = require('../../utils/route-place-behavior')
 
-
-// 读取所有美食数据源。
-function buildFoodItems() {
-  const userShops = util.loadData('userAddedShops', [])
-  return [...placesData.getFoods(), ...userShops]
-    .map(item => ({ ...item, type: 'food' }))
-}
-
-// 读取所有景点数据源。
-function buildSpotItems() {
-  return placesData.getSpots().map(item => ({ ...item, type: 'spot' }))
-}
 
 // 只有用户明确点"保存"时，才真正写入 savedRoutes。
 function savePreviewRouteData(data, options = {}) {
@@ -74,7 +61,9 @@ Page({
     viewMode: 'list',
     modeSwitchTop: 44,
     routeDaySections: [],
+    // 列表/预览模式：底部 Tab 选中索引（0=行程总览，1=第1天，2=第2天...）
     currentTab: 0,
+    // 地图模式：当前高亮显示第几天的路线（-1=未确定，0=第1天，1=第2天...）
     currentMapDay: -1,
     sheetScrollTarget: '',
     cityText: '深圳市',
@@ -139,11 +128,11 @@ Page({
   // 2. 计算顶部安全区
   // 3. 获取定位并生成路线
   onLoad(options) {
-    // 接收 type=food/spot 和 ids=1,2,3 参数
-    const { type, ids, dayCount } = options
+    // ids=1,2,3 参数
+    const { ids, dayCount } = options
     console.log('r-dayCount', dayCount)
 
-    const routeType = type === 'spot' ? 'spot' : type === 'plan' ? 'mixed' : 'food'
+    const routeType = 'mixed'
     const windowInfo = wx.getWindowInfo()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
     const menuTop = menuButtonInfo ? menuButtonInfo.top : (windowInfo.statusBarHeight || 44) + 4
@@ -258,33 +247,22 @@ Page({
   loadRoute() {
     // 清除路线缓存
     this._routeCache = {}
-    const { routeType, presetIds, selectMode } = this.data
+    const { presetIds, selectMode } = this.data
 
     // 确定要加载的ID列表
     let likedIds = []
     if (presetIds && presetIds.length > 0) {
       // 从想去清单页面传入的ID（按用户拖拽排序）
       likedIds = presetIds
-    } else if (routeType === 'spot') {
-      likedIds = util.loadData('userWantSpots', [])
-    } else if (routeType === 'mixed') {
-      likedIds = [
-        ...util.loadData('userWantFoods', []),
-        ...util.loadData('userWantSpots', [])
-      ]
     } else {
-      likedIds = util.loadData('userWantFoods', [])
+      // 新格式：从 userWantList 获取所有想去 ID（不再区分类型）
+      likedIds = util.getWantList()
     }
 
-    // 获取对应的数据源
-    let allItems = []
-    if (routeType === 'spot') {
-      allItems = buildSpotItems()
-    } else if (routeType === 'mixed') {
-      allItems = [...buildFoodItems(), ...buildSpotItems()]
-    } else {
-      allItems = buildFoodItems()
-    }
+    // 获取对应的数据源（统一使用 mixed 模式：美食+景点）
+    // 使用 getAllPlaces() 获取所有地点，并补充用户自己添加的店铺
+    const userAddedShops = util.loadData('userAddedShops', [])
+    let allItems = [...placesData.getAllPlaces(), ...userAddedShops];
     const rawItems = likedIds
       .map(id => allItems.find(s => String(s.id) === String(id)))
       .filter(Boolean)
@@ -357,6 +335,15 @@ Page({
 
     const { preferredDayCount, dayStartPoints, currentStart } = this.data
     
+    // 保存当前 routeShops 中每项的逐段交通方式，重规划后恢复
+    const prevTravelModeMap = {}
+    if (this.data.routeShops && this.data.routeShops.length > 0) {
+      this.data.routeShops.forEach(item => {
+        const mode = (item.travelMeta && item.travelMeta.mode) || item.travelMode
+        if (mode) prevTravelModeMap[item.id] = mode
+      })
+    }
+    
     // 先按天分组（使用当前的 routeDaySections 分组逻辑）
     const routeDaySections = buildPreviewDaySections(shops, preferredDayCount)
     
@@ -398,15 +385,20 @@ Page({
         dayShops[0].dayStartPoint = dayStartPoint
       }
       
-      // 标记每个地点属于第几天
-      dayShops.forEach(s => { s.dayIndex = dayIndex })
-      
+      // 标记每个地点属于第几天，并恢复之前设置的逐段交通方式
+      dayShops.forEach(s => {
+        s.dayIndex = dayIndex
+        if (prevTravelModeMap[s.id]) {
+          s.travelMode = prevTravelModeMap[s.id]
+        }
+      })
+
       // 累加总距离
       dayShops.forEach(s => { totalDist += s.distanceFromPrev || 0 })
-      
+
       allRouteShops.push(...dayShops)
     })
-    
+
     this.setData({
       totalDistance: util.formatDistance(totalDist)
     })
@@ -570,8 +562,8 @@ Page({
       routeShops: nextRouteShops,
       transportSheetVisible: false,
       transportTargetIndex: -1,
-      transportTarget: null,
-      travelMode: pendingTransportMode // 同时更新整条路线的默认交通方式
+      transportTarget: null
+      // 不再覆盖全局 travelMode，每段独立维护自己的交通方式
     }
     if (isNavigating && currentNavIndex === transportTargetIndex) {
       nextData.currentNavShop = nextRouteShops[transportTargetIndex]
@@ -593,7 +585,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           this.data.allLikedShops.forEach(shop => {
-            util.toggleLike(shop.id, getLikeType(shop, this.data.routeType))
+            util.toggleWant(shop.id)
           })
           this.loadRoute()
           wx.showToast({ title: '已清空', icon: 'none' })
@@ -805,20 +797,18 @@ Page({
     }
   },
 
-  // 路线规划弹窗改成“点选项即确认”：
-  // 用户直接点“智能规划”或“手动编辑”就立刻执行，不再需要底部确认按钮。
+  // 路线规划弹窗改成"点选项即确认"：
+  // 用户直接点"智能规划"或"手动编辑"就立刻执行，不再需要底部确认按钮。
   onConfirmReorderOption(e) {
     const mode = e.currentTarget.dataset.mode
     if (!mode) return
     if (mode === 'manual') {
       const previewRoute = buildPreviewRouteData(this.data, { isDraft: true })
       if (!previewRoute) return
-      console.log(mode)
       this.setData({
         reorderSheetVisible: false,
         previewRouteId: previewRoute.id,
-        hasUnsavedPreview: true,
-        pendingReorderMode: ''
+        hasUnsavedPreview: true
       })
       wx.navigateTo({
         url: `/subpackages/route/pages/my-route/my-route?route=${encodeURIComponent(JSON.stringify(previewRoute))}&edit=1&create=1&fromPreview=1`,
@@ -832,15 +822,17 @@ Page({
               this.focusPreviewByIndex(0, -1)
             }
           })
+        },
+        fail: (err) => {
+          console.error('导航失败:', err)
+          wx.showToast({ title: '页面跳转失败', icon: 'none' })
         }
       })
       return
     }
 
-    this.setData({ pendingReorderMode: '' })
     this.onOptimizeRoute()
   },
-  
   // 设置起点为当前位置
   _setDayStartToCurrent(dayIndex) {
     const currentStart = this.data.currentStart

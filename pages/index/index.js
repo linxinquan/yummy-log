@@ -278,12 +278,11 @@ Page({
   // 读取用户状态：
   // 这里主要拿"想去"和"足迹"的本地缓存。
   loadUserData() {
-    const wantFoods = util.loadData('userWantFoods', [])
-    const wantSpots = util.loadData('userWantSpots', [])
+    const wantList = util.getWantList()
     const checkedIn = util.getFootprintItems()
     
     // 合并所有的想去 ID，方便在混合列表中判断
-    const likedShops = [...wantFoods, ...wantSpots]
+    const likedShops = wantList
 
     this.setData({
       likedShops: likedShops,
@@ -602,8 +601,7 @@ Page({
     }
     
     const shopId = e.currentTarget.dataset.shopid
-    const type = e.currentTarget.dataset.type || 'food'
-    const isLiked = util.toggleLike(shopId, type)
+    const isLiked = util.toggleWant(shopId)
     
     this.loadUserData()
     

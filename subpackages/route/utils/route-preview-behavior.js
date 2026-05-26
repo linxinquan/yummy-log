@@ -107,8 +107,8 @@ methods: {
       dayIndex >= 0 ? getPreviewIndexByDay(this.data.routeDaySections, dayIndex) : 0,
       dayIndex
     )
-    // 更新地图显示当天的路线
-    this.updateMap()
+    // 用 setTimeout 确保 focusPreviewByIndex 里的 setData 完成后，updateMap 能读到最新的 currentMapDay
+    setTimeout(() => this.updateMap(), 0)
   },
 
   // 切换地图预览中的当前地点
@@ -119,9 +119,13 @@ methods: {
     )
     if (Number.isNaN(nextIndex)) return
     const nextDayIndex = getDayIndexByPreview(this.data.routeDaySections, nextIndex)
+    // 在 focusPreviewByIndex 之前保存旧值，因为 setData 会同步更新 this.data
+    const oldMapDay = this.data.currentMapDay
     this.focusPreviewByIndex(nextIndex, nextDayIndex)
-    // 更新地图显示当前站点
-    this.updateMap()
+    // 只有跨天时才重新渲染地图路径，同天内只切换焦点不需要重绘路线
+    if (nextDayIndex !== oldMapDay) {
+      setTimeout(() => this.updateMap(), 0)
+    }
   },
 
   // 点击上一站 / 下一站

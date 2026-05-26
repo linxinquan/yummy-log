@@ -7,10 +7,12 @@ const { resolveDisplayCategory } = require('../../utils/displayCategory')
 const { formatTripDuration, normalizeTripSummaryText } = require('../../utils/trip-duration')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 
+
+const DEFAULT_DAY = 2; // 默认天数
 // 每项高度(px) = 卡片高度120rpx + gap 16rpx 换算
 const ITEM_H = 60 // px，每项高度用于计算排序
 const DEFAULT_COVER = '/images/app-logo.jpg'
-const DAY_OPTIONS = Array.from({ length: 30 }, (_, index) => index + 1)
+const DAY_OPTIONS = Array.from({ length: 10 }, (_, index) => index + 1)
 const DELETE_ACTION_WIDTH_RPX = 144
 const DEFAULT_ROUTE_AVATAR = '/images/app-logo.jpg'
 const ROUTE_ACTION_OPTIONS = [
@@ -30,7 +32,7 @@ function getCurrentUserProfile() {
   }
 }
 
-// 给列表项补一个“左滑偏移量”字段。
+// 给列表项补一个"左滑偏移量"字段。
 // 这样卡片才能记住自己当前是否被左滑打开。
 function withSwipeState(items) {
   return (items || []).map(item => ({
@@ -55,7 +57,7 @@ function closeSwipeItems(items, keepIndex = -1) {
   return { nextItems, changed }
 }
 
-// 用比较宽松的规则判断“这是景点还是美食”。
+// 用比较宽松的规则判断"这是景点还是美食"。
 // 这个项目里有些历史数据字段不完全统一，所以这里要多做几层兜底。
 function isSpotItem(item) {
   return item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price
@@ -72,7 +74,7 @@ function inferTagText(item) {
   return '美食'
 }
 
-// 把“想去人数”格式化成更短的文案，避免数字太长撑坏布局。
+// 把"想去人数"格式化成更短的文案，避免数字太长撑坏布局。
 function formatWantCount(count) {
   const value = Number(count) || 1024
   if (value >= 10000) {
@@ -156,7 +158,7 @@ function resolveRouteCardCover(item, index = 0) {
   return item.coverImage || item.displayImage || daySectionCover || dayDetailCover || localPool[index % localPool.length] || DEFAULT_COVER
 }
 
-// 把“我的路线”里的原始数据整理成列表卡片需要的字段。
+// 把"我的路线"里的原始数据整理成列表卡片需要的字段。
 function buildRouteCards(items) {
   const currentUser = getCurrentUserProfile()
   return (items || [])
@@ -183,7 +185,7 @@ function buildRouteCards(items) {
 }
 
 // 发布攻略前，先把每个地点的展示字段补齐。
-// 这样攻略详情页就不用依赖“再次猜测”才能拿到评分和标签。
+// 这样攻略详情页就不用依赖"再次猜测"才能拿到评分和标签。
 function normalizeGuideDaySections(daySections) {
   return (daySections || []).map(day => ({
     ...day,
@@ -209,7 +211,7 @@ function normalizeGuideDaySections(daySections) {
   }))
 }
 
-// 把路线数据转换成攻略数据，这是“发布攻略”的核心映射。
+// 把路线数据转换成攻略数据，这是"发布攻略"的核心映射。
 function buildGuideDraftFromRoute(route, copy = false) {
   const currentUser = getCurrentUserProfile()
   const daySections = normalizeGuideDaySections(route.daySections || [])
@@ -238,7 +240,7 @@ function buildGuideDraftFromRoute(route, copy = false) {
   }
 }
 
-// 复制路线时，自动在标题前面加“（复制）”。
+// 复制路线时，自动在标题前面加"（复制）"。
 function buildCopiedRoute(route) {
   const timestamp = Date.now()
   const title = String(route.title || '未命名路线')
@@ -273,7 +275,7 @@ function getEmptyStateMeta(tab) {
 }
 
 // 统一打开地点详情：
-// 足迹里如果是“系统未收录但用户采集过的地点”，就把完整对象直接带去详情页。
+// 足迹里如果是"系统未收录但用户采集过的地点"，就把完整对象直接带去详情页。
 function openPlaceDetail(item) {
   if (!item) return
   if (item.type === 'spot') {
@@ -319,8 +321,7 @@ Page({
     transportTargetIndex: -1,
     planDaySheetVisible: false,
     dayOptions: DAY_OPTIONS,
-    selectedPlanDayCount: 1,
-    selectedPlanDayIndex: 0,
+    selectedPlanDayCount: DEFAULT_DAY,
     deleteActionWidthPx: 72,
     routeActionSheetVisible: false,
     routeActionOptions: ROUTE_ACTION_OPTIONS,
@@ -400,24 +401,29 @@ Page({
     let items = []
 
     if (tab === 'want') {
-      const foodIds = util.loadData('userWantFoods', [])
-      const spotIds = util.loadData('userWantSpots', [])
-      
-      const foods = placesData.getFoods()
-      const spots = placesData.getSpots()
+      // 新格式：userWantList 存储所有想去的 ID（美食+景点）
+      const wantIds = util.getWantList()
       const userShops = util.loadData('userAddedShops', [])
-      const allFoodItems = [...foods, ...userShops]
       
-      const foodItems = foodIds
-        .map(id => allFoodItems.find(s => String(s.id) === String(id)))
-        .filter(Boolean)
-        .map(item => ({ ...item, type: 'food' }))
-      const spotItems = spotIds
-        .map(id => spots.find(s => String(s.id) === String(id)))
-        .filter(Boolean)
-        .map(item => ({ ...item, type: 'spot' }))
+      // 通过 placesData.getPlaceById 一次性读取所有想去地点的完整数据
+      const wantItems = wantIds
+        .map(id => {
+          // 先查 placesData（美食+景点）
+          let place = placesData.getPlaceById(id)
+          // 如果找不到，再查用户自己添加的店铺
+          if (!place) {
+            place = userShops.find(s => String(s.id) === String(id))
+          }
+          return place
+        })
+        .filter(Boolean)  // 过滤掉找不到的数据（防护数据不一致）
+        .map(item => ({
+          ...item,
+          // 确保有 type 字段（美食或景点）
+          type: item.type || (item.category === '景点' || item.category === '公园' ? 'spot' : 'food')
+        }))
       
-      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems([...foodItems, ...spotItems])))
+      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(wantItems)))
       console.log('wantgo', items)
       this.setData({ items, empty: items.length === 0 })
     } else if (tab === 'plan') {
@@ -500,7 +506,7 @@ Page({
     wx.showToast({ title: copy ? '已复制攻略' : '已发布为攻略', icon: 'success' })
   },
 
-  // 复制路线卡片，并自动加上“（复制）”前缀
+  // 复制路线卡片，并自动加上"（复制）"前缀
   copyRouteCard(route) {
     const savedRoutes = util.loadData('savedRoutes', [])
     const copiedRoute = buildCopiedRoute(route)
@@ -724,10 +730,7 @@ Page({
     if (Number.isNaN(pickerIndex)) return
     const dayCount = this.data.dayOptions[pickerIndex]
     if (!dayCount) return
-    this.setData({
-      selectedPlanDayIndex: pickerIndex,
-      selectedPlanDayCount: dayCount
-    })
+    this.setData({ selectedPlanDayCount: dayCount })
   },
 
   // ─── 拖拽开始（长按）：用于调整路线列表顺序 ─────────────────────────────
@@ -763,11 +766,9 @@ Page({
     if (!this.data.dragging) return
     // 保存排序后的顺序
     if (tab === 'plan') {
-      // 区分出 spot 和 food 并分别保存
-      const spotIds = items.filter(item => item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price).map(s => s.id)
-      const foodIds = items.filter(item => !(item.category === '景点' || item.category === '公园' || item.type === 'spot' || !item.price)).map(s => s.id)
-      util.saveData('userWantSpots', spotIds)
-      util.saveData('userWantFoods', foodIds)
+      // 新格式：直接保存所有 ID 到 userWantList（不区分 spot/food）
+      const sortedIds = items.map(item => String(item.id))
+      util.saveData('userWantList', sortedIds)
     }
     this.setData({ dragging: false, dragIndex: -1 })
   },
@@ -785,16 +786,13 @@ Page({
     }
   },
 
-  // ─── 从“想去”里删除当前地点 ─────────────────────────────
+  // ─── 从"想去"里删除当前地点 ─────────────────────────────
   onRemove(e) {
     const id = String(e.currentTarget.dataset.id)
-    const { items } = this.data
-    const item = items.find(i => String(i.id) === id)
-    if (!item) return
-    const type = item.type === 'spot' ? 'spot' : 'food'
-    const key = type === 'spot' ? 'userWantSpots' : 'userWantFoods'
-    const nextIds = util.loadData(key, []).filter(savedId => String(savedId) !== id)
-    util.saveData(key, nextIds)
+    // 新格式：直接从 userWantList 中删除 ID
+    const wantList = util.getWantList()
+    const nextIds = wantList.filter(savedId => String(savedId) !== id)
+    util.saveData('userWantList', nextIds)
     this._loadData()
     wx.showToast({ title: '已移除', icon: 'none', duration: 1000 })
   },
@@ -808,8 +806,7 @@ Page({
     }
     this.setData({
       planDaySheetVisible: true,
-      selectedPlanDayCount: Math.max(1, Math.min(this.data.selectedPlanDayCount || 3, 30)),
-      selectedPlanDayIndex: Math.max(Math.max(1, Math.min(this.data.selectedPlanDayCount || 3, 30)) - 1, 0)
+      selectedPlanDayCount: Math.max(1, Math.min(this.data.selectedPlanDayCount || DEFAULT_DAY, 10))
     })
   },
 
@@ -824,16 +821,7 @@ Page({
     const dayCount = Math.max(1, parseInt(selectedPlanDayCount, 10) || 1)
     console.log('dayCount', dayCount)
     this.setData({ planDaySheetVisible: false })
-    wx.navigateTo({ url: `/subpackages/route/pages/route/route?type=plan&ids=${ids}&dayCount=${dayCount}` })
+    wx.navigateTo({ url: `/subpackages/route/pages/route/route?&ids=${ids}&dayCount=${dayCount}` })
   },
 
-  // 底部空状态按钮：回首页
-  onGoHome() {
-    wx.switchTab({ url: '/pages/index/index' })
-  },
-
-  // 顶部返回按钮
-  onBack() {
-    wx.navigateBack()
-  }
 })

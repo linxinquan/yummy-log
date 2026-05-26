@@ -69,6 +69,13 @@ App({
   // 获取用户位置（返回 Promise）
   getUserLocation() {
     return new Promise((resolve) => {
+      // 如果已经有位置信息，直接返回缓存
+      if (this.globalData.location && this.globalData.locationReady) {
+        console.log('✅ 使用缓存位置', this.globalData.location)
+        resolve(this.globalData.location)
+        return
+      }
+
       wx.getLocation({
         type: 'gcj02',
         isHighAccuracy: true,
