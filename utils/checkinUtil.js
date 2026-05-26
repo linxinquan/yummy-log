@@ -19,7 +19,7 @@ function reverseGeocode(latitude, longitude) {
         poi_options: 'policy=2;radius=1000'
       },
       header: {
-        'Referer': 'https://meitour.app'   // 腾讯地图 WebService API 要求
+        'Referer': 'https://meitour.app'   // 腾讯地图 WebService API 要求、小程序可能拦截
       },
       success: (res) => {
         console.log('[checkinUtil] 逆地理响应 statusCode:', res.statusCode)
