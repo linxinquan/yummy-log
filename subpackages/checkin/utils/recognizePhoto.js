@@ -7,11 +7,10 @@ const forceBase64 = false;
 /**
  * 图片识别（通过云函数 recognizePhoto 调用 AI）
  * @param {string} photoPath - 照片路径
- * @param {'food'|'spot'} type - 识别类型
  * @param {boolean} forceBase64 - 是否强制使用 base64（跳过云存储，方便测试）
  * @returns {Promise<{name: string, desc: string}>}
  */
-async function recognizePhoto(photoPath, type) {
+async function recognizePhoto(photoPath) {
   if (!photoPath) throw new Error('photoPath 不能为空')
 
   // 递增请求版本号，后续判断是否过期
@@ -89,7 +88,7 @@ async function recognizePhoto(photoPath, type) {
   console.log('[Recognize] 调用云函数 recognizePhoto...')
   const res = await wx.cloud.callFunction({
     name: 'recognizePhoto',
-    data: { tempURL, type }
+    data: { tempURL }
   })
 
   // 最终检查，防止是旧请求的响应
@@ -113,16 +112,16 @@ async function recognizePhoto(photoPath, type) {
 /**
  * 生成AI打卡内容（包装 recognizePhoto，返回标准化格式）
  * @param {string} photoPath - 照片路径
- * @param {'food'|'spot'} type - 识别类型
  * @returns {Promise<{success: boolean, title: string, description: string}>}
  */
-async function generateAIContent(photoPath, type) {
+async function generateAIContent(photoPath) {
   try {
-    const result = await recognizePhoto(photoPath, type)
+    const result = await recognizePhoto(photoPath)
     return {
       success: true,
       title: result.name || '',
-      description: result.desc || ''
+      description: result.desc || '',
+      type: result.type || ''
     }
   } catch (err) {
     console.error('[generateAIContent] 失败:', err)

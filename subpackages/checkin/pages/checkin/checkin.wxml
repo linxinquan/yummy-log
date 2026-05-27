@@ -1,4 +1,4 @@
-<view class="page {{type === 'spot' ? 'type-spot' : 'type-food'}}">
+<view class="page">
   <!-- 第二步：新的确认采集页，样式直接复用邮票详情页 -->
   <view class="section confirm-section" wx:if="{{step === 2}}">
     <view class="detail-stamp-wrap" bindtap="onPreviewPhoto">
@@ -6,7 +6,7 @@
         <image class="detail-stamp-shell" src="/images/collection/stamp-ticket.png" mode="scaleToFill"></image>
         <image class="detail-stamp-photo" src="{{photoPath}}" mode="aspectFill"></image>
       </view>
-      <text class="detail-stamp-title">{{spotName || 'AI 正在识别地点'}}</text>
+      <text class="detail-stamp-title">{{spotName || 'AI 正在定位地点'}}</text>
     </view>
 
     <view class="detail-info-list">

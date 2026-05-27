@@ -18,24 +18,6 @@ function getRandomProfileImage() {
   return imagePool[randomIndex]
 }
 
-// 统一打开地点详情：
-// 如果足迹里的景点来自采集记录而不是系统内置数据，就直接把完整对象传过去。
-function openPlaceDetail(shop) {
-  if (!shop) return
-  if (shop.type === 'spot') {
-    if (shop.detailSource === 'record') {
-      const spotStr = encodeURIComponent(JSON.stringify(shop))
-      wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?spotData=${spotStr}` })
-      return
-    }
-    wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${shop.id}` })
-    return
-  }
-  wx.navigateTo({
-    url: `/subpackages/extra/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(shop))}`
-  })
-}
-
 Page({
   data: {
     // 登录状态
@@ -77,20 +59,15 @@ Page({
     weatherTemp: '25°C',
 
     // 打卡采集统计
-    checkinStats: { totalCount: 0, cityCount: 0, spotCount: 0, foodCount: 0 },
+    checkinStats: { totalCount: 0, cityCount: 0 },
 
     // 采集展示
     latestStamp: null,
     recentStamps: [],
 
-    // 深圳地图打卡点（统一 + 分类）
+    // 深圳地图打卡点
     mapCenter: { latitude: 22.543099, longitude: 114.057868 },
-    mapMarkers: [],
-    spotMarkers: [],
-    foodMarkers: [],
-
-    // 双地图滚动指示
-    journeyIndex: 0
+    mapMarkers: []
   },
 
   // 页面初始化：加载用户信息、统计数据、行政区和天气。
@@ -138,10 +115,8 @@ Page({
         }
       })
 
-      // 地图打卡点：只用有坐标的采集记录，分景点/美食两组
+      // 地图打卡点：只用有坐标的采集记录
       const mapMarkers = []
-      const spotMarkers = []
-      const foodMarkers = []
       allCheckins.forEach((c) => {
         if (c.latitude && c.longitude) {
           const marker = {
@@ -151,22 +126,17 @@ Page({
             width: 36,
             height: 36,
             callout: {
-              content: c.spotName || (c.type === 'spot' ? '景点' : '美食'),
+              content: c.spotName || '采集点',
               color: '#ffffff',
               fontSize: 11,
               borderRadius: 6,
               padding: 4,
               display: 'BYCLICK',
-              bgColor: c.type === 'spot' ? '#00D9C0' : '#FF8B7E',
+              bgColor: '#FF8B7E',
               textAlign: 'center'
             }
           }
           mapMarkers.push(marker)
-          if (c.type === 'spot') {
-            spotMarkers.push(marker)
-          } else {
-            foodMarkers.push(marker)
-          }
         }
       })
 
@@ -181,59 +151,19 @@ Page({
         }
       }
 
-      // 景点/美食各自的地图中心
-      const getCenter = (markers) => {
-        if (markers.length === 0) return { latitude: 22.543099, longitude: 114.057868 }
-        const lats = markers.map(m => m.latitude)
-        const lngs = markers.map(m => m.longitude)
-        return {
-          latitude: (Math.min(...lats) + Math.max(...lats)) / 2,
-          longitude: (Math.min(...lngs) + Math.max(...lngs)) / 2
-        }
-      }
-
       this.setData({
         checkinStats: {
           totalCount: stats.totalCount || 0,
-          cityCount: stats.cityCount || 0,
-          spotCount: stats.spotCount || 0,
-          foodCount: stats.foodCount || 0
+          cityCount: stats.cityCount || 0
         },
         latestStamp,
         recentStamps,
         mapMarkers,
-        spotMarkers,
-        foodMarkers,
-        mapCenter,
-        spotMapCenter: getCenter(spotMarkers),
-        foodMapCenter: getCenter(foodMarkers)
+        mapCenter
       })
     } catch (e) {
       console.warn('getCheckinStats 失败:', e)
     }
-  },
-
-  // 预览最近邮票的大图
-  onPreviewStamp(e) {
-    const id = e.currentTarget.dataset.id
-    const item = this.data.recentStamps.find(c => c.id === id)
-    if (item && item.photoPath) {
-      wx.previewImage({ urls: [item.photoPath], current: item.photoPath })
-    }
-  },
-
-  // 统一采集入口：先让用户选"美食采集"还是"景点采集"
-  onGoCheckin() {
-    wx.showActionSheet({
-      itemList: ['美食采集', '景点采集'],
-      success: (res) => {
-        if (res.tapIndex === 0) {
-          wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=food' })
-        } else {
-          wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=spot' })
-        }
-      }
-    })
   },
 
   // 读取定位后的城市和区信息
@@ -464,10 +394,7 @@ Page({
   // 读取"想去 / 到访 / 自己添加的地点"等统计数据。
   loadData() {
     const userAddedShops = util.loadData('userAddedShops', [])
-    const foodItems = [...placesData.getFoods(), ...userAddedShops]
-      .map(item => ({ ...item, type: 'food' }))
-    const spotItems = placesData.getSpots().map(item => ({ ...item, type: 'spot' }))
-    const allItems = [...foodItems, ...spotItems]
+    const allItems = [...placesData.getFoods(), ...userAddedShops, ...placesData.getSpots()]
     const itemMap = {}
     allItems.forEach(item => {
       itemMap[String(item.id)] = item
@@ -509,119 +436,9 @@ Page({
     }
   },
 
-  // 页面内部 Tab 切换
-  onSwitchTab(e) {
-    const tab = e.currentTarget.dataset.tab
-    this.setData({ currentTab: tab })
-  },
-
-  // 点击列表里的地点卡片，进入对应详情页。
-  onShopTap(e) {
-    const shop = e.currentTarget.dataset.shop
-    if (!shop) return
-    openPlaceDetail(shop)
-  },
-
-  // 从"想去"里移除一个地点。
-  onRemoveLiked(e) {
-    const shopId = e.currentTarget.dataset.shopid
-    const type = e.currentTarget.dataset.type || 'food'
-    util.toggleLike(shopId, type)
-    this.loadData()
-    wx.showToast({ title: '已取消', icon: 'none' })
-  },
-
-  // 删除用户自己添加的地点。
-  onDeleteShop(e) {
-    const shopId = e.currentTarget.dataset.shopid
-    wx.showModal({
-      title: '确认删除',
-      content: '确定要删除这个店铺吗？',
-      success: (res) => {
-        if (res.confirm) {
-          let shops = util.loadData('userAddedShops', [])
-          shops = shops.filter(s => s.id !== shopId)
-          util.saveData('userAddedShops', shops)
-          this.loadData()
-          wx.showToast({ title: '已删除', icon: 'success' })
-        }
-      }
-    })
-  },
-
-  // 进入中间的路线入口页。
-  onOpenRouteEntry() {
-    wx.navigateTo({
-      url: '/pages/route-entry/route-entry'
-    })
-  },
-
-  // 跳到"想去"页。
-  onGoWantgo() {
-    wx.switchTab({ url: '/pages/wantgo/wantgo' })
-  },
-
-  // 跳到路线相关页面。
-  onGoRoute() {
-    wx.navigateTo({ url: '/subpackages/route/pages/route/route' })
-  },
-
   // 跳到采集本页面。
   onGoCollection() {
     wx.navigateTo({ url: '/subpackages/extra/pages/collection/collection' })
-  },
-
-  // 快捷进入美食采集。
-  onGoCheckinFood() {
-    wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=food' })
-  },
-
-  // 快捷进入景点采集。
-  onGoCheckinSpot() {
-    wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=spot' })
-  },
-
-  // 点击总地图卡片：没数据时引导去采集。
-  onMapTap() {
-    // 有打卡点时提示，无打卡点时引导采集
-    if (this.data.mapMarkers.length === 0) {
-      wx.showModal({
-        title: '还没有点亮',
-        content: '先去采集美食或景点吧～',
-        confirmText: '去采集',
-        cancelText: '取消',
-        success: (res) => {
-          if (res.confirm) {
-            wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=food' })
-          }
-        }
-      })
-    }
-  },
-
-
-
-  // 点击景点地图卡片。
-  onSpotMapTap() {
-    if (this.data.spotMarkers.length === 0) {
-      wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=spot' })
-    }
-  },
-
-  // 点击美食地图卡片。
-  onFoodMapTap() {
-    if (this.data.foodMarkers.length === 0) {
-      wx.navigateTo({ url: '/subpackages/checkin/pages/checkin/checkin?type=food' })
-    }
-  },
-
-  // 双地图横向滚动时，同步当前页码指示。
-  onJourneyScroll(e) {
-    const scrollLeft = e.detail.scrollLeft
-    const cardWidth = wx.getWindowInfo().windowWidth - 80 // 减去边距
-    const index = Math.round(scrollLeft / cardWidth)
-    if (index !== this.data.journeyIndex) {
-      this.setData({ journeyIndex: index })
-    }
   }
+
 })

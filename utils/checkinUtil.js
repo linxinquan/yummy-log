@@ -140,7 +140,7 @@ function saveCheckin(data) {
     customRecordTimeLabel: data.customRecordTimeLabel || '',
     city: extractCity(data.address),
     // 如果这条采集能匹配到系统里的真实地点，就顺手记下它的 id，
-    // 后面“足迹 / 已去过 / 详情跳转”都能更稳定地复用。
+    // 后面"足迹 / 已去过 / 详情跳转"都能更稳定地复用。
     relatedPlaceId: matchedPlace ? String(matchedPlace.id) : ''
   }
   checkins.unshift(checkin)
@@ -201,31 +201,23 @@ function getCheckinStats() {
 }
 
 /**
- * 生成AI描述（本地兜底版本，诗意风格，区分美食/景点）
+ * 生成AI描述（本地兜底版本，诗意风格）
  * @param {string} locationName - 地点名称
  * @param {string} address - 详细地址
- * @param {string} type - 'food' | 'spot'
  */
-function generateDescription(locationName, address, type) {
+function generateDescription(locationName, address) {
   const hour = new Date().getHours()
   const name = locationName || '某处'
-
-  if (type === 'spot') {
-    const templates = [
-      `${hour < 12 ? '清晨的光影' : hour < 18 ? '午后的斜阳' : '暮色渐起'}落在${name}，城市的喧哗在这里忽然安静下来。`,
-      `${name}有一种让人慢下来的力量，像一帧被按下暂停键的画面。`,
-      `${hour < 12 ? '早晨' : hour < 18 ? '下午' : '入夜'}走进${name}，发现了这座城市另一面的故事。`
-    ]
-    return templates[Math.floor(Math.random() * templates.length)]
-  } else {
-    // 美食：聚焦鲜、香、暖，诗意感
-    const templates = [
-      `${hour < 12 ? '清晨路过' : hour < 14 ? '午间探访' : hour < 18 ? '午后闲逛' : '傍晚觅食'}${name}，香气从路口就能捕捉到。`,
-      `${name}的出品有惊喜，汤头清澈、鲜味却浓，胃里落定，心里也暖了起来。`,
-      `${hour < 12 ? '早餐' : hour < 14 ? '午餐' : hour < 18 ? '下午茶' : '晚餐'}时光，${name}的一口，是认真生活的证据。`
-    ]
-    return templates[Math.floor(Math.random() * templates.length)]
-  }
+  
+  const templates = [
+    `${hour < 12 ? '清晨的光影' : hour < 18 ? '午后的斜阳' : '暮色渐起'}落在${name}，城市的喧哗在这里忽然安静下来。`,
+    `${name}有一种让人慢下来的力量，像一帧被按下暂停键的画面。`,
+    `${hour < 12 ? '早晨' : hour < 18 ? '下午' : '入夜'}走进${name}，发现了这座城市另一面的故事。`,
+    `${hour < 12 ? '清晨路过' : hour < 14 ? '午间探访' : hour < 18 ? '午后闲逛' : '傍晚觅食'}${name}，香气从路口就能捕捉到。`,
+    `${name}的出品有惊喜，汤头清澈、鲜味却浓，胃里落定，心里也暖了起来。`,
+    `${hour < 12 ? '早餐' : hour < 14 ? '午餐' : hour < 18 ? '下午茶' : '晚餐'}时光，${name}的一口，是认真生活的证据。`
+  ]
+  return templates[Math.floor(Math.random() * templates.length)]
 }
 
 /**

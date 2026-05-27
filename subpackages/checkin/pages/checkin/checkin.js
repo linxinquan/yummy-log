@@ -50,7 +50,6 @@ Page({
 
   onLoad(query) {
     const app = getApp()
-    const type = query.type === 'spot' ? 'spot' : 'food'
     const pendingPhoto = query.prefillPhoto === '1'
       ? (app.globalData && app.globalData.pendingCheckinPhoto) || ''
       : ''
@@ -69,10 +68,10 @@ Page({
     // 如果没有照片，直接跳独立拍照页，不再展示中间页。
     if (!pendingPhoto) {
       wx.redirectTo({
-        url: `/subpackages/checkin/pages/checkin-camera/checkin-camera?type=${type}`,
+        url: '/subpackages/checkin/pages/checkin-camera/checkin-camera',
         fail: () => {
           wx.navigateTo({
-            url: `/subpackages/checkin/pages/checkin-camera/checkin-camera?type=${type}`
+            url: '/subpackages/checkin/pages/checkin-camera/checkin-camera'
           })
         }
       })
@@ -80,7 +79,6 @@ Page({
     }
 
     this.setData({
-      type,
       autoCamera: query.autoCamera === '1',
       navTitle: '采集打卡',
       photoPath: pendingPhoto,
@@ -163,10 +161,10 @@ Page({
     }
 
     wx.redirectTo({
-      url: `/subpackages/checkin/pages/checkin-camera/checkin-camera?type=${this.data.type}`,
+      url: '/subpackages/checkin/pages/checkin-camera/checkin-camera',
       fail: () => {
         wx.navigateTo({
-          url: `/subpackages/checkin/pages/checkin-camera/checkin-camera?type=${this.data.type}`
+          url: '/subpackages/checkin/pages/checkin-camera/checkin-camera'
         })
       }
     })
@@ -227,6 +225,7 @@ Page({
     const nextDescription = aiResult.success
       ? (aiResult.description || fallback.description)
       : fallback.description
+    console.log('aiResult', aiResult.type)
 
     this.setData({
       editDescription: nextDescription,
@@ -387,7 +386,7 @@ Page({
     const fallback = this._getFallbackContent(spotName, address)
     const finalTitle = aiResult.success ? (aiResult.title || spotName) : fallback.title
     const finalDescription = aiResult.success ? (aiResult.description || fallback.description) : fallback.description
-
+    console.log('aiResult', aiResult.type)
     this.setData({
       title: finalTitle,
       description: finalDescription
@@ -485,9 +484,10 @@ Page({
         return
       }
 
-      recognizePhotoUtil.generateAIContent(this.data.photoPath, this.data.type)
+      recognizePhotoUtil.generateAIContent(this.data.photoPath)
         .then(result => {
-          resolve(result) // result: {success, title, description}
+          // TODO: 用AI识别type
+          resolve(result) // result: {success, title, description,}
         })
         .catch(err => {
           console.error('[Checkin] generateAIContent 失败:', err)
@@ -502,7 +502,7 @@ Page({
     return {
       title: spotName || '当前位置',
       description: checkinUtil
-        ? checkinUtil.generateDescription(spotName || '当前位置', address || '', this.data.type)
+        ? checkinUtil.generateDescription(spotName || '当前位置', address || '')
         : '记录下这一刻，下次再看仍然会想起当时的心情'
     }
   },

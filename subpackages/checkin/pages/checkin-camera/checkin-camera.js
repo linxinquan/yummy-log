@@ -1,7 +1,6 @@
-﻿// 独立拍照页：用于从路线入口直接进入拍照，不再先显示“记录美食”页面。
+﻿// 独立拍照页：用于从路线入口直接进入拍照，不再先显示"记录美食"页面。
 Page({
   data: {
-    type: 'food',
     menuTop: 44,
     menuHeight: 32
   },
@@ -12,7 +11,6 @@ Page({
     const menuTop = menuButtonInfo ? menuButtonInfo.top : (windowInfo.statusBarHeight || 44) + 4
     const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
     this.setData({
-      type: query.type === 'spot' ? 'spot' : 'food',
       menuTop,
       menuHeight
     })
@@ -55,7 +53,7 @@ Page({
     })
   },
 
-  // 点击采集本，直接进入“我的采集本”详情页。
+  // 点击采集本，直接进入"我的采集本"详情页。
   onGoCollection() {
     wx.navigateTo({
       url: '/subpackages/extra/pages/collection/collection'
