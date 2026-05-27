@@ -1,7 +1,7 @@
 const app = getApp()
 const util = require('../../../../utils/util')
 const placesData = require('../../../../utils/placesData')
-const { applyTravelMeta, buildTravelOptions, MODE_CONFIG } = require('../../../../utils/travel')
+const { applyTravelMeta, buildTravelOptions } = require('../../../../utils/travel')
 const { buildMapPreviewViewData } = require('../../../../utils/map-preview')
 const { resolveDisplayCategory } = require('../../../../utils/displayCategory')
 const mapConfig = require('../../utils/map-config')
@@ -184,17 +184,6 @@ function syncDaySections(daySections, cityInfo) {
   })
 }
 
-// 当用户改了旅行天数时，补齐或裁剪天数，再重新同步数据结构。
-function alignDaySections(daySections, targetCount, cityInfo) {
-  const sections = stripEditState(daySections).slice(0, targetCount)
-  while (sections.length < targetCount) {
-    sections.push({
-      id: `day-${Date.now()}-${sections.length}`,
-      items: []
-    })
-  }
-  return syncDaySections(sections, cityInfo)
-}
 
 // 兼容旧版路线结构，给老数据继续生成 daySummaries / dayDetails。
 function buildLegacyRouteData(daySections) {
@@ -651,8 +640,13 @@ Page({
   // 从"路线规划详情"临时进入手动编辑时：
   // 保存结果不直接落库，而是回传给上一页，再返回上一页。
   handoffPreviewRoute(route, showToastTitle) {
-    const eventChannel = this.getOpenerEventChannel && this.getOpenerEventChannel()
-    eventChannel && eventChannel.emit('previewRouteEdited', route)
+    const eventChannel = this.getOpenerEventChannel ? this.getOpenerEventChannel() : null
+    if (eventChannel) {
+      eventChannel.emit('previewRouteEdited', route)
+    } else {
+      console.error('[my-route] handoffPreviewRoute: eventChannel is null, cannot emit event')
+    }
+    
     if (showToastTitle) {
       wx.showToast({ title: showToastTitle, icon: 'success' })
     }

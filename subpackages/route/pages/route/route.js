@@ -11,8 +11,9 @@ const {
   decorateRouteCardItem,
   buildPreviewRouteData,
   getPreviewIndexByDay,
-  buildPreviewDaySections
+  buildPreviewDaySections,
 } = require('../../../../utils/routeHelper')
+const { buildPreviewStateFromRoute } = require('../../utils/routeHelper')
 
 const routeMapBehavior = require('../../utils/route-map-behavior')
 const routePreviewBehavior = require('../../utils/route-preview-behavior')
@@ -55,9 +56,6 @@ Page({
 
     // 当前定位
     currentLocation: null,
-
-    // 编辑模式
-    isEditing: false,
     viewMode: 'list',
     modeSwitchTop: 44,
     routeDaySections: [],
@@ -416,15 +414,6 @@ Page({
     })
 
     return decoratedRouteShops
-  },
-
-  // 切换"最优路径 / 自定义选择"模式。
-  onSwitchSelectMode(e) {
-    const mode = e.currentTarget.dataset.mode
-    if (mode === this.data.selectMode) return
-    this.setData({ selectMode: mode, isEditing: false }, () => {
-      this.loadRoute()
-    })
   },
 
   // 自定义模式下，单独勾选或取消某个地点。
@@ -812,16 +801,17 @@ Page({
       })
       wx.navigateTo({
         url: `/subpackages/route/pages/my-route/my-route?route=${encodeURIComponent(JSON.stringify(previewRoute))}&edit=1&create=1&fromPreview=1`,
-        success: (res) => {
-          // 手动编辑保存后，把最新路线回传给当前预览页；取消则直接回到这里。
-          res.eventChannel.on('previewRouteEdited', (updatedRoute) => {
+        events: {
+          // 监听 my-route 页面发送的 previewRouteEdited 事件
+          'previewRouteEdited': (updatedRoute) => {
             if (!updatedRoute) return
-            this.setData(buildPreviewStateFromRoute(updatedRoute, this.data.currentStart))
+            const newState = buildPreviewStateFromRoute(updatedRoute, this.data.currentStart)
+            this.setData(newState)
             this.updateMap()
             if (updatedRoute.daySections && updatedRoute.daySections.length) {
               this.focusPreviewByIndex(0, -1)
             }
-          })
+          }
         },
         fail: (err) => {
           console.error('导航失败:', err)
