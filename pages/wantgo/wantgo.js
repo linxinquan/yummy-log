@@ -146,13 +146,13 @@ function buildRouteCoverPool() {
 function resolveRouteCardCover(item, index = 0) {
   const daySectionCover = (item.daySections || []).reduce((cover, day) => {
     if (cover) return cover
-    const firstItem = (day.items || []).find(place => place && (place.coverImage || place.image || place.thumb))
-    return firstItem ? (firstItem.coverImage || firstItem.image || firstItem.logo || firstItem.thumb) : ''
+    const firstItem = (day.items || []).find(place => place && (place.coverImage || place.image))
+    return firstItem ? (firstItem.coverImage || firstItem.image || firstItem.logo) : ''
   }, '')
   const dayDetailCover = (item.dayDetails || []).reduce((cover, day) => {
     if (cover) return cover
-    const firstItem = (day || []).find(place => place && (place.coverImage || place.image || place.thumb))
-    return firstItem ? (firstItem.coverImage || firstItem.image || firstItem.logo || firstItem.thumb) : ''
+    const firstItem = (day || []).find(place => place && (place.coverImage || place.image))
+    return firstItem ? (firstItem.coverImage || firstItem.image || firstItem.logo) : ''
   }, '')
   const localPool = buildRouteCoverPool()
   return item.coverImage || item.displayImage || daySectionCover || dayDetailCover || localPool[index % localPool.length] || DEFAULT_COVER
@@ -196,8 +196,8 @@ function normalizeGuideDaySections(daySections) {
         : [item.tag || item.tagText || displayCategory].filter(Boolean).slice(0, 2)
       return {
         ...item,
-        image: item.image || item.coverImage || item.logo || item.thumb || DEFAULT_COVER,
-        coverImage: item.coverImage || item.image || item.logo || item.thumb || DEFAULT_COVER,
+        image: item.image || item.coverImage || item.logo || DEFAULT_COVER,
+        coverImage: item.coverImage || item.image || item.logo || DEFAULT_COVER,
         displayCategory,
         rating: item.rating || item.score || '',
         tags: safeTags,
@@ -315,7 +315,6 @@ Page({
     dragging: false,
     dragIndex: -1,
     dragY: 0,
-    transportSheetVisible: false,
     transportOptions: [],
     pendingTransportMode: 'drive',
     transportTargetIndex: -1,
@@ -446,6 +445,7 @@ Page({
       const routeCards = buildRouteCards(visibleRoutes)
       this.setData({ items: routeCards, empty: routeCards.length === 0 })
     } else {
+      // tab === 'visited'
       // 足迹统一以 checkin_records 为准，再在这里转成卡片展示数据。
       items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(util.getFootprintItems())))
       this.setData({ items, empty: items.length === 0 })
@@ -506,59 +506,6 @@ Page({
     wx.showToast({ title: copy ? '已复制攻略' : '已发布为攻略', icon: 'success' })
   },
 
-  // 复制路线卡片，并自动加上"（复制）"前缀
-  copyRouteCard(route) {
-    const savedRoutes = util.loadData('savedRoutes', [])
-    const copiedRoute = buildCopiedRoute(route)
-    util.saveData('savedRoutes', [copiedRoute].concat(savedRoutes))
-    wx.showToast({ title: '已复制路线', icon: 'success' })
-  },
-
-  // 点击弹窗确认按钮后，真正执行发布 / 复制 / 编辑 / 删除
-  onConfirmRouteAction() {
-    const { selectedRouteAction, routeActionTarget } = this.data
-    if (!routeActionTarget) return
-    if (!selectedRouteAction) {
-      wx.showToast({
-        title: '请先选择操作',
-        icon: 'none'
-      })
-      return
-    }
-
-    if (selectedRouteAction === 'delete') {
-      wx.showModal({
-        title: '删除路线',
-        content: '删除后无法恢复，确认删除吗？',
-        confirmColor: '#FF5A5F',
-        success: (res) => {
-          if (!res.confirm) return
-          const savedRoutes = util.loadData('savedRoutes', [])
-          const nextRoutes = savedRoutes.filter(item => String(item.id) !== String(routeActionTarget.id))
-          util.saveData('savedRoutes', nextRoutes)
-          this.onCloseRouteActionSheet()
-          this._loadData()
-          wx.showToast({ title: '已删除', icon: 'success' })
-        }
-      })
-      return
-    }
-
-    if (selectedRouteAction === 'publish') {
-      this.publishRouteAsGuide(routeActionTarget, false)
-    } else if (selectedRouteAction === 'copy') {
-      this.copyRouteCard(routeActionTarget)
-      this._loadData()
-    } else if (selectedRouteAction === 'edit') {
-      const routeStr = encodeURIComponent(JSON.stringify(routeActionTarget))
-      wx.navigateTo({
-        url: `/subpackages/route/pages/route-basic-edit/route-basic-edit?route=${routeStr}`
-      })
-    }
-
-    this.onCloseRouteActionSheet()
-  },
-
   // ─── 点击地点卡片：进入详情页；如果有左滑打开，先帮用户收起 ─────────────────────────────
   onItemTap(e) {
     if (this.data.tab === 'want') {
@@ -580,24 +527,6 @@ Page({
 
     const item = e.currentTarget.dataset.item
     openPlaceDetail(item)
-  },
-
-  // 打开交通方式弹窗
-  onOpenTransportSheet(e) {
-    const index = parseInt(e.currentTarget.dataset.index, 10)
-    const item = (this.data.items || [])[index]
-    if (!item) return
-    this.setData({
-      transportSheetVisible: true,
-      transportOptions: buildTravelOptions(item.distanceFromPrev || 0),
-      pendingTransportMode: item.travelMode || (item.travelMeta && item.travelMeta.mode) || 'drive',
-      transportTargetIndex: index
-    })
-  },
-
-  // 关闭交通方式弹窗
-  onCloseTransportSheet() {
-    this.setData({ transportSheetVisible: false, transportTargetIndex: -1 })
   },
 
   // 左滑开始：记录起点坐标和当前卡片状态
@@ -693,27 +622,6 @@ Page({
     this._swipeGesture = null
   },
 
-  // 交通方式弹窗里切换当前选项
-  onSelectTransportMode(e) {
-    const mode = e.detail && e.detail.mode
-    if (!mode) return
-    this.setData({ pendingTransportMode: mode })
-  },
-
-  // 确认新的交通方式，并把它写回对应卡片
-  onConfirmTransportMode() {
-    const { transportTargetIndex, pendingTransportMode, items } = this.data
-    if (transportTargetIndex < 0 || !items[transportTargetIndex]) return
-    const nextItems = (items || []).map((item, index) => (
-      index === transportTargetIndex ? applyTravelMeta(item, pendingTransportMode) : item
-    ))
-    this.setData({
-      items: nextItems,
-      transportSheetVisible: false,
-      transportTargetIndex: -1
-    })
-  },
-
   // 阻止点击弹窗内容时触发遮罩层关闭
   preventBubble() {
   },
@@ -773,18 +681,6 @@ Page({
     this.setData({ dragging: false, dragIndex: -1 })
   },
 
-  // ─── 导航：打开系统地图 ─────────────────────────────
-  onNavigate(e) {
-    const item = e.currentTarget.dataset.item
-    e.stopPropagation()
-    const lat = item.lat || item.latitude
-    const lng = item.lng || item.longitude
-    if (lat && lng) {
-      wx.openLocation({ latitude: lat, longitude: lng, name: item.name, scale: 16 })
-    } else {
-      wx.showToast({ title: '暂无坐标', icon: 'none' })
-    }
-  },
 
   // ─── 从"想去"里删除当前地点 ─────────────────────────────
   onRemove(e) {

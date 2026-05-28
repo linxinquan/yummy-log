@@ -12,29 +12,7 @@ const CURRENT_LOCATION_ICON_PATH = '/images/markers/marker_current_location.png'
 // 重新定位后，把地图拉近到当前位置附近，避免只更新中心点却看起来没变化。
 const MY_LOCATION_FOCUS_SCALE = 17
 
-const GUANGDONG_CITIES = [
-  { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 1070 },
-  { id: 2, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 1070 },
-  { id: 12, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168, bgColor: '#DCE3E8', wantCount: 1070 },
-  { id: 3, name: '汕头', fullName: '汕头市', lat: 23.3541, lng: 116.6819, bgColor: '#E4D8DC', wantCount: 1070 },
-  { id: 4, name: '湛江', fullName: '湛江市', lat: 21.2707, lng: 110.3594, bgColor: '#E6DBD8', wantCount: 1070 },
-  { id: 5, name: '汕尾', fullName: '汕尾市', lat: 22.7862, lng: 115.3751, bgColor: '#DAE5E8', wantCount: 1070 },
-  { id: 6, name: '清远', fullName: '清远市', lat: 23.6817, lng: 113.0560, bgColor: '#E0E0E0', wantCount: 1070 },
-  { id: 7, name: '佛山', fullName: '佛山市', lat: 23.0215, lng: 113.1214, bgColor: '#DCE5DE', wantCount: 1070 },
-  { id: 8, name: '东莞', fullName: '东莞市', lat: 23.0207, lng: 113.7518, bgColor: '#D8E3E8', wantCount: 1070 },
-  { id: 9, name: '珠海', fullName: '珠海市', lat: 22.2710, lng: 113.5767, bgColor: '#E3DBE6', wantCount: 1070 },
-  { id: 10, name: '中山', fullName: '中山市', lat: 22.5176, lng: 113.3928, bgColor: '#E5DFDA', wantCount: 1070 },
-  { id: 11, name: '江门', fullName: '江门市', lat: 22.5787, lng: 113.0819, bgColor: '#DCE5E3', wantCount: 1070 },
-  { id: 13, name: '肇庆', fullName: '肇庆市', lat: 23.0472, lng: 112.4651, bgColor: '#E6DDE2', wantCount: 1070 },
-  { id: 14, name: '茂名', fullName: '茂名市', lat: 21.6633, lng: 110.9255, bgColor: '#E6E0DA', wantCount: 1070 },
-  { id: 15, name: '阳江', fullName: '阳江市', lat: 21.8579, lng: 111.9822, bgColor: '#DCE7E0', wantCount: 1070 },
-  { id: 16, name: '梅州', fullName: '梅州市', lat: 24.2886, lng: 116.1176, bgColor: '#D9E3E8', wantCount: 1070 },
-  { id: 17, name: '河源', fullName: '河源市', lat: 23.7437, lng: 114.7004, bgColor: '#E4DCE3', wantCount: 1070 },
-  { id: 18, name: '韶关', fullName: '韶关市', lat: 24.8104, lng: 113.5972, bgColor: '#E3DFDB', wantCount: 1070 },
-  { id: 19, name: '揭阳', fullName: '揭阳市', lat: 23.5498, lng: 116.3728, bgColor: '#DCE5E1', wantCount: 1070 },
-  { id: 20, name: '潮州', fullName: '潮州市', lat: 23.6567, lng: 116.6226, bgColor: '#D7E2E6', wantCount: 1070 },
-  { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445, bgColor: '#E2DEE0', wantCount: 1070 }
-]
+
 // 顶部分类导航统一复用 marker 图标资源。
 // 这样地图上的点位图标和分类 Tab 图标就能保持同一套视觉。
 function buildExploreCategories() {
@@ -204,11 +182,7 @@ Page({
   },
 
   initCityOptions() {
-    const coverPool = DEFAULT_COVER_POOL
-    const cityOptions = GUANGDONG_CITIES.map((city, index) => ({
-      ...city,
-      coverImage: coverPool[index % coverPool.length] || '/images/app-logo.jpg'
-    }))
+    const cityOptions = util.getCityOptions(DEFAULT_COVER_POOL)
     this.setData({ cityOptions })
   },
 

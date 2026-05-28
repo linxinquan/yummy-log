@@ -747,6 +747,8 @@ Page({
         id: index,
         latitude: item.lat,
         longitude: item.lng,
+        width: 28,
+        height: 28,
         // 我的路线地图模式只保留数字顺序，不再显示分类图片底图，
         // 避免分类图标和数字标签叠在一起影响识别。
         label: {

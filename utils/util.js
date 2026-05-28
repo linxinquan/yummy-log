@@ -418,14 +418,14 @@ function buildFootprintItem(record = {}) {
   const fallbackType = record.type === 'spot' ? 'spot' : 'food'
   const fallbackName = record.spotName || record.name || '未命名地点'
   const fallbackAddress = record.address || ''
-  const fallbackImage = '/images/app-logo.jpg'
+  const fallbackImage = record.photoPath || '/images/app-logo.jpg'
 
   if (matchedPlace) {
     return {
       ...matchedPlace,
       type: matchedPlace.type || fallbackType,
-      coverImage: matchedPlace.coverImage || matchedPlace.image || matchedPlace.logo || matchedPlace.thumb || fallbackImage,
-      image: matchedPlace.image || matchedPlace.coverImage || matchedPlace.logo || matchedPlace.thumb || fallbackImage,
+      coverImage: fallbackImage,
+      image: fallbackImage,
       address: matchedPlace.address || fallbackAddress,
       lat: matchedPlace.lat || matchedPlace.latitude || record.latitude || 0,
       lng: matchedPlace.lng || matchedPlace.longitude || record.longitude || 0,
@@ -807,6 +807,52 @@ function getCityShortName(fullCityName) {
   return cityMap[fullCityName] || fullCityName.replace('市', '')
 }
 
+
+/**
+ * 城市数据工具函数
+ * 包含广东省城市列表和生成城市选项的函数
+ */
+
+// 广东省城市列表
+const GUANGDONG_CITIES = [
+  { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD' },
+  { id: 2, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8' },
+  { id: 3, name: '汕头', fullName: '汕头市', lat: 23.3541, lng: 116.6819, bgColor: '#E4D8DC' },
+  { id: 4, name: '湛江', fullName: '湛江市', lat: 21.2707, lng: 110.3594, bgColor: '#E6DBD8' },
+  { id: 5, name: '汕尾', fullName: '汕尾市', lat: 22.7862, lng: 115.3751, bgColor: '#DAE5E8' },
+  { id: 6, name: '清远', fullName: '清远市', lat: 23.6817, lng: 113.056, bgColor: '#E0E0E0' },
+  { id: 7, name: '佛山', fullName: '佛山市', lat: 23.0215, lng: 113.1214, bgColor: '#DCE5DE' },
+  { id: 8, name: '东莞', fullName: '东莞市', lat: 23.0207, lng: 113.7518, bgColor: '#D8E3E8' },
+  { id: 9, name: '珠海', fullName: '珠海市', lat: 22.271, lng: 113.5767, bgColor: '#E3DBE6' },
+  { id: 10, name: '中山', fullName: '中山市', lat: 22.5176, lng: 113.3928, bgColor: '#E5DFDA' },
+  { id: 11, name: '江门', fullName: '江门市', lat: 22.5787, lng: 113.0819, bgColor: '#DCE5E3' },
+  { id: 12, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168, bgColor: '#DCE3E8' },
+  { id: 13, name: '肇庆', fullName: '肇庆市', lat: 23.0472, lng: 112.4651, bgColor: '#E6DDE2' },
+  { id: 14, name: '茂名', fullName: '茂名市', lat: 21.6633, lng: 110.9255, bgColor: '#E6E0DA' },
+  { id: 15, name: '阳江', fullName: '阳江市', lat: 21.8579, lng: 111.9822, bgColor: '#DCE7E0' },
+  { id: 16, name: '梅州', fullName: '梅州市', lat: 24.2886, lng: 116.1176, bgColor: '#D9E3E8' },
+  { id: 17, name: '河源', fullName: '河源市', lat: 23.7437, lng: 114.7004, bgColor: '#E4DCE3' },
+  { id: 18, name: '韶关', fullName: '韶关市', lat: 24.8104, lng: 113.5972, bgColor: '#E3DFDB' },
+  { id: 19, name: '揭阳', fullName: '揭阳市', lat: 23.5498, lng: 116.3728, bgColor: '#DCE5E1' },
+  { id: 20, name: '潮州', fullName: '潮州市', lat: 23.6567, lng: 116.6226, bgColor: '#D7E2E6' },
+  { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445, bgColor: '#E2DEE0' }
+]
+
+/**
+ * 生成城市选项列表，为每个城市添加封面图
+ * @param {Array} coverPool - 封面图池，用于为城市分配封面图
+ * @returns {Array} 带有 coverImage 的城市选项列表
+ */
+function getCityOptions(coverPool) {
+  const safeCoverPool = coverPool || []
+  return GUANGDONG_CITIES.map((city, index) => ({
+    ...city,
+    coverImage: safeCoverPool[index % safeCoverPool.length] || '/images/app-logo.jpg'
+  }))
+}
+
+
+
 module.exports = {
   getDistance,
   planRoute,
@@ -843,4 +889,5 @@ module.exports = {
   getWantList,
   toggleWant,
   isWant,
+  getCityOptions
 }

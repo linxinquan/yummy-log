@@ -1,4 +1,4 @@
-﻿const util = require('../../../../utils/util')
+﻿const { getCityOptions, loadData } = require('../../../../utils/util')
 const placesData = require('../../../../utils/placesData')
 const {
   applyTravelMeta,
@@ -7,31 +7,8 @@ const {
   saveGlobalTransportPreferences
 } = require('../../../../utils/travel')
 const { formatTripSummary } = require('../../../../utils/trip-duration')
+const { DEFAULT_SPOT_COVERS } = require('../../../../config/cover-pool')
 
-// 城市列表：基础信息页的城市选择弹窗用这个数据。
-const GUANGDONG_CITIES = [
-  { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD' },
-  { id: 2, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8' },
-  { id: 3, name: '汕头', fullName: '汕头市', lat: 23.3541, lng: 116.6819, bgColor: '#E4D8DC' },
-  { id: 4, name: '湛江', fullName: '湛江市', lat: 21.2707, lng: 110.3594, bgColor: '#E6DBD8' },
-  { id: 5, name: '汕尾', fullName: '汕尾市', lat: 22.7862, lng: 115.3751, bgColor: '#DAE5E8' },
-  { id: 6, name: '清远', fullName: '清远市', lat: 23.6817, lng: 113.056, bgColor: '#E0E0E0' },
-  { id: 7, name: '佛山', fullName: '佛山市', lat: 23.0215, lng: 113.1214, bgColor: '#DCE5DE' },
-  { id: 8, name: '东莞', fullName: '东莞市', lat: 23.0207, lng: 113.7518, bgColor: '#D8E3E8' },
-  { id: 9, name: '珠海', fullName: '珠海市', lat: 22.271, lng: 113.5767, bgColor: '#E3DBE6' },
-  { id: 10, name: '中山', fullName: '中山市', lat: 22.5176, lng: 113.3928, bgColor: '#E5DFDA' },
-  { id: 11, name: '江门', fullName: '江门市', lat: 22.5787, lng: 113.0819, bgColor: '#DCE5E3' },
-  { id: 12, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168, bgColor: '#DCE3E8' },
-  { id: 13, name: '肇庆', fullName: '肇庆市', lat: 23.0472, lng: 112.4651, bgColor: '#E6DDE2' },
-  { id: 14, name: '茂名', fullName: '茂名市', lat: 21.6633, lng: 110.9255, bgColor: '#E6E0DA' },
-  { id: 15, name: '阳江', fullName: '阳江市', lat: 21.8579, lng: 111.9822, bgColor: '#DCE7E0' },
-  { id: 16, name: '梅州', fullName: '梅州市', lat: 24.2886, lng: 116.1176, bgColor: '#D9E3E8' },
-  { id: 17, name: '河源', fullName: '河源市', lat: 23.7437, lng: 114.7004, bgColor: '#E4DCE3' },
-  { id: 18, name: '韶关', fullName: '韶关市', lat: 24.8104, lng: 113.5972, bgColor: '#E3DFDB' },
-  { id: 19, name: '揭阳', fullName: '揭阳市', lat: 23.5498, lng: 116.3728, bgColor: '#DCE5E1' },
-  { id: 20, name: '潮州', fullName: '潮州市', lat: 23.6567, lng: 116.6226, bgColor: '#D7E2E6' },
-  { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445, bgColor: '#E2DEE0' }
-]
 
 // 旅行天数选择范围：1 到 30 天。
 const DAY_OPTIONS = Array.from({ length: 30 }, (_, index) => index + 1)
@@ -44,25 +21,6 @@ const TRANSPORT_PREFERENCE_OPTIONS = [
   { key: 'drive', label: '驾车', icon: MODE_CONFIG.drive.icon }
 ]
 
-// 给城市卡片准备图片池。
-function buildCityCoverPool() {
-  const foodCovers = placesData.getFoods()
-    .map(item => item.coverImage || item.displayImage || item.logo || item.image || item.thumb)
-    .filter(Boolean)
-  const spotCovers = placesData.getSpots()
-    .map(item => item.coverImage || item.displayImage || item.image)
-    .filter(Boolean)
-  return [...foodCovers, ...spotCovers]
-}
-
-// 把城市列表补上封面图，供城市选择器直接渲染。
-function buildCityOptions() {
-  const coverPool = buildCityCoverPool()
-  return GUANGDONG_CITIES.map((city, index) => ({
-    ...city,
-    coverImage: coverPool[index % coverPool.length] || '/images/app-logo.jpg'
-  }))
-}
 
 // 从一个数组里随机取一个值。
 function pickRandomItem(list) {
@@ -91,7 +49,7 @@ function resolveRouteCoverImage(route, daySections) {
     ? [route.image]
     : []
 
-  const coverPool = [...routeItemCovers, ...summaryCovers, ...routeImage, ...buildCityCoverPool()]
+  const coverPool = [...routeItemCovers, ...summaryCovers, ...routeImage, ...DEFAULT_SPOT_COVERS]
   return pickRandomItem(coverPool) || '/images/app-logo.jpg'
 }
 
@@ -257,7 +215,7 @@ Page({
       dayCount: Math.max(daySections.length || route.dayCount || 1, 1),
       draftDayCount: Math.max(daySections.length || route.dayCount || 1, 1),
       dayPickerIndex: Math.max(Math.max(daySections.length || route.dayCount || 1, 1) - 1, 0),
-      cityOptions: buildCityOptions(),
+      cityOptions: getCityOptions(DEFAULT_SPOT_COVERS),
       transportPreferences,
       draftTransportPreferences: { ...transportPreferences },
       transportPreferenceText: buildTransportPreferenceSummary(transportPreferences)
@@ -397,7 +355,7 @@ Page({
       success: (res) => {
         if (!res.confirm) return
         if (routeId !== undefined && routeId !== null) {
-          const savedRoutes = util.loadData('savedRoutes', [])
+          const savedRoutes = loadData('savedRoutes', [])
           const nextRoutes = savedRoutes.filter(item => String(item.id) !== String(routeId))
           wx.setStorageSync('savedRoutes', nextRoutes)
         }
@@ -465,7 +423,7 @@ Page({
       return
     }
 
-    const savedRoutes = util.loadData('savedRoutes', [])
+    const savedRoutes = loadData('savedRoutes', [])
     const index = savedRoutes.findIndex(item => String(item.id) === String(updatedRoute.id))
     if (index > -1) {
       savedRoutes[index] = updatedRoute

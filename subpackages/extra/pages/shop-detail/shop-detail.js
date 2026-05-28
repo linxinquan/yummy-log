@@ -3,6 +3,7 @@
 // 转成那个模板能直接使用的格式。
 const placesData = require('../../../../utils/placesData')
 const util = require('../../../../utils/util')
+const { DEFAULT_FOOD_COVERS } = require('../../../../config/cover-pool')
 
 // 读取系统里所有可作为"美食详情"来源的店铺。
 function buildAllFoodItems() {
@@ -13,9 +14,7 @@ function buildAllFoodItems() {
 // 给"推荐菜"准备封面图池。
 // 如果菜品本身没有图，就从现有美食/景点图片里兜底取。
 function buildCoverPool(currentCover) {
-  const foodCovers = buildAllFoodItems()
-    .map(item => item.coverImage || item.displayImage || item.image || item.thumb)
-    .filter(Boolean)
+  const foodCovers = DEFAULT_FOOD_COVERS
 
   const uniqueCovers = [...new Set([currentCover, ...foodCovers].filter(Boolean))]
   return uniqueCovers
@@ -138,7 +137,7 @@ Page({
   // 美食详情页底部显示的是"推荐菜"，不是附近美食。
   // 所以这里把 dishes 数组转换成卡片数据。
   _loadNearbyShops(spot) {
-    const coverPool = buildCoverPool(spot.image || spot.coverImage || '/images/app-logo.jpg')
+    const coverPool = buildCoverPool(spot.image || spot.coverImage)
     const dishes = this.data.shop.dishes || []
     const relatedItems = dishes.map((name, index) => ({
       name,

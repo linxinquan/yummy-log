@@ -119,15 +119,6 @@
 
   <custom-tabbar></custom-tabbar>
 
-  <transport-info-sheet
-    visible="{{transportSheetVisible}}"
-    options="{{transportOptions}}"
-    selected-mode="{{pendingTransportMode}}"
-    bindclose="onCloseTransportSheet"
-    bindselect="onSelectTransportMode"
-    bindconfirm="onConfirmTransportMode"
-  ></transport-info-sheet>
-
   <view class="plan-day-mask {{planDaySheetVisible ? 'show' : ''}}" bindtap="onClosePlanDaySheet">
     <view class="plan-day-sheet" catchtap="preventBubble">
       <view class="plan-day-header">
