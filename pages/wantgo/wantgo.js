@@ -484,11 +484,78 @@ Page({
     })
   },
 
-  // 在弹窗里切换当前选中的操作项
+  // 点击操作项：执行对应操作并关闭弹窗
   onSelectRouteAction(e) {
     const action = e.currentTarget.dataset.action
     if (!action) return
-    this.setData({ selectedRouteAction: action })
+    
+    const route = this.data.routeActionTarget
+    if (!route) return
+    
+    switch (action) {
+      case 'publish':
+        this.publishRouteAsGuide(route, false)
+        this.onCloseRouteActionSheet()
+        break
+      case 'copy':
+        this.copyRoute(route)
+        this.onCloseRouteActionSheet()
+        break
+      case 'edit':
+        this.editRoute(route)
+        this.onCloseRouteActionSheet()
+        break
+      case 'delete':
+        // deleteRoute 会自己处理关闭弹窗的逻辑
+        this.deleteRoute(route)
+        break
+      default:
+        break
+    }
+  },
+
+  // 复制路线
+  copyRoute(route) {
+    const savedRoutes = util.loadData('savedRoutes', [])
+    const newRoute = {
+      ...route,
+      id: Date.now(), // 生成新ID
+      title: route.title + ' (复制)',
+      createTime: Date.now()
+    }
+    savedRoutes.push(newRoute)
+    util.saveData('savedRoutes', savedRoutes)
+    wx.showToast({ title: '已复制路线', icon: 'success' })
+    // 刷新列表
+    this.onShow()
+  },
+
+  // 编辑路线
+  editRoute(route) {
+    // 跳转到路线编辑页面，并自动进入编辑模式
+    const routeStr = encodeURIComponent(JSON.stringify(route))
+    wx.navigateTo({ url: `/subpackages/route/pages/my-route/my-route?route=${routeStr}&edit=1&returnTo=plan` })
+  },
+
+  // 删除路线
+  deleteRoute(route) {
+    const that = this // 保存 this 引用
+    wx.showModal({
+      title: '确认删除',
+      content: `确定要删除路线"${route.title}"吗？`,
+      success: (res) => {
+        if (res.confirm) {
+          let savedRoutes = util.loadData('savedRoutes', [])
+          savedRoutes = savedRoutes.filter(item => String(item.id) !== String(route.id))
+          util.saveData('savedRoutes', savedRoutes)
+          wx.showToast({ title: '已删除', icon: 'success' })
+          // 刷新列表
+          that.onShow()
+          // 关闭弹窗
+          that.onCloseRouteActionSheet()
+        }
+      }
+    })
   },
 
   // 把一条路线发布成攻略，并保存到 myGuides 里
