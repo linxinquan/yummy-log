@@ -7,6 +7,8 @@ const placesData = require('./utils/placesData')
 // 子包共用工具（主包显式引用，确保打包进主包 common/vendor chunk）
 require('./utils/routeHelper')
 require('./utils/map-preview')
+require('./utils/mapRouteFetcher')
+require('./utils/map-config')
 
 App({
   globalData: {

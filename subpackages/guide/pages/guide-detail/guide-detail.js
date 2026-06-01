@@ -9,6 +9,9 @@ const {
   buildRouteTravelDisplay,
   buildPlaceIntroData: buildPlaceIntroSheetData
 } = require('../../../../utils/route-place-card')
+const { fetchRealRoute } = require('../../../../utils/mapRouteFetcher')
+const mapConfig = require('../../../../utils/map-config')
+const { buildDayLabel, buildTabs } = require("../../../../utils/routeHelper");
 
 // 地图模式统一使用当前位置 PNG 图标，和探索页保持一致。
 const CURRENT_LOCATION_ICON_PATH = '/images/markers/marker_current_location.png'
@@ -39,27 +42,11 @@ const XIAN_POI_MAP = {
   '大唐不夜城': { lat: 34.2174, lng: 108.968, type: 'spot' }
 }
 
-// 从“3天”“2天1夜”这类文案里取出天数。
+// 从"3天""2天1夜"这类文案里取出天数。
 function parseDayCount(duration) {
   const matched = String(duration || '').match(/(\d+)/)
   if (!matched) return 1
   return Math.max(parseInt(matched[1], 10) || 1, 1)
-}
-
-// 生成“第几天”的标题文字。
-function buildDayLabel(dayNumber) {
-  const labels = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
-  if (dayNumber <= 10) return `第${labels[dayNumber - 1]}天`
-  return `第${dayNumber}天`
-}
-
-// 生成顶部 Tab：行程总览 + 每一天。
-function buildTabs(dayCount) {
-  const tabs = [{ key: 'overview', label: '行程总览' }]
-  for (let i = 0; i < dayCount; i += 1) {
-    tabs.push({ key: `day-${i}`, label: buildDayLabel(i + 1) })
-  }
-  return tabs
 }
 
 // 把分天路线拍平成普通数组，方便地图预览使用。
@@ -77,7 +64,7 @@ function flattenDaySections(daySections) {
   return places
 }
 
-// 根据“第几天”找到它在预览数组里的起始位置。
+// 根据"第几天"找到它在预览数组里的起始位置。
 function getPreviewIndexByDay(daySections, dayIndex) {
   if (dayIndex <= 0) return 0
   let count = 0
@@ -302,8 +289,50 @@ function buildGenericSections(guide, covers) {
   return sections
 }
 
+// 将 routes 数据结构转换为 daySections 结构。
+// routes: [{ id, title, countText, places: [id1, id2, ...] }]
+function convertRoutesToDaySections(routes) {
+  return (routes || []).map((route, dayIndex) => {
+    const items = (route.places || [])
+      .map(id => placesData.getPlaceById(id))
+      .filter(Boolean)
+      .map((place, itemIndex) => ({
+        id: place.id || `day-${dayIndex}-item-${itemIndex}`,
+        name: place.name || '待补充地点',
+        tag: place.tag || inferTag(place.name),
+        image: place.coverImage || place.displayImage || '/images/app-logo.jpg',
+        type: place.type || (place.tag === '美食' ? 'food' : 'spot'),
+        rating: place.rating || place.score || '',
+        tags: place.tags || [],
+        desc: place.desc || '',
+        hours: place.hours || '',
+        openHours: place.openHours || '',
+        free: place.free,
+        price: place.price || '',
+        category: place.category || '',
+        address: place.address || '',
+        lat: place.lat || place.latitude || 0,
+        lng: place.lng || place.longitude || 0,
+        distanceFromPrev: place.distanceFromPrev || 0
+      }))
+    
+    return {
+      id: route.id || `day-${dayIndex}`,
+      title: route.title || buildDayLabel(dayIndex + 1),
+      countText: route.countText || `${items.length} 个地点`,
+      items
+    }
+  })
+}
+
 // 构建详情页最终要展示的 daySections。
 function buildDaySections(guide, cityInfo) {
+  // 优先处理 routes 数据结构（新版数据格式）
+  if (guide.routes && guide.routes.length) {
+    const convertedSections = convertRoutesToDaySections(guide.routes)
+    return syncDaySections(convertedSections, cityInfo)
+  }
+  // 兼容旧版 daySections 数据结构
   if (guide.daySections && guide.daySections.length) {
     return syncDaySections(guide.daySections, cityInfo)
   }
@@ -394,7 +423,6 @@ Page({
     const menuHeight = menuButtonInfo ? menuButtonInfo.height : 32
     const modeSwitchTop = menuTop
     const tabStickyTop = menuTop + menuHeight + 24
-
     if (!options.guide) {
       wx.showToast({ title: '攻略不存在', icon: 'none' })
       setTimeout(() => wx.navigateBack({ delta: 1 }), 1200)
@@ -402,6 +430,8 @@ Page({
     }
 
     const guide = JSON.parse(decodeURIComponent(options.guide))
+    console.log('guide', guide)
+
     const cityInfo = getCityInfo(guide)
     const daySections = buildDaySections(guide, cityInfo)
 
@@ -418,7 +448,7 @@ Page({
       summaryText: buildSummaryText(guide, daySections)
     })
 
-    this.updateMapData(daySections, cityInfo, 0)
+    // this.updateMapData(daySections, cityInfo, 0)
     this.refreshMapPreview(daySections, 0)
     this.syncCurrentLocation()
   },
@@ -443,8 +473,10 @@ Page({
     const markers = flattened.map((item, index) => {
       return {
         id: index,
-        latitude: item.lat,
-        longitude: item.lng,
+        latitude: item.lat || item.latitude,
+        longitude: item.lng || item.longitude,
+        width: 28,
+        height: 28,
         // 攻略详情的查看路线地图模式，也统一只保留数字顺序，
         // 不再显示分类图片，避免和数字标记冲突。
         label: {
@@ -468,15 +500,9 @@ Page({
       }
     })
 
-
-    const polyline = markers.length > 1 ? [{
-      points: markers.map(marker => ({ latitude: marker.latitude, longitude: marker.longitude })),
-      color: '#47BFFE',
-      width: 4,
-      dottedLine: false,
-      borderColor: '#FFFFFF',
-      borderWidth: 1
-    }] : []
+    // 不显示直线折线，等待 API 返回真实路线
+    const routeColor = mapConfig.THEME_COLORS.drive
+    const initialPolyline = []
 
     const mapMarkers = markers.slice()
     if (this.data.currentLocation && typeof this.data.currentLocation.lat === 'number' && typeof this.data.currentLocation.lng === 'number') {
@@ -491,13 +517,54 @@ Page({
       })
     }
 
+    // 如果有焦点地点，地图中心对准它；否则对准城市中心
+    const focusPlace = this.data.mapPreviewPlace
+    const mapCenter = focusPlace && (focusPlace.lat !== undefined || focusPlace.latitude !== undefined)
+      ? {
+          lat: focusPlace.lat !== undefined ? focusPlace.lat : focusPlace.latitude,
+          lng: focusPlace.lng !== undefined ? focusPlace.lng : focusPlace.longitude,
+        }
+      : { lat: cityInfo.lat, lng: cityInfo.lng }
+    console.log('focusPlace', focusPlace)
     this.setData({
-      mapCenter: { lat: cityInfo.lat, lng: cityInfo.lng },
-      mapScale: 12,
+      mapCenter,
+      mapScale: focusPlace ? 14 : 12,
       mapMarkers,
-      polyline,
+      polyline: initialPolyline,
       currentMapDay: typeof mapDayIndex === 'number' ? mapDayIndex : -1
     })
+
+    // 有 2+ 个地点时才请求真实路线
+    if (flattened.length > 1) {
+      const qqMapKey = getApp().globalData && getApp().globalData.qqMapKey
+      if (!qqMapKey) return
+
+      const allPoints = flattened.map((item) => ({
+        latitude: item.lat || item.latitude,
+        longitude: item.lng || item.longitude
+      }))
+      fetchRealRoute({
+        allPoints,
+        travelMode: 'drive',
+        qqMapKey,
+        onSuccess: (points) => {
+          this.setData({
+            polyline: [
+              {
+                points,
+                color: routeColor + 'CC',
+                width: 5,
+                dottedLine: false,
+                arrowLine: true
+              }
+            ]
+          })
+        },
+        onFallback: () => {
+          // 降级时不展示路线
+        }
+      })
+    }
   },
 
   // 同步当前位置，供地图模式显示当前位置图标和重新定位使用。
@@ -507,7 +574,7 @@ Page({
       isHighAccuracy: true,
       success: (res) => {
         const currentLocation = { lat: res.latitude, lng: res.longitude, name: '我的位置' }
-        app.globalData.location = currentLocation
+        getApp().globalData.location = currentLocation
         this.setData({
           currentLocation,
           mapCenter: { lat: currentLocation.lat, lng: currentLocation.lng }
@@ -608,8 +675,13 @@ Page({
       currentMapDay: resolvedDayIndex,
       ...previewViewData
     }
-    if (currentPlace && currentPlace.lat && currentPlace.lng) {
-      nextData.mapCenter = { lat: currentPlace.lat, lng: currentPlace.lng }
+    // 增加聚焦功能：设置 mapCenter 使地图聚焦到当前预览地点
+    if (currentPlace) {
+      const lat = currentPlace.lat !== undefined ? currentPlace.lat : currentPlace.latitude
+      const lng = currentPlace.lng !== undefined ? currentPlace.lng : currentPlace.longitude
+      if (lat !== undefined && lng !== undefined) {
+        nextData.mapCenter = { lat, lng }
+      }
     }
     this.setData(nextData)
   },
@@ -645,28 +717,31 @@ Page({
       const mapDayIndex = this.data.currentTab > 0
         ? this.data.currentTab - 1
         : (this.data.daySections.length ? 0 : -1)
-      this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
+      this.setData({ currentMapDay: mapDayIndex })
       this.refreshMapPreview(
         this.data.daySections,
-        mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, mapDayIndex) : this.data.mapPreviewIndex
+        mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, mapDayIndex) : this.data.mapPreviewIndex,
+        mapDayIndex
       )
+      this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
     }
   },
 
-  // 底部“路线”按钮：直接切到地图模式
+  // 底部"路线"按钮：直接切到地图模式
   onOpenMapMode() {
-    this.setData({ viewMode: 'map' })
     const mapDayIndex = this.data.currentTab > 0
       ? this.data.currentTab - 1
       : (this.data.daySections.length ? 0 : -1)
-    this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
+    this.setData({ viewMode: 'map', currentMapDay: mapDayIndex })
     this.refreshMapPreview(
       this.data.daySections,
-      mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, mapDayIndex) : this.data.mapPreviewIndex
+      mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, mapDayIndex) : this.data.mapPreviewIndex,
+      mapDayIndex
     )
+    this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
   },
 
-  // 把这篇攻略保存成“我的路线”
+  // 把这篇攻略保存成"我的路线"
   onSaveRoute() {
     const { guide, daySections, summaryText } = this.data
     const { daySummaries, dayDetails } = buildLegacyRouteData(daySections)
@@ -704,6 +779,12 @@ Page({
   // 地图模式里切换某一天
   onSelectMapDay(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10)
+    this.setData({ currentMapDay: index })
+    this.refreshMapPreview(
+      this.data.daySections,
+      index >= 0 ? getPreviewIndexByDay(this.data.daySections, index) : 0,
+      index
+    )
     this.updateMapData(this.data.daySections, this.data.cityInfo, index)
   },
 
@@ -713,12 +794,17 @@ Page({
       (e.detail && e.detail.index) !== undefined ? e.detail.index : e.currentTarget.dataset.index,
       10
     )
-    this.updateMapData(this.data.daySections, this.data.cityInfo, index)
     this.refreshMapPreview(
       this.data.daySections,
       index >= 0 ? getPreviewIndexByDay(this.data.daySections, index) : this.data.mapPreviewIndex,
       index
     )
+    // 用 setTimeout 确保 refreshMapPreview 里的 setData 完成后，updateMapData 能读到最新的 currentMapDay
+    setTimeout(() => {
+      if (this.data.viewMode === 'map') {
+        this.updateMapData(this.data.daySections, this.data.cityInfo, this.data.currentMapDay)
+      }
+    }, 0)
   },
 
   // 列表模式顶部 Tab 切换
@@ -729,11 +815,13 @@ Page({
 
     if (this.data.viewMode === 'map') {
       const nextMapDay = index > 0 ? index - 1 : (this.data.daySections.length ? 0 : -1)
-      this.updateMapData(this.data.daySections, this.data.cityInfo, nextMapDay)
+      this.setData({ currentMapDay: nextMapDay })
       this.refreshMapPreview(
         this.data.daySections,
-        nextMapDay >= 0 ? getPreviewIndexByDay(this.data.daySections, nextMapDay) : this.data.mapPreviewIndex
+        nextMapDay >= 0 ? getPreviewIndexByDay(this.data.daySections, nextMapDay) : this.data.mapPreviewIndex,
+        nextMapDay
       )
+      this.updateMapData(this.data.daySections, this.data.cityInfo, nextMapDay)
     }
   },
 
@@ -745,8 +833,15 @@ Page({
     )
     if (Number.isNaN(nextIndex)) return
     const nextDayIndex = getDayIndexByPreview(this.data.daySections, nextIndex)
-    this.updateMapData(this.data.daySections, this.data.cityInfo, nextDayIndex)
+    // 在 refreshMapPreview 之前保存旧值，因为 setData 会同步更新 this.data
+    const oldMapDay = this.data.currentMapDay
     this.refreshMapPreview(this.data.daySections, nextIndex, nextDayIndex)
+    // 只有跨天时才重新渲染地图路径，同天内只切换焦点不需要重绘路线
+    if (nextDayIndex !== oldMapDay && this.data.viewMode === 'map') {
+      setTimeout(() => {
+        this.updateMapData(this.data.daySections, this.data.cityInfo, this.data.currentMapDay)
+      }, 0)
+    }
   },
 
   // 点击上一站 / 下一站

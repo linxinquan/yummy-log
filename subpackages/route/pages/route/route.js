@@ -128,8 +128,6 @@ Page({
   onLoad(options) {
     // ids=1,2,3 参数
     const { ids, dayCount } = options
-    console.log('r-dayCount', dayCount)
-
     const routeType = 'mixed'
     const windowInfo = wx.getWindowInfo()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
@@ -483,7 +481,6 @@ Page({
 
   // 打开某一段交通方式弹窗。
   openTransportSheet(dayIndex, itemIndex, previewIndex) {
-    console.log('[route] openTransportSheet, dayIndex:', dayIndex, 'itemIndex:', itemIndex, 'previewIndex:', previewIndex)
     const day = (this.data.routeDaySections || [])[dayIndex]
     const item = ((day || {}).items || [])[itemIndex]
     if (!item) return
@@ -494,7 +491,6 @@ Page({
       transportTargetIndex: previewIndex,
       transportTarget: { dayIndex, itemIndex, previewIndex }
     })
-    console.log('[route] transportSheetVisible:', true)
   },
 
   // 列表模式里点击交通方式入口

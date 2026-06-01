@@ -104,7 +104,7 @@ Page({
   },
 
   // 确认导入内容：
-  // 这里会直接解析地点，并跳去路线规划页。
+  // 这里会直接解析地点（含逆地理编码），并跳去路线规划页。
   async onConfirmLink() {
     const guideLink = (this.data.guideLink || '').trim()
     if (!guideLink) {
@@ -122,10 +122,24 @@ Page({
         return
       }
 
-      const parseResult = parseRouteTextToIds(resolvedInput.text)
+      const parseResult = await parseRouteTextToIds(resolvedInput.text)
       if (!parseResult.totalCount) {
         wx.showToast({ title: '暂未识别到可规划地点', icon: 'none' })
         return
+      }
+
+      // 显示输入过长警告（如有）
+      if (parseResult.warning) {
+        console.warn('[route-entry]', parseResult.warning)
+      }
+
+      // 显示地理编码统计
+      let successMsg = `已识别 ${parseResult.totalCount} 个地点`
+      if (parseResult.geoStats && parseResult.geoStats.total > 0) {
+        const unresolved = parseResult.geoStats.total - parseResult.geoStats.resolved
+        if (unresolved > 0) {
+          successMsg += `（${unresolved}个使用估算坐标）`
+        }
       }
 
       this.setData({
@@ -134,7 +148,7 @@ Page({
       })
 
       wx.showToast({
-        title: `已识别 ${parseResult.totalCount} 个地点`,
+        title: successMsg,
         icon: 'success'
       })
       setTimeout(() => {

@@ -1,10 +1,3 @@
-/**
- * 地图路线获取工具
- * 封装腾讯地图路径规划 API 调用、polyline 解析、模拟路线降级
- * 供 route-map-behavior 和 my-route 页面共用
- * 放在子包内，避免主包 → 子包的非法引用
- */
-
 const mapConfig = require('./map-config')
 
 /**

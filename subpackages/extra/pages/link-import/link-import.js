@@ -38,7 +38,7 @@ Page({
         return
       }
 
-      const parseResult = parseRouteTextToIds(resolvedInput.text)
+      const parseResult = await parseRouteTextToIds(resolvedInput.text)
       if (!parseResult.totalCount) {
         wx.showToast({ title: '暂未识别到可规划地点', icon: 'none' })
         return

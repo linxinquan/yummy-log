@@ -815,8 +815,8 @@ function getCityShortName(fullCityName) {
 
 // 广东省城市列表
 const GUANGDONG_CITIES = [
-  { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD' },
-  { id: 2, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8' },
+  { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 8970 },
+  { id: 2, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 8270 },
   { id: 3, name: '汕头', fullName: '汕头市', lat: 23.3541, lng: 116.6819, bgColor: '#E4D8DC' },
   { id: 4, name: '湛江', fullName: '湛江市', lat: 21.2707, lng: 110.3594, bgColor: '#E6DBD8' },
   { id: 5, name: '汕尾', fullName: '汕尾市', lat: 22.7862, lng: 115.3751, bgColor: '#DAE5E8' },
@@ -847,6 +847,7 @@ function getCityOptions(coverPool) {
   const safeCoverPool = coverPool || []
   return GUANGDONG_CITIES.map((city, index) => ({
     ...city,
+    wantCount: city.wantCount || (2000 + Math.floor(Math.random() * 4001)),
     coverImage: safeCoverPool[index % safeCoverPool.length] || '/images/app-logo.jpg'
   }))
 }

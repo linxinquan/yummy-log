@@ -394,16 +394,30 @@ Page({
   // 读取"想去 / 到访 / 自己添加的地点"等统计数据。
   loadData() {
     const userAddedShops = util.loadData('userAddedShops', [])
-    const allItems = [...placesData.getFoods(), ...userAddedShops, ...placesData.getSpots()]
+    const allItems = [...placesData.getAllPlaces(), ...userAddedShops]
     const itemMap = {}
     allItems.forEach(item => {
       itemMap[String(item.id)] = item
     })
 
-    const likedIds = util.getWantList()
-    const likedShops = likedIds
-      .map(id => itemMap[String(id)])
-      .filter(Boolean)
+    // 新格式：userWantList 存储所有想去的 ID（美食+景点）
+    const wantIds = util.getWantList()
+    const likedShops = wantIds
+      .map(id => {
+        // 先查 placesData（美食+景点）
+        let place = placesData.getPlaceById(id)
+        // 如果找不到，再查用户自己添加的店铺
+        if (!place) {
+          place = userAddedShops.find(s => String(s.id) === String(id))
+        }
+        return place
+      })
+      .filter(Boolean)  // 过滤掉找不到的数据（防护数据不一致）
+      .map(item => ({
+        ...item,
+        // 确保有 type 字段（美食或景点）
+        type: item.type || (item.category === '景点' || item.category === '公园' ? 'spot' : 'food')
+      }))
 
     const footprintItems = util.getFootprintItems()
     const visitedList = footprintItems.map(item => ({

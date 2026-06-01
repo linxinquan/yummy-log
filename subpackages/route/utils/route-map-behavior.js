@@ -3,8 +3,8 @@
 // 包含：地图更新、路线规划、地图预览等功能
 
 const app = getApp()
-const mapConfig = require('./map-config')
-const { fetchRealRoute, fetchMixedRoute } = require('./mapRouteFetcher')
+const mapConfig = require('../../../utils/map-config')
+const { fetchRealRoute, fetchMixedRoute } = require('../../../utils/mapRouteFetcher')
 
 // 路线地图统一复用探索页同一张当前位置图标。
 const CURRENT_LOCATION_ICON_PATH = '/images/markers/marker_current_location.png'

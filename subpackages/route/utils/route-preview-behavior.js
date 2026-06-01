@@ -2,7 +2,7 @@
 // 预览相关行为的 Behavior
 // 包含：预览路线、焦点切换、预览卡片更新等功能
 const { buildMapPreviewViewData } = require('../../../utils/map-preview')
-const { getPreviewIndexByDay, getCityInfo, buildDayLabel, buildTabs, buildSummaryText, buildPreviewTitle, buildPreviewDaySections } = require('../../../utils/routeHelper')
+const { getPreviewIndexByDay, getCityInfo, buildTabs, buildSummaryText, buildPreviewTitle, buildPreviewDaySections } = require('../../../utils/routeHelper')
 
 // 根据预览下标反推属于第几天。
 function getDayIndexByPreview(routeDaySections, previewIndex) {
