@@ -67,7 +67,11 @@ Page({
 
     // 深圳地图打卡点
     mapCenter: { latitude: 22.543099, longitude: 114.057868 },
-    mapMarkers: []
+    mapMarkers: [],
+
+    // 登录临时数据（直接在页面上设置）
+    loginAvatarUrl: '',
+    loginNickname: ''
   },
 
   // 页面初始化：加载用户信息、统计数据、行政区和天气。
@@ -277,26 +281,58 @@ Page({
     })
   },
 
-  // 未登录时点击顶部头像区域，直接触发快速登录。
+  // 未登录时点击顶部区域，初始化登录状态（直接在页面上操作）。
   onShowLogin() {
     if (this.data.isLoggedIn) {
       return
     }
-    const defaultAvatar = getRandomProfileImage()
-    // 点击登录，直接调用快速登录（为了方便测试体验，目前直接生成默认账号）
+    // 直接在页面上显示头像和昵称设置控件
     this.setData({
-      nickName: '觅食者',
-      avatarUrl: defaultAvatar,
+      loginAvatarUrl: '',
+      loginNickname: ''
+    })
+  },
+
+  // 执行登录逻辑
+  doLogin(userInfo) {
+    const avatarUrl = userInfo.avatarUrl || getRandomProfileImage()
+    const nickName = userInfo.nickName || '觅食者'
+
+    const userData = {
+      uid: 'MS' + Date.now().toString(36).toUpperCase(),
+      nickName: nickName,
+      avatarUrl: avatarUrl,
+      phone: '',
+      level: 'Lv.1 入门吃货',
+      isVip: false,
+      visits: this.data.stats.visitedCount || 0,
+      days: 1,
+      createdAt: new Date().toISOString()
+    }
+
+    // 保存到缓存
+    util.saveData('userInfo', userData)
+
+    // 更新页面数据
+    this.setData({
+      isLoggedIn: true,
+      userInfo: userData,
+      nickName: nickName,
+      avatarUrl: avatarUrl,
       hasNickname: true,
       hasAvatar: true
     })
-    this.onQuickLogin()
+
+    wx.showToast({
+      title: '登录成功',
+      icon: 'success',
+      duration: 2000
+    })
   },
 
-  // 点击顶部资料区：未登录走登录，已登录走资料编辑。
+  // 点击顶部资料区：已登录走资料编辑。
   onTapUserProfile() {
     if (!this.data.isLoggedIn) {
-      this.onShowLogin()
       return
     }
     this.onEditProfile()
@@ -338,6 +374,40 @@ Page({
         }
       }
     })
+  },
+
+  // 登录相关方法：头像和昵称都获取后自动登录
+  onChooseAvatar(e) {
+    const { avatarUrl } = e.detail
+    const { loginNickname } = this.data
+
+    this.setData({ loginAvatarUrl: avatarUrl })
+
+    // 如果昵称也已获取，自动完成登录
+    if (loginNickname) {
+      this.doLogin({
+        nickName: loginNickname,
+        avatarUrl: avatarUrl
+      })
+    }
+  },
+
+  onInputNickname(e) {
+    // 只保存昵称值，不在输入过程中自动登录，避免打断用户输入
+    this.setData({ loginNickname: e.detail.value })
+  },
+
+  onNicknameBlur(e) {
+    const nickName = e.detail.value
+    const { loginAvatarUrl } = this.data
+
+    // 输入框失去焦点时，如果头像已获取，自动完成登录
+    if (loginAvatarUrl && nickName) {
+      this.doLogin({
+        nickName: nickName,
+        avatarUrl: loginAvatarUrl
+      })
+    }
   },
 
   // 退出登录，但不清掉历史打卡等业务数据。

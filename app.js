@@ -16,10 +16,9 @@ App({
     location: null,
     locationReady: false,          // 定位是否已就绪
     locationCallbacks: [],           // 等待定位的回调队列
-    // 蛇口区域中心坐标（定位失败时使用）
     centerLocation: {
-      lat: 22.4846,
-      lng: 113.9046
+      lat: 22.5322,
+      lng: 113.9558
     },
     // 地图 Key
     qqMapKey: 'SWGBZ-7P2CB-LK2UO-JZYYV-6BZYQ-KEBUG',

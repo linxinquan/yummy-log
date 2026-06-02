@@ -163,16 +163,43 @@ page {
   background: #FFFFFF;
 }
 
-.detail-stamp-title {
+.detail-stamp-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
   width: 100%;
+}
+
+.detail-stamp-title {
   color: #242529;
   font-size: 48rpx;
   font-weight: 500;
   line-height: 64rpx;
-  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.refresh-spot-btn {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  background: #F2F4F7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.refresh-spot-btn i {
+  font-size: 28rpx;
+  color: #8F949C;
+  line-height: 1;
 }
 
 .detail-info-list {

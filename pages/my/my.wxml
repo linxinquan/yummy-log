@@ -2,16 +2,34 @@
 <view class="container">
   <!-- 顶部灰底信息区 -->
   <view class="profile-hero">
-    <!-- 头像和昵称区域：未登录点这里登录，已登录点这里编辑资料 -->
-    <view class="user-section" bindtap="onTapUserProfile">
+    <!-- 头像和昵称区域：已登录展示信息，未登录展示设置控件 -->
+    <view class="user-section">
       <view class="user-info">
-        <text class="user-nickname">{{isLoggedIn ? (userInfo.nickName || '觅食者') : '未登录'}}</text>
-        <text class="user-desc">{{isLoggedIn ? ('与你相遇的第 ' + (userInfo.days || 1) + ' 天') : '点击登录，开始记录你的美食足迹'}}</text>
+        <block wx:if="{{isLoggedIn}}">
+          <text class="user-nickname">{{userInfo.nickName || '觅食者'}}</text>
+          <text class="user-desc">与你相遇的第 {{userInfo.days || 1}} 天</text>
+        </block>
+        <block wx:else>
+          <!-- 未登录：昵称输入框（type="nickname" 可获取微信昵称） -->
+          <input class="user-nickname-input" type="nickname" placeholder="点击获取微信昵称" value="{{loginNickname}}" bindinput="onInputNickname" bindblur="onNicknameBlur" />
+          <text class="user-desc">设置头像和昵称，开始记录美食足迹</text>
+        </block>
       </view>
-      <image wx:if="{{isLoggedIn}}" class="user-avatar" src="{{avatarUrl}}" mode="aspectFill" />
-      <view wx:else class="user-avatar-default">
-        <i class="mgc_ghost_fill"></i>
-      </view>
+
+      <!-- 头像区域 -->
+      <block wx:if="{{isLoggedIn}}">
+        <image class="user-avatar" src="{{avatarUrl}}" mode="aspectFill" bindtap="onTapUserProfile" />
+      </block>
+      <block wx:else>
+        <!-- 未登录：头像选择按钮（open-type="chooseAvatar"） -->
+        <button class="user-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+          <image wx:if="{{loginAvatarUrl}}" class="user-avatar-img" src="{{loginAvatarUrl}}" mode="aspectFill" />
+          <view wx:else class="user-avatar-placeholder">
+            <i class="mgc_ghost_fill"></i>
+            <text class="avatar-btn-text">点我</text>
+          </view>
+        </button>
+      </block>
     </view>
 
     <!-- 统计一行：点击整行进入我的采集 -->

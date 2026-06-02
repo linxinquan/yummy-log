@@ -6,7 +6,12 @@
         <image class="detail-stamp-shell" src="/images/collection/stamp-ticket.png" mode="scaleToFill"></image>
         <image class="detail-stamp-photo" src="{{photoPath}}" mode="aspectFill"></image>
       </view>
-      <text class="detail-stamp-title">{{spotName || 'AI 正在定位地点'}}</text>
+      <view class="detail-stamp-title-row">
+        <text class="detail-stamp-title">{{spotName || 'AI 正在定位地点'}}</text>
+        <view class="refresh-spot-btn" wx:if="{{locationCandidates.length > 1}}" catchtap="onRefreshSpotName">
+          <i class="mgc_refresh_2_line"></i>
+        </view>
+      </view>
     </view>
 
     <view class="detail-info-list">

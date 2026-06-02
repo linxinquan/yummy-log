@@ -7,6 +7,11 @@ const QQMAP_KEY = 'SWGBZ-7P2CB-LK2UO-JZYYV-6BZYQ-KEBUG'
 /**
  * 逆地理编码：坐标 → 景点名 + 详细地址
  * 腾讯地图 WebService API v1
+ *
+ * 筛选策略：
+ * 1. 初筛：从 POI 列表中按类别/距离筛选候选
+ * 2. 进一步筛：用 reject_patterns 过滤无意义名称
+ * 3. 兜底策略：使用 formatted_addresses.recommend 或地址文本
  */
 function reverseGeocode(latitude, longitude) {
   return new Promise((resolve, reject) => {
@@ -16,10 +21,11 @@ function reverseGeocode(latitude, longitude) {
         location: latitude + ',' + longitude,
         key: QQMAP_KEY,
         get_poi: 1,
-        poi_options: 'policy=2;radius=1000'
+        poi_options: 'address_format=short;radius=3000;policy=5;orderby=_distance',
+        added_fields: 'is_aoi'
       },
       header: {
-        'Referer': 'https://meitour.app'   // 腾讯地图 WebService API 要求、小程序可能拦截
+        'Referer': 'https://meitour.app'   // 腾讯地图 WebService API 要求
       },
       success: (res) => {
         console.log('[checkinUtil] 逆地理响应 statusCode:', res.statusCode)
@@ -28,61 +34,75 @@ function reverseGeocode(latitude, longitude) {
           if (data.status === 0) {
             const result = data.result || {}
             const pois = result.pois || []
+            console.log('pois-5', pois)
 
-            // ── 智能选 POI：优先有辨识度的名称 ──
-            const genericPatterns = [
-              /^(深圳市|广州市|东莞市|佛山市|珠海市)/,           // 城市前缀
-              /^(大楼|大廈|大厦|广场|商场|购物中心|写字楼|商业中心|科技园|工业园|孵化园)$/,
-              /公司$/, /中心$/, /基地$/, /园区$/,
-              /路\d+号$/, /街道\d+号$/,
-              /_\d+$/, /\d+层$/
+            // ── 多级筛选 ──
+
+            // 【第一级】初筛：按类别偏好排序，提取候选列表
+            // 社交签到场景(policy=4)已按热度+距离排序，这里只做分类加权
+            const categoryPriority = [
+              /美食|小吃|餐厅|火锅|烧烤|快餐|面馆|粥店|甜品|咖啡|茶饮|酒吧|酒楼/,
+              /街|巷|城|广场|市场|农庄|农贸市场|步行街|美食街|夜市/,
+              /景区|公园|博物馆|美术馆|寺庙|教堂|景点|名胜|河/,
+              /商场|购物中心|百货|超市|mall/i,
+              /酒店|宾馆|民宿|公寓/
             ]
-            const isGeneric = (name) => {
+            const sortedPOIs = [...pois].sort((a, b) => {
+              let scoreA = 0, scoreB = 0
+              const catA = (a.category || '').toLowerCase()
+              const catB = (b.category || '').toLowerCase()
+              categoryPriority.forEach((pattern, idx) => {
+                if (pattern.test(catA)) scoreA += (categoryPriority.length - idx)
+                if (pattern.test(catB)) scoreB += (categoryPriority.length - idx)
+              })
+              return scoreB - scoreA
+            })
+
+            // 【第二级】进一步筛：reject_patterns 过滤无意义名称
+            // 只丢弃真正没辨识度的地址片段，保留大楼/商场等有意义的地标名
+            const rejectPatterns = [
+              /路\d+号/,           // xx路xx号
+              /弄\d+号/,           // 弄堂号
+              /街道/,
+              /小区/, /村\d+号/, /号楼/, /单元/,
+              /公司/, /有限公司/, /办事处/,
+              /加油站/, /停车场/,
+              /厕所/, /卫生间/
+            ]
+            const isRejectName = (name) => {
               if (!name) return true
               const n = name.trim()
-              if (n.length < 3) return true
-              return genericPatterns.some(p => p.test(n))
+              if (n.length < 2) return true
+              return rejectPatterns.some(p => p.test(n))
             }
 
-            // 从 pois 数组里找一个具体、有辨识度的名称
+            const candidatePOIs = sortedPOIs.filter(p => !isRejectName(p.title || p.name))
+
+            // 从候选 POI 中取最优名称
             let spotName = ''
-            if (pois.length > 0) {
-              // 优先找带小吃/美食/街/巷/城/广场后缀的 POI（商圈/美食区）
-              const premiumPOI = pois.find(p =>
-                p.category && /美食|小吃|街|巷|城|广场|市场|农庄|农贸市场/.test(p.category)
-              )
-              if (premiumPOI && !isGeneric(premiumPOI.title || premiumPOI.name)) {
-                spotName = premiumPOI.title || premiumPOI.name
-              } else {
-                // 按顺序找第一个非通用名
-                for (const p of pois) {
-                  const name = p.title || p.name
-                  if (!isGeneric(name)) {
-                    spotName = name
-                    break
-                  }
-                }
-              }
+            if (candidatePOIs.length > 0) {
+              spotName = candidatePOIs[0].title || candidatePOIs[0].name
             }
 
-            // 备选：formatted_addresses（腾讯推荐精地址，精度高于 rough）
-            if (!spotName || isGeneric(spotName)) {
+            // 【第三级兜底】用腾讯推荐精地址
+            if (!spotName || isRejectName(spotName)) {
               spotName = ''
               if (result.formatted_addresses) {
                 const rec = result.formatted_addresses.recommend
-                if (rec && !isGeneric(rec)) spotName = rec
+                if (rec && !isRejectName(rec)) spotName = rec
               }
             }
 
             const city = result.ad_info ? result.ad_info.city : extractCity(result.address || '')
 
-            console.log('[checkinUtil] 解析结果 - spotName:', spotName, '| address:', result.address)
+            console.log('[checkinUtil] 解析结果 - spotName:', spotName, '| address:', result.address, ' | candidatePOIs:', candidatePOIs)
 
             resolve({
               spotName: spotName,
               address: result.address || '',
               district: result.ad_info ? result.ad_info.district : '',
-              city: city
+              city: city,
+              candidates: candidatePOIs.map(p => (p.title || p.name))
             })
           } else {
             console.error('[checkinUtil] 逆地理状态码错误:', data.status, data.message)

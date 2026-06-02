@@ -42,8 +42,8 @@ Page({
 
     // 地图配置
     mapCenter: {
-      lat: 22.4846,
-      lng: 113.9046
+      lat: 22.5322,
+      lng: 113.9558
     },
     mapScale: 15,
     allMarkers: [],

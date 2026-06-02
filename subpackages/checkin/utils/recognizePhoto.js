@@ -7,10 +7,13 @@ const forceBase64 = false;
 /**
  * 图片识别（通过云函数 recognizePhoto 调用 AI）
  * @param {string} photoPath - 照片路径
- * @param {boolean} forceBase64 - 是否强制使用 base64（跳过云存储，方便测试）
- * @returns {Promise<{name: string, desc: string}>}
+ * @param {Object} [options] - 可选配置
+ * @param {string[]} [options.spots] - 地点名称列表，传入时 AI 会从中匹配最符合的一个
+ * @param {boolean} [options.forceBase64] - 是否强制使用 base64（跳过云存储，方便测试）
+ * @returns {Promise<{name: string, desc: string, type: string, matchedName: string}>}
  */
-async function recognizePhoto(photoPath) {
+async function recognizePhoto(photoPath, options = {}) {
+  const { spots, forceBase64 = false } = options
   if (!photoPath) throw new Error('photoPath 不能为空')
 
   // 递增请求版本号，后续判断是否过期
@@ -88,7 +91,7 @@ async function recognizePhoto(photoPath) {
   console.log('[Recognize] 调用云函数 recognizePhoto...')
   const res = await wx.cloud.callFunction({
     name: 'recognizePhoto',
-    data: { tempURL }
+    data: { tempURL, spots }
   })
 
   // 最终检查，防止是旧请求的响应
@@ -102,30 +105,35 @@ async function recognizePhoto(photoPath) {
     throw new Error(result.error || '云函数调用失败')
   }
 
-  console.log('[Recognize] AI 返回:', result.name, result.desc)
+  console.log('[Recognize] AI 返回:', result.name, result.desc, 'matchedName:', result.matchedName)
   return {
     name: (result.name || '').trim(),
-    desc: (result.desc || '').trim()
+    desc: (result.desc || '').trim(),
+    type: (result.type || '').trim(),
+    matchedName: (result.matchedName || '').trim()
   }
 }
 
 /**
  * 生成AI打卡内容（包装 recognizePhoto，返回标准化格式）
  * @param {string} photoPath - 照片路径
- * @returns {Promise<{success: boolean, title: string, description: string}>}
+ * @param {Object} [options] - 可选配置
+ * @param {string[]} [options.spots] - 地点名称列表
+ * @returns {Promise<{success: boolean, title: string, description: string, type: string, matchedName: string}>}
  */
-async function generateAIContent(photoPath) {
+async function generateAIContent(photoPath, options = {}) {
   try {
-    const result = await recognizePhoto(photoPath)
+    const result = await recognizePhoto(photoPath, options)
     return {
       success: true,
       title: result.name || '',
       description: result.desc || '',
-      type: result.type || ''
+      type: result.type || '',
+      matchedName: result.matchedName || ''
     }
   } catch (err) {
     console.error('[generateAIContent] 失败:', err)
-    return { success: false, title: '', description: '' }
+    return { success: false, title: '', description: '', type: '', matchedName: '' }
   }
 }
 

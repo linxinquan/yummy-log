@@ -42,6 +42,19 @@
   line-height: 64rpx;
 }
 
+/* 未登录时的昵称输入框 */
+.user-nickname-input {
+  color: #242529;
+  font-size: 36rpx;
+  font-weight: 500;
+  line-height: 48rpx;
+  height: 64rpx;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
 .user-desc {
   color: #A0A4AE;
   font-size: 28rpx;
@@ -69,6 +82,57 @@
   line-height: 80rpx;
   color: #FFFFFF;
 }
+
+/* 未登录时的头像选择按钮 */
+.user-avatar-btn {
+  width: 160rpx !important;
+  height: 160rpx !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: none !important;
+  border: none !important;
+  line-height: normal !important;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.user-avatar-btn::after {
+  display: none;
+}
+
+.user-avatar-img {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  display: block;
+}
+
+.user-avatar-placeholder {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #C5D3E3 0%, #D8E1EC 100%);
+  gap: 8rpx;
+}
+
+.user-avatar-placeholder i {
+  font-size: 64rpx;
+  line-height: 64rpx;
+  color: #FFFFFF;
+}
+
+.avatar-btn-text {
+  font-size: 24rpx;
+  color: #FFFFFF;
+  line-height: 24rpx;
+}
+
+
 
 /* 统计一行：整行可点击进入采集页 */
 .stats-row {
@@ -166,3 +230,5 @@
   font-size: 40rpx;
   line-height: 40rpx;
 }
+
+

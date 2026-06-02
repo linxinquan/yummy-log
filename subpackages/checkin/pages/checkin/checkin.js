@@ -45,7 +45,8 @@ Page({
     editLongitude: null,
     editGeneratingDescription: false,
     autoCamera: false,
-    navTitle: '采集打卡'
+    navTitle: '采集打卡',
+    locationCandidates: []
   },
 
   onLoad(query) {
@@ -246,6 +247,18 @@ Page({
     })
   },
 
+  // 随机切换候选地址
+  onRefreshSpotName() {
+    const candidates = this.data.locationCandidates
+    if (candidates.length <= 1) return
+    const current = this.data.spotName || ''
+    let next
+    do {
+      next = candidates[Math.floor(Math.random() * candidates.length)]
+    } while (next === current && candidates.length > 1)
+    this.setData({ spotName: next })
+  },
+
   onConfirmEditSheet() {
     this.setData({
       address: this.data.editAddress,
@@ -362,13 +375,12 @@ Page({
     const locationResult = await this._resolveLocation()
     if (token !== this._flowToken) return
 
-    const spotName = locationResult.spotName || '当前位置'
     const address = locationResult.address || '暂未识别到地址'
     this.setData({
-      spotName,
       address,
       latitude: locationResult.latitude,
-      longitude: locationResult.longitude
+      longitude: locationResult.longitude,
+      locationCandidates: locationResult.candidates || []
     })
 
     await this._typeToField('typedAddress', address, 30, token)
@@ -383,11 +395,13 @@ Page({
     const aiResult = await this._generateAIContent()
     if (token !== this._flowToken) return
 
-    const fallback = this._getFallbackContent(spotName, address)
-    const finalTitle = aiResult.success ? (aiResult.title || spotName) : fallback.title
+    // AI 匹配到地点名称则优先使用，否则用定位结果
+    const finalSpotName = aiResult.matchedName || locationResult.spotName || '当前位置'
+    const fallback = this._getFallbackContent(finalSpotName, address)
+    const finalTitle = aiResult.success ? (aiResult.title || finalSpotName) : fallback.title
     const finalDescription = aiResult.success ? (aiResult.description || fallback.description) : fallback.description
-    console.log('aiResult', aiResult.type)
     this.setData({
+      spotName: finalSpotName,
       title: finalTitle,
       description: finalDescription
     })
@@ -451,7 +465,8 @@ Page({
                 spotName: geo.spotName || geo.district || geo.city || '当前位置',
                 address: geo.address || '',
                 latitude,
-                longitude
+                longitude,
+                candidates: geo.candidates || []
               })
             })
             .catch(() => {
@@ -484,10 +499,14 @@ Page({
         return
       }
 
-      recognizePhotoUtil.generateAIContent(this.data.photoPath)
+      const spots = this.data.locationCandidates.length > 0
+        ? this.data.locationCandidates.map(c => c.name || c).filter(Boolean)
+        : []
+
+      recognizePhotoUtil.generateAIContent(this.data.photoPath, { spots })
         .then(result => {
           // TODO: 用AI识别type
-          resolve(result) // result: {success, title, description,}
+          resolve(result) // result: {success, title, description, matchedName}
         })
         .catch(err => {
           console.error('[Checkin] generateAIContent 失败:', err)
