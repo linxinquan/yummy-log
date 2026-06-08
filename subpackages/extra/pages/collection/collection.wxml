@@ -110,17 +110,15 @@
       <view class="route-action-body">
         <view class="route-action-grid">
           <view
-            class="route-action-card {{selectedAction === 'edit' ? 'active' : ''}}"
-            bindtap="onSelectAction"
-            data-action="edit"
+            class="route-action-card"
+            bindtap="onEditCheckin"
           >
             <i class="route-action-icon mgc_pencil_3_line"></i>
             <text class="route-action-label">编辑名称</text>
           </view>
           <view
-            class="route-action-card danger {{selectedAction === 'delete' ? 'active' : ''}}"
-            bindtap="onSelectAction"
-            data-action="delete"
+            class="route-action-card danger"
+            bindtap="onDeleteCheckin"
           >
             <i class="route-action-icon mgc_delete_2_line"></i>
             <text class="route-action-label">删除采集</text>

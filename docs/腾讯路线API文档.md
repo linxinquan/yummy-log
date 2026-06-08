@@ -935,3 +935,7 @@ for (var i = 2; i < coors.length ; i++)
 
 polyline_idx说明
 下图为polyline的数组结构，路线全程的坐标点串都在polyline中， "polyline_idx"表达的是路段点串在polyline中的数组下标位置（而非坐标个数位置）的开始到结束序号，举个例子，假设某路段(steps)在polyline中是第4到第6个坐标，则polyline_idx为 “polyline_idx”:[6,11]
+
+
+todo：天气查询可以用腾讯地图
+ https://lbs.qq.com/service/webService/webServiceGuide/weatherinfo  

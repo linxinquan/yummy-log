@@ -19,8 +19,7 @@ Page({
     editNameSheetVisible: false,
     activeCheckinId: '',
     activeCheckinName: '',
-    editNameValue: '',
-    selectedAction: ''
+    editNameValue: ''
   },
 
   onLoad() {
@@ -454,40 +453,17 @@ Page({
       editNameSheetVisible: false,
       activeCheckinId: id,
       activeCheckinName: name || '',
-      editNameValue: name || '',
-      selectedAction: ''
+      editNameValue: name || ''
     })
   },
 
   onCloseActionSheet() {
     this.setData({
-      actionSheetVisible: false,
-      selectedAction: ''
+      actionSheetVisible: false
     })
   },
 
-  onSelectAction(e) {
-    const action = e.currentTarget.dataset.action
-    if (!action) return
-    this.setData({
-      selectedAction: action
-    })
-  },
-
-  onConfirmSelectedAction() {
-    if (!this.data.selectedAction) {
-      wx.showToast({
-        title: '请选择操作',
-        icon: 'none'
-      })
-      return
-    }
-
-    if (this.data.selectedAction === 'delete') {
-      this.onDeleteCheckin()
-      return
-    }
-
+  onEditCheckin() {
     this.setData({
       actionSheetVisible: false,
       editNameSheetVisible: true,
@@ -561,8 +537,7 @@ Page({
           editNameSheetVisible: false,
           activeCheckinId: '',
           activeCheckinName: '',
-          editNameValue: '',
-          selectedAction: ''
+          editNameValue: ''
         })
         this.loadData()
       }

@@ -251,34 +251,88 @@ Page({
     }
   },
 
-  // 快速登录：当前项目里先用一份默认账号，方便体验流程。
-  onQuickLogin() {
-    const defaultAvatar = this.data.avatarUrl || getRandomProfileImage()
-    const userInfo = {
-      uid: 'MS' + Date.now().toString(36).toUpperCase(),
-      nickName: this.data.nickName || '觅食者',
-      avatarUrl: defaultAvatar,
-      phone: '',
-      level: 'Lv.1 入门吃货',
-      isVip: false,
-      visits: this.data.stats.visitedCount || 0,
-      days: 1,
-      createdAt: new Date().toISOString()
-    }
-
-    util.saveData('userInfo', userInfo)
+  // 真实登录：调用云函数获取用户openid并创建/查询用户记录
+  async onLogin() {
+    wx.showLoading({ title: '登录中...' })
     
-    this.setData({
-      isLoggedIn: true,
-      userInfo: userInfo,
-      avatarUrl: defaultAvatar
-    })
+    try {
+      // 调用云函数登录
+      const res = await wx.cloud.callFunction({
+        name: 'login',
+        data: {}
+      })
+      
+      if (res.result.success) {
+        const userInfo = res.result.user
+        
+        // 保存到本地
+        util.saveData('userInfo', userInfo)
+        
+        // 更新页面状态
+        this.setData({
+          isLoggedIn: true,
+          userInfo: userInfo,
+          nickName: userInfo.nickName,
+          avatarUrl: userInfo.avatarUrl || getRandomProfileImage()
+        })
+        
+        // 如果是新用户，询问是否同步本地数据
+        if (res.result.isNew) {
+          this.askSyncData()
+        }
+        
+        wx.showToast({ title: '登录成功', icon: 'success' })
+      } else {
+        wx.showToast({ title: res.result.error || '登录失败', icon: 'none' })
+      }
+    } catch (err) {
+      console.error('[my.js] 登录失败:', err)
+      wx.showToast({ title: '登录失败，请重试', icon: 'none' })
+    } finally {
+      wx.hideLoading()
+    }
+  },
 
-    wx.showToast({ 
-      title: '登录成功', 
-      icon: 'success',
-      duration: 2000
+  // 询问是否同步本地数据到云端
+  askSyncData() {
+    const hasLocalData = this.checkHasLocalData()
+    
+    if (!hasLocalData) {
+      return // 无本地数据，无需同步
+    }
+    
+    wx.showModal({
+      title: '数据同步',
+      content: '检测到本地有采集数据，是否同步到云端？同步后可在其他设备访问。',
+      confirmText: '立即同步',
+      cancelText: '暂时不同步',
+      success: (res) => {
+        if (res.confirm) {
+          this.syncLocalDataToCloud()
+        }
+      }
     })
+  },
+
+  // 检查是否有本地数据需要同步
+  checkHasLocalData() {
+    const checkinRecords = util.loadData('checkin_records', [])
+    const wantList = util.loadData('userWantList', [])
+    const collectedFoods = util.loadData('userCollectedFoods', [])
+    const collectedSpots = util.loadData('userCollectedSpots', [])
+    const userAddedShops = util.loadData('userAddedShops', [])
+    
+    return checkinRecords.length > 0 || 
+           wantList.length > 0 || 
+           collectedFoods.length > 0 || 
+           collectedSpots.length > 0 || 
+           userAddedShops.length > 0
+  },
+
+  // 同步本地数据到云端（暂时只提示，Phase 2实现）
+  syncLocalDataToCloud() {
+    wx.showToast({ title: '数据同步功能即将上线', icon: 'none' })
+    // TODO: Phase 2 实现数据同步云函数
   },
 
   // 未登录时点击顶部区域，初始化登录状态（直接在页面上操作）。
@@ -290,43 +344,6 @@ Page({
     this.setData({
       loginAvatarUrl: '',
       loginNickname: ''
-    })
-  },
-
-  // 执行登录逻辑
-  doLogin(userInfo) {
-    const avatarUrl = userInfo.avatarUrl || getRandomProfileImage()
-    const nickName = userInfo.nickName || '觅食者'
-
-    const userData = {
-      uid: 'MS' + Date.now().toString(36).toUpperCase(),
-      nickName: nickName,
-      avatarUrl: avatarUrl,
-      phone: '',
-      level: 'Lv.1 入门吃货',
-      isVip: false,
-      visits: this.data.stats.visitedCount || 0,
-      days: 1,
-      createdAt: new Date().toISOString()
-    }
-
-    // 保存到缓存
-    util.saveData('userInfo', userData)
-
-    // 更新页面数据
-    this.setData({
-      isLoggedIn: true,
-      userInfo: userData,
-      nickName: nickName,
-      avatarUrl: avatarUrl,
-      hasNickname: true,
-      hasAvatar: true
-    })
-
-    wx.showToast({
-      title: '登录成功',
-      icon: 'success',
-      duration: 2000
     })
   },
 
@@ -376,8 +393,8 @@ Page({
     })
   },
 
-  // 登录相关方法：头像和昵称都获取后自动登录
-  onChooseAvatar(e) {
+  // 登录相关方法：头像和昵称都获取后自动登录（调用云函数）
+  async onChooseAvatar(e) {
     const { avatarUrl } = e.detail
     const { loginNickname } = this.data
 
@@ -385,10 +402,54 @@ Page({
 
     // 如果昵称也已获取，自动完成登录
     if (loginNickname) {
-      this.doLogin({
-        nickName: loginNickname,
-        avatarUrl: avatarUrl
+      await this.callLoginCloudFunction(loginNickname, avatarUrl)
+    }
+  },
+
+  // 调用云函数登录
+  async callLoginCloudFunction(nickName, avatarUrl) {
+    wx.showLoading({ title: '登录中...' })
+    
+    try {
+      // 调用云函数登录
+      const res = await wx.cloud.callFunction({
+        name: 'login',
+        data: {
+          nickName: nickName,
+          avatarUrl: avatarUrl
+        }
       })
+      
+      if (res.result.success) {
+        const userInfo = res.result.user
+        
+        // 保存到本地
+        util.saveData('userInfo', userInfo)
+        
+        // 更新页面状态
+        this.setData({
+          isLoggedIn: true,
+          userInfo: userInfo,
+          nickName: userInfo.nickName,
+          avatarUrl: userInfo.avatarUrl || getRandomProfileImage(),
+          hasNickname: true,
+          hasAvatar: true
+        })
+        
+        // 如果是新用户，询问是否同步本地数据
+        if (res.result.isNew) {
+          this.askSyncData()
+        }
+        
+        wx.showToast({ title: '登录成功', icon: 'success' })
+      } else {
+        wx.showToast({ title: res.result.error || '登录失败', icon: 'none' })
+      }
+    } catch (err) {
+      console.error('[my.js] 登录失败:', err)
+      wx.showToast({ title: '登录失败，请重试', icon: 'none' })
+    } finally {
+      wx.hideLoading()
     }
   },
 
@@ -397,16 +458,13 @@ Page({
     this.setData({ loginNickname: e.detail.value })
   },
 
-  onNicknameBlur(e) {
+  async onNicknameBlur(e) {
     const nickName = e.detail.value
     const { loginAvatarUrl } = this.data
 
     // 输入框失去焦点时，如果头像已获取，自动完成登录
     if (loginAvatarUrl && nickName) {
-      this.doLogin({
-        nickName: nickName,
-        avatarUrl: loginAvatarUrl
-      })
+      await this.callLoginCloudFunction(nickName, loginAvatarUrl)
     }
   },
 

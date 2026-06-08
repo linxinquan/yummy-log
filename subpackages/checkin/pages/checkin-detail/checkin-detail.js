@@ -26,7 +26,6 @@ Page({
     editGeneratingDescription: false,
     actionSheetVisible: false,
     editNameSheetVisible: false,
-    selectedAction: '',
     editNameValue: ''
   },
 
@@ -95,8 +94,7 @@ Page({
       editLongitude: detail.longitude || null,
       editGeneratingDescription: false,
       actionSheetVisible: false,
-      editNameSheetVisible: false,
-      selectedAction: ''
+      editNameSheetVisible: false
     })
   },
 
@@ -104,40 +102,17 @@ Page({
     this.setData({
       actionSheetVisible: true,
       editNameSheetVisible: false,
-      editSheetVisible: false,
-      selectedAction: ''
+      editSheetVisible: false
     })
   },
 
   onCloseActionSheet() {
     this.setData({
-      actionSheetVisible: false,
-      selectedAction: ''
+      actionSheetVisible: false
     })
   },
 
-  onSelectAction(e) {
-    const action = e.currentTarget.dataset.action
-    if (!action) return
-    this.setData({
-      selectedAction: action
-    })
-  },
-
-  onConfirmSelectedAction() {
-    if (!this.data.selectedAction) {
-      wx.showToast({
-        title: '请选择操作',
-        icon: 'none'
-      })
-      return
-    }
-
-    if (this.data.selectedAction === 'delete') {
-      this.onDeleteCheckin()
-      return
-    }
-
+  onEditCheckin() {
     const detail = this.data.detail || {}
     this.setData({
       actionSheetVisible: false,
