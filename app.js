@@ -11,6 +11,9 @@ require('./utils/mapRouteFetcher')
 require('./utils/map-config')
 
 App({
+  // 当前版本号（每次发版递增，大版本变更时强制清除缓存）
+  currentVersion: '2.0.0',
+
   globalData: {
     userInfo: null,
     location: null,
@@ -34,6 +37,16 @@ App({
   },
 
   onLaunch() {
+    // 版本检查：如果版本不一致，强制清除所有缓存（避免旧数据结构导致问题）
+    const lastVersion = wx.getStorageSync('app_version');
+    if (!lastVersion || lastVersion !== this.currentVersion) {
+      // 强制清除所有本地缓存
+      wx.clearStorageSync();
+      // 记录新的版本号，下次启动不再清除
+      wx.setStorageSync('app_version', this.currentVersion);
+      console.log('[App] 已检测到版本升级，本地缓存已全部清除（旧版本：' + (lastVersion || '无') + '，新版本：' + this.currentVersion + '）');
+    }
+    
     // ── CloudBase 初始化 ──────────────
     if (wx.cloud) {
       wx.cloud.init({

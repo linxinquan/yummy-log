@@ -79,8 +79,6 @@ Page({
           return {
             ...item,
             tags: filteredTags,
-            // 直接使用统一数据中的字段，如果没有再兼容旧数据
-            displayImage: item.coverImage || item.displayImage || item.logo || item.image || item.thumb,
             displayCategory: item.displayCategory || resolveDisplayCategory(item),
             displayWantCount: formatWantCount(item.wantCount),
             distance,
@@ -102,7 +100,7 @@ Page({
           const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2)
           return {
             ...item,
-            displayImage: item.image || item.logo || item.thumb,
+            displayImage: item.coverImage,
             displayCategory: resolveDisplayCategory(item),
             displayWantCount: formatWantCount(item.wantCount),
             distance,

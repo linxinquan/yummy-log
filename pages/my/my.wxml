@@ -6,29 +6,31 @@
     <view class="user-section">
       <view class="user-info">
         <block wx:if="{{isLoggedIn}}">
-          <text class="user-nickname">{{userInfo.nickName || '觅食者'}}</text>
+          <!-- 已登录：点击昵称可修改 -->
+          <input class="user-nickname-input" type="nickname" placeholder="点击设置昵称" value="{{userInfo.nickName}}" bindblur="onUpdateNickname" />
           <text class="user-desc">与你相遇的第 {{userInfo.days || 1}} 天</text>
         </block>
         <block wx:else>
-          <!-- 未登录：昵称输入框（type="nickname" 可获取微信昵称） -->
-          <input class="user-nickname-input" type="nickname" placeholder="点击获取微信昵称" value="{{loginNickname}}" bindinput="onInputNickname" bindblur="onNicknameBlur" />
-          <text class="user-desc">设置头像和昵称，开始记录美食足迹</text>
+          <!-- 未登录：显示请登录按钮 -->
+          <view class="login-prompt" bindtap="showLoginModal">
+            <text class="login-prompt-text">点击登录</text>
+            <text class="user-desc">登录后记录你的美食足迹</text>
+          </view>
         </block>
       </view>
 
       <!-- 头像区域 -->
       <block wx:if="{{isLoggedIn}}">
-        <image class="user-avatar" src="{{avatarUrl}}" mode="aspectFill" bindtap="onTapUserProfile" />
+        <!-- 已登录：点击头像可修改 -->
+        <button class="user-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onUpdateAvatar">
+          <image class="user-avatar-img" src="{{avatarUrl}}" mode="aspectFill" />
+        </button>
       </block>
       <block wx:else>
-        <!-- 未登录：头像选择按钮（open-type="chooseAvatar"） -->
-        <button class="user-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-          <image wx:if="{{loginAvatarUrl}}" class="user-avatar-img" src="{{loginAvatarUrl}}" mode="aspectFill" />
-          <view wx:else class="user-avatar-placeholder">
-            <i class="mgc_ghost_fill"></i>
-            <text class="avatar-btn-text">点我</text>
-          </view>
-        </button>
+        <!-- 未登录：显示默认头像，点击弹出登录弹窗 -->
+        <view class="user-avatar-default" bindtap="showLoginModal">
+          <i class="mgc_user_3_fill avatar-icon"></i>
+        </view>
       </block>
     </view>
 
@@ -79,4 +81,56 @@
 
   <!-- 自定义 TabBar -->
   <custom-tabbar></custom-tabbar>
+
+  <!-- 登录弹窗 -->
+  <view class="login-modal {{showLoginModal ? 'show' : ''}}" bindtap="onModalMaskTap">
+    <view class="login-modal-content" catchtap="onModalContentTap">
+      <!-- 关闭按钮 -->
+      <view class="modal-close" bindtap="hideLoginModal">
+        <i class="mgc_close_line"></i>
+      </view>
+      
+      <!-- 标题 -->
+      <view class="modal-header">
+        <text class="modal-title">欢迎登录觅食迹</text>
+        <text class="modal-subtitle">授权微信账号，记录你的美食足迹</text>
+      </view>
+      
+      <!-- 用户信息预览 -->
+      <view class="modal-user-preview">
+        <view class="preview-avatar">
+          <open-data type="userAvatarUrl"></open-data>
+        </view>
+        <view class="preview-name">
+          <open-data type="userNickName"></open-data>
+        </view>
+      </view>
+      
+      <!-- 隐私协议 -->
+      <view class="privacy-agreement">
+        <checkbox class="agreement-checkbox" checked="{{isAgreePrivacy}}" bindtap="togglePrivacyAgreement"/>
+        <view class="agreement-text">
+          <text>我已阅读并同意</text>
+          <text class="agreement-link" bindtap="onTapPrivacyPolicy">《隐私协议》</text>
+          <text>和</text>
+          <text class="agreement-link" bindtap="onTapUserAgreement">《用户协议》</text>
+        </view>
+      </view>
+      
+      <!-- 登录按钮 -->
+      <button 
+        class="login-btn {{isAgreePrivacy ? '' : 'disabled'}}" 
+        bindtap="onWechatLogin"
+        disabled="{{!isAgreePrivacy}}"
+      >
+        <i class="mgc_wechat_fill wechat-icon"></i>
+        <text>授权微信登录</text>
+      </button>
+      
+      <!-- 暂不登录 -->
+      <view class="cancel-login" bindtap="hideLoginModal">
+        <text>暂不登录</text>
+      </view>
+    </view>
+  </view>
 </view>

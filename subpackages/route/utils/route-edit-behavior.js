@@ -1,5 +1,5 @@
 ﻿const util = require('../../../utils/util')
-const { buildPreviewRouteData } = require('../../../utils/routeHelper')
+const { buildPreviewRouteData, flattenDaySections } = require('../../../utils/routeHelper')
 const { buildPreviewStateFromRoute } = require('./routeHelper')
 
 
@@ -25,8 +25,9 @@ module.exports = Behavior({
           const shops = this.data.selectMode === 'all'
             ? this.data.allLikedShops
             : this.data.allLikedShops.filter(s => s.selected)
-          const routeShops = this._planRouteByDays(shops)
-          this.setData({ routeShops, isEditing: false, reorderSheetVisible: false })
+          const daySections = this._planRouteByDays(shops)
+          const routeShops = flattenDaySections(daySections)
+          this.setData({ daySections, routeShops, isEditing: false, reorderSheetVisible: false })
           this.refreshPreviewRoute(routeShops, { markDirty: true })
           this.updateMap()
           wx.hideLoading()

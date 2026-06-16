@@ -30,7 +30,7 @@ function isSpotItem(item) {
 
 // 统一拿封面图字段。
 function getCoverImage(item) {
-  return item.coverImage || item.displayImage || item.thumb || '/images/app-logo.jpg'
+  return item.coverImage || '/images/app-logo.jpg'
 }
 
 // 把交通方式 key 转成可读文案。
@@ -56,16 +56,16 @@ function getItemTagText(item) {
 }
 
 // 从路线里的地点图、回退图池中挑一张路线封面。
-function resolveRouteCoverImage(routeDaySections, fallbackImage = '') {
+function resolveRouteCoverImage(routeDaySections) {
   const itemCovers = (routeDaySections || []).reduce((result, day) => {
-    ;(day.items || []).forEach(item => {
-      const cover = item.coverImage || item.image || item.logo || item.thumb
+    (day.items || []).forEach(item => {
+      const cover = item.coverImage
       if (cover) result.push(cover)
     })
     return result
   }, [])
 
-  return itemCovers[0] || fallbackImage || DEFAULT_COVER_POOL[0] || '/images/app-logo.jpg'
+  return itemCovers[0] || DEFAULT_COVER_POOL[0] || '/images/app-logo.jpg'
 }
 
 // 生成地点卡片的补充信息，例如价格、评分、分类。
@@ -82,7 +82,6 @@ function decorateSelectableItems(items) {
   return (items || []).map(item => ({
     ...item,
     coverImage: getCoverImage(item),
-    image: item.image || item.displayImage || item.thumb || getCoverImage(item),
     tagText: getItemTagText(item),
     displayCategory: item.displayCategory || resolveDisplayCategory(item),
     rating: item.rating || item.score || '',
@@ -196,51 +195,39 @@ function getCityInfo(text) {
   return { name: '深圳市', lat: 22.5431, lng: 114.0579 }
 }
 
-// 生成旧版路线数据格式，兼容历史数据。
-function buildLegacyRouteData(daySections) {
-  const daySummaries = (daySections || []).map((day, index) => ({
-    location: '',
-    route: (day.items || []).map(item => item.name).join(' --- '),
-    image: (day.items && day.items[0] && (day.items[0].coverImage || day.items[0].image)) || '/images/app-logo.jpg'
-  }))
-
-  const dayDetails = (daySections || []).map(day => (day.items || []).map(item => ({
-    name: item.name,
-    desc: item.travelText,
-    travelText: item.travelText,
-    tag: item.tagText || item.tag,
-    image: item.coverImage || item.image || getCoverImage(item),
-    type: item.type || (isSpotItem(item) ? 'spot' : 'food'),
-    lat: item.lat || item.latitude,
-    lng: item.lng || item.longitude
-  })))
-
-  return { daySummaries, dayDetails }
+// 把"按天分组"的路线拍平成普通数组，方便地图预览和统计
+function flattenDaySections(daySections) {
+  const flattened = []
+  ;(daySections || []).forEach((day, dayIndex) => {
+    ;(day.items || []).forEach((item, itemIndex) => {
+      flattened.push({ ...item, dayIndex, itemIndex })
+    })
+  })
+  return flattened
 }
 
 // 先把当前预览路线整理成统一对象：
 // 这里只负责组装数据，不直接写入 savedRoutes。
 function buildPreviewRouteData(data, options = {}) {
-  const { routeDaySections, summaryText, cityText, previewRouteId, routeTitle } = data
+  // 兼容新旧属性名：routeDaySections (旧) 或 daySections (新)
+  const routeDaySections = data.daySections || data.routeDaySections || []
+  const { summaryText, cityText, previewRouteId, routeTitle } = data
   if (!routeDaySections || !routeDaySections.length) return null
 
   const routeId = options.routeId || previewRouteId || `ai-${Date.now()}`
   const timestamp = Date.now()
   const savedRoutes = util.loadData('savedRoutes', [])
   const existingRoute = savedRoutes.find(item => String(item.id) === String(routeId))
-  const { daySummaries, dayDetails } = buildLegacyRouteData(routeDaySections)
   return {
     id: routeId,
     title: routeTitle || buildPreviewTitle(cityText, routeDaySections.length, routeDaySections),
     subtitle: summaryText || buildSummaryText(routeDaySections),
-    image: resolveRouteCoverImage(routeDaySections, daySummaries[0]?.image),
-    coverImage: resolveRouteCoverImage(routeDaySections, daySummaries[0]?.image),
+    image: resolveRouteCoverImage(routeDaySections),
+    coverImage: resolveRouteCoverImage(routeDaySections),
     author: 'AI规划',
     city: cityText,
     sourceType: 'ai',
     daySections: routeDaySections,
-    daySummaries,
-    dayDetails,
     createdAt: existingRoute && existingRoute.createdAt ? existingRoute.createdAt : timestamp,
     updatedAt: timestamp,
     isDraft: Boolean(options.isDraft)
@@ -257,12 +244,24 @@ function getPreviewIndexByDay(routeDaySections, dayIndex) {
   return offset
 }
 
+// 反过来：根据地图预览的下标，找到它属于第几天。
+function getDayIndexByPreview(daySections, previewIndex) {
+  if (!daySections || !daySections.length) return -1
+  let offset = 0
+  for (let i = 0; i < daySections.length; i += 1) {
+    const count = (daySections[i].items || []).length
+    if (previewIndex < offset + count) return i
+    offset += count
+  }
+  return daySections.length - 1
+}
+
 // 把一串地点按天数拆成"每天的路线"。
 function buildPreviewDaySections(routeShops, preferredDayCount = 1) {
   const items = (routeShops || []).map((item, index) => ({
     ...item,
     id: item.id || `preview-place-${index}`,
-    coverImage: item.coverImage || getCoverImage(item),
+    coverImage: item.coverImage,
     tagText: item.tagText || getItemTagText(item)
   }))
   if (!items.length) return []
@@ -288,6 +287,17 @@ function buildPreviewDaySections(routeShops, preferredDayCount = 1) {
   return sections
 }
 
+// 去掉编辑态临时字段，避免把左滑偏移量之类的界面状态保存进正式数据。
+function stripEditState(daySections) {
+ return (daySections || []).map((day) => ({
+  ...day,
+  items: (day.items || []).map((item) => {
+   const nextItem = { ...item };
+   delete nextItem.swipeOffset;
+   return nextItem;
+  }),
+ }));
+}
 
 module.exports = {
   CITY_PRESETS,
@@ -310,8 +320,10 @@ module.exports = {
   buildTabs,
   buildSummaryText,
   getCityInfo,
-  buildLegacyRouteData,
   buildPreviewRouteData,
   getPreviewIndexByDay,
-  buildPreviewDaySections
+  getDayIndexByPreview,
+  buildPreviewDaySections,
+  flattenDaySections,
+  stripEditState
 }

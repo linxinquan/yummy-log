@@ -173,7 +173,7 @@ function syncDaySections(daySections, cityInfo) {
         id: item.id || `day-${dayIndex}-item-${itemIndex}`,
         name: item.name || '待补充地点',
         tag,
-        image: item.image || matched?.image || matched?.logo || '/images/app-logo.jpg',
+        image: item.coverImage || '/images/app-logo.jpg',
         type: item.type || matched?.type || (tag === '美食' ? 'food' : 'spot'),
         rating: item.rating || matched?.rating || matched?.score || '',
         tags: item.tags || matched?.tags || [],
@@ -300,7 +300,7 @@ function convertRoutesToDaySections(routes) {
         id: place.id || `day-${dayIndex}-item-${itemIndex}`,
         name: place.name || '待补充地点',
         tag: place.tag || inferTag(place.name),
-        image: place.coverImage || place.displayImage || '/images/app-logo.jpg',
+        coverImage: place.coverImage || '/images/app-logo.jpg',
         type: place.type || (place.tag === '美食' ? 'food' : 'spot'),
         rating: place.rating || place.score || '',
         tags: place.tags || [],
@@ -343,28 +343,6 @@ function buildDaySections(guide, cityInfo) {
     return syncDaySections(buildXianSections(covers), cityInfo)
   }
   return syncDaySections(buildGenericSections(guide, covers), cityInfo)
-}
-
-// 兼容旧路线结构，生成 daySummaries / dayDetails。
-function buildLegacyRouteData(daySections) {
-  const daySummaries = daySections.map((day, index) => ({
-    location: '',
-    route: (day.items || []).map(item => item.name).join(' --- '),
-    image: (day.items && day.items[0] && day.items[0].image) || '/images/app-logo.jpg',
-  }))
-
-  const dayDetails = daySections.map(day => (day.items || []).map(item => ({
-    name: item.name,
-    desc: item.travelText,
-    travelText: item.travelText,
-    tag: item.tag,
-    image: item.image,
-    type: item.type,
-    lat: item.lat,
-    lng: item.lng
-  })))
-
-  return { daySummaries, dayDetails }
 }
 
 Page({
@@ -744,18 +722,15 @@ Page({
   // 把这篇攻略保存成"我的路线"
   onSaveRoute() {
     const { guide, daySections, summaryText } = this.data
-    const { daySummaries, dayDetails } = buildLegacyRouteData(daySections)
     const routeCard = {
       id: guide.id,
       title: guide.title,
       subtitle: summaryText,
-      image: guide.coverImage || daySummaries[0]?.image || '/images/app-logo.jpg',
+      image: guide.coverImage || '/images/app-logo.jpg',
       author: guide.author || '匿名',
       city: this.data.cityText,
       guideId: guide.id,
       daySections,
-      daySummaries,
-      dayDetails,
       createdAt: Date.now()
     }
 

@@ -20,7 +20,8 @@ const {
 function buildPreviewStateFromRoute(route = {}, currentStart = null) {
   const citySource = route.city || route.cityText || route.title || ''
   const cityInfo = getCityInfo(citySource)
-  const routeDaySections = (route.daySections || []).map((day, dayIndex) => ({
+  // 兼容新旧属性名：daySections (新) 或 routeDaySections (旧)
+  const daySections = (route.daySections || route.routeDaySections || []).map((day, dayIndex) => ({
     ...day,
     id: day.id || `preview-day-${dayIndex}`,
     title: day.title || buildDayLabel(dayIndex + 1),
@@ -30,8 +31,7 @@ function buildPreviewStateFromRoute(route = {}, currentStart = null) {
       const lng = item.lng || item.longitude
       const decorated = decorateRouteCardItem({
         ...item,
-        coverImage: item.coverImage || getCoverImage(item),
-        image: item.image || item.coverImage || getCoverImage(item),
+        coverImage: item.coverImage,
         tagText: item.tagText || getItemTagText(item),
         distanceStr: item.distanceStr || util.formatDistance(item.distanceFromPrev || 0),
         timeStr: item.timeStr || estimateRouteDuration(item.distanceFromPrev || 0, item.travelMode)
@@ -47,7 +47,7 @@ function buildPreviewStateFromRoute(route = {}, currentStart = null) {
       }
     })
   }))
-  const routeShops = routeDaySections.reduce((result, day) => result.concat(day.items || []), [])
+  const routeShops = daySections.reduce((result, day) => result.concat(day.items || []), [])
   const totalDistanceValue = routeShops.reduce((sum, item) => sum + (item.distanceFromPrev || 0), 0)
   const totalMinutes = routeShops.reduce((sum, item) => {
     const modeKey = (item.travelMeta && item.travelMeta.mode) || item.travelMode
@@ -55,22 +55,22 @@ function buildPreviewStateFromRoute(route = {}, currentStart = null) {
     return sum + ((Math.max(0, item.distanceFromPrev || 0) / 1000) * modeConfig.minutesPerKm)
   }, 0)
   const previewViewData = routeShops.length
-    ? buildMapPreviewViewData(routeDaySections, -1, 0, routeShops[0], routeShops.length)
+    ? buildMapPreviewViewData(daySections, -1, 0, routeShops[0], routeShops.length)
     : {}
 
   return {
+    daySections,  // ★ 改用 daySections 作为属性名（新标准）
     routeShops,
-    routeDaySections,
-    tabs: routeDaySections.length ? buildTabs(routeDaySections.length) : [],
+    tabs: daySections.length ? buildTabs(daySections.length) : [],
     currentTab: 0,
     currentMapDay: -1,
     sheetScrollTarget: '',
-    summaryText: route.subtitle || buildSummaryText(routeDaySections),
+    summaryText: route.subtitle || buildSummaryText(daySections),
     cityText: cityInfo.name,
-    routeTitle: route.title || buildPreviewTitle(cityInfo.name, routeDaySections.length, routeDaySections),
+    routeTitle: route.title || buildPreviewTitle(cityInfo.name, daySections.length, daySections),
     previewRouteId: route.id ? String(route.id) : '',
     hasUnsavedPreview: true,
-    preferredDayCount: Math.max(routeDaySections.length || route.dayCount || 1, 1),
+    preferredDayCount: Math.max(daySections.length || route.dayCount || 1, 1),
     totalDistance: util.formatDistance(totalDistanceValue),
     totalTime: formatDurationShort(totalMinutes),
     mapPreviewShop: routeShops[0] || null,

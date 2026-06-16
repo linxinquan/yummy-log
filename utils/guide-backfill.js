@@ -39,8 +39,8 @@ function enrichGuidePlace(item = {}) {
 
   return {
     ...item,
-    image: item.image || item.coverImage || matched?.image || matched?.logo || matched?.thumb || '',
-    coverImage: item.coverImage || item.image || matched?.image || matched?.logo || matched?.thumb || '',
+    image: item.coverImage || '',
+    coverImage: item.coverImage || '',
     displayCategory,
     rating: item.rating || item.score || matched?.rating || matched?.score || '',
     tags: buildPlaceCardTags({ ...merged, displayCategory }),

@@ -162,7 +162,7 @@
                     <!-- 地点卡片主体：左侧封面，中间信息，右侧箭头或拖拽手柄 -->
                     <view class="route-place-main">
                       <view class="route-place-cover-wrap">
-                        <image class="place-cover" src="{{place.image}}" mode="aspectFill"></image>
+                        <image class="place-cover" src="{{place.coverImage}}" mode="aspectFill"></image>
                         <view class="card-cat-badge" wx:if="{{place.displayCategory}}">{{place.displayCategory}}</view>
                       </view>
                       <view class="place-info-row">
@@ -371,7 +371,7 @@
               <!-- 添加地点列表改成和详情页地点卡片同一套视觉，只保留右侧加号图标 -->
               <view class="picker-route-place-main">
                 <view class="picker-route-place-cover-wrap">
-                  <image class="picker-place-image" src="{{item.image}}" mode="aspectFill"></image>
+                  <image class="picker-place-image" src="{{item.coverImage}}" mode="aspectFill"></image>
                   <view class="picker-place-tag" wx:if="{{item.displayCategory || item.tag}}">{{item.displayCategory || item.tag}}</view>
                 </view>
                 <view class="picker-route-place-info-row">

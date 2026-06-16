@@ -121,11 +121,11 @@ Page({
 
             const shop = allShops.find(s => String(s.id) === String(firstItem.id))
             if (shop) {
-              nextGuide.coverImage = shop.logo || shop.image || shop.thumb
+              nextGuide.coverImage = shop.coverImage
             } else {
               const spot = allSpots.find(s => String(s.id) === String(firstItem.id))
               if (spot) {
-                nextGuide.coverImage = spot.image || spot.logo || spot.thumb
+                nextGuide.coverImage = spot.coverImage
               }
             }
           }

@@ -12,6 +12,7 @@ const {
   buildPreviewRouteData,
   getPreviewIndexByDay,
   buildPreviewDaySections,
+  flattenDaySections,
 } = require('../../../../utils/routeHelper')
 const { buildPreviewStateFromRoute } = require('../../utils/routeHelper')
 
@@ -37,7 +38,7 @@ function savePreviewRouteData(data, options = {}) {
   return savedRoute
 }
 
-// 把“当前所在位置”和真实定位地址拼成统一显示文案。
+// 把"当前所在位置"和真实定位地址拼成统一显示文案。
 // 有地址时显示：当前所在位置（深圳市南山区xxx）
 // 没地址时只显示：当前所在位置
 function buildCurrentLocationDisplayName(address = '') {
@@ -48,7 +49,7 @@ function buildCurrentLocationDisplayName(address = '') {
 Page({
   behaviors: [routeMapBehavior, routePreviewBehavior, routeEditBehavior, routeNavBehavior, routePlaceBehavior],
   data: {
-    // 起点默认使用“当前所在位置”，统一页面里的起点文案。
+    // 起点默认使用"当前所在位置"，统一页面里的起点文案。
     currentStart: { name: '当前所在位置', lat: 22.5431, lng: 114.0579, type: 'current' },
 
     // 出行方式
@@ -58,7 +59,10 @@ Page({
     currentLocation: null,
     viewMode: 'list',
     modeSwitchTop: 44,
-    routeDaySections: [],
+    // ★ 主数据：按天分组的路线（嵌套结构）
+    daySections: [],
+    // 派生数据：扁平数组，用于兼容现有逻辑
+    routeShops: [],
     // 列表/预览模式：底部 Tab 选中索引（0=行程总览，1=第1天，2=第2天...）
     currentTab: 0,
     // 地图模式：当前高亮显示第几天的路线（-1=未确定，0=第1天，1=第2天...）
@@ -159,7 +163,7 @@ Page({
     this.loadRoute()
   },
 
-  // 把当前位置补成“当前所在位置（真实地址）”：
+  // 把当前位置补成"当前所在位置（真实地址）"：
   // 这里只在仍然使用当前定位作为起点时更新，避免覆盖用户手动选的其他起点。
   syncCurrentStartAddress(location) {
     if (!location || typeof location.lat !== 'number' || typeof location.lng !== 'number') return
@@ -180,15 +184,15 @@ Page({
       }
 
       // 全局定位对象也同步更新成带地址的版本：
-      // 这样后面无论是路线重排，还是第二天以后再次点“使用当前所在位置”，
-      // 取到的都会是“当前所在位置（真实地址）”这份最新文案。
+      // 这样后面无论是路线重排，还是第二天以后再次点"使用当前所在位置"，
+      // 取到的都会是"当前所在位置（真实地址）"这份最新文案。
       app.globalData.location = {
         ...(app.globalData.location || {}),
         ...currentLocationWithAddress
       }
 
       const dayStartPointTexts = [...(this.data.dayStartPointTexts || [])]
-      // 只有第一天当前仍是“当前所在位置”体系时，才自动更新显示文案。
+      // 只有第一天当前仍是"当前所在位置"体系时，才自动更新显示文案。
       // 这样不会把用户已经手动选好的第 1 天起点覆盖掉。
       if (!dayStartPointTexts[0] || /^当前所在位置/.test(dayStartPointTexts[0])) {
         dayStartPointTexts[0] = displayName
@@ -197,7 +201,7 @@ Page({
 
       this.setData(nextData, () => {
         // 地址文案更新后，同步刷新分天结构里的起点显示。
-        if (this.data.routeDaySections && this.data.routeDaySections.length) {
+        if (this.data.daySections && this.data.daySections.length) {
           this._updateDayStartPointTexts()
         }
       })
@@ -221,13 +225,13 @@ Page({
       type: 'gcj02',
       isHighAccuracy: true,
       success: (res) => {
-        // 先写入基础文案“当前所在位置”，真实地址异步补齐到括号里。
+        // 先写入基础文案"当前所在位置"，真实地址异步补齐到括号里。
         const location = { lat: res.latitude, lng: res.longitude, name: '当前所在位置' }
         app.globalData.location = location
         this.setData({ currentLocation: location })
         if (this.data.currentStart.type === 'current') {
           this.setData({ currentStart: { ...this.data.currentStart, ...location } })
-          // 定位成功后，继续把真实地址补进“当前所在位置（地址）”。
+          // 定位成功后，继续把真实地址补进"当前所在位置（地址）"。
           this.syncCurrentStartAddress(location)
           this.loadRoute()
         }
@@ -272,21 +276,23 @@ Page({
     // 支持景点(lat/lng)和美食(latitude/longitude)两种格式
     if (selectMode === 'all') {
       const allLikedShops = decorateSelectableItems(rawItems.map(s => ({ ...s, selected: true, orderNum: '' })))
-      const routeShops = this._planRouteByDays(rawItems, presetIds ? true : false)
+      const daySections = this._planRouteByDays(rawItems, presetIds ? true : false)
+      const routeShops = flattenDaySections(daySections)
       routeShops.forEach((s, i) => {
         const hit = allLikedShops.find(a => a.id === s.id)
         if (hit) hit.orderNum = i + 1
       })
     this.setData({
       allLikedShops,
+      daySections,
       routeShops,
       rawItems,
       selectedCount: rawItems.length,
       isAllSelected: true
     })
     
-    // 调试：打印 routeShops 数据
-    console.log('[loadRoute] routeShops:', routeShops.map(s => ({ id: s.id, name: s.name, lat: s.lat, lng: s.lng })))
+    // 调试：打印 daySections 数据
+    console.log('[loadRoute] daySections:', daySections)
     
     this.refreshPreviewRoute(routeShops)
   } else {
@@ -300,7 +306,8 @@ Page({
       }))
 
       const selectedShops = allLikedShops.filter(s => s.selected)
-      const routeShops = this._planRouteByDays(selectedShops)
+      const daySections = this._planRouteByDays(selectedShops)
+      const routeShops = flattenDaySections(daySections)
       allLikedShops.forEach(s => { s.orderNum = '' })
       routeShops.forEach((s, i) => {
         const hit = allLikedShops.find(a => a.id === s.id)
@@ -309,6 +316,7 @@ Page({
 
       this.setData({
         allLikedShops,
+        daySections,
         routeShops,
         rawItems,
         selectedCount: selectedShops.length,
@@ -326,6 +334,7 @@ Page({
 
   // 对地点做路径规划（按天独立规划），并补上距离、时间、总里程这些信息。
   // 每天使用当天的起点独立调用 planRoute，然后合并结果。
+  // 返回 daySections（嵌套结构），调用方需要通过 flattenDaySections() 派生 routeShops。
   _planRouteByDays(shops, preserveOrder = false) {
     if (shops.length === 0) return []
 
@@ -340,20 +349,19 @@ Page({
       })
     }
     
-    // 先按天分组（使用当前的 routeDaySections 分组逻辑）
-    const routeDaySections = buildPreviewDaySections(shops, preferredDayCount)
+    // 先按天分组（使用当前的 daySections 分组逻辑）
+    const daySections = buildPreviewDaySections(shops, preferredDayCount)
     
     // 对每一天独立规划路线
-    const allRouteShops = []
     let totalDist = 0
     
-    routeDaySections.forEach((daySection, dayIndex) => {
+    const decoratedDaySections = daySections.map((daySection, dayIndex) => {
       // 确定当天的起点
       let dayStartPoint = null
       if (dayIndex === 0) {
         // 第1天：优先使用 currentStart。
         // 这里不能再优先拿 app.globalData.location，
-        // 否则可能会把已经补好真实地址的文案又降回“当前所在位置”。
+        // 否则可能会把已经补好真实地址的文案又降回"当前所在位置"。
         dayStartPoint = currentStart.type === 'current' 
           ? (currentStart || app.globalData.location || app.globalData.centerLocation)
           : currentStart
@@ -364,7 +372,7 @@ Page({
           dayStartPoint = customStart
         } else {
           // 默认：前一天最后一个地点
-          const prevDaySection = routeDaySections[dayIndex - 1]
+          const prevDaySection = daySections[dayIndex - 1]
           const prevDayItems = prevDaySection ? (prevDaySection.items || []) : []
           const prevDayLastShop = prevDayItems.length > 0 ? prevDayItems[prevDayItems.length - 1] : null
           dayStartPoint = prevDayLastShop 
@@ -382,36 +390,45 @@ Page({
       }
       
       // 标记每个地点属于第几天，并恢复之前设置的逐段交通方式
-      dayShops.forEach(s => {
+      const decoratedDayShops = dayShops.map(s => {
         s.dayIndex = dayIndex
         if (prevTravelModeMap[s.id]) {
           s.travelMode = prevTravelModeMap[s.id]
         }
+        return s
       })
 
       // 累加总距离
-      dayShops.forEach(s => { totalDist += s.distanceFromPrev || 0 })
+      decoratedDayShops.forEach(s => { totalDist += s.distanceFromPrev || 0 })
 
-      allRouteShops.push(...dayShops)
+      // 返回当天的 section（嵌套结构）
+      return {
+        ...daySection,
+        startPoint: dayStartPoint,
+        startPointText: dayIndex === 0 ? '当前所在位置' : '',
+        items: decorateRouteItems(decoratedDayShops)
+      }
     })
 
     this.setData({
       totalDistance: util.formatDistance(totalDist)
     })
 
-    const decoratedRouteShops = decorateRouteItems(allRouteShops)
+    // 计算总时间
     let totalMinutes = 0
-    decoratedRouteShops.forEach(item => {
-      const modeKey = (item.travelMeta && item.travelMeta.mode) || item.travelMode
-      const modeConfig = MODE_CONFIG[modeKey] || MODE_CONFIG.drive
-      totalMinutes += (Math.max(0, item.distanceFromPrev || 0) / 1000) * modeConfig.minutesPerKm
+    decoratedDaySections.forEach(day => {
+      (day.items || []).forEach(item => {
+        const modeKey = (item.travelMeta && item.travelMeta.mode) || item.travelMode
+        const modeConfig = MODE_CONFIG[modeKey] || MODE_CONFIG.drive
+        totalMinutes += (Math.max(0, item.distanceFromPrev || 0) / 1000) * modeConfig.minutesPerKm
+      })
     })
 
     this.setData({
       totalTime: formatDurationShort(totalMinutes)
     })
 
-    return decoratedRouteShops
+    return decoratedDaySections
   },
 
   // 自定义模式下，单独勾选或取消某个地点。
@@ -426,14 +443,15 @@ Page({
 
     this.setData({ allLikedShops, selectedCount, isAllSelected })
 
-    const routeShops = this._planRouteByDays(selectedShops)
+    const daySections = this._planRouteByDays(selectedShops)
+    const routeShops = flattenDaySections(daySections)
     const updated = allLikedShops.map(s => ({ ...s, orderNum: '' }))
     routeShops.forEach((s, i) => {
       const hit = updated.find(a => a.id === s.id)
       if (hit) hit.orderNum = i + 1
     })
 
-    this.setData({ allLikedShops: updated, routeShops })
+    this.setData({ allLikedShops: updated, daySections, routeShops })
     this.refreshPreviewRoute(routeShops)
     this.updateMap()
   },
@@ -448,16 +466,17 @@ Page({
     this.setData({ allLikedShops: updated, selectedCount, isAllSelected: newSelected })
 
     if (newSelected) {
-      const routeShops = this._planRouteByDays(updated)
+      const daySections = this._planRouteByDays(updated)
+      const routeShops = flattenDaySections(daySections)
       const withOrder = updated.map(s => ({ ...s, orderNum: '' }))
       routeShops.forEach((s, i) => {
         const hit = withOrder.find(a => a.id === s.id)
         if (hit) hit.orderNum = i + 1
       })
-      this.setData({ allLikedShops: withOrder, routeShops })
+      this.setData({ allLikedShops: withOrder, daySections, routeShops })
       this.refreshPreviewRoute(routeShops)
     } else {
-      this.setData({ routeShops: [], totalDistance: '0m', totalTime: '0分钟' })
+      this.setData({ daySections: [], routeShops: [], totalDistance: '0m', totalTime: '0分钟' })
       this.refreshPreviewRoute([])
     }
 
@@ -468,7 +487,7 @@ Page({
   onSelectMode(e) {
     const mode = e.currentTarget.dataset.mode
     console.log('[onSelectMode] 切换到模式:', mode, '当前 travelMode:', this.data.travelMode)
-    const routeShops = decorateRouteItems(this.data.routeShops, mode)
+    const routeShops = decorateRouteItems(flattenDaySections(this.data.daySections), mode)
     this.setData({ travelMode: mode, routeShops })
     console.log('[onSelectMode] setData 后 travelMode:', this.data.travelMode)
     this.refreshPreviewRoute(routeShops)
@@ -481,7 +500,7 @@ Page({
 
   // 打开某一段交通方式弹窗。
   openTransportSheet(dayIndex, itemIndex, previewIndex) {
-    const day = (this.data.routeDaySections || [])[dayIndex]
+    const day = (this.data.daySections || [])[dayIndex]
     const item = ((day || {}).items || [])[itemIndex]
     if (!item) return
     this.setData({
@@ -498,7 +517,7 @@ Page({
     console.log('[route] onOpenPlaceTransportSheet, dataset:', e.currentTarget.dataset)
     const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10)
     const itemIndex = parseInt(e.currentTarget.dataset.index, 10)
-    this.openTransportSheet(dayIndex, itemIndex, getPreviewIndexByDay(this.data.routeDaySections, dayIndex) + itemIndex)
+    this.openTransportSheet(dayIndex, itemIndex, getPreviewIndexByDay(this.data.daySections, dayIndex) + itemIndex)
   },
 
   // 地图模式里点击交通方式入口
@@ -532,18 +551,31 @@ Page({
   // 确认交通方式后，把结果写回对应地点
   onConfirmTransportMode() {
     console.log('[route] onConfirmTransportMode 开始')
-    const { transportTarget, transportTargetIndex, pendingTransportMode, routeShops, currentNavIndex, isNavigating } = this.data
+    const { transportTarget, transportTargetIndex, pendingTransportMode, daySections, currentNavIndex, isNavigating } = this.data
     console.log('[route] transportTarget:', transportTarget, 'transportTargetIndex:', transportTargetIndex, 'pendingTransportMode:', pendingTransportMode)
-    if (!transportTarget || transportTargetIndex < 0 || !routeShops[transportTargetIndex]) {
+    if (!transportTarget || transportTargetIndex < 0) {
       console.log('[route] onConfirmTransportMode 提前返回')
       return
     }
 
-    const nextRouteShops = (routeShops || []).map((item, index) => {
-      if (index !== transportTargetIndex) return item
-      return decorateRouteCardItem(applyTravelMeta(item, pendingTransportMode))
+    // 根据 transportTarget 中的 dayIndex 和 itemIndex 找到对应地点并修改
+    const { dayIndex, itemIndex } = transportTarget
+    const nextDaySections = daySections.map((day, dIdx) => {
+      if (dIdx !== dayIndex) return day
+      return {
+        ...day,
+        items: day.items.map((item, iIdx) => {
+          if (iIdx !== itemIndex) return item
+          return decorateRouteCardItem(applyTravelMeta(item, pendingTransportMode))
+        })
+      }
     })
+
+    // 重新计算 routeShops
+    const nextRouteShops = flattenDaySections(nextDaySections)
+
     const nextData = {
+      daySections: nextDaySections,
       routeShops: nextRouteShops,
       transportSheetVisible: false,
       transportTargetIndex: -1,
@@ -593,7 +625,7 @@ Page({
         this.setData({ currentLocation: location })
         if (this.data.currentStart.type === 'current') {
           this.setData({ currentStart: { ...this.data.currentStart, ...location } })
-          // 重新定位后同步刷新“当前所在位置（地址）”的显示。
+          // 重新定位后同步刷新"当前所在位置（地址）"的显示。
           this.syncCurrentStartAddress(location)
           this.loadRoute()
         }
@@ -619,9 +651,9 @@ Page({
     if (mode === 'map') {
       const mapDayIndex = this.data.currentTab > 0
         ? this.data.currentTab - 1
-        : (this.data.routeDaySections.length ? 0 : -1)
+        : (this.data.daySections.length ? 0 : -1)
       this.setData({ currentMapDay: mapDayIndex })
-      this.focusPreviewByIndex(mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.routeDaySections, mapDayIndex) : 0, mapDayIndex >= 0 ? mapDayIndex : undefined)
+      this.focusPreviewByIndex(mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, mapDayIndex) : 0, mapDayIndex >= 0 ? mapDayIndex : undefined)
       this.updateMap()
     }
   },
@@ -632,9 +664,9 @@ Page({
     const sheetScrollTarget = index === 0 ? 'route-overview-anchor' : `route-day-anchor-${index - 1}`
     this.setData({ currentTab: index, sheetScrollTarget })
     if (this.data.viewMode === 'map') {
-      const mapDayIndex = index > 0 ? index - 1 : (this.data.routeDaySections.length ? 0 : -1)
+      const mapDayIndex = index > 0 ? index - 1 : (this.data.daySections.length ? 0 : -1)
       this.setData({ currentMapDay: mapDayIndex })
-      this.focusPreviewByIndex(mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.routeDaySections, mapDayIndex) : 0, mapDayIndex >= 0 ? mapDayIndex : undefined)
+      this.focusPreviewByIndex(mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, mapDayIndex) : 0, mapDayIndex >= 0 ? mapDayIndex : undefined)
     }
   },
 
@@ -675,9 +707,9 @@ Page({
   onViewRoute() {
     const mapDayIndex = this.data.currentTab > 0
       ? this.data.currentTab - 1
-      : (this.data.routeDaySections.length ? 0 : -1)
+      : (this.data.daySections.length ? 0 : -1)
     this.setData({ viewMode: 'map', currentMapDay: mapDayIndex })
-    this.focusPreviewByIndex(mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.routeDaySections, mapDayIndex) : 0, mapDayIndex >= 0 ? mapDayIndex : undefined)
+    this.focusPreviewByIndex(mapDayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, mapDayIndex) : 0, mapDayIndex >= 0 ? mapDayIndex : undefined)
     this.updateMap()
   },
 
@@ -729,7 +761,7 @@ Page({
     const options = [{
       type: 'current',
       icon: 'mgc_aiming_2_line',
-        // 弹窗选项文案也统一成“当前所在位置”。
+        // 弹窗选项文案也统一成"当前所在位置"。
         label: '使用当前所在位置'
     }]
     if (dayIndex > 0) {
@@ -761,7 +793,7 @@ Page({
     })
   },
 
-  // 点击起点弹窗里的某个选项后立即执行，对齐当前页面其他“点选即确认”的弹窗规则。
+  // 点击起点弹窗里的某个选项后立即执行，对齐当前页面其他"点选即确认"的弹窗规则。
   onSelectDayStartOption(e) {
     const type = e.currentTarget.dataset.type
     const dayIndex = this.data.dayStartSheetDayIndex
@@ -831,12 +863,12 @@ Page({
     dayStartPoints[dayIndex] = {
       lat: startPoint.lat,
       lng: startPoint.lng,
-      // 如果当前定位名称不存在，兜底成统一文案“当前所在位置”。
+      // 如果当前定位名称不存在，兜底成统一文案"当前所在位置"。
       name: startPoint.name || '当前所在位置'
     }
 
     const dayStartPointTexts = [...this.data.dayStartPointTexts]
-    // 第一天下方地址和按钮状态都基于这里的文字，所以这里也统一成“当前所在位置”。
+    // 第一天下方地址和按钮状态都基于这里的文字，所以这里也统一成"当前所在位置"。
     dayStartPointTexts[dayIndex] = startPoint.name || '当前所在位置'
 
     this.setData({
@@ -844,7 +876,7 @@ Page({
       dayStartPointTexts
     })
 
-    // 更新 routeDaySections 中的 startPointText
+    // 更新 daySections 中的 startPointText
     this._updateDayStartPointTexts()
 
     // 重新规划路线
@@ -853,10 +885,10 @@ Page({
 
   // 设置起点为前一天最后一个地点
   _setDayStartToPrevDayEnd(dayIndex) {
-    const routeDaySections = this.data.routeDaySections
-    if (!routeDaySections || dayIndex <= 0 || dayIndex >= routeDaySections.length) return
+    const daySections = this.data.daySections
+    if (!daySections || dayIndex <= 0 || dayIndex >= daySections.length) return
 
-    const prevDaySection = routeDaySections[dayIndex - 1]
+    const prevDaySection = daySections[dayIndex - 1]
     const prevDayLastShop = prevDaySection.items[prevDaySection.items.length - 1]
     if (!prevDayLastShop) return
 
@@ -877,7 +909,7 @@ Page({
       dayStartPointTexts
     })
 
-    // 更新 routeDaySections 中的 startPointText
+    // 更新 daySections 中的 startPointText
     this._updateDayStartPointTexts()
 
     // 重新规划路线
@@ -905,7 +937,7 @@ Page({
           dayStartPointTexts
         })
 
-        // 更新 routeDaySections 中的 startPointText
+        // 更新 daySections 中的 startPointText
         this._updateDayStartPointTexts()
 
         // 重新规划路线
@@ -917,14 +949,14 @@ Page({
     })
   },
 
-  // 更新 routeDaySections 中的 startPointText
+  // 更新 daySections 中的 startPointText
   _updateDayStartPointTexts() {
-    const { routeDaySections, dayStartPointTexts } = this.data
-    if (!routeDaySections || !routeDaySections.length) return
+    const { daySections, dayStartPointTexts } = this.data
+    if (!daySections || !daySections.length) return
 
-    const updatedSections = routeDaySections.map((section, dayIndex) => {
-      // 第一天默认直接显示“当前所在位置”；
-      // 第二天及以后如果还没选，就保持空值，让模板走“选择起点”的未选择状态。
+    const updatedSections = daySections.map((section, dayIndex) => {
+      // 第一天默认直接显示"当前所在位置"；
+      // 第二天及以后如果还没选，就保持空值，让模板走"选择起点"的未选择状态。
       const defaultText = dayIndex === 0 ? '当前所在位置' : ''
       return {
         ...section,
@@ -933,7 +965,7 @@ Page({
     })
 
     this.setData({
-      routeDaySections: updatedSections
+      daySections: updatedSections
     })
   },
 
@@ -942,7 +974,8 @@ Page({
     const { selectMode, rawItems, presetIds } = this.data
     
     if (selectMode === 'all') {
-      const routeShops = this._planRouteByDays(rawItems, presetIds ? true : false)
+      const daySections = this._planRouteByDays(rawItems, presetIds ? true : false)
+      const routeShops = flattenDaySections(daySections)
       // 更新 orderNum
       const allLikedShops = this.data.allLikedShops
       allLikedShops.forEach(s => { s.orderNum = '' })
@@ -951,6 +984,7 @@ Page({
         if (hit) hit.orderNum = i + 1
       })
       this.setData({
+        daySections,
         routeShops,
         allLikedShops: [...allLikedShops]
       })
@@ -958,13 +992,15 @@ Page({
     } else {
       const allLikedShops = this.data.allLikedShops
       const selectedShops = allLikedShops.filter(s => s.selected)
-      const routeShops = this._planRouteByDays(selectedShops)
+      const daySections = this._planRouteByDays(selectedShops)
+      const routeShops = flattenDaySections(daySections)
       allLikedShops.forEach(s => { s.orderNum = '' })
       routeShops.forEach((s, i) => {
         const hit = allLikedShops.find(a => a.id === s.id)
         if (hit) hit.orderNum = i + 1
       })
       this.setData({
+        daySections,
         routeShops,
         allLikedShops: [...allLikedShops]
       })

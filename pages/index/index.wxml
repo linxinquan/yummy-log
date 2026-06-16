@@ -142,14 +142,14 @@
               <!-- 左侧封面区：图片、兜底占位、封面角标都放这里 -->
               <view class="card-img-wrap">
                 <image
-                  wx:if="{{item.displayImage}}"
+                  wx:if="{{item.coverImage}}"
                   class="card-img"
-                  src="{{item.displayImage}}"
+                  src="{{item.coverImage}}"
                   mode="aspectFill"
                   binderror="onImageError"
                   data-index="{{index}}"
                 />
-                <view wx:if="{{!item.displayImage}}" class="shop-emoji-placeholder">
+                <view wx:if="{{!item.coverImage}}" class="shop-emoji-placeholder">
                   <i class="mgc_sparkles_line shop-emoji"></i>
                 </view>
                 <view class="card-cat-badge" wx:if="{{item.displayCategory}}">{{item.displayCategory}}</view>

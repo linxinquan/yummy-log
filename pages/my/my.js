@@ -71,7 +71,11 @@ Page({
 
     // 登录临时数据（直接在页面上设置）
     loginAvatarUrl: '',
-    loginNickname: ''
+    loginNickname: '',
+
+    // 登录弹窗
+    showLoginModal: false,
+    isAgreePrivacy: false
   },
 
   // 页面初始化：加载用户信息、统计数据、行政区和天气。
@@ -91,6 +95,121 @@ Page({
     this.loadUserInfo()
     this.loadData()
     this.loadCheckinStats()
+  },
+
+  // ========== 登录弹窗相关方法 ==========
+
+  // 显示登录弹窗
+  showLoginModal() {
+    this.setData({
+      showLoginModal: true,
+      isAgreePrivacy: false
+    })
+  },
+
+  // 隐藏登录弹窗
+  hideLoginModal() {
+    this.setData({
+      showLoginModal: false
+    })
+  },
+
+  // 点击弹窗遮罩层关闭
+  onModalMaskTap() {
+    this.hideLoginModal()
+  },
+
+  // 阻止弹窗内容点击冒泡
+  onModalContentTap() {
+    // 什么都不做，只是阻止冒泡
+  },
+
+  // 切换隐私协议勾选状态
+  togglePrivacyAgreement() {
+    this.setData({
+      isAgreePrivacy: !this.data.isAgreePrivacy
+    })
+  },
+
+  // 点击隐私协议
+  onTapPrivacyPolicy() {
+    wx.navigateTo({
+      url: '/subpackages/extra/pages/privacy/privacy'
+    })
+  },
+
+  // 点击用户协议
+  onTapUserAgreement() {
+    wx.navigateTo({
+      url: '/subpackages/extra/pages/agreement/agreement'
+    })
+  },
+
+  // 微信登录
+  async onWechatLogin() {
+    if (!this.data.isAgreePrivacy) {
+      wx.showToast({
+        title: '请先同意隐私协议',
+        icon: 'none'
+      })
+      return
+    }
+
+    wx.showLoading({ title: '登录中...' })
+
+    try {
+      // 获取微信用户信息
+      const profileRes = await wx.getUserProfile({
+        desc: '用于完善用户资料'
+      })
+
+      const { nickName, avatarUrl } = profileRes.userInfo
+
+      // 调用云函数登录
+      const res = await wx.cloud.callFunction({
+        name: 'login',
+        data: {
+          nickName: nickName,
+          avatarUrl: avatarUrl
+        }
+      })
+
+      if (res.result.success) {
+        const userInfo = res.result.user
+
+        // 保存到本地
+        util.saveData('userInfo', userInfo)
+
+        // 更新页面状态
+        this.setData({
+          isLoggedIn: true,
+          userInfo: userInfo,
+          nickName: userInfo.nickName,
+          avatarUrl: userInfo.avatarUrl || getRandomProfileImage(),
+          hasNickname: true,
+          hasAvatar: true,
+          showLoginModal: false
+        })
+
+        // 如果是新用户，询问是否同步本地数据
+        if (res.result.isNew) {
+          this.askSyncData()
+        }
+
+        wx.showToast({ title: '登录成功', icon: 'success' })
+      } else {
+        wx.showToast({ title: res.result.error || '登录失败', icon: 'none' })
+      }
+    } catch (err) {
+      console.error('[my.js] 微信登录失败:', err)
+      if (err.errMsg && err.errMsg.includes('deny')) {
+        wx.showToast({ title: '您拒绝了授权', icon: 'none' })
+      } else {
+        wx.showToast({ title: '登录失败，请重试', icon: 'none' })
+      }
+    } finally {
+      wx.hideLoading()
+    }
   },
 
   // 读取打卡统计、最近邮票、地图点位这些"足迹"相关数据。
@@ -450,6 +569,62 @@ Page({
       wx.showToast({ title: '登录失败，请重试', icon: 'none' })
     } finally {
       wx.hideLoading()
+    }
+  },
+
+  // 更新昵称
+  async onUpdateNickname(e) {
+    const newNickName = e.detail.value
+    if (!newNickName || newNickName === this.data.userInfo.nickName) {
+      return
+    }
+
+    try {
+      const db = wx.cloud.database()
+      await db.collection('users').doc(this.data.userInfo._id).update({
+        data: {
+          nickName: newNickName,
+          updatedAt: db.serverDate()
+        }
+      })
+
+      // 更新本地数据
+      const userInfo = { ...this.data.userInfo, nickName: newNickName }
+      util.saveData('userInfo', userInfo)
+      this.setData({ userInfo, nickName: newNickName })
+
+      wx.showToast({ title: '昵称已更新', icon: 'success' })
+    } catch (err) {
+      console.error('[my.js] 更新昵称失败:', err)
+      wx.showToast({ title: '更新失败', icon: 'none' })
+    }
+  },
+
+  // 更新头像
+  async onUpdateAvatar(e) {
+    const newAvatarUrl = e.detail.avatarUrl
+    if (!newAvatarUrl || newAvatarUrl === this.data.userInfo.avatarUrl) {
+      return
+    }
+
+    try {
+      const db = wx.cloud.database()
+      await db.collection('users').doc(this.data.userInfo._id).update({
+        data: {
+          avatarUrl: newAvatarUrl,
+          updatedAt: db.serverDate()
+        }
+      })
+
+      // 更新本地数据
+      const userInfo = { ...this.data.userInfo, avatarUrl: newAvatarUrl }
+      util.saveData('userInfo', userInfo)
+      this.setData({ userInfo, avatarUrl: newAvatarUrl })
+
+      wx.showToast({ title: '头像已更新', icon: 'success' })
+    } catch (err) {
+      console.error('[my.js] 更新头像失败:', err)
+      wx.showToast({ title: '更新失败', icon: 'none' })
     }
   },
 

@@ -108,7 +108,7 @@
               </view>
             </view>
 
-            <view class="tab-sticky-wrap" wx:if="{{routeDaySections.length > 0}}">
+            <view class="tab-sticky-wrap" wx:if="{{daySections.length > 0}}">
               <scroll-view class="tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
                 <view class="tab-row">
                   <view
@@ -155,7 +155,7 @@
                 </view>
               </view>
 
-              <block wx:if="{{routeDaySections.length > 0}}">
+              <block wx:if="{{daySections.length > 0}}">
                 <view class="overview-anchor" id="route-overview-anchor"></view>
                 <!-- 概览区：按天快速浏览 -->
                 <view class="overview-section" wx:if="{{!isEditing}}">
@@ -163,7 +163,7 @@
                   <view class="overview-list">
                     <view
                       class="overview-card"
-                      wx:for="{{routeDaySections}}"
+                      wx:for="{{daySections}}"
                       wx:key="id"
                     >
                       <text class="overview-card-day">{{item.title}}</text>
@@ -185,7 +185,7 @@
 
                 <view
                   class="day-section"
-                  wx:for="{{routeDaySections}}"
+                  wx:for="{{daySections}}"
                   wx:key="id"
                   id="route-day-section-{{index}}"
                 >
@@ -285,7 +285,7 @@
 
                   <!-- 每一天结束后补回分割条：
                   只有最后一天不显示，保证“第一天/第二天/第三天”之间的分隔和其他详情页保持一致。 -->
-                  <view class="day-separator" wx:if="{{index < routeDaySections.length - 1}}"></view>
+                  <view class="day-separator" wx:if="{{index < daySections.length - 1}}"></view>
                 </view>
               </block>
 

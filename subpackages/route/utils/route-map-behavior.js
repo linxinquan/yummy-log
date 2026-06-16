@@ -23,7 +23,7 @@ module.exports = Behavior({
       
       // 根据 currentMapDay 决定显示哪一天的路线
       const effectiveDayIndex = this.data.currentMapDay >= 0 ? this.data.currentMapDay : 0
-      const currentDaySection = (this.data.routeDaySections || [])[effectiveDayIndex] || {}
+      const currentDaySection = (this.data.daySections || [])[effectiveDayIndex] || {}
       const routeShops = (currentDaySection.items || []).length ? currentDaySection.items : (this.data.routeShops || [])
       
       if (routeShops.length === 0) {
@@ -71,10 +71,23 @@ module.exports = Behavior({
       }
 
     const markers = routeShops.map((shop, index) => {
+      // 防御性代码：确保经纬度不是 NaN
+      let lat = 0, lng = 0
+      if (typeof shop.lat === 'number' && !isNaN(shop.lat)) {
+        lat = shop.lat
+      } else if (typeof shop.latitude === 'number' && !isNaN(shop.latitude)) {
+        lat = shop.latitude
+      }
+      if (typeof shop.lng === 'number' && !isNaN(shop.lng)) {
+        lng = shop.lng
+      } else if (typeof shop.longitude === 'number' && !isNaN(shop.longitude)) {
+        lng = shop.longitude
+      }
+      
       return {
         id: shop.id,
-        latitude: shop.lat || shop.latitude,
-        longitude: shop.lng || shop.longitude,
+        latitude: lat,
+        longitude: lng,
         // 地图模式只保留数字顺序，不再显示分类图片底图，
         // 避免分类图标和数字标签叠在一起发生冲突。
         label: {
@@ -146,7 +159,13 @@ module.exports = Behavior({
       // 构建所有途经点（起点 + 各店铺，不返回起点）
       const allPoints = [
         { latitude: startPoint.lat, longitude: startPoint.lng },
-        ...routeShops.map(shop => ({ latitude: shop.lat || shop.latitude, longitude: shop.lng || shop.longitude }))
+        ...routeShops.map(shop => { 
+          let lat = typeof shop.lat === 'number' && !isNaN(shop.lat) ? shop.lat : 
+                   typeof shop.latitude === 'number' && !isNaN(shop.latitude) ? shop.latitude : 0
+          let lng = typeof shop.lng === 'number' && !isNaN(shop.lng) ? shop.lng : 
+                   typeof shop.longitude === 'number' && !isNaN(shop.longitude) ? shop.longitude : 0
+          return { latitude: lat, longitude: lng }
+        })
       ]
       
       // 调试：打印 allPoints 数据
@@ -185,14 +204,17 @@ module.exports = Behavior({
     // 让地图自动缩放到能看见当前路线的全部点位。
     onFitRoute() {
       const effectiveDayIndex = this.data.currentMapDay >= 0 ? this.data.currentMapDay : 0
-      const currentDaySection = (this.data.routeDaySections || [])[effectiveDayIndex] || {}
+      const currentDaySection = (this.data.daySections || [])[effectiveDayIndex] || {}
       const currentItems = (currentDaySection.items || []).length ? currentDaySection.items : (this.data.routeShops || [])
       if (currentItems.length === 0) return
       const points = currentItems
-        .map(item => ({
-          latitude: item.lat || item.latitude,
-          longitude: item.lng || item.longitude
-        }))
+        .map(item => {
+          let lat = typeof item.lat === 'number' && !isNaN(item.lat) ? item.lat : 
+                   typeof item.latitude === 'number' && !isNaN(item.latitude) ? item.latitude : 0
+          let lng = typeof item.lng === 'number' && !isNaN(item.lng) ? item.lng : 
+                   typeof item.longitude === 'number' && !isNaN(item.longitude) ? item.longitude : 0
+          return { latitude: lat, longitude: lng }
+        })
         .filter(item => typeof item.latitude === 'number' && typeof item.longitude === 'number')
       if (!points.length) return
 
@@ -242,9 +264,13 @@ module.exports = Behavior({
         polyline
       }
       if (focusShop) {
+        let lat = typeof focusShop.lat === 'number' && !isNaN(focusShop.lat) ? focusShop.lat : 
+                 typeof focusShop.latitude === 'number' && !isNaN(focusShop.latitude) ? focusShop.latitude : 0
+        let lng = typeof focusShop.lng === 'number' && !isNaN(focusShop.lng) ? focusShop.lng : 
+                 typeof focusShop.longitude === 'number' && !isNaN(focusShop.longitude) ? focusShop.longitude : 0
         setDataPayload.mapCenter = {
-          lat: focusShop.lat || focusShop.latitude,
-          lng: focusShop.lng || focusShop.longitude
+          lat: lat,
+          lng: lng
         }
       }
 

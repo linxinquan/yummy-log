@@ -132,7 +132,7 @@ Page({
         // 城市和区域都无匹配，直接返回空结果
         this.setData({
           nearbyShops: [],
-          displayAvatars: [spot.image || '/images/app-logo.jpg'].slice(0, 6)
+          displayAvatars: [spot.coverImage || '/images/app-logo.jpg'].slice(0, 6)
         })
         return
       }
@@ -145,7 +145,7 @@ Page({
         ...s,
         dist: util.getDistance(spot.lat, spot.lng, s.lat || s.latitude, s.lng || s.longitude),
         distText: '',
-        coverImage: s.logo || s.image || s.thumb || '/images/app-logo.jpg'
+        coverImage: s.coverImage || '/images/app-logo.jpg'
       }))
       .filter(s => s.dist <= 5000) // 只保留 5 公里内的地点
       .sort((a, b) => a.dist - b.dist) // 离得近的排前面
@@ -158,7 +158,7 @@ Page({
     // 顶部头像组直接复用附近美食或景点本身的封面图。
     const displayAvatars = [
       ...nearby.map(item => item.coverImage).filter(Boolean),
-      spot.image || '/images/app-logo.jpg'
+      spot.coverImage || '/images/app-logo.jpg'
     ].slice(0, 6)
 
     this.setData({

@@ -2,19 +2,8 @@
 // 预览相关行为的 Behavior
 // 包含：预览路线、焦点切换、预览卡片更新等功能
 const { buildMapPreviewViewData } = require('../../../utils/map-preview')
-const { getPreviewIndexByDay, getCityInfo, buildTabs, buildSummaryText, buildPreviewTitle, buildPreviewDaySections } = require('../../../utils/routeHelper')
+const { getPreviewIndexByDay, getCityInfo, buildTabs, buildSummaryText, buildPreviewTitle, buildPreviewDaySections, getDayIndexByPreview } = require('../../../utils/routeHelper')
 
-// 根据预览下标反推属于第几天。
-function getDayIndexByPreview(routeDaySections, previewIndex) {
-  if (!routeDaySections || !routeDaySections.length) return -1
-  let offset = 0
-  for (let i = 0; i < routeDaySections.length; i += 1) {
-    const count = (routeDaySections[i].items || []).length
-    if (previewIndex < offset + count) return i
-    offset += count
-  }
-  return routeDaySections.length - 1
-}
 
 module.exports = Behavior({
   data: {
@@ -35,14 +24,14 @@ methods: {
       ...(routeShops || []).map(item => item.city || item.address || item.name)
     ].filter(Boolean).join(' ')
     const cityInfo = getCityInfo(citySource)
-    const routeDaySections = routeShops.length ? buildPreviewDaySections(routeShops, this.data.preferredDayCount) : []
+    const daySections = routeShops.length ? buildPreviewDaySections(routeShops, this.data.preferredDayCount) : []
     
     // 保留之前的 startPointText（如果有）：
-    // 第一天默认文案统一成“当前所在位置”；
-    // 第二天及以后默认留空，避免把“设置起点”误当成真实地址显示出来。
-    const prevDaySections = this.data.routeDaySections || []
+    // 第一天默认文案统一成"当前所在位置"；
+    // 第二天及以后默认留空，避免把"设置起点"误当成真实地址显示出来。
+    const prevDaySections = this.data.daySections || []
     const dayStartPointTexts = this.data.dayStartPointTexts || []
-    const updatedSections = routeDaySections.map((section, dayIndex) => {
+    const updatedSections = daySections.map((section, dayIndex) => {
       const prevSection = prevDaySections[dayIndex]
       const defaultText = dayIndex === 0 ? '当前所在位置' : ''
       return {
@@ -53,7 +42,7 @@ methods: {
     
     const tabs = updatedSections.length ? buildTabs(updatedSections.length) : []
     this.setData({
-      routeDaySections: updatedSections,
+      daySections: updatedSections,
       tabs,
       currentTab: 0,
       currentMapDay: -1,
@@ -69,7 +58,7 @@ methods: {
   },
   // 根据预览下标聚焦当前地点，并刷新顶部预览卡片
   focusPreviewByIndex(index, currentDayOverride) {
-    const { routeShops, routeDaySections } = this.data
+    const { routeShops, daySections } = this.data
     if (!routeShops.length) return
     const parsedIndex = parseInt(index, 10)
     if (Number.isNaN(parsedIndex)) return
@@ -77,9 +66,9 @@ methods: {
     const target = routeShops[safeIndex]
     const resolvedDayIndex = typeof currentDayOverride === 'number'
       ? currentDayOverride
-      : getDayIndexByPreview(routeDaySections, safeIndex)
+      : getDayIndexByPreview(daySections, safeIndex)
     const previewViewData = buildMapPreviewViewData(
-      routeDaySections,
+      daySections,
       resolvedDayIndex,
       safeIndex,
       target,
@@ -104,7 +93,7 @@ methods: {
     )
     this.setData({ currentMapDay: dayIndex })
     this.focusPreviewByIndex(
-      dayIndex >= 0 ? getPreviewIndexByDay(this.data.routeDaySections, dayIndex) : 0,
+      dayIndex >= 0 ? getPreviewIndexByDay(this.data.daySections, dayIndex) : 0,
       dayIndex
     )
     // 用 setTimeout 确保 focusPreviewByIndex 里的 setData 完成后，updateMap 能读到最新的 currentMapDay
@@ -118,7 +107,7 @@ methods: {
       10
     )
     if (Number.isNaN(nextIndex)) return
-    const nextDayIndex = getDayIndexByPreview(this.data.routeDaySections, nextIndex)
+    const nextDayIndex = getDayIndexByPreview(this.data.daySections, nextIndex)
     // 在 focusPreviewByIndex 之前保存旧值，因为 setData 会同步更新 this.data
     const oldMapDay = this.data.currentMapDay
     this.focusPreviewByIndex(nextIndex, nextDayIndex)

@@ -26,7 +26,7 @@ methods: {
         if (this.data.isEditing) return
         const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10)
         const itemIndex = parseInt(e.currentTarget.dataset.index, 10)
-        const day = (this.data.routeDaySections || [])[dayIndex]
+        const day = (this.data.daySections || [])[dayIndex]
         const item = ((day || {}).items || [])[itemIndex]
         if (!item) return
         this.setData({
@@ -48,7 +48,7 @@ methods: {
         if (this.data.isEditing) return
         const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10)
         const itemIndex = parseInt(e.currentTarget.dataset.index, 10)
-        const day = (this.data.routeDaySections || [])[dayIndex]
+        const day = (this.data.daySections || [])[dayIndex]
         const item = ((day || {}).items || [])[itemIndex]
         if (!item) return
         this.setData({

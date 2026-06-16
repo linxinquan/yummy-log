@@ -146,16 +146,12 @@ function buildRouteCoverPool() {
 function resolveRouteCardCover(item, index = 0) {
   const daySectionCover = (item.daySections || []).reduce((cover, day) => {
     if (cover) return cover
-    const firstItem = (day.items || []).find(place => place && (place.coverImage || place.image))
-    return firstItem ? (firstItem.coverImage || firstItem.image || firstItem.logo) : ''
+    const firstItem = (day.items || []).find(place => place && place.coverImage)
+    return firstItem ? firstItem.coverImage : ''
   }, '')
-  const dayDetailCover = (item.dayDetails || []).reduce((cover, day) => {
-    if (cover) return cover
-    const firstItem = (day || []).find(place => place && (place.coverImage || place.image))
-    return firstItem ? (firstItem.coverImage || firstItem.image || firstItem.logo) : ''
-  }, '')
+
   const localPool = buildRouteCoverPool()
-  return item.coverImage || item.displayImage || daySectionCover || dayDetailCover || localPool[index % localPool.length] || DEFAULT_COVER
+  return item.coverImage || daySectionCover || localPool[index % localPool.length]
 }
 
 // 把"我的路线"里的原始数据整理成列表卡片需要的字段。
@@ -196,8 +192,8 @@ function normalizeGuideDaySections(daySections) {
         : [item.tag || item.tagText || displayCategory].filter(Boolean).slice(0, 2)
       return {
         ...item,
-        image: item.image || item.coverImage || item.logo || DEFAULT_COVER,
-        coverImage: item.coverImage || item.image || item.logo || DEFAULT_COVER,
+        image: item.coverImage || DEFAULT_COVER,
+        coverImage: item.coverImage || DEFAULT_COVER,
         displayCategory,
         rating: item.rating || item.score || '',
         tags: safeTags,
@@ -228,7 +224,7 @@ function buildGuideDraftFromRoute(route, copy = false) {
     id: `guide-${Date.now()}-${copy ? 'copy' : 'publish'}`,
     routeId: route.id,
     title,
-    coverImage: route.coverImage || route.image || DEFAULT_COVER,
+    coverImage: route.coverImage || DEFAULT_COVER,
     content: flatContent,
     daySections,
     date: Date.now(),
@@ -434,6 +430,7 @@ Page({
         return {
           ...item,
           subtitle: normalizeTripSummaryText(item.subtitle, fallbackDayCount, fallbackPlaceCount),
+          // TODO: 看看非image不可？
           image: item.image || routeCover,
           coverImage: routeCover
         }
