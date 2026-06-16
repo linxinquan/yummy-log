@@ -100,7 +100,7 @@ Page({
           const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2)
           return {
             ...item,
-            displayImage: item.coverImage,
+            coverImage: item.coverImage,
             displayCategory: resolveDisplayCategory(item),
             displayWantCount: formatWantCount(item.wantCount),
             distance,
@@ -134,13 +134,7 @@ Page({
     const item = e.currentTarget.dataset.item
     if (!item) return
 
-    if (item.type === 'spot') {
-      wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${item.id}` })
-    } else {
-      wx.navigateTo({
-        url: `/subpackages/extra/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(item))}`
-      })
-    }
+    wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${item.id}` })
   },
 
   // 取消收藏
@@ -169,7 +163,7 @@ Page({
   // 图片加载失败
   onImageError(e) {
     const index = e.currentTarget.dataset.index
-    const key = `allList[${index}].displayImage`
+    const key = `allList[${index}].coverImage`
     this.setData({ [key]: '/images/app-logo.jpg' })
   }
 })

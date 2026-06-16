@@ -1,3 +1,0 @@
-/* 美食详情页样式直接复用景点详情页 */
-/* 这样只维护一套样式即可 */
-@import "../spot-detail/spot-detail.wxss";

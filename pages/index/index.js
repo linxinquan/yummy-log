@@ -499,11 +499,7 @@ Page({
   // 点击列表卡片：根据类型进入景点详情或美食详情
   onItemTap(e) {
     const item = e.currentTarget.dataset.item
-    if (item.type === 'spot') {
-      wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${item.id}` })
-    } else {
-      wx.navigateTo({ url: `/subpackages/extra/pages/shop-detail/shop-detail?shopData=${encodeURIComponent(JSON.stringify(item))}` })
-    }
+    wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${item.id}` })
   },
 
   // 点击地图上的标记点，等同于点击对应的列表卡片

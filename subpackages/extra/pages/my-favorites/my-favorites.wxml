@@ -32,7 +32,7 @@
         <view class="card-img-wrap">
           <image 
             class="card-img" 
-            src="{{item.displayImage}}" 
+            src="{{item.coverImage}}" 
             mode="aspectFill"
             binderror="onImageError"
             data-index="{{index}}"

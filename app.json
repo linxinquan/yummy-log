@@ -38,7 +38,6 @@
       "root": "subpackages/extra",
       "name": "extra",
       "pages": [
-        "pages/shop-detail/shop-detail",
         "pages/spot-detail/spot-detail",
         "pages/collection/collection",
         "pages/link-import/link-import",

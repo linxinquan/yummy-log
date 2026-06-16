@@ -1,7 +1,7 @@
 <view class="container" wx:if="{{spot}}">
   <!-- ── 顶部图片区 ── -->
   <view class="hero-wrap">
-    <image class="hero-img" src="{{spot.image || spot.coverImage}}" mode="aspectFill" />
+    <image class="hero-img" src="{{spot.coverImage}}" mode="aspectFill" />
     
     <!-- 自定义导航栏按钮 -->
     <view class="top-bar" style="top: {{menuTop}}px; height: {{menuHeight}}px;">

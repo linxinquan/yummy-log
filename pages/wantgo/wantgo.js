@@ -274,18 +274,12 @@ function getEmptyStateMeta(tab) {
 // 足迹里如果是"系统未收录但用户采集过的地点"，就把完整对象直接带去详情页。
 function openPlaceDetail(item) {
   if (!item) return
-  if (item.type === 'spot') {
-    if (item.detailSource === 'record') {
-      const spotStr = encodeURIComponent(JSON.stringify(item))
-      wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?spotData=${spotStr}` })
-      return
-    }
-    wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${item.id}` })
+  if (item.detailSource === 'record') {
+    const spotStr = encodeURIComponent(JSON.stringify(item))
+    wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?spotData=${spotStr}` })
     return
   }
-
-  const shopStr = encodeURIComponent(JSON.stringify(item))
-  wx.navigateTo({ url: `/subpackages/extra/pages/shop-detail/shop-detail?shopData=${shopStr}&id=${item.id}` })
+  wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${item.id}` })
 }
 
 Page({

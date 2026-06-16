@@ -1,13 +1,10 @@
-// 觅食图 V1 - 景点详情页逻辑
-// 这个页面负责：展示景点详情、底部附近美食、收藏/想去、导航和去规划路线。
+// 觅食图 - 地点详情页（统一美食和景点）
 const app = getApp()
 const util = require('../../../../utils/util')
 const placesData = require('../../../../utils/placesData')
+const { DEFAULT_FOOD_COVERS } = require('../../../../config/cover-pool')
 
-// 统一生成景点详情页要显示的地址文案：
-// 1. 优先使用真实 address
-// 2. 兼容少量历史字段名
-// 3. 如果都没有，就回退到“城市/区域 + 名称”，避免页面只剩“地址”标题没有内容
+// 统一生成地址文案
 function resolveSpotAddress(spot = {}) {
   return (
     spot.address ||
@@ -18,20 +15,44 @@ function resolveSpotAddress(spot = {}) {
   )
 }
 
-// 统一解析景点详情入参：
-// 既支持传统 id，也支持足迹里传进来的完整 spotData。
-function resolveSpot(options = {}) {
+// 统一解析详情页入参：支持 spot/spotData/shop/shopData/id 多种格式
+function resolveItem(options = {}) {
   if (options.spotData) {
     return JSON.parse(decodeURIComponent(options.spotData))
   }
   if (options.spot) {
     return JSON.parse(decodeURIComponent(options.spot))
   }
-  const id = parseInt(options.id, 10)
-  if (!Number.isNaN(id)) {
-    return placesData.getPlaceById(id) || null
+  if (options.shop) {
+    return JSON.parse(decodeURIComponent(options.shop))
+  }
+  if (options.shopData) {
+    return JSON.parse(decodeURIComponent(options.shopData))
+  }
+  if (options.id !== undefined) {
+    const id = String(options.id)
+    // 先从 placesData 查（涵盖美食+景点）
+    const place = placesData.getPlaceById(id)
+    if (place) return place
+    // 查用户添加的店铺
+    const userAddedShops = util.loadData('userAddedShops', [])
+    return userAddedShops.find(item => String(item.id) === id) || null
   }
   return null
+}
+
+// 判断是否美食类地点
+function isFoodItem(item) {
+  if (item.type === 'food') return true
+  if (item.type === 'spot') return false
+  // 无 type 时通过 category 推断
+  return item.category !== '景点' && item.category !== '公园'
+}
+
+// 给推荐菜准备封面图池
+function buildCoverPool(currentCover) {
+  const foodCovers = DEFAULT_FOOD_COVERS
+  return [...new Set([currentCover, ...foodCovers].filter(Boolean))]
 }
 
 Page({
@@ -45,14 +66,18 @@ Page({
     secondaryTag: '',
     wantStatText: '',
     openTimeText: '',
+    phoneText: '',
+    relatedItems: [],
+    relatedSectionTitle: '附近美食',
+    showRelatedMore: true,
+    showDesc: true,
+    showDivider: true,
     navMapSheetVisible: false,
-    navMapTarget: null
+    navMapTarget: null,
+    addressText: '',
+    isFoodDetail: false
   },
 
-  // 页面初始化：
-  // 1. 读取景点 id
-  // 2. 组装详情页需要的数据
-  // 3. 加载附近美食和用户状态
   onLoad(options) {
     const windowInfo = wx.getWindowInfo()
     const menuButtonInfo = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
@@ -62,26 +87,34 @@ Page({
       ? Math.max(windowInfo.windowWidth - menuButtonInfo.left + 8, 24)
       : 103
 
-    // 优先读取真实入参；没有入参时，才回退到默认景点。
-    const sourceSpot = resolveSpot(options) || placesData.getSpots()[0]
-    const spot = sourceSpot ? {
-      ...sourceSpot,
-      wantCount: sourceSpot.wantCount || 4232
-    } : null
-    if (!spot) {
-      wx.showToast({ title: '景点不存在', icon: 'none' })
+    const sourceItem = resolveItem(options)
+    if (!sourceItem) {
+      wx.showToast({ title: '地点不存在', icon: 'none' })
       setTimeout(() => wx.navigateBack(), 1500)
       return
     }
 
-    // 读取当前用户对这个景点的状态：是否想去、是否收藏。
-    const isLiked = util.isWant(spot.id)
-    const isCollected = util.loadData('userCollectedSpots', []).some(id => String(id) === String(spot.id))
-    // 地址显示、复制地址、系统导航统一使用同一份兜底后的文案，避免页面和弹窗出现不一致。
-    const addressText = resolveSpotAddress(spot)
+    const isFood = isFoodItem(sourceItem)
+    const spot = {
+      ...sourceItem,
+      coverImage: sourceItem.coverImage || '/images/app-logo.jpg',
+      wantCount: sourceItem.wantCount || 4232,
+      category: sourceItem.category || (isFood ? '美食' : '景点')
+    }
 
-    this.setData({ 
-      spot, 
+    const addressText = resolveSpotAddress(spot)
+    const hoursText = spot.openHours || (isFood ? '暂无营业时间' : '全天')
+    const priceText = isFood
+      ? (spot.avgPrice ? `￥${spot.avgPrice}/人` : '暂无均价')
+      : ((spot.free || !spot.avgPrice) ? '免费' : '收费')
+    const phoneText = isFood ? (spot.phone || '') : ''
+
+    const isLiked = util.isWant(spot.id)
+    const collectedKey = isFood ? 'userCollectedFoods' : 'userCollectedSpots'
+    const isCollected = util.loadData(collectedKey, []).some(id => String(id) === String(spot.id))
+
+    this.setData({
+      spot,
       addressText,
       mapMarkers: [],
       isLiked,
@@ -89,47 +122,70 @@ Page({
       menuTop,
       menuHeight,
       menuRightInset,
-      secondaryTag: (spot.tags && spot.tags[0]) || spot.district || '热门地点',
-      wantStatText: `${spot.wantCount || 4232} 人想去 · 883m`,
-      openTimeText: `营业时间：${spot.openHours || '全天'} · ${spot.free ? '免费' : '收费'}`
+      secondaryTag: (spot.tags && spot.tags[0]) || spot.district || (isFood ? '热门店铺' : '热门地点'),
+      wantStatText: `${spot.wantCount || 4232} 人想去`,
+      openTimeText: `营业时间：${hoursText} · ${priceText}`,
+      phoneText,
+      showDesc: !isFood,
+      showDivider: !isFood,
+      relatedSectionTitle: isFood ? '推荐菜' : '附近美食',
+      showRelatedMore: !isFood,
+      relatedItems: [],
+      isFoodDetail: isFood
     })
-    wx.setNavigationBarTitle({ title: spot.name })
 
-    this._loadNearbyShops(spot)
+    wx.setNavigationBarTitle({ title: spot.name || '地点详情' })
+    this.initMap(spot)
+    this._loadNearbyShops(spot, isFood)
   },
 
-  // 读取景点附近的美食卡片。
-  // 优化：先按城市和区域粗筛，再计算距离，减少计算量。
-  _loadNearbyShops(spot) {
-    // 把系统内置美食和用户自己添加的店一起纳入附近美食候选池。
+  initMap(spot) {
+    this.setData({
+      mapMarkers: [{
+        id: spot.id,
+        latitude: spot.lat || spot.latitude,
+        longitude: spot.lng || spot.longitude,
+        width: 36,
+        height: 36
+      }]
+    })
+  },
+
+  // 加载相关项：美食显示推荐菜，景点显示附近美食
+  _loadNearbyShops(spot, isFood) {
+    if (isFood) {
+      const coverPool = buildCoverPool(spot.image || spot.coverImage)
+      const dishes = spot.dishes || []
+      const relatedItems = dishes.map((name, index) => ({
+        name,
+        coverImage: coverPool[index % coverPool.length] || '/images/app-logo.jpg'
+      }))
+      const displayAvatars = coverPool.slice(0, 6)
+
+      this.setData({ relatedItems, nearbyShops: [], displayAvatars })
+      return
+    }
+
+    // 景点：附近美食
     const userAddedShops = util.loadData('userAddedShops', [])
     const allShops = [...placesData.getFoods(), ...userAddedShops]
-    
-    // 第一步：城市和区域粗筛（快速过滤，减少后续距离计算量）
     let candidates = allShops
-    
-    // 优先使用城市+区域筛选，无结果则降级为仅城市筛选
+
     if (spot.city || spot.district) {
-      // 尝试1：城市+区域筛选
       let filtered = allShops.filter(s => {
         if (spot.city && s.city && s.city !== spot.city) return false
         if (spot.district && s.district && s.district !== spot.district) return false
         return true
       })
-      
-      // 尝试2：如果城市+区域无结果，降级为仅城市筛选
       if (filtered.length === 0 && spot.city) {
         filtered = allShops.filter(s => {
           if (s.city && s.city !== spot.city) return false
           return true
         })
       }
-      
-      // 如果筛选后有结果，使用筛选结果；否则直接返回空（跳过距离计算）
       if (filtered.length > 0) {
         candidates = filtered
       } else {
-        // 城市和区域都无匹配，直接返回空结果
         this.setData({
           nearbyShops: [],
           displayAvatars: [spot.coverImage || '/images/app-logo.jpg'].slice(0, 6)
@@ -137,8 +193,7 @@ Page({
         return
       }
     }
-    
-    // 第二步：计算距离并精筛
+
     const nearby = candidates
       .filter(s => (s.lat || s.latitude) && (s.lng || s.longitude))
       .map(s => ({
@@ -147,69 +202,28 @@ Page({
         distText: '',
         coverImage: s.coverImage || '/images/app-logo.jpg'
       }))
-      .filter(s => s.dist <= 5000) // 只保留 5 公里内的地点
-      .sort((a, b) => a.dist - b.dist) // 离得近的排前面
-      .slice(0, 8) // 最多显示 8 个
+      .filter(s => s.dist <= 5000)
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, 8)
       .map(s => ({
         ...s,
         distText: util.formatDistance(s.dist).replace('.00', '').replace(/\.0+km/, 'km')
       }))
 
-    // 顶部头像组直接复用附近美食或景点本身的封面图。
     const displayAvatars = [
       ...nearby.map(item => item.coverImage).filter(Boolean),
       spot.coverImage || '/images/app-logo.jpg'
     ].slice(0, 6)
 
-    this.setData({
-      nearbyShops: nearby,
-      displayAvatars
-    })
+    this.setData({ nearbyShops: nearby, displayAvatars, relatedItems: [] })
   },
 
-  // 返回上一页
-  onBack() {
-    wx.navigateBack()
-  },
+  onBack() { wx.navigateBack() },
 
-  // 提示用户使用右上角系统分享
-  onShareTap() {
-    wx.showToast({ title: '请点击右上角分享', icon: 'none' })
-  },
+  onShareTap() { wx.showToast({ title: '请点击右上角分享', icon: 'none' }) },
 
-  // 收藏/取消收藏景点
-  onCollect() {
-    const { spot } = this.data
-    if (!spot) return
-    if (!util.requireLogin()) return
-    
-    const isCollected = util.toggleCollect(spot.id, 'spot')
-    
-    this.setData({ isCollected })
-    wx.showToast({
-      title: isCollected ? '已收藏' : '已取消收藏',
-      icon: 'none',
-      duration: 1200
-    })
-  },
-
-  // 想去/取消想去景点
-  onWant() {
-    const { spot } = this.data
-    if (!spot) return
-    if (!util.requireLogin()) return
-    const isLiked = util.toggleWant(spot.id)
-    this.setData({ isLiked })
-    wx.showToast({
-      title: isLiked ? '已添加到想去' : '已移出想去',
-      icon: 'none',
-      duration: 1200
-    })
-  },
-
-  // 地址卡片点击后，打开“请选择导航地图”底部弹窗。
   onOpenNavMapSheet() {
-    const { spot } = this.data
+    const { spot, addressText } = this.data
     if (!spot) return
     this.setData({
       navMapSheetVisible: true,
@@ -217,15 +231,13 @@ Page({
         lat: spot.lat || spot.latitude || 0,
         lng: spot.lng || spot.longitude || 0,
         name: spot.name,
-        // 导航弹窗里也复用同一份地址兜底文案，保证复制地址和页面显示一致。
-        address: this.data.addressText || spot.name
+        address: addressText || spot.name
       }
     })
   },
 
-  // 位置地图点击后，继续使用微信原生地图。
   onNavigate() {
-    const { spot } = this.data
+    const { spot, addressText } = this.data
     const latitude = spot && (spot.lat || spot.latitude)
     const longitude = spot && (spot.lng || spot.longitude)
     if (latitude && longitude) {
@@ -233,8 +245,7 @@ Page({
         latitude,
         longitude,
         name: spot.name,
-        // 系统地图里也带上兜底后的地址，避免出现空地址。
-        address: this.data.addressText || spot.name,
+        address: addressText || spot.name,
         scale: 16
       })
       return
@@ -242,21 +253,15 @@ Page({
     wx.showToast({ title: '暂无坐标', icon: 'none' })
   },
 
-  // 关闭导航地图选择弹窗。
   onCloseNavMapSheet() {
-    this.setData({
-      navMapSheetVisible: false,
-      navMapTarget: null
-    })
+    this.setData({ navMapSheetVisible: false, navMapTarget: null })
   },
 
-  // 在导航弹窗里选择地图应用或复制地址。
   onSelectNavMapOption(e) {
     const type = e.currentTarget.dataset.type
     const target = this.data.navMapTarget
     if (!type || !target) return
 
-    // 复制地址不依赖坐标，所以单独放行。
     if (type === 'copy') {
       wx.setClipboardData({
         data: target.address || target.name,
@@ -285,18 +290,47 @@ Page({
     }
   },
 
-  // 阻止弹窗面板点击冒泡到遮罩层。
-  preventBubble() {
+  preventBubble() {},
+
+  onCall() {
+    if (this.data.spot.phone) {
+      wx.makePhoneCall({ phoneNumber: this.data.spot.phone })
+    }
   },
 
-  // 点击附近美食卡片，进入对应的美食详情页
+  onCollect() {
+    const { spot, isFoodDetail } = this.data
+    if (!spot) return
+    if (!util.requireLogin()) return
+
+    const type = isFoodDetail ? 'food' : 'spot'
+    const isCollected = util.toggleCollect(spot.id, type)
+    this.setData({ isCollected })
+    wx.showToast({
+      title: isCollected ? '已收藏' : '已取消收藏',
+      icon: 'none',
+      duration: 1200
+    })
+  },
+
+  onWant() {
+    const { spot } = this.data
+    if (!spot) return
+    if (!util.requireLogin()) return
+    const isLiked = util.toggleWant(spot.id)
+    this.setData({ isLiked })
+    wx.showToast({
+      title: isLiked ? '已添加到想去' : '已移出想去',
+      icon: 'none',
+      duration: 1000
+    })
+  },
+
   onGoShop(e) {
     const id = e.currentTarget.dataset.id
-    wx.navigateTo({ url: `/subpackages/extra/pages/shop-detail/shop-detail?id=${id}` })
+    wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${id}` })
   },
 
-  // 点击“更多”时回到探索页，并把当前景点暂存下来，
-  // 这样探索页后面可以按这个景点做附近推荐。
   onFindFood() {
     const { spot } = this.data
     if (spot) {
@@ -305,11 +339,10 @@ Page({
     wx.switchTab({ url: '/pages/index/index' })
   },
 
-  // 小程序右上角分享文案
   onShareAppMessage() {
     const { spot } = this.data
     return {
-      title: spot ? `${spot.name} · 景点详情` : '景点详情',
+      title: spot ? `${spot.name} · 地点详情` : '地点详情',
       path: spot ? `/subpackages/extra/pages/spot-detail/spot-detail?id=${spot.id}` : '/pages/index/index'
     }
   }
