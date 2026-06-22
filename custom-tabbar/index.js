@@ -7,32 +7,32 @@ Component({
       {
         pagePath: "/pages/index/index",
         text: "探索",
-        iconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-home.png",
-        selectedIconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-home-active.png"
+        iconPath: "/assets/icons/tabbar-home.png",
+        selectedIconPath: "/assets/icons/tabbar-home-active.png"
       },
       {
         pagePath: "/pages/wantgo/wantgo",
         text: "想去",
-        iconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-spots.png",
-        selectedIconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-spots-active.png"
+        iconPath: "/assets/icons/tabbar-spots.png",
+        selectedIconPath: "/assets/icons/tabbar-spots-active.png"
       },
       {
         pagePath: "/pages/route-entry/route-entry",
         text: "",
-        iconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-add.png",
-        selectedIconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-add.png"
+        iconPath: "/assets/icons/tabbar-add.png",
+        selectedIconPath: "/assets/icons/tabbar-add.png"
       },
       {
         pagePath: "/pages/discover/discover",
         text: "攻略",
-        iconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-discover.png",
-        selectedIconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-discover-active.png"
+        iconPath: "/assets/icons/tabbar-discover.png",
+        selectedIconPath: "/assets/icons/tabbar-discover-active.png"
       },
       {
         pagePath: "/pages/my/my",
         text: "我的",
-        iconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-my.png",
-        selectedIconPath: "cloud://cloud1-9grc0ja0405b042a.636c-cloud1-9grc0ja0405b042a-1420912402/images/tabbar-my-active.png"
+        iconPath: "/assets/icons/tabbar-my.png",
+        selectedIconPath: "/assets/icons/tabbar-my-active.png"
       }
     ]
   },
@@ -48,6 +48,7 @@ Component({
     updateSelected() {
       const pages = getCurrentPages()
       const currentPage = pages[pages.length - 1]
+      if (!currentPage) return // 页面栈为空时跳过
       const route = "/" + currentPage.route
       const list = this.data.list
       for (let i = 0; i < list.length; i++) {
