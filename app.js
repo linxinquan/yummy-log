@@ -37,14 +37,11 @@ App({
   },
 
   onLaunch() {
-    // 版本检查：如果版本不一致，强制清除所有缓存（避免旧数据结构导致问题）
+    // 版本记录（用于后续可能的增量迁移，不再强制清除缓存）
     const lastVersion = wx.getStorageSync('app_version');
-    if (!lastVersion || lastVersion !== this.currentVersion) {
-      // 强制清除所有本地缓存
-      wx.clearStorageSync();
-      // 记录新的版本号，下次启动不再清除
+    if (lastVersion !== this.currentVersion) {
       wx.setStorageSync('app_version', this.currentVersion);
-      console.log('[App] 已检测到版本升级，本地缓存已全部清除（旧版本：' + (lastVersion || '无') + '，新版本：' + this.currentVersion + '）');
+      console.log('[App] 版本已更新：' + (lastVersion || '无') + ' → ' + this.currentVersion);
     }
     
     // ── CloudBase 初始化 ──────────────

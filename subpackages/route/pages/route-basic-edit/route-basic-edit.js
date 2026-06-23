@@ -1,4 +1,5 @@
-﻿const { getCityOptions, loadData } = require('../../../../utils/util')
+﻿const util = require('../../../../utils/util')
+const { getCityOptions } = util
 const placesData = require('../../../../utils/placesData')
 const {
   applyTravelMeta,
@@ -313,18 +314,26 @@ Page({
     wx.navigateBack({ delta: 1 })
   },
 
-  // 删除当前路线
+  // 删除当前路线（同步云端）
   onDeleteRoute() {
     const routeId = this.data.route && this.data.route.id
+    const routeCloudId = this.data.route && this.data.route._id
     wx.showModal({
       title: '删除路线',
       content: '删除后无法恢复，确认删除吗？',
-      success: (res) => {
+      success: async (res) => {
         if (!res.confirm) return
-        if (routeId !== undefined && routeId !== null) {
-          const savedRoutes = loadData('savedRoutes', [])
-          const nextRoutes = savedRoutes.filter(item => String(item.id) !== String(routeId))
-          wx.setStorageSync('savedRoutes', nextRoutes)
+        // 本地删除
+        const savedRoutes = util.loadData('savedRoutes', [])
+        const nextRoutes = savedRoutes.filter(item => String(item.id) !== String(routeId))
+        wx.setStorageSync('savedRoutes', nextRoutes)
+        // 云端删除
+        if (routeCloudId) {
+          try {
+            await util.deleteRouteAsync(routeCloudId)
+          } catch (err) {
+            console.warn('[route-basic-edit] 云端删除失败:', err)
+          }
         }
         wx.showToast({ title: '已删除', icon: 'success' })
         setTimeout(() => {
@@ -387,7 +396,7 @@ Page({
       return
     }
 
-    const savedRoutes = loadData('savedRoutes', [])
+    const savedRoutes = util.loadData('savedRoutes', [])
     const index = savedRoutes.findIndex(item => String(item.id) === String(updatedRoute.id))
     if (index > -1) {
       savedRoutes[index] = updatedRoute
@@ -395,6 +404,9 @@ Page({
       savedRoutes.push(updatedRoute)
     }
     wx.setStorageSync('savedRoutes', savedRoutes)
+
+    // 同步云端
+    this._syncRouteToCloud(updatedRoute, index > -1)
 
     if (this.data.isNewRoute) {
       wx.redirectTo({
@@ -405,5 +417,21 @@ Page({
 
     wx.showToast({ title: '已保存', icon: 'success' })
     setTimeout(() => wx.navigateBack({ delta: 1 }), 300)
+  },
+
+  // 保存路线到云端：新增或更新
+  async _syncRouteToCloud(routeData, isUpdate) {
+    try {
+      if (isUpdate) {
+        const cloudId = routeData._id
+        if (cloudId) {
+          await util.updateRouteAsync(cloudId, routeData)
+        }
+      } else {
+        await util.saveRouteAsync(routeData)
+      }
+    } catch (err) {
+      console.warn('[route-basic-edit] 云端同步失败（已保留本地数据）:', err)
+    }
   }
 })

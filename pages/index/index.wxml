@@ -1,3 +1,5 @@
+<wxs src="../../utils/likedCheck.wxs" module="like" />
+
 <!-- 觅食图 · 探索页 (合并景点与美食) -->
 <view class="container">
 
@@ -165,7 +167,7 @@
                   <text class="spot-tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
                 </view>
                 <view class="card-footer">
-                  <text class="card-desc">{{item.displayWantCount}} 人想去</text>
+                  <text class="card-desc">{{like.formatWantCount(item.wantCount, like.isLiked(likedShops, item.id))}} 人想去</text>
                   <text class="card-separator">·</text>
                   <text class="card-desc">{{item.distance}}</text>
                 </view>
@@ -175,12 +177,12 @@
             <!-- 右侧操作区：这里只保留想去图标 -->
             <view class="shop-action-icons">
               <view
-                class="want-icon {{item.isLiked ? 'liked' : ''}}"
+                class="want-icon {{like.isLiked(likedShops, item.id) ? 'liked' : ''}}"
                 catchtap="onToggleLike"
                 data-shopid="{{item.id}}"
                 data-type="{{item.type}}"
               >
-                <i class="{{item.isLiked ? 'mgc_heart_fill' : 'mgc_heart_line'}} icon-btn-text"></i>
+                <i class="{{like.isLiked(likedShops, item.id) ? 'mgc_heart_fill' : 'mgc_heart_line'}} icon-btn-text"></i>
               </view>
             </view>
           </view>

@@ -69,7 +69,7 @@
             <view class="stamp-bottom-shadow"></view>
             <!-- 邮票壳：使用 PNG 切图 -->
             <image class="stamp-shell" src="/images/collection/stamp-ticket.png" mode="scaleToFill"></image>
-            <image class="stamp-photo" src="{{item.photoPath}}" mode="aspectFill" />
+            <image class="stamp-photo" src="{{item.displayPath}}" mode="aspectFill" />
           </view>
           <text class="stamp-title">{{item.spotName || item.shortAddr || '未知地点'}}</text>
         </view>

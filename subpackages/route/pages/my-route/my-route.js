@@ -564,8 +564,8 @@ Page({
     );
   },
 
-  // 写回本地存储：这是"保存路线"的真正落盘入口。
-  saveRouteToStorage(route, showToastTitle) {
+  // 写回本地存储并同步云端：这是"保存路线"的真正落盘入口。
+  async saveRouteToStorage(route, showToastTitle) {
     const savedRoutes = util.loadData("savedRoutes", []);
     const index = savedRoutes.findIndex(
       (item) => String(item.id) === String(route.id)
@@ -578,6 +578,22 @@ Page({
     wx.setStorageSync("savedRoutes", savedRoutes);
     if (showToastTitle) {
       wx.showToast({ title: showToastTitle, icon: "success" });
+    }
+    // 同步云端
+    try {
+      if (index > -1) {
+        const cloudId = route._id || savedRoutes[index]._id
+        if (cloudId) {
+          await util.updateRouteAsync(cloudId, route)
+        } else {
+          // 已有本地记录但无云端 _id → 用 saveRouteAsync 推上云端
+          await util.saveRouteAsync(route)
+        }
+      } else {
+        await util.saveRouteAsync(route)
+      }
+    } catch (err) {
+      console.warn('[my-route] 云端同步失败（已保留本地数据）:', err)
     }
   },
 

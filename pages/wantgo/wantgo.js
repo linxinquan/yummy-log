@@ -284,6 +284,8 @@ function openPlaceDetail(item) {
 
 Page({
   data: {
+    // 加载状态
+    loading: false,
     // 当前Tab
     tab: 'want',
     titles: {
@@ -385,14 +387,15 @@ Page({
 
   // 按当前 Tab 读取不同的数据源：
   // want 读想去地点，plan 读我的路线，visited 读足迹。
-  _loadData() {
+  async _loadData() {
+    this.setData({ loading: true })
     const { tab } = this.data
     let items = []
 
     if (tab === 'want') {
       // 新格式：userWantList 存储所有想去的 ID（美食+景点）
-      const wantIds = util.getWantList()
-      const userShops = util.loadData('userAddedShops', [])
+      const wantIds = await util.getWantListAsync()
+      const userShops = await util.getUserShopsAsync()
       
       // 通过 placesData.getPlaceById 一次性读取所有想去地点的完整数据
       const wantItems = wantIds
@@ -414,9 +417,9 @@ Page({
       
       items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(wantItems)))
       console.log('wantgo', items)
-      this.setData({ items, empty: items.length === 0 })
+      this.setData({ items, empty: items.length === 0, loading: false })
     } else if (tab === 'plan') {
-      const savedRoutes = util.loadData('savedRoutes', [])
+      const savedRoutes = await util.getRoutesAsync()
       const normalizedRoutes = savedRoutes.map((item, index) => {
         const routeCover = resolveRouteCardCover(item, index)
         const fallbackDayCount = Math.max((item.daySections || []).length || item.dayCount || 1, 1)
@@ -434,12 +437,12 @@ Page({
       }
       const visibleRoutes = normalizedRoutes.filter(item => !item.isDraft)
       const routeCards = buildRouteCards(visibleRoutes)
-      this.setData({ items: routeCards, empty: routeCards.length === 0 })
+      this.setData({ items: routeCards, empty: routeCards.length === 0, loading: false })
     } else {
       // tab === 'visited'
       // 足迹统一以 checkin_records 为准，再在这里转成卡片展示数据。
-      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(util.getFootprintItems())))
-      this.setData({ items, empty: items.length === 0 })
+      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(await util.getFootprintItemsAsync())))
+      this.setData({ items, empty: items.length === 0, loading: false })
     }
   },
 
@@ -506,8 +509,8 @@ Page({
   },
 
   // 复制路线
-  copyRoute(route) {
-    const savedRoutes = util.loadData('savedRoutes', [])
+  async copyRoute(route) {
+    const savedRoutes = await util.getRoutesAsync()
     const newRoute = {
       ...route,
       id: Date.now(), // 生成新ID
@@ -534,11 +537,9 @@ Page({
     wx.showModal({
       title: '确认删除',
       content: `确定要删除路线"${route.title}"吗？`,
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          let savedRoutes = util.loadData('savedRoutes', [])
-          savedRoutes = savedRoutes.filter(item => String(item.id) !== String(route.id))
-          util.saveData('savedRoutes', savedRoutes)
+          await util.deleteRouteAsync(route._id || route.id)
           wx.showToast({ title: '已删除', icon: 'success' })
           // 刷新列表
           that.onShow()
@@ -741,12 +742,9 @@ Page({
 
 
   // ─── 从"想去"里删除当前地点 ─────────────────────────────
-  onRemove(e) {
+  async onRemove(e) {
     const id = String(e.currentTarget.dataset.id)
-    // 新格式：直接从 userWantList 中删除 ID
-    const wantList = util.getWantList()
-    const nextIds = wantList.filter(savedId => String(savedId) !== id)
-    util.saveData('userWantList', nextIds)
+    await util.toggleWantAsync(id)
     this._loadData()
     wx.showToast({ title: '已移除', icon: 'none', duration: 1000 })
   },

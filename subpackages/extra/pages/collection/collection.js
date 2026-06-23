@@ -1,6 +1,12 @@
 ﻿// pages/collection/collection.js
 let checkinUtil = null
 const util = require('../../../../utils/util')
+let photoStorage = null
+try {
+  photoStorage = require('../../utils/photoStorage')
+} catch (e) {
+  console.warn('photoStorage load fail', e)
+}
 try {
   checkinUtil = require('../../../../utils/checkinUtil')
 } catch (e) {
@@ -43,9 +49,9 @@ Page({
     if (!checkinUtil) return
     const loadToken = ++this._loadToken
 
-    const raw = checkinUtil.getCheckins()
-    const stats = checkinUtil.getCheckinStats()
-    const footprintItems = util.getFootprintItems()
+    const raw = await checkinUtil.getCheckinsAsync()
+    const stats = await checkinUtil.getCheckinStatsAsync()
+    const footprintItems = await util.getFootprintItemsAsync()
 
     // 预处理日期和地址，避免在 WXML 里调用函数
     const checkins = raw.map((c) => {
@@ -58,6 +64,7 @@ Page({
       // 短地址：取地址前16个字
       const shortAddr = c.address ? c.address.substring(0, 20) : ''
       return Object.assign({}, c, {
+        displayPath: photoStorage ? photoStorage.getDisplayPath(c) : (c.photoPath || ''),
         dateStr: mm + '/' + dd + '/' + yyyy,
         monthDay: mm + '.' + dd,
         yearText: String(yyyy),
@@ -289,14 +296,14 @@ Page({
   // 底部白点里的数字表示这个位置聚合了多少张采集。
   generateMapMarkerIcon(item, markerCount, showCount) {
     return new Promise((resolve) => {
-      const cacheKey = `${item.id}_${item.photoPath || ''}_${markerCount || ''}_${showCount ? 'count' : 'plain'}`
+      const photoSrc = item.displayPath || item.photoPath || ''
+      const cacheKey = `${item.id}_${photoSrc}_${markerCount || ''}_${showCount ? 'count' : 'plain'}`
       if (this._markerIconCache[cacheKey]) {
         resolve(this._markerIconCache[cacheKey])
         return
       }
 
       const shellPath = '/images/collection/stamp-ticket.png'
-      const photoPath = item.photoPath
       const ctx = wx.createCanvasContext('mapMarkerCanvas', this)
 
       ctx.clearRect(0, 0, 170, 318)
@@ -304,8 +311,8 @@ Page({
       ctx.drawImage(shellPath, 0, 0, 170, 221)
       ctx.setShadow(0, 0, 0, 'rgba(0, 0, 0, 0)')
 
-      if (photoPath) {
-        ctx.drawImage(photoPath, 16, 16, 138, 184)
+      if (photoSrc) {
+        ctx.drawImage(photoSrc, 16, 16, 138, 184)
       }
 
       ctx.draw(false, () => {
@@ -486,7 +493,7 @@ Page({
   },
 
   // 编辑名称只更新邮票标题，保存后立即刷新列表。
-  onConfirmEditName() {
+  async onConfirmEditName() {
     const { activeCheckinId, editNameValue } = this.data
     if (!activeCheckinId || !checkinUtil) return
 
@@ -499,7 +506,7 @@ Page({
       return
     }
 
-    const updated = checkinUtil.updateCheckin(activeCheckinId, {
+    const updated = await checkinUtil.updateCheckinAsync(activeCheckinId, {
       spotName: nextName
     })
 
@@ -528,10 +535,10 @@ Page({
       content: '删除后这张邮票会从我的采集中移除',
       confirmText: '删除',
       confirmColor: '#E05252',
-      success: (res) => {
+      success: async (res) => {
         if (!res.confirm) return
 
-        checkinUtil.deleteCheckin(activeCheckinId)
+        await checkinUtil.deleteCheckinAsync(activeCheckinId)
         this.setData({
           actionSheetVisible: false,
           editNameSheetVisible: false,

@@ -2,6 +2,22 @@
 // 腾讯地图逆地理接口（直接用 wx.request，无需 SDK 文件）
 const util = require('./util')
 
+// ─── 云端数据访问层（懒加载）────────────────────
+let _dbCheckinRecords = null
+
+function _getDbCheckinRecords() {
+  if (!_dbCheckinRecords) _dbCheckinRecords = require('./db/checkinRecords')
+  return _dbCheckinRecords
+}
+
+/**
+ * 判断当前是否已登录（云端模式）
+ * @returns {boolean}
+ */
+function _isCloudMode() {
+  return !!util.loadData('userInfo', null)
+}
+
 const QQMAP_KEY = 'SWGBZ-7P2CB-LK2UO-JZYYV-6BZYQ-KEBUG'
 
 /**
@@ -150,6 +166,7 @@ function saveCheckin(data) {
     id: 'CK' + Date.now().toString(36).toUpperCase(),
     type: data.type || 'food',       // 'food' 美食 | 'spot' 景点
     photoPath: data.photoPath,
+    cloudFileID: data.cloudFileID || '',    // 云端 fileID，用于跨设备降级
     spotName: data.spotName || '',
     address: data.address || '',
     latitude: data.latitude,
@@ -251,6 +268,118 @@ function formatStampDate(isoString) {
   return mm + '/' + dd + '/' + yyyy
 }
 
+// ============================================================
+// 云端异步版（已登录走云端，未登录走本地）
+// ============================================================
+
+/**
+ * 获取打卡记录列表（云端优先）
+ * @returns {Promise<Array>}
+ */
+async function getCheckinsAsync() {
+  if (!_isCloudMode()) return getCheckins()
+  const { success, data } = await _getDbCheckinRecords().getList()
+  if (success) {
+    util.saveData('checkin_records', data)  // 更新本地缓存
+    return data
+  }
+  return getCheckins()
+}
+
+/**
+ * 保存打卡记录（云端优先）
+ * @param {Object} data - 打卡数据
+ * @returns {Promise<Object>} 保存后的记录（含 _id）
+ */
+async function saveCheckinAsync(data) {
+  if (!_isCloudMode()) return saveCheckin(data)
+  const { success, data: recordId } = await _getDbCheckinRecords().add(data)
+  if (success && recordId) {
+    // 同步到本地缓存
+    const list = getCheckins()
+    const matchedPlace = util.findKnownPlace({
+      name: data.spotName,
+      address: data.address,
+      type: data.type
+    }, data.type)
+    const newRecord = {
+      id: recordId,
+      type: data.type || 'food',
+      photoPath: data.photoPath || '',
+      cloudFileID: data.cloudFileID || '',
+      spotName: data.spotName || '',
+      address: data.address || '',
+      latitude: data.latitude || null,
+      longitude: data.longitude || null,
+      description: data.description || '',
+      date: data.date || new Date().toISOString(),
+      customRecordTimeLabel: data.customRecordTimeLabel || '',
+      city: data.city || '',
+      relatedPlaceId: matchedPlace ? String(matchedPlace.id) : '',
+      _id: recordId,  // 云端 _id，方便后续更新/删除
+    }
+    list.unshift(newRecord)
+    util.saveData('checkin_records', list)
+    util.syncLegacyCheckedInFromRecords()
+    return newRecord
+  }
+  // 云端失败，走本地
+  return saveCheckin(data)
+}
+
+/**
+ * 更新打卡记录（云端优先）
+ * @param {string} id  - 记录 _id
+ * @param {Object} patchData - 要更新的字段
+ * @returns {Promise<Object|null>}
+ */
+async function updateCheckinAsync(id, patchData) {
+  if (!_isCloudMode()) return updateCheckin(id, patchData)
+  const { success } = await _getDbCheckinRecords().update(id, patchData)
+  if (success) {
+    // 同步本地缓存
+    const list = getCheckins()
+    const idx = list.findIndex(item => String(item.id) === String(id) || String(item._id) === String(id))
+    if (idx > -1) {
+      list[idx] = { ...list[idx], ...patchData }
+      util.saveData('checkin_records', list)
+    }
+    util.syncLegacyCheckedInFromRecords()
+    return list[idx] || null
+  }
+  return updateCheckin(id, patchData)
+}
+
+/**
+ * 删除打卡记录（云端优先）
+ * @param {string} id - 记录 _id
+ * @returns {Promise<Array>} 删除后的列表
+ */
+async function deleteCheckinAsync(id) {
+  if (!_isCloudMode()) return deleteCheckin(id)
+  const { success } = await _getDbCheckinRecords().remove(id)
+  if (success) {
+    const list = getCheckins()
+    const filtered = list.filter(c => String(c.id) !== String(id) && String(c._id) !== String(id))
+    util.saveData('checkin_records', filtered)
+    util.syncLegacyCheckedInFromRecords()
+    return filtered
+  }
+  return deleteCheckin(id)
+}
+
+/**
+ * 获取打卡统计（云端优先）
+ * @returns {Promise<Object>}
+ */
+async function getCheckinStatsAsync() {
+  if (!_isCloudMode()) return getCheckinStats()
+  const { success, data } = await _getDbCheckinRecords().getStats()
+  return success ? data : getCheckinStats()
+}
+
+// ─── 导出 ─────────────────────────────────────
+
 module.exports = {
   getCheckins,
   saveCheckin,
@@ -259,5 +388,11 @@ module.exports = {
   getCheckinStats,
   reverseGeocode,
   generateDescription,
-  formatStampDate
+  formatStampDate,
+  // 云端异步版
+  getCheckinsAsync,
+  saveCheckinAsync,
+  updateCheckinAsync,
+  deleteCheckinAsync,
+  getCheckinStatsAsync,
 }

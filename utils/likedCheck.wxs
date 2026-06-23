@@ -1,0 +1,22 @@
+// 检查某个地点是否在"想去"列表中
+function isLiked(likedShops, id) {
+  if (!likedShops || !id) return false
+  return likedShops.indexOf(id + '') !== -1
+}
+
+// 格式化想去人数（1.2k、2.3w 等）
+function formatWantCount(count, isLiked) {
+  var actual = isLiked ? (count || 1024) + 1 : (count || 1024)
+  if (actual >= 10000) {
+    return (actual / 10000).toFixed(1).replace('.0', '') + 'w'
+  }
+  if (actual >= 1000) {
+    return (actual / 1000).toFixed(1).replace('.0', '') + 'k'
+  }
+  return '' + actual
+}
+
+module.exports = {
+  isLiked: isLiked,
+  formatWantCount: formatWantCount
+}

@@ -110,8 +110,7 @@ Page({
     const phoneText = isFood ? (spot.phone || '') : ''
 
     const isLiked = util.isWant(spot.id)
-    const collectedKey = isFood ? 'userCollectedFoods' : 'userCollectedSpots'
-    const isCollected = util.loadData(collectedKey, []).some(id => String(id) === String(spot.id))
+    const isCollected = util.isCollected(spot.id)
 
     this.setData({
       spot,
@@ -298,13 +297,13 @@ Page({
     }
   },
 
-  onCollect() {
+  // TODO: 重构为乐观更新（先改本地 UI + setData，后台同步云端，避免等待）
+  async onCollect() {
     const { spot, isFoodDetail } = this.data
     if (!spot) return
     if (!util.requireLogin()) return
 
-    const type = isFoodDetail ? 'food' : 'spot'
-    const isCollected = util.toggleCollect(spot.id, type)
+    const isCollected = await util.toggleCollectAsync(spot.id)
     this.setData({ isCollected })
     wx.showToast({
       title: isCollected ? '已收藏' : '已取消收藏',

@@ -14,6 +14,13 @@ try {
   console.error('[Checkin] recognizePhotoUtil 加载失败:', e)
 }
 
+let photoStorage = null
+try {
+  photoStorage = require('../../utils/photoStorage')
+} catch (e) {
+  console.error('[Checkin] photoStorage 加载失败:', e)
+}
+
 Page({
   data: {
     type: 'food',
@@ -602,7 +609,7 @@ Page({
   },
 
   // 保存采集：不再进入成功页，直接完成并跳去采集本。
-  onSaveCheckin() {
+  async onSaveCheckin() {
     if (this.data.saving) return
     if (this.data.confirmLoading) {
       wx.showToast({
@@ -617,8 +624,19 @@ Page({
     try {
       if (!checkinUtil) throw new Error('checkinUtil not loaded')
 
-      checkinUtil.saveCheckin({
-        photoPath: this.data.photoPath,
+      // 1. 持久化图片（本地 + 云端）
+      let photoPath = this.data.photoPath
+      let cloudFileID = ''
+      if (photoStorage) {
+        const result = await photoStorage.persistPhoto(this.data.photoPath)
+        photoPath = result.localPath
+        cloudFileID = result.cloudFileID
+      }
+
+      // 2. 保存打卡记录
+      await checkinUtil.saveCheckinAsync({
+        photoPath,
+        cloudFileID,
         spotName: this.data.spotName || '当前位置',
         address: this.data.address || '',
         latitude: this.data.latitude,

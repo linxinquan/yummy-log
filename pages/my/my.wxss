@@ -231,6 +231,11 @@
   line-height: 40rpx;
 }
 
+/* 退出登录文字样式 */
+.list-item-danger {
+  color: #FF4D4F !important;
+}
+
 /* ========== 登录弹窗样式 ========== */
 
 /* 未登录提示 */

@@ -196,7 +196,6 @@ Page({
   
   onShow() {
     this.loadUserData()
-    this.updateItemStatus()
   },
 
   onUnload() {
@@ -222,7 +221,7 @@ Page({
   async loadItems() {
     // 等待 placesData 初始化完成（解决启动时序竞争问题）
     await placesData.whenReady()
-    const userShops = util.loadData('userAddedShops', [])
+    const userShops = await util.getUserShopsAsync()
     const currentCity = this.data.currentCity || '深圳市'
     
     // 为用户添加的数据补充 city 字段
@@ -249,47 +248,14 @@ Page({
     this._scheduleApplyFilters()
   },
 
-  // 读取用户状态：
-  // 这里主要拿"想去"和"足迹"的本地缓存。
-  loadUserData() {
-    const wantList = util.getWantList()
-    const checkedIn = util.getFootprintItems()
-    
-    // 合并所有的想去 ID，方便在混合列表中判断
-    const likedShops = wantList
-
+  // 读取用户状态
+  async loadUserData() {
+    const wantList = await util.getWantListAsync()
+    const checkedIn = await util.getFootprintItemsAsync()
     this.setData({
-      likedShops: likedShops,
+      likedShops: wantList,
       visitedShops: checkedIn.map(item => String(item.id))
     })
-    this.updateItemStatus()
-  },
-
-  // 把"是否想去"和"想去人数展示文案"刷新到列表数据里。
-  updateItemStatus() {
-    const { allItems, likedShops } = this.data
-    const updatedItems = allItems.map(item => {
-      // util 中的存储都统一转为了 String，所以这里比较时也转为 String
-      const isLiked = likedShops.includes(String(item.id)) || likedShops.includes(Number(item.id))
-      const baseWant = item.wantCount || 1024
-      const actualWant = isLiked ? baseWant + 1 : baseWant
-      
-      // 格式化想去人数
-      let displayWantCount = actualWant
-      if (actualWant >= 10000) {
-        displayWantCount = (actualWant / 10000).toFixed(1).replace('.0', '') + 'w'
-      } else if (actualWant >= 1000) {
-        displayWantCount = (actualWant / 1000).toFixed(1).replace('.0', '') + 'k'
-      }
-
-      return { 
-        ...item, 
-        isLiked,
-        displayWantCount
-      }
-    })
-    this.setData({ allItems: updatedItems })
-    this._scheduleApplyFilters()
   },
 
   // 按当前分类、排序和地图中心点，重新生成当前可见列表。
@@ -563,23 +529,26 @@ Page({
     }
   },
 
-  // 点击右侧心形，加入或移出"想去"
-  onToggleLike(e) {
-    // 统一走公共登录校验，避免每个页面提示文案不一致。
+  // 点击右侧心形，加入或移出"想去"（UI 通过 wxs 响应，不需预计算 isLiked）
+  async onToggleLike(e) {
     if (!util.requireLogin()) {
       return
     }
     
     const shopId = e.currentTarget.dataset.shopid
-    const isLiked = util.toggleWant(shopId)
     
-    this.loadUserData()
+    // 1. 本地缓存 + data 立变，wxs 自动渲染实心/空心
+    util.toggleWant(shopId)
+    this.setData({ likedShops: util.getWantList() })
     
     wx.showToast({
-      title: isLiked ? '已添加到想去' : '已移出想去',
+      title: util.isWant(shopId) ? '已添加到想去' : '已移出想去',
       icon: 'none',
       duration: 1000
     })
+    
+    // 2. 后台同步云端
+    util.toggleWantAsync(shopId).catch(() => {})
   },
   // 计算两点之间的直线距离（单位：米）
   calculateDistance(lat1, lng1, lat2, lng2) {

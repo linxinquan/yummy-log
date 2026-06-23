@@ -3,8 +3,10 @@ const app = getApp()
 const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
-const { getCheckinStats, getCheckins } = require('../../utils/checkinUtil')
+const { getCheckinStats, getCheckins, getCheckinsAsync, getCheckinStatsAsync } = require('../../utils/checkinUtil')
+const migration = require('../../utils/db/migration')
 
+const DATA_MIGRATED_KEY = 'data_migrated'
 
 // 登录用户没有上传头像时，随机从美食 / 景点封面里挑一张，避免回退到项目 Logo。
 function getRandomProfileImage() {
@@ -213,10 +215,22 @@ Page({
   },
 
   // 读取打卡统计、最近邮票、地图点位这些"足迹"相关数据。
-  loadCheckinStats() {
+  async loadCheckinStats() {
     try {
-      const stats = getCheckinStats()
-      const allCheckins = getCheckins()
+      // 优先使用云端异步版（已登录时读云端，未登录时读本地）
+      const isLoggedIn = !!util.loadData('userInfo', null)
+      let stats = { totalCount: 0, cityCount: 0 }
+      let allCheckins = []
+
+      if (isLoggedIn) {
+        const statsRes = await getCheckinStatsAsync()
+        stats = statsRes || { totalCount: 0, cityCount: 0 }
+        const listRes = await getCheckinsAsync()
+        allCheckins = listRes || []
+      } else {
+        stats = getCheckinStats()
+        allCheckins = getCheckins()
+      }
       // 最新邮票（第一条）
       let latestStamp = null
       if (allCheckins.length > 0) {
@@ -412,14 +426,17 @@ Page({
     }
   },
 
+
   // 询问是否同步本地数据到云端
   askSyncData() {
-    const hasLocalData = this.checkHasLocalData()
-    
-    if (!hasLocalData) {
-      return // 无本地数据，无需同步
+    // 已迁移过则跳过（localStorage 数据保留供前端页面读取，不清除）
+    if (wx.getStorageSync(DATA_MIGRATED_KEY)) {
+      return
     }
-    
+
+    const hasLocalData = this.checkHasLocalData()
+    if (!hasLocalData) return
+
     wx.showModal({
       title: '数据同步',
       content: '检测到本地有采集数据，是否同步到云端？同步后可在其他设备访问。',
@@ -448,10 +465,56 @@ Page({
            userAddedShops.length > 0
   },
 
-  // 同步本地数据到云端（暂时只提示，Phase 2实现）
-  syncLocalDataToCloud() {
-    wx.showToast({ title: '数据同步功能即将上线', icon: 'none' })
-    // TODO: Phase 2 实现数据同步云函数
+  // 同步本地数据到云端（使用 DAL 逐条写入）
+  async syncLocalDataToCloud() {
+    wx.showLoading({ title: '正在同步...', mask: true })
+
+    try {
+      const { success, data, error } = await migration.migrateAll({
+        onProgress: (phase, current, total) => {
+          const phaseName = {
+            wantList:       '想去',
+            collectedList:   '收藏',
+            checkinRecords:  '采集记录',
+            routes:          '路线',
+            userAddedShops:  '自定义店铺',
+            done:            '完成',
+          }[phase] || phase
+          if (phase !== 'done') {
+            wx.showLoading({ title: `同步${phaseName}...`, mask: true })
+          }
+        }
+      })
+
+      wx.hideLoading()
+
+      if (success) {
+        const { stats } = data
+        const parts = []
+        if (stats.wantCount > 0)      parts.push(`想去 ${stats.wantCount} 条`)
+        if (stats.collectCount > 0)    parts.push(`收藏 ${stats.collectCount} 条`)
+        if (stats.checkinCount > 0)    parts.push(`采集 ${stats.checkinCount} 条`)
+        if (stats.routeCount > 0)      parts.push(`路线 ${stats.routeCount} 条`)
+        if (stats.shopCount > 0)       parts.push(`店铺 ${stats.shopCount} 条`)
+
+        wx.showModal({
+          title: '同步完成',
+          content: parts.length > 0
+            ? `已同步：${parts.join('，')}`
+            : '没有需要同步的数据',
+          showCancel: false,
+        })
+
+        // 记录迁移完成标记，避免重复弹窗（本地数据保留供前端页面读取）
+        wx.setStorageSync(DATA_MIGRATED_KEY, true)
+      } else {
+        wx.showToast({ title: '同步失败：' + (error && error.message || '未知错误'), icon: 'none' })
+      }
+    } catch (err) {
+      wx.hideLoading()
+      console.error('[my.js] 数据迁移失败:', err)
+      wx.showToast({ title: '同步失败，请重试', icon: 'none' })
+    }
   },
 
   // 未登录时点击顶部区域，初始化登录状态（直接在页面上操作）。
@@ -580,13 +643,12 @@ Page({
     }
 
     try {
-      const db = wx.cloud.database()
-      await db.collection('users').doc(this.data.userInfo._id).update({
-        data: {
-          nickName: newNickName,
-          updatedAt: db.serverDate()
-        }
+      const usersDal = require('../../utils/db/users')
+      const { success, error } = await usersDal.update(this.data.userInfo._id, {
+        nickName: newNickName,
       })
+
+      if (!success) throw error || new Error('更新失败')
 
       // 更新本地数据
       const userInfo = { ...this.data.userInfo, nickName: newNickName }
@@ -608,13 +670,12 @@ Page({
     }
 
     try {
-      const db = wx.cloud.database()
-      await db.collection('users').doc(this.data.userInfo._id).update({
-        data: {
-          avatarUrl: newAvatarUrl,
-          updatedAt: db.serverDate()
-        }
+      const usersDal = require('../../utils/db/users')
+      const { success, error } = await usersDal.update(this.data.userInfo._id, {
+        avatarUrl: newAvatarUrl,
       })
+
+      if (!success) throw error || new Error('更新失败')
 
       // 更新本地数据
       const userInfo = { ...this.data.userInfo, avatarUrl: newAvatarUrl }
@@ -695,8 +756,8 @@ Page({
   },
 
   // 读取"想去 / 到访 / 自己添加的地点"等统计数据。
-  loadData() {
-    const userAddedShops = util.loadData('userAddedShops', [])
+  async loadData() {
+    const userAddedShops = await util.getUserShopsAsync()
     const allItems = [...placesData.getAllPlaces(), ...userAddedShops]
     const itemMap = {}
     allItems.forEach(item => {
@@ -704,7 +765,7 @@ Page({
     })
 
     // 新格式：userWantList 存储所有想去的 ID（美食+景点）
-    const wantIds = util.getWantList()
+    const wantIds = await util.getWantListAsync()
     const likedShops = wantIds
       .map(id => {
         // 先查 placesData（美食+景点）
@@ -722,7 +783,7 @@ Page({
         type: item.type || (item.category === '景点' || item.category === '公园' ? 'spot' : 'food')
       }))
 
-    const footprintItems = util.getFootprintItems()
+    const footprintItems = await util.getFootprintItemsAsync()
     const visitedList = footprintItems.map(item => ({
       shopId: item.id,
       shop: itemMap[String(item.id)] || item,

@@ -55,66 +55,42 @@ Page({
   },
 
   // 加载收藏数据
-  loadData() {
-    // 加载收藏的美食ID
-    const collectedFoodIds = util.loadData('userCollectedFoods', [])
-    // 加载收藏的景点ID
-    const collectedSpotIds = util.loadData('userCollectedSpots', [])
+  async loadData() {
+    // 加载所有收藏 ID（不区分类型）
+    const allCollectedIds = await util.getCollectedListAsync()
 
-    // 构建所有美食数据
-    const userAddedShops = util.loadData('userAddedShops', [])
-    const allFoods = [...placesData.getFoods(), ...userAddedShops]
-    
-    // 构建所有景点数据
-    const allSpots = placesData.getSpots()
+    const userAddedShops = await util.getUserShopsAsync()
 
-    // 筛选已收藏的商业类（美食、饮品、购物、酒店）
-    const businessCategoryList = collectedFoodIds
+    // 用 getPlaceById 跨类型查找，避免 type 字段不匹配漏掉
+    const findItem = (id) => {
+      const fromPlaces = placesData.getPlaceById(id)
+      if (fromPlaces) return fromPlaces
+      return userAddedShops.find(s => String(s.id) === String(id))
+    }
+
+    // 统一查找、构建卡片、按距离排序
+    const seen = new Set()
+    const allList = allCollectedIds
       .map(id => {
-        const item = allFoods.find(f => String(f.id) === String(id))
-        if (item) {
-          const distance = util.getDistance(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng, item.lat || DEFAULT_CENTER.lat, item.lng || DEFAULT_CENTER.lng)
-          // 标签最多只显示 2 个，避免撑破卡片布局。
-          const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2)
-          return {
-            ...item,
-            tags: filteredTags,
-            displayCategory: item.displayCategory || resolveDisplayCategory(item),
-            displayWantCount: formatWantCount(item.wantCount),
-            distance,
-            distanceText: util.formatDistance(distance),
-            type: item.type || 'food'
-          }
+        const item = findItem(id)
+        if (!item) return null
+        // 防重复
+        const key = String(item.id)
+        if (seen.has(key)) return null
+        seen.add(key)
+
+        const distance = util.getDistance(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng, item.lat || DEFAULT_CENTER.lat, item.lng || DEFAULT_CENTER.lng)
+        const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2)
+        return {
+          ...item,
+          tags: filteredTags,
+          displayCategory: item.displayCategory || resolveDisplayCategory(item),
+          displayWantCount: formatWantCount(item.wantCount),
+          distance,
+          distanceText: util.formatDistance(distance),
         }
-        return null
       })
       .filter(Boolean)
-
-    // 筛选已收藏的景点类（景点、文化展馆、自然户外）
-    const attractionCategoryList = collectedSpotIds
-      .map(id => {
-        const item = allSpots.find(s => String(s.id) === String(id))
-        if (item) {
-          const distance = util.getDistance(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng, item.lat || DEFAULT_CENTER.lat, item.lng || DEFAULT_CENTER.lng)
-          // 标签最多只显示 2 个，和探索页保持一致。
-          const filteredTags = (item.tags || []).filter(tag => !tag.endsWith('区')).slice(0, 2)
-          return {
-            ...item,
-            coverImage: item.coverImage,
-            displayCategory: resolveDisplayCategory(item),
-            displayWantCount: formatWantCount(item.wantCount),
-            distance,
-            distanceText: util.formatDistance(distance),
-            tags: filteredTags,
-            type: item.type || 'spot'
-          }
-        }
-        return null
-      })
-      .filter(Boolean)
-
-    // 合并后再按距离排序，让离用户更近的收藏排在前面。
-    const allList = [...businessCategoryList, ...attractionCategoryList]
       .sort((a, b) => (a.distance || 0) - (b.distance || 0))
 
     this.setData({
@@ -138,15 +114,11 @@ Page({
   },
 
   // 取消收藏
-  onRemoveCollect(e) {
+  async onRemoveCollect(e) {
     const item = e.currentTarget.dataset.item
     if (!item) return
 
-    const key = item.type === 'spot' ? 'userCollectedSpots' : 'userCollectedFoods'
-    let collects = util.loadData(key, [])
-    
-    collects = collects.filter(id => String(id) !== String(item.id))
-    util.saveData(key, collects)
+    await util.toggleCollectAsync(item.id)
 
     wx.showToast({
       title: '已取消收藏',

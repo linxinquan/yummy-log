@@ -6,9 +6,9 @@
     <view class="user-section">
       <view class="user-info">
         <block wx:if="{{isLoggedIn}}">
-          <!-- 已登录：点击昵称可修改 -->
+          <!-- 已登录：点击昵称可修改；点击资料区（头像或描述文字）可编辑资料或退出登录 -->
           <input class="user-nickname-input" type="nickname" placeholder="点击设置昵称" value="{{userInfo.nickName}}" bindblur="onUpdateNickname" />
-          <text class="user-desc">与你相遇的第 {{userInfo.days || 1}} 天</text>
+          <text class="user-desc" bindtap="onTapUserProfile">与你相遇的第 {{userInfo.days || 1}} 天</text>
         </block>
         <block wx:else>
           <!-- 未登录：显示请登录按钮 -->
@@ -77,6 +77,7 @@
       <text class="list-item-text">分享我们</text>
       <i class="mgc_right_line arrow-icon"></i>
     </view>
+
   </view>
 
   <!-- 自定义 TabBar -->

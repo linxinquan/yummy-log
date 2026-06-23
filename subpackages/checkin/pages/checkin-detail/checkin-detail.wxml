@@ -4,7 +4,7 @@
     <view class="detail-stamp-wrap" bindtap="onPreviewPhoto">
       <view class="detail-stamp">
         <image class="detail-stamp-shell" src="/images/collection/stamp-ticket.png" mode="scaleToFill"></image>
-        <image class="detail-stamp-photo" src="{{detail.photoPath}}" mode="aspectFill"></image>
+        <image class="detail-stamp-photo" src="{{detail.displayPath}}" mode="aspectFill"></image>
       </view>
       <!-- 邮票标题：补回详情页底部标题 -->
       <text class="detail-stamp-title">{{detail.spotName || '未知地点'}}</text>

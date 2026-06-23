@@ -14,7 +14,13 @@
     <view class="tab-right"></view>
   </view>
 
-  <view wx:if="{{empty}}" class="empty-wrap">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <view wx:elif="{{empty}}" class="empty-wrap">
     <view class="empty-illustration">
       <i class="empty-icon {{emptyIcon}}"></i>
     </view>

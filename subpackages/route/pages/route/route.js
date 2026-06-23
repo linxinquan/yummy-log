@@ -23,8 +23,8 @@ const routeNavBehavior = require('../../utils/route-nav-behavior')
 const routePlaceBehavior = require('../../utils/route-place-behavior')
 
 
-// 只有用户明确点"保存"时，才真正写入 savedRoutes。
-function savePreviewRouteData(data, options = {}) {
+// 只有用户明确点"保存"时，才真正写入 savedRoutes（同时同步云端）。
+async function savePreviewRouteData(data, options = {}) {
   const savedRoute = buildPreviewRouteData(data, options)
   if (!savedRoute) return null
   const savedRoutes = util.loadData('savedRoutes', [])
@@ -35,6 +35,16 @@ function savePreviewRouteData(data, options = {}) {
     savedRoutes.push(savedRoute)
   }
   wx.setStorageSync('savedRoutes', savedRoutes)
+  // 同步云端
+  try {
+    if (index >= 0 && savedRoute._id) {
+      await util.updateRouteAsync(savedRoute._id, savedRoute)
+    } else {
+      await util.saveRouteAsync(savedRoute)
+    }
+  } catch (err) {
+    console.warn('[route.js] 云端同步失败（已保留本地数据）:', err)
+  }
   return savedRoute
 }
 
@@ -671,8 +681,8 @@ Page({
   },
 
   // 把当前路线保存到"我的路线"
-  onSaveToMyRoute() {
-    const savedRoute = savePreviewRouteData(this.data)
+  async onSaveToMyRoute() {
+    const savedRoute = await savePreviewRouteData(this.data)
     if (!savedRoute) return
     this.setData({
       previewRouteId: savedRoute.id,
@@ -682,8 +692,8 @@ Page({
   },
 
   // 保存当前规划路线并退出页面。
-  saveAndExit() {
-    const savedRoute = savePreviewRouteData(this.data)
+  async saveAndExit() {
+    const savedRoute = await savePreviewRouteData(this.data)
     if (!savedRoute) {
       wx.navigateBack()
       return

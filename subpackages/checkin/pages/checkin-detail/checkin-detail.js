@@ -14,6 +14,13 @@ try {
   console.warn('recognizePhotoUtil load fail', e)
 }
 
+let photoStorage = null
+try {
+  photoStorage = require('../../utils/photoStorage')
+} catch (e) {
+  console.warn('photoStorage load fail', e)
+}
+
 Page({
   data: {
     detail: null,
@@ -36,9 +43,9 @@ Page({
     this.loadDetail(options.id || '')
   },
 
-  loadDetail(id) {
+  async loadDetail(id) {
     if (!checkinUtil || !id) return
-    const checkins = checkinUtil.getCheckins()
+    const checkins = await checkinUtil.getCheckinsAsync()
     const detail = checkins.find(item => String(item.id) === String(id))
     if (!detail) {
       wx.showToast({
@@ -60,6 +67,7 @@ Page({
     this.setData({
       detail: {
         ...detail,
+        displayPath: photoStorage ? photoStorage.getDisplayPath(detail) : (detail.photoPath || ''),
         recordTimeLabel: detail.customRecordTimeLabel || `${yyyy}年${month}月${day}日 ${hh}:${minute}:${second}`
       }
     })
@@ -68,9 +76,10 @@ Page({
   onPreviewPhoto() {
     const { detail } = this.data
     if (!detail || !detail.photoPath) return
+    const previewPath = (photoStorage ? photoStorage.getDisplayPath(detail) : detail.photoPath) || detail.photoPath
     wx.previewImage({
-      urls: [detail.photoPath],
-      current: detail.photoPath
+      urls: [previewPath],
+      current: previewPath
     })
   },
 
@@ -133,7 +142,7 @@ Page({
     })
   },
 
-  onConfirmEditName() {
+  async onConfirmEditName() {
     const { currentId, editNameValue, detail } = this.data
     if (!checkinUtil || !currentId || !detail) return
 
@@ -146,7 +155,7 @@ Page({
       return
     }
 
-    const updated = checkinUtil.updateCheckin(currentId, {
+    const updated = await checkinUtil.updateCheckinAsync(currentId, {
       spotName: nextName
     })
 
@@ -176,9 +185,9 @@ Page({
       content: '删除后这张邮票会从我的采集中移除',
       confirmText: '删除',
       confirmColor: '#E05252',
-      success: (res) => {
+      success: async (res) => {
         if (!res.confirm) return
-        checkinUtil.deleteCheckin(currentId)
+        await checkinUtil.deleteCheckinAsync(currentId)
         wx.navigateBack()
       }
     })
@@ -239,11 +248,11 @@ Page({
     })
   },
 
-  onConfirmEditSheet() {
+  async onConfirmEditSheet() {
     const { currentId, detail, editAddress, editDescription, editLatitude, editLongitude } = this.data
     if (!checkinUtil || !detail || !currentId) return
 
-    const updated = checkinUtil.updateCheckin(currentId, {
+    const updated = await checkinUtil.updateCheckinAsync(currentId, {
       address: editAddress,
       description: editDescription,
       latitude: editLatitude,

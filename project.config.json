@@ -58,11 +58,31 @@
     "ignore": [
       {
         "type": "directory",
+        "value": "__tests__"
+      },
+      {
+        "type": "directory",
+        "value": "docs"
+      },
+      {
+        "type": "directory",
         "value": ".figma"
       },
       {
         "type": "directory",
         "value": "node_modules"
+      },
+      {
+        "type": "directory",
+        "value": "coverage"
+      },
+      {
+        "type": "directory",
+        "value": ".codebuddy"
+      },
+      {
+        "type": "directory",
+        "value": ".workbuddy"
       },
       {
         "type": "file",

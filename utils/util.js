@@ -684,9 +684,8 @@ const isLiked = isWant
 // 收藏功能（支持美食和景点）
 // ============================================================
 
-function toggleCollect(id, type = 'food') {
-  const key = type === 'food' ? 'userCollectedFoods' : 'userCollectedSpots'
-  const list = loadData(key, [])
+function toggleCollect(id) {
+  const list = loadData('userCollectedSpots', [])
   const strId = String(id)
   const idx = list.findIndex(v => String(v) === strId)
   if (idx > -1) {
@@ -694,13 +693,12 @@ function toggleCollect(id, type = 'food') {
   } else {
     list.push(strId)
   }
-  saveData(key, list)
+  saveData('userCollectedSpots', list)
   return list.includes(strId)
 }
 
-function isCollected(id, type = 'food') {
-  const key = type === 'food' ? 'userCollectedFoods' : 'userCollectedSpots'
-  return loadData(key, []).some(v => String(v) === String(id))
+function isCollected(id) {
+  return loadData('userCollectedSpots', []).some(v => String(v) === String(id))
 }
 
 // ============================================================
@@ -854,6 +852,346 @@ function getCityOptions(coverPool) {
 
 
 
+// ============================================================
+// 云端数据访问层（DAL）— 已登录用户走云端，未登录继续读本地
+// ============================================================
+let _dbWantList = null
+let _dbCollectedList = null
+let _dbUserAddedShops = null
+let _dbRoutes = null
+let _dbCheckinRecords = null
+
+function _getDbWantList() {
+  if (!_dbWantList) _dbWantList = require('./db/wantList')
+  return _dbWantList
+}
+
+function _getDbCollectedList() {
+  if (!_dbCollectedList) _dbCollectedList = require('./db/collectedList')
+  return _dbCollectedList
+}
+
+function _getDbUserAddedShops() {
+  if (!_dbUserAddedShops) _dbUserAddedShops = require('./db/userAddedShops')
+  return _dbUserAddedShops
+}
+
+function _getDbRoutes() {
+  if (!_dbRoutes) _dbRoutes = require('./db/routes')
+  return _dbRoutes
+}
+
+function _getDbCheckinRecords() {
+  if (!_dbCheckinRecords) _dbCheckinRecords = require('./db/checkinRecords')
+  return _dbCheckinRecords
+}
+
+/**
+ * 判断当前是否已登录（云端模式）
+ * @returns {boolean}
+ */
+function _isCloudMode() {
+  return !!loadData('userInfo', null)
+}
+
+// ─── 想去（云端异步版）────────────────────────
+
+/**
+ * 获取想去列表（云端优先，失败 fallback 本地）
+ * @returns {Promise<string[]>}
+ */
+async function getWantListAsync() {
+  if (!_isCloudMode()) return getWantList()
+  const { success, data } = await _getDbWantList().getList()
+  if (success) {
+    saveData('userWantList', data)  // 更新本地缓存
+    return data
+  }
+  return getWantList()
+}
+
+/**
+ * 切换想去状态（云端优先，失败 fallback 本地）
+ * @param {string|number} id
+ * @param {string} [placeType='food']
+ * @returns {Promise<boolean>} true = 已想去
+ */
+async function toggleWantAsync(id, placeType = 'food') {
+  const strId = String(id)
+  if (!_isCloudMode()) {
+    const list = getWantList()
+    const idx = list.indexOf(strId)
+    if (idx > -1) list.splice(idx, 1)
+    else list.push(strId)
+    saveData('userWantList', list)
+    return list.includes(strId)
+  }
+  const { success, data } = await _getDbWantList().toggle(strId, placeType)
+  if (success) {
+    // 同步本地缓存
+    const list = getWantList()
+    if (data) { if (!list.includes(strId)) list.push(strId) }
+    else     { const idx = list.indexOf(strId); if (idx > -1) list.splice(idx, 1) }
+    saveData('userWantList', list)
+    return data
+  }
+  // 云端失败，走本地
+  const list = getWantList()
+  const idx = list.indexOf(strId)
+  if (idx > -1) list.splice(idx, 1)
+  else list.push(strId)
+  saveData('userWantList', list)
+  return list.includes(strId)
+}
+
+/**
+ * 检查是否已想去（云端优先）
+ * @param {string|number} id
+ * @param {string} [placeType='food']
+ * @returns {Promise<boolean>}
+ */
+async function isWantAsync(id, placeType = 'food') {
+  if (!_isCloudMode()) return isWant(id)
+  const { success, data } = await _getDbWantList().check(String(id), placeType)
+  return success ? data : isWant(id)
+}
+
+// ─── 收藏（云端异步版）────────────────────────
+
+/**
+ * 获取所有收藏 ID（不区分类型，云端优先）
+ * @returns {Promise<string[]>}
+ */
+async function getCollectedListAsync() {
+  if (!_isCloudMode()) {
+    return [...loadData('userCollectedFoods', []), ...loadData('userCollectedSpots', [])]
+  }
+  const { success, data } = await _getDbCollectedList().getList()
+  if (success) {
+    // 统一存到 userCollectedSpots（后续可逐步干掉 userCollectedFoods）
+    saveData('userCollectedSpots', data.map(i => i.placeId))
+    return data.map(i => i.placeId)
+  }
+  // fallback
+  return [...loadData('userCollectedFoods', []), ...loadData('userCollectedSpots', [])]
+}
+
+/**
+ * 切换收藏状态（云端优先）
+ * @param {string|number} id
+ * @returns {Promise<boolean>} true = 已收藏
+ */
+async function toggleCollectAsync(id) {
+  const strId = String(id)
+  if (!_isCloudMode()) return toggleCollect(id)
+  const { success, data } = await _getDbCollectedList().toggle(strId)
+  if (success) {
+    // 同步本地缓存
+    const list = loadData('userCollectedSpots', [])
+    if (data) { if (!list.includes(strId)) list.push(strId) }
+    else      { const idx = list.indexOf(strId); if (idx > -1) list.splice(idx, 1) }
+    saveData('userCollectedSpots', list)
+    return data
+  }
+  return toggleCollect(id)
+}
+
+/**
+ * 检查是否已收藏（云端优先）
+ * @param {string|number} id
+ * @returns {Promise<boolean>}
+ */
+async function isCollectedAsync(id) {
+  if (!_isCloudMode()) return isCollected(id)
+  const { success, data } = await _getDbCollectedList().check(String(id))
+  return success ? data : isCollected(id)
+}
+
+// ─── 用户自建店铺（云端异步版）─────────────────────
+
+/**
+ * 获取当前用户的自建店铺列表（云端优先）
+ * @returns {Promise<Array>}
+ */
+async function getUserShopsAsync() {
+  if (!_isCloudMode()) return loadData('userAddedShops', [])
+  const { success, data } = await _getDbUserAddedShops().getList()
+  if (success) {
+    saveData('userAddedShops', data)  // 更新本地缓存
+    return data
+  }
+  return loadData('userAddedShops', [])
+}
+
+/**
+ * 删除用户自建店铺（云端优先）
+ * @param {string} id - 店铺 _id
+ * @returns {Promise<boolean>}
+ */
+async function deleteUserShopAsync(id) {
+  if (!_isCloudMode()) {
+    const list = loadData('userAddedShops', [])
+    const filtered = list.filter(s => String(s._id) !== String(id) && String(s.id) !== String(id))
+    saveData('userAddedShops', filtered)
+    return true
+  }
+  const { success } = await _getDbUserAddedShops().remove(id)
+  if (success) {
+    const list = loadData('userAddedShops', [])
+    const filtered = list.filter(s => String(s._id) !== String(id) && String(s.id) !== String(id))
+    saveData('userAddedShops', filtered)
+    return true
+  }
+  // fallback 本地
+  const list = loadData('userAddedShops', [])
+  const filtered = list.filter(s => String(s._id) !== String(id) && String(s.id) !== String(id))
+  saveData('userAddedShops', filtered)
+  return true
+}
+
+// ─── 路线（云端异步版）────────────────────────
+
+/**
+ * 获取当前用户的路线列表（云端优先）
+ * @returns {Promise<Array>}
+ */
+async function getRoutesAsync() {
+  if (!_isCloudMode()) return loadData('savedRoutes', [])
+  const { success, data } = await _getDbRoutes().getList()
+  if (success) {
+    saveData('savedRoutes', data)  // 更新本地缓存
+    return data
+  }
+  return loadData('savedRoutes', [])
+}
+
+/**
+ * 删除路线（云端优先）
+ * @param {string} id - 路线 _id
+ * @returns {Promise<boolean>}
+ */
+async function deleteRouteAsync(id) {
+  if (!_isCloudMode()) {
+    const list = loadData('savedRoutes', [])
+    const filtered = list.filter(r => String(r._id) !== String(id) && String(r.id) !== String(id))
+    saveData('savedRoutes', filtered)
+    return true
+  }
+  const { success } = await _getDbRoutes().remove(id)
+  if (success) {
+    const list = loadData('savedRoutes', [])
+    const filtered = list.filter(r => String(r._id) !== String(id) && String(r.id) !== String(id))
+    saveData('savedRoutes', filtered)
+    return true
+  }
+  return false
+}
+
+/**
+ * 保存/新增路线（云端优先）
+ * @param {Object} routeData - 路线数据
+ * @returns {Promise<Object>} 保存后的路线（含 _id）
+ */
+async function saveRouteAsync(routeData) {
+  // 先写本地（确保 UI 即时响应）
+  const list = loadData('savedRoutes', [])
+  list.push(routeData)
+  saveData('savedRoutes', list)
+
+  // 已登录 → 同步到云端
+  if (_isCloudMode()) {
+    const { _openid, ...cleanData } = routeData
+    const { success, data: recordId } = await _getDbRoutes().add(cleanData)
+    if (success && recordId) {
+      const saved = { ...routeData, _id: recordId }
+      // 用云端 _id 更新本地缓存
+      const updatedList = loadData('savedRoutes', [])
+      const idx = updatedList.findIndex(r => String(r.id) === String(routeData.id))
+      if (idx > -1) {
+        updatedList[idx] = saved
+        saveData('savedRoutes', updatedList)
+      }
+      return saved
+    }
+    // 云端写入失败，本地数据已保留，静默降级
+    console.warn('[util] saveRouteAsync: 云端写入失败，已保留本地数据')
+  }
+  return routeData
+}
+
+/**
+ * 更新路线（云端优先）
+ * @param {string|number} id - 路线 _id 或本地 id
+ * @param {Object} patchData - 要更新的字段（完整路线对象或增量 patch）
+ * @returns {Promise<Object|null>}
+ */
+async function updateRouteAsync(id, patchData) {
+  // 先写本地
+  const list = loadData('savedRoutes', [])
+  const idx = list.findIndex(r => String(r._id) === String(id) || String(r.id) === String(id))
+  if (idx > -1) {
+    list[idx] = { ...list[idx], ...patchData }
+    saveData('savedRoutes', list)
+  } else {
+    return null
+  }
+
+  // 已登录 + 有云端 _id → 同步到云端
+  if (_isCloudMode() && patchData._id) {
+    // 剔除系统字段，_openid 由云端自动管理，客户端不可写入
+    const { _openid, ...cleanData } = patchData
+    const { success } = await _getDbRoutes().update(patchData._id, cleanData)
+    if (!success) {
+      console.warn('[util] updateRouteAsync: 云端更新失败，本地数据已保留')
+    }
+  } else if (_isCloudMode() && !patchData._id) {
+    // 本地路线 ID 但无云端 _id → 视为新增
+    const { _openid, ...cleanRouteData } = list[idx]
+    const { success, data: recordId } = await _getDbRoutes().add(cleanRouteData)
+    if (success && recordId) {
+      const saved = { ...routeData, _id: recordId }
+      const updatedList = loadData('savedRoutes', [])
+      const uIdx = updatedList.findIndex(r => String(r.id) === String(id))
+      if (uIdx > -1) {
+        updatedList[uIdx] = saved
+        saveData('savedRoutes', updatedList)
+      }
+      return saved
+    }
+  }
+  return list[idx] || null
+}
+
+// ─── 足迹（云端异步版）────────────────────────
+
+/**
+ * 获取足迹/已去过列表（云端优先）
+ * 从云端打卡记录派生，按地点去重
+ * @returns {Promise<Array>}
+ */
+async function getFootprintItemsAsync() {
+  if (!_isCloudMode()) return getFootprintItems()
+  const { success, data } = await _getDbCheckinRecords().getList()
+  if (success) {
+    // 用云端打卡记录按地点去重，生成足迹列表
+    const seenKeys = new Set()
+    const items = []
+    data.forEach(record => {
+      const place = buildFootprintItem(record)
+      const uniqueKey = place.detailSource === 'catalog'
+        ? `${place.type}:${place.id}`
+        : `${place.type}:${normalizeCompareText(place.name)}:${normalizeCompareText(place.address)}`
+      if (seenKeys.has(uniqueKey)) return
+      seenKeys.add(uniqueKey)
+      items.push(place)
+    })
+    return items
+  }
+  return getFootprintItems()
+}
+
+// ─── 导出扩展 ─────────────────────────────────
+
 module.exports = {
   getDistance,
   planRoute,
@@ -890,5 +1228,19 @@ module.exports = {
   getWantList,
   toggleWant,
   isWant,
-  getCityOptions
+  getCityOptions,
+  // 云端异步版
+  getWantListAsync,
+  toggleWantAsync,
+  isWantAsync,
+  getCollectedListAsync,
+  toggleCollectAsync,
+  isCollectedAsync,
+  getUserShopsAsync,
+  deleteUserShopAsync,
+  getRoutesAsync,
+  saveRouteAsync,
+  updateRouteAsync,
+  deleteRouteAsync,
+  getFootprintItemsAsync,
 }
