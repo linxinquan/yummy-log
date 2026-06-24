@@ -1,33 +1,19 @@
 /**
- * 数据迁移工具 — 将本地存储数据一次性写入云端数据库
+ * 迁移工具 — 仅迁移打卡记录（含图片处理）
  *
- * 使用方式：
- *   1. 在"我的"页面登录后自动检测并弹窗提示
- *   2. 在设置页提供"数据迁移"手动入口
- *
- * 注意：微信云数据库不支持批量 add，需要逐条写入。
- *       如果数据量较大（>50 条），建议分批次或让用户手动选择迁移范围。
+ * 数据决策：
+ * - 路线、添加店铺、想去列表、收藏列表 → 登录后直接丢弃（不复用）
+ * - 打卡记录 → 两阶段迁移：
+ *   Phase 1: 处理图片（本地持久化 + 上传云端获取 cloudFileID）
+ *   Phase 2: 写入云端数据库
  */
-
 const { safeCall } = require('./base')
-const wantListDal       = require('./wantList')
-const collectedListDal  = require('./collectedList')
 const checkinRecordsDal = require('./checkinRecords')
-const routesDal         = require('./routes')
-const userAddedShopsDal = require('./userAddedShops')
-
 const util = require('../util')
 
+const fs = wx.getFileSystemManager()
+
 // ─── 批量辅助 ─────────────────────────────────
-// 微信云数据库有并发上限，以可控并发度分批写入
-/**
- * 以指定并发度逐批执行异步任务
- * @param {Array}     items       - 待处理数据
- * @param {Function}  fn          - 异步处理函数 (item, index) => Promise
- * @param {number}    concurrency - 最大并发数（默认 5）
- * @param {Function}  [onItem]    - 每项完成回调 (current, total)
- * @returns {Promise<void>}
- */
 async function _batchRun(items, fn, concurrency = 5, onItem = null) {
   let completed = 0
   const total = items.length
@@ -39,83 +25,94 @@ async function _batchRun(items, fn, concurrency = 5, onItem = null) {
   }
 }
 
+// ─── 图片处理 ─────────────────────────────────
+
+/**
+ * 处理单条打卡记录的图片：
+ * 1. 本地持久化（临时文件 → 持久路径）
+ * 2. 上传云端获取 cloudFileID
+ * 返回更新后的记录
+ */
+async function _processCheckinPhoto(record) {
+  if (!record.photoPath) return record
+
+  let photoPath = record.photoPath
+  let cloudFileID = record.cloudFileID || ''
+
+  // Phase 1a: 本地持久化
+  try {
+    const savedPath = await new Promise((resolve, reject) => {
+      fs.saveFile({
+        tempFilePath: photoPath,
+        success: (res) => resolve(res.savedFilePath),
+        fail: reject,
+      })
+    })
+    photoPath = savedPath
+  } catch (err) {
+    // 可能已是持久化路径或已损坏，保留原路径
+  }
+
+  // Phase 1b: 上传云端
+  if (!cloudFileID) {
+    try {
+      const cloudPath = `checkin/${Date.now()}_${Math.random().toString(36).slice(2, 10)}.jpg`
+      const uploadRes = await wx.cloud.uploadFile({
+        cloudPath,
+        filePath: photoPath,
+      })
+      cloudFileID = uploadRes.fileID
+    } catch (err) {
+      console.warn('[migration] 图片云端上传失败:', err)
+    }
+  }
+
+  return { ...record, photoPath, cloudFileID }
+}
+
+/**
+ * 处理所有打卡记录的图片（Phase 1）
+ * 更新本地缓存中的 photoPath 和 cloudFileID
+ */
+async function _processCheckinPhotos(records, onProgress) {
+  const processed = []
+  for (let i = 0; i < records.length; i++) {
+    processed.push(await _processCheckinPhoto(records[i]))
+    if (onProgress) onProgress('photos', i + 1, records.length)
+  }
+  // 写回本地缓存
+  util.saveData('checkin_records', processed)
+  return processed
+}
+
 // ─── 主入口 ───────────────────────────────────
 
 /**
- * 执行完整迁移（所有数据类型）
+ * 执行打卡记录迁移（两阶段）
  *
  * @param {Object}   [options]
- * @param {boolean}  [options.wantList=true]        - 是否迁移想去列表
- * @param {boolean}  [options.collectedList=true]   - 是否迁移收藏列表
- * @param {boolean}  [options.checkinRecords=true]  - 是否迁移打卡记录
- * @param {boolean}  [options.routes=true]          - 是否迁移路线
- * @param {boolean}  [options.userAddedShops=true]  - 是否迁移用户添加店铺
- * @param {Function} [options.onProgress]           - 进度回调 (phase, current, total)
- *
- * @returns {Promise<{success, data: {stats}, error}>}
- *          stats = { wantCount, collectCount, checkinCount, routeCount, shopCount }
+ * @param {Function} [options.onProgress] - (phase, current, total)
+ *        phase: 'photos' | 'checkins' | 'done'
+ * @returns {Promise<{success, data: {count}, error}>}
  */
 async function migrateAll(options = {}) {
-  const opts = {
-    wantList:       true,
-    collectedList:   true,
-    checkinRecords:  true,
-    routes:          true,
-    userAddedShops:  true,
-    onProgress:      null,
-    ...options,
+  const opts = { onProgress: null, ...options }
+
+  const records = util.loadData('checkin_records', []) || []
+  if (records.length === 0) {
+    if (opts.onProgress) opts.onProgress('done', 0, 0)
+    return { success: true, data: { count: 0 }, error: null }
   }
 
-  const stats = {
-    wantCount:     0,
-    collectCount:   0,
-    checkinCount:   0,
-    routeCount:     0,
-    shopCount:      0,
-  }
+  // ── Phase 1: 处理图片 ──────────────────
+  const processed = await _processCheckinPhotos(records, opts.onProgress)
 
-  const _progress = (phase, current, total) => {
-    if (opts.onProgress) opts.onProgress(phase, current, total)
-  }
-
-  // ── 1. 想去列表 ──────────────────────────
-  if (opts.wantList) {
-    const wantIds = util.getWantList()
-    _progress('wantList', 0, wantIds.length)
-    await _batchRun(
-      wantIds,
-      (id) => wantListDal.add(id, 'food'),
-      5,
-      (current) => _progress('wantList', current, wantIds.length),
-    )
-    stats.wantCount = wantIds.length
-  }
-
-  // ── 2. 收藏列表 ──────────────────────────
-  if (opts.collectedList) {
-    const foodIds = util.loadData('userCollectedFoods', [])
-    const spotIds = util.loadData('userCollectedSpots', [])
-    const allIds  = [
-      ...foodIds.map(id => ({ id, type: 'food' })),
-      ...spotIds.map(id => ({ id, type: 'spot' })),
-    ]
-    _progress('collectedList', 0, allIds.length)
-    await _batchRun(
-      allIds,
-      (item) => collectedListDal.add(item.id, item.type),
-      5,
-      (current) => _progress('collectedList', current, allIds.length),
-    )
-    stats.collectCount = allIds.length
-  }
-
-  // ── 3. 打卡记录 ──────────────────────────
-  if (opts.checkinRecords) {
-    const records = util.loadData('checkin_records', []) || []
-    _progress('checkinRecords', 0, records.length)
-    await _batchRun(
-      records,
-      (r) => checkinRecordsDal.add({
+  // ── Phase 2: 写入云端 ──────────────────
+  let count = 0
+  await _batchRun(
+    processed,
+    async (r) => {
+      await checkinRecordsDal.add({
         type:                  r.type || 'food',
         photoPath:             r.photoPath || '',
         cloudFileID:           r.cloudFileID || '',
@@ -128,87 +125,51 @@ async function migrateAll(options = {}) {
         customRecordTimeLabel: r.customRecordTimeLabel || '',
         city:                  r.city || '',
         relatedPlaceId:        r.relatedPlaceId || '',
-      }),
-      5,
-      (current) => _progress('checkinRecords', current, records.length),
-    )
-    stats.checkinCount = records.length
-  }
+      })
+      count++
+    },
+    5,
+    (current) => {
+      if (opts.onProgress) opts.onProgress('checkins', current, processed.length)
+    },
+  )
 
-  // ── 4. 路线 ──────────────────────────────
-  if (opts.routes) {
-    const savedRoutes = util.loadData('savedRoutes', []) || []
-    _progress('routes', 0, savedRoutes.length)
-    await _batchRun(
-      savedRoutes,
-      (r) => routesDal.add(r),
-      5,
-      (current) => _progress('routes', current, savedRoutes.length),
-    )
-    stats.routeCount = savedRoutes.length
-  }
+  // 清除本地打卡数据
+  util.saveData('checkin_records', [])
+  util.saveData('userCheckedIn', [])
 
-  // ── 5. 用户添加店铺 ──────────────────────
-  if (opts.userAddedShops) {
-    const shops = util.loadData('userAddedShops', []) || []
-    _progress('userAddedShops', 0, shops.length)
-    await _batchRun(
-      shops,
-      (s) => userAddedShopsDal.add({
-        name:       s.name || '',
-        address:    s.address || '',
-        lat:        s.lat || null,
-        lng:        s.lng || null,
-        type:       s.type || 'food',                   // 保留本地 type，无则默认 food
-        category:   s.category || '',
-        price:      String(s.price || ''),               // number → string
-        rating:     String(s.rating || ''),               // number → string
-        tags:       Array.isArray(s.tags) ? s.tags : [],
-        coverImage: s.image || s.coverImage || '',        // 兼容本地 image 字段名
-      }),
-      5,
-      (current) => _progress('userAddedShops', current, shops.length),
-    )
-    stats.shopCount = shops.length
-  }
-
-  _progress('done', 1, 1)
-  return { success: true, data: { stats }, error: null }
+  if (opts.onProgress) opts.onProgress('done', count, count)
+  return { success: true, data: { count }, error: null }
 }
 
 /**
- * 检测本地是否有未迁移的数据
- * @returns {boolean}
+ * 检查本地是否有打卡记录需要迁移
  */
 function hasLocalData() {
-  const wantIds   = util.getWantList()
-  const foodIds   = util.loadData('userCollectedFoods', [])
-  const spotIds   = util.loadData('userCollectedSpots', [])
-  const records   = util.loadData('checkin_records', []) || []
-  const routes    = util.loadData('savedRoutes', []) || []
-  const shops     = util.loadData('userAddedShops', []) || []
-  return (
-    wantIds.length > 0 ||
-    foodIds.length > 0 ||
-    spotIds.length > 0 ||
-    records.length > 0 ||
-    routes.length > 0 ||
-    shops.length > 0
-  )
+  const records = util.loadData('checkin_records', []) || []
+  return records.length > 0
 }
 
 /**
- * 清除本地数据（迁移完成后调用）
+ * 登录后丢弃路线/店铺/想去/收藏等不再复用的本地列表数据
+ * （打卡记录保留，供后续迁移）
  */
-function clearLocalData() {
+function discardLocalLists() {
   util.saveData('userWantList',      [])
-  util.saveData('userWantFoods',     [])  // 旧格式
-  util.saveData('userWantSpots',     [])  // 旧格式
+  util.saveData('userWantFoods',     [])
+  util.saveData('userWantSpots',     [])
   util.saveData('userCollectedFoods', [])
   util.saveData('userCollectedSpots', [])
-  util.saveData('checkin_records',   [])
   util.saveData('savedRoutes',        [])
   util.saveData('userAddedShops',    [])
+}
+
+/**
+ * 清除所有本地用户数据（打卡记录迁移完成后调用）
+ */
+function clearLocalData() {
+  discardLocalLists()
+  util.saveData('checkin_records',   [])
   util.saveData('userCheckedIn',     [])
 }
 
@@ -216,5 +177,6 @@ function clearLocalData() {
 module.exports = {
   migrateAll,
   hasLocalData,
+  discardLocalLists,
   clearLocalData,
 }

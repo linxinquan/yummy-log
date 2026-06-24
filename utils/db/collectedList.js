@@ -45,6 +45,29 @@ function check(placeId) {
 // ─── 写入 ─────────────────────────────────────
 
 /**
+ * 添加收藏（仅当不存在时添加，幂等）
+ * @param {string} placeId
+ * @returns {Promise<{success, data: string|null, error}>} data = 新记录 _id，已存在则 null
+ */
+function add(placeId) {
+  return safeCall(async () => {
+    const existing = await collection(COLLECTIONS.COLLECTED_LIST)
+      .where({ placeId: String(placeId) })
+      .limit(1)
+      .get()
+    if (existing.data.length > 0) return null
+
+    const res = await collection(COLLECTIONS.COLLECTED_LIST).add({
+      data: {
+        placeId: String(placeId),
+        createdAt: getDB().serverDate(),
+      },
+    })
+    return res._id
+  })
+}
+
+/**
  * 切换收藏状态（核心方法）
  * @param {string} placeId
  * @returns {Promise<{success, data: boolean, error}>} data = true 表示已收藏
@@ -77,5 +100,6 @@ function toggle(placeId) {
 module.exports = {
   getList,
   check,
+  add,
   toggle,
 }

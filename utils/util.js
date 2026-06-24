@@ -525,8 +525,7 @@ function requireLogin(options = {}) {
     toastText = '请先登录',
     duration = 1500
   } = options
-  const userInfo = loadData('userInfo', null)
-  if (userInfo) return true
+  if (isCloudMode()) return true
   wx.showToast({
     title: toastText,
     icon: 'none',
@@ -887,12 +886,19 @@ function _getDbCheckinRecords() {
 }
 
 /**
- * 判断当前是否已登录（云端模式）
+ * 判断当前是否已真实登录（云端模式）
+ *
+ * 旧版假登录只存了 { nickName, avatarUrl }，没有 _id / openid，
+ * 如果无真实云端身份，视为未登录（走本地模式）。
  * @returns {boolean}
  */
-function _isCloudMode() {
-  return !!loadData('userInfo', null)
+function isCloudMode() {
+  const info = loadData('userInfo', null)
+  return !!(info && (info._id || info.openid))
 }
+
+// 内部快捷引用，给 _isCloudMode 保留别名兼容
+const _isCloudMode = isCloudMode
 
 // ─── 想去（云端异步版）────────────────────────
 
@@ -1243,4 +1249,6 @@ module.exports = {
   updateRouteAsync,
   deleteRouteAsync,
   getFootprintItemsAsync,
+  // 登录状态判断
+  isCloudMode,
 }

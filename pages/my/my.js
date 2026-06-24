@@ -218,7 +218,7 @@ Page({
   async loadCheckinStats() {
     try {
       // 优先使用云端异步版（已登录时读云端，未登录时读本地）
-      const isLoggedIn = !!util.loadData('userInfo', null)
+      const isLoggedIn = util.isCloudMode()
       let stats = { totalCount: 0, cityCount: 0 }
       let allCheckins = []
 
@@ -356,8 +356,9 @@ Page({
 
   // 从本地缓存读取登录用户信息。
   loadUserInfo() {
-    const userInfo = util.loadData('userInfo', null)
-    if (userInfo) {
+    const isCloudLogin = util.isCloudMode()
+    if (isCloudLogin) {
+      const userInfo = util.loadData('userInfo', null)
       // 兼容历史账号：如果之前没有头像，就补一张随机封面并写回缓存。
       const fallbackAvatar = userInfo.avatarUrl || getRandomProfileImage()
       const nextUserInfo = userInfo.avatarUrl
@@ -375,6 +376,11 @@ Page({
         avatarUrl: fallbackAvatar
       })
     } else {
+      // 旧版假登录数据（无 _id/openid）→ 清除并视为未登录
+      if (util.loadData('userInfo', null)) {
+        util.saveData('userInfo', null)
+        console.log('[my] 检测到旧版假登录数据，已清除，需重新登录')
+      }
       this.setData({
         isLoggedIn: false,
         userInfo: {},
@@ -427,19 +433,22 @@ Page({
   },
 
 
-  // 询问是否同步本地数据到云端
+  // 询问是否同步本地打卡数据到云端
   askSyncData() {
-    // 已迁移过则跳过（localStorage 数据保留供前端页面读取，不清除）
+    // 已迁移过则跳过
     if (wx.getStorageSync(DATA_MIGRATED_KEY)) {
       return
     }
 
-    const hasLocalData = this.checkHasLocalData()
-    if (!hasLocalData) return
+    // 登录后直接丢弃路线/店铺/想去/收藏等旧列表数据
+    migration.discardLocalLists()
+
+    const hasCheckins = this.checkHasLocalData()
+    if (!hasCheckins) return
 
     wx.showModal({
-      title: '数据同步',
-      content: '检测到本地有采集数据，是否同步到云端？同步后可在其他设备访问。',
+      title: '采集数据同步',
+      content: '检测到本地有采集记录，是否将照片上传并同步到云端？同步后可在其他设备查看。',
       confirmText: '立即同步',
       cancelText: '暂时不同步',
       success: (res) => {
@@ -450,38 +459,25 @@ Page({
     })
   },
 
-  // 检查是否有本地数据需要同步
+  // 检查本地是否有打卡记录需要迁移
   checkHasLocalData() {
-    const checkinRecords = util.loadData('checkin_records', [])
-    const wantList = util.loadData('userWantList', [])
-    const collectedFoods = util.loadData('userCollectedFoods', [])
-    const collectedSpots = util.loadData('userCollectedSpots', [])
-    const userAddedShops = util.loadData('userAddedShops', [])
-    
-    return checkinRecords.length > 0 || 
-           wantList.length > 0 || 
-           collectedFoods.length > 0 || 
-           collectedSpots.length > 0 || 
-           userAddedShops.length > 0
+    const records = util.loadData('checkin_records', []) || []
+    return records.length > 0
   },
 
-  // 同步本地数据到云端（使用 DAL 逐条写入）
+  // 同步打卡记录到云端（两阶段：处理图片 → 写入云端）
   async syncLocalDataToCloud() {
-    wx.showLoading({ title: '正在同步...', mask: true })
+    wx.showLoading({ title: '正在处理...', mask: true })
 
     try {
       const { success, data, error } = await migration.migrateAll({
         onProgress: (phase, current, total) => {
           const phaseName = {
-            wantList:       '想去',
-            collectedList:   '收藏',
-            checkinRecords:  '采集记录',
-            routes:          '路线',
-            userAddedShops:  '自定义店铺',
-            done:            '完成',
-          }[phase] || phase
-          if (phase !== 'done') {
-            wx.showLoading({ title: `同步${phaseName}...`, mask: true })
+            photos:   '处理图片',
+            checkins: '同步记录',
+          }[phase]
+          if (phase !== 'done' && phaseName) {
+            wx.showLoading({ title: `${phaseName} ${current}/${total}`, mask: true })
           }
         }
       })
@@ -489,23 +485,16 @@ Page({
       wx.hideLoading()
 
       if (success) {
-        const { stats } = data
-        const parts = []
-        if (stats.wantCount > 0)      parts.push(`想去 ${stats.wantCount} 条`)
-        if (stats.collectCount > 0)    parts.push(`收藏 ${stats.collectCount} 条`)
-        if (stats.checkinCount > 0)    parts.push(`采集 ${stats.checkinCount} 条`)
-        if (stats.routeCount > 0)      parts.push(`路线 ${stats.routeCount} 条`)
-        if (stats.shopCount > 0)       parts.push(`店铺 ${stats.shopCount} 条`)
+        const { count } = data
+        if (count > 0) {
+          wx.showModal({
+            title: '同步完成',
+            content: `已同步 ${count} 条采集记录，照片已上传到云端`,
+            showCancel: false,
+          })
+        }
 
-        wx.showModal({
-          title: '同步完成',
-          content: parts.length > 0
-            ? `已同步：${parts.join('，')}`
-            : '没有需要同步的数据',
-          showCancel: false,
-        })
-
-        // 记录迁移完成标记，避免重复弹窗（本地数据保留供前端页面读取）
+        // 记录迁移完成标记
         wx.setStorageSync(DATA_MIGRATED_KEY, true)
       } else {
         wx.showToast({ title: '同步失败：' + (error && error.message || '未知错误'), icon: 'none' })

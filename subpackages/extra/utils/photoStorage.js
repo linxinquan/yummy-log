@@ -3,7 +3,7 @@ const util = require('../../../utils/util')
 const fs = wx.getFileSystemManager()
 
 function _isCloudMode() {
-  return !!util.loadData('userInfo', null)
+  return util.isCloudMode()
 }
 
 /**

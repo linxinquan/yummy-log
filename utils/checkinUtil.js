@@ -15,7 +15,7 @@ function _getDbCheckinRecords() {
  * @returns {boolean}
  */
 function _isCloudMode() {
-  return !!util.loadData('userInfo', null)
+  return util.isCloudMode()
 }
 
 const QQMAP_KEY = 'SWGBZ-7P2CB-LK2UO-JZYYV-6BZYQ-KEBUG'

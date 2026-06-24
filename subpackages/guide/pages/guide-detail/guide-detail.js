@@ -720,7 +720,7 @@ Page({
   },
 
   // 把这篇攻略保存成"我的路线"
-  onSaveRoute() {
+  async onSaveRoute() {
     const { guide, daySections, summaryText } = this.data
     const routeCard = {
       id: guide.id,
@@ -743,6 +743,22 @@ Page({
 
     savedRoutes.push(routeCard)
     wx.setStorageSync('savedRoutes', savedRoutes)
+
+    // 同步云端
+    try {
+      const saved = await util.saveRouteAsync(routeCard)
+      if (saved && saved._id) {
+        const list = util.loadData('savedRoutes', [])
+        const idx = list.findIndex(r => String(r.id) === String(routeCard.id))
+        if (idx > -1) {
+          list[idx] = saved
+          wx.setStorageSync('savedRoutes', list)
+        }
+      }
+    } catch (err) {
+      console.warn('[guide-detail] 云端同步失败（已保留本地数据）:', err)
+    }
+
     wx.showToast({ title: '已保存到路线', icon: 'success' })
   },
 
