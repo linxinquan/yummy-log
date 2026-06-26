@@ -3,7 +3,7 @@ const app = getApp()
 const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
-const { getCheckinStats, getCheckins, getCheckinsAsync, getCheckinStatsAsync } = require('../../utils/checkinUtil')
+const { getCheckinsAsync, getCheckinStatsAsync } = require('../../utils/checkinUtil')
 const migration = require('../../utils/db/migration')
 
 const DATA_MIGRATED_KEY = 'data_migrated'
@@ -77,14 +77,16 @@ Page({
 
     // 登录弹窗
     showLoginModal: false,
-    isAgreePrivacy: false
+    isAgreePrivacy: false,
+
+    // 设置弹窗
+    showSettingsModal: false
   },
 
   // 页面初始化：加载用户信息、统计数据、行政区和天气。
   onLoad() {
     this.loadUserInfo()
     this.loadData()
-    // 首屏就刷新采集统计，避免第一次进入数字为空
     this.loadCheckinStats()
     // 获取行政区划信息
     this.loadDistrictInfo()
@@ -92,11 +94,14 @@ Page({
     this.loadWeather()
   },
 
-  // 回到页面时重新刷新用户和打卡数据。
+  // 回到页面时重新刷新用户和打卡数据（纯本地读取）。
   onShow() {
     this.loadUserInfo()
     this.loadData()
     this.loadCheckinStats()
+  },
+
+  onUnload() {
   },
 
   // ========== 登录弹窗相关方法 ==========
@@ -123,6 +128,28 @@ Page({
 
   // 阻止弹窗内容点击冒泡
   onModalContentTap() {
+    // 什么都不做，只是阻止冒泡
+  },
+
+  // ========== 设置弹窗相关方法 ==========
+
+  // 显示设置弹窗
+  showSettingsModal() {
+    this.setData({ showSettingsModal: true })
+  },
+
+  // 隐藏设置弹窗
+  hideSettingsModal() {
+    this.setData({ showSettingsModal: false })
+  },
+
+  // 点击弹窗遮罩层关闭
+  onSettingsModalMaskTap() {
+    this.hideSettingsModal()
+  },
+
+  // 阻止弹窗内容点击冒泡
+  onSettingsModalContentTap() {
     // 什么都不做，只是阻止冒泡
   },
 
@@ -193,6 +220,10 @@ Page({
           showLoginModal: false
         })
 
+        // 异步从云端恢复数据
+        const restore = require('../../utils/db/restore')
+        restore.restoreFromCloud()
+
         // 如果是新用户，询问是否同步本地数据
         if (res.result.isNew) {
           this.askSyncData()
@@ -214,93 +245,78 @@ Page({
     }
   },
 
-  // 读取打卡统计、最近邮票、地图点位这些"足迹"相关数据。
-  async loadCheckinStats() {
-    try {
-      // 优先使用云端异步版（已登录时读云端，未登录时读本地）
-      const isLoggedIn = util.isCloudMode()
-      let stats = { totalCount: 0, cityCount: 0 }
-      let allCheckins = []
+  // 读取打卡统计、最近邮票、地图点位这些"足迹"相关数据（同步读本地）。
+  loadCheckinStats() {
+    const stats = getCheckinStatsAsync() || { totalCount: 0, cityCount: 0 }
+    const allCheckins = getCheckinsAsync() || []
 
-      if (isLoggedIn) {
-        const statsRes = await getCheckinStatsAsync()
-        stats = statsRes || { totalCount: 0, cityCount: 0 }
-        const listRes = await getCheckinsAsync()
-        allCheckins = listRes || []
-      } else {
-        stats = getCheckinStats()
-        allCheckins = getCheckins()
+    // 最新邮票（第一条）
+    let latestStamp = null
+    if (allCheckins.length > 0) {
+      const first = allCheckins[0]
+      const d = new Date(first.date)
+      latestStamp = {
+        ...first,
+        dateStr: `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`
       }
-      // 最新邮票（第一条）
-      let latestStamp = null
-      if (allCheckins.length > 0) {
-        const first = allCheckins[0]
-        const d = new Date(first.date)
-        latestStamp = {
-          ...first,
-          dateStr: `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`
-        }
-      }
-
-      // 近期邮票（最多6条）
-      const recentStamps = allCheckins.slice(0, 6).map(c => {
-        const d = new Date(c.date)
-        return {
-          ...c,
-          shortDate: `${d.getMonth()+1}/${d.getDate()}`,
-          dateStr: `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`
-        }
-      })
-
-      // 地图打卡点：只用有坐标的采集记录
-      const mapMarkers = []
-      allCheckins.forEach((c) => {
-        if (c.latitude && c.longitude) {
-          const marker = {
-            id: c.id,
-            latitude: c.latitude,
-            longitude: c.longitude,
-            width: 36,
-            height: 36,
-            callout: {
-              content: c.spotName || '采集点',
-              color: '#ffffff',
-              fontSize: 11,
-              borderRadius: 6,
-              padding: 4,
-              display: 'BYCLICK',
-              bgColor: '#FF8B7E',
-              textAlign: 'center'
-            }
-          }
-          mapMarkers.push(marker)
-        }
-      })
-
-      // 地图中心：取所有打卡点的边界中心，无数据时默认深圳
-      let mapCenter = { latitude: 22.543099, longitude: 114.057868 }
-      if (mapMarkers.length > 0) {
-        const lats = mapMarkers.map(m => m.latitude)
-        const lngs = mapMarkers.map(m => m.longitude)
-        mapCenter = {
-          latitude: (Math.min(...lats) + Math.max(...lats)) / 2,
-          longitude: (Math.min(...lngs) + Math.max(...lngs)) / 2
-        }
-      }
-
-      this.setData({
-        checkinStats: {
-          totalCount: stats.totalCount || 0,
-          cityCount: stats.cityCount || 0
-        },
-        latestStamp,
-        recentStamps,
-        mapMarkers,
-        mapCenter
-      })
-    } catch (e) {
-      console.warn('getCheckinStats 失败:', e)
     }
+
+    // 近期邮票（最多6条）
+    const recentStamps = allCheckins.slice(0, 6).map(c => {
+      const d = new Date(c.date)
+      return {
+        ...c,
+        shortDate: `${d.getMonth()+1}/${d.getDate()}`,
+        dateStr: `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`
+      }
+    })
+
+    // 地图打卡点：只用有坐标的采集记录
+    const mapMarkers = []
+    allCheckins.forEach((c) => {
+      if (c.latitude && c.longitude) {
+        const marker = {
+          id: c.id,
+          latitude: c.latitude,
+          longitude: c.longitude,
+          width: 36,
+          height: 36,
+          callout: {
+            content: c.spotName || '采集点',
+            color: '#ffffff',
+            fontSize: 11,
+            borderRadius: 6,
+            padding: 4,
+            display: 'BYCLICK',
+            bgColor: '#FF8B7E',
+            textAlign: 'center'
+          }
+        }
+        mapMarkers.push(marker)
+      }
+    })
+
+    // 地图中心：取所有打卡点的边界中心，无数据时默认深圳
+    let mapCenter = { latitude: 22.543099, longitude: 114.057868 }
+    if (mapMarkers.length > 0) {
+      const lats = mapMarkers.map(m => m.latitude)
+      const lngs = mapMarkers.map(m => m.longitude)
+      mapCenter = {
+        latitude: (Math.min(...lats) + Math.max(...lats)) / 2,
+        longitude: (Math.min(...lngs) + Math.max(...lngs)) / 2
+      }
+    }
+
+    this.setData({
+      checkinStats: {
+        totalCount: stats.totalCount || 0,
+        cityCount: stats.cityCount || 0
+      },
+      latestStamp,
+      recentStamps,
+      mapMarkers,
+      mapCenter
+    })
   },
 
   // 读取定位后的城市和区信息
@@ -526,18 +542,13 @@ Page({
     this.onEditProfile()
   },
 
-  // 已登录后点击资料区：可改昵称或退出登录。
+  // 已登录后点击资料区：可修改昵称
   onEditProfile() {
     wx.showActionSheet({
-      itemList: ['修改昵称', '退出登录'],
+      itemList: ['修改昵称'],
       success: (res) => {
-        switch (res.tapIndex) {
-          case 0: // 修改昵称
-            this.showEditNickname()
-            break
-          case 1: // 退出登录
-            this.onLogout()
-            break
+        if (res.tapIndex === 0) {
+          this.showEditNickname()
         }
       }
     })
@@ -695,6 +706,7 @@ Page({
 
   // 退出登录，但不清掉历史打卡等业务数据。
   onLogout() {
+    this.hideSettingsModal()
     wx.showModal({
       title: '退出登录',
       content: '确定要退出当前账号吗？',
@@ -708,8 +720,7 @@ Page({
             avatarUrl: '',
             hasNickname: false,
             hasAvatar: false,
-            userInfo: {},
-            showUserMenu: false
+            userInfo: {}
           })
           wx.showToast({ title: '已退出登录', icon: 'none' })
         }
@@ -733,20 +744,15 @@ Page({
       return
     }
     
-    if (type === 'settings') {
-      wx.showToast({ title: '设置', icon: 'none' })
-      return
-    }
-    
     if (type === 'share') {
       wx.showToast({ title: '分享我们', icon: 'none' })
       return
     }
   },
 
-  // 读取"想去 / 到访 / 自己添加的地点"等统计数据。
-  async loadData() {
-    const userAddedShops = await util.getUserShopsAsync()
+  // 读取"想去 / 到访 / 自己添加的地点"等统计数据（同步读本地）。
+  loadData() {
+    const userAddedShops = util.getUserShopsAsync()
     const allItems = [...placesData.getAllPlaces(), ...userAddedShops]
     const itemMap = {}
     allItems.forEach(item => {
@@ -754,7 +760,7 @@ Page({
     })
 
     // 新格式：userWantList 存储所有想去的 ID（美食+景点）
-    const wantIds = await util.getWantListAsync()
+    const wantIds = util.getWantListAsync()
     const likedShops = wantIds
       .map(id => {
         // 先查 placesData（美食+景点）
@@ -772,7 +778,7 @@ Page({
         type: item.type || (item.category === '景点' || item.category === '公园' ? 'spot' : 'food')
       }))
 
-    const footprintItems = await util.getFootprintItemsAsync()
+    const footprintItems = util.getFootprintItemsAsync()
     const visitedList = footprintItems.map(item => ({
       shopId: item.id,
       shop: itemMap[String(item.id)] || item,

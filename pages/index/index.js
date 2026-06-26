@@ -217,11 +217,11 @@ Page({
     }, 0)
   },
 
-  // 加载数据 (混合美食和景点)
+  // 加载数据 (本地优先 + 后台同步)
   async loadItems() {
     // 等待 placesData 初始化完成（解决启动时序竞争问题）
     await placesData.whenReady()
-    const userShops = await util.getUserShopsAsync()
+    const userShops = util.getUserShopsAsync()
     const currentCity = this.data.currentCity || '深圳市'
     
     // 为用户添加的数据补充 city 字段
@@ -248,10 +248,10 @@ Page({
     this._scheduleApplyFilters()
   },
 
-  // 读取用户状态
-  async loadUserData() {
-    const wantList = await util.getWantListAsync()
-    const checkedIn = await util.getFootprintItemsAsync()
+  // 读取用户状态（读本地 + 后台同步）
+  loadUserData() {
+    const wantList = util.getWantListAsync()
+    const checkedIn = util.getFootprintItemsAsync()
     this.setData({
       likedShops: wantList,
       visitedShops: checkedIn.map(item => String(item.id))
@@ -529,26 +529,23 @@ Page({
     }
   },
 
-  // 点击右侧心形，加入或移出"想去"（UI 通过 wxs 响应，不需预计算 isLiked）
-  async onToggleLike(e) {
+  // 点击右侧心形，加入或移出"想去"（本地优先 + 后台同步）
+  onToggleLike(e) {
     if (!util.requireLogin()) {
       return
     }
     
     const shopId = e.currentTarget.dataset.shopid
     
-    // 1. 本地缓存 + data 立变，wxs 自动渲染实心/空心
-    util.toggleWant(shopId)
+    // toggleWantAsync 内部已处理本地缓存切换 + 云端同步
+    const isNowWant = util.toggleWantAsync(shopId)
     this.setData({ likedShops: util.getWantList() })
     
     wx.showToast({
-      title: util.isWant(shopId) ? '已添加到想去' : '已移出想去',
+      title: isNowWant ? '已添加到想去' : '已移出想去',
       icon: 'none',
       duration: 1000
     })
-    
-    // 2. 后台同步云端
-    util.toggleWantAsync(shopId).catch(() => {})
   },
   // 计算两点之间的直线距离（单位：米）
   calculateDistance(lat1, lng1, lat2, lng2) {

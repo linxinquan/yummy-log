@@ -273,109 +273,82 @@ function formatStampDate(isoString) {
 // ============================================================
 
 /**
- * 获取打卡记录列表（云端优先）
- * @returns {Promise<Array>}
+ * 获取打卡记录列表（纯本地）
+ * @returns {Array}
  */
-async function getCheckinsAsync() {
-  if (!_isCloudMode()) return getCheckins()
-  const { success, data } = await _getDbCheckinRecords().getList()
-  if (success) {
-    util.saveData('checkin_records', data)  // 更新本地缓存
-    return data
-  }
+function getCheckinsAsync() {
   return getCheckins()
 }
 
 /**
- * 保存打卡记录（云端优先）
+ * 保存打卡记录（本地优先 + 后台同步）
  * @param {Object} data - 打卡数据
- * @returns {Promise<Object>} 保存后的记录（含 _id）
+ * @returns {Object} 保存后的记录
  */
-async function saveCheckinAsync(data) {
-  if (!_isCloudMode()) return saveCheckin(data)
-  const { success, data: recordId } = await _getDbCheckinRecords().add(data)
-  if (success && recordId) {
-    // 同步到本地缓存
-    const list = getCheckins()
-    const matchedPlace = util.findKnownPlace({
-      name: data.spotName,
-      address: data.address,
-      type: data.type
-    }, data.type)
-    const newRecord = {
-      id: recordId,
-      type: data.type || 'food',
-      photoPath: data.photoPath || '',
-      cloudFileID: data.cloudFileID || '',
-      spotName: data.spotName || '',
-      address: data.address || '',
-      latitude: data.latitude || null,
-      longitude: data.longitude || null,
-      description: data.description || '',
-      date: data.date || new Date().toISOString(),
-      customRecordTimeLabel: data.customRecordTimeLabel || '',
-      city: data.city || '',
-      relatedPlaceId: matchedPlace ? String(matchedPlace.id) : '',
-      _id: recordId,  // 云端 _id，方便后续更新/删除
-    }
-    list.unshift(newRecord)
-    util.saveData('checkin_records', list)
-    util.syncLegacyCheckedInFromRecords()
-    return newRecord
+function saveCheckinAsync(data) {
+  // 1. 立即写本地（零等待）
+  const record = saveCheckin(data)
+
+  // 2. 后台推云端（fire-and-forget）
+  if (_isCloudMode() && record) {
+    _getDbCheckinRecords().add(data).then(res => {
+      if (res.success && res.data) {
+        // 用云端 _id 更新本地记录
+        updateCheckin(record.id, { _id: res.data })
+      }
+    }).catch(err => {
+      console.warn('[checkinUtil] 云端保存失败，数据已在本地:', err)
+    })
   }
-  // 云端失败，走本地
-  return saveCheckin(data)
+
+  return record
 }
 
 /**
- * 更新打卡记录（云端优先）
- * @param {string} id  - 记录 _id
+ * 更新打卡记录（本地优先 + 后台同步）
+ * @param {string} id  - 记录 id
  * @param {Object} patchData - 要更新的字段
- * @returns {Promise<Object|null>}
+ * @returns {Object|null}
  */
-async function updateCheckinAsync(id, patchData) {
-  if (!_isCloudMode()) return updateCheckin(id, patchData)
-  const { success } = await _getDbCheckinRecords().update(id, patchData)
-  if (success) {
-    // 同步本地缓存
-    const list = getCheckins()
-    const idx = list.findIndex(item => String(item.id) === String(id) || String(item._id) === String(id))
-    if (idx > -1) {
-      list[idx] = { ...list[idx], ...patchData }
-      util.saveData('checkin_records', list)
-    }
-    util.syncLegacyCheckedInFromRecords()
-    return list[idx] || null
+function updateCheckinAsync(id, patchData) {
+  // 1. 立即更新本地
+  const result = updateCheckin(id, patchData)
+
+  // 2. 后台推云端
+  if (_isCloudMode()) {
+    _getDbCheckinRecords().update(id, patchData).catch(err => {
+      console.warn('[checkinUtil] 云端更新失败，数据已在本地:', err)
+    })
   }
-  return updateCheckin(id, patchData)
+
+  return result
 }
 
 /**
- * 删除打卡记录（云端优先）
- * @param {string} id - 记录 _id
- * @returns {Promise<Array>} 删除后的列表
+ * 删除打卡记录（本地优先 + 后台同步）
+ * @param {string} id - 记录 id
+ * @returns {Array} 删除后的列表
  */
-async function deleteCheckinAsync(id) {
-  if (!_isCloudMode()) return deleteCheckin(id)
-  const { success } = await _getDbCheckinRecords().remove(id)
-  if (success) {
-    const list = getCheckins()
-    const filtered = list.filter(c => String(c.id) !== String(id) && String(c._id) !== String(id))
-    util.saveData('checkin_records', filtered)
-    util.syncLegacyCheckedInFromRecords()
-    return filtered
+function deleteCheckinAsync(id) {
+  // 1. 立即删除本地
+  const filtered = deleteCheckin(id)
+
+  // 2. 后台推云端
+  if (_isCloudMode()) {
+    _getDbCheckinRecords().remove(id).catch(err => {
+      console.warn('[checkinUtil] 云端删除失败，本地已删除:', err)
+    })
   }
-  return deleteCheckin(id)
+
+  return filtered
 }
 
 /**
- * 获取打卡统计（云端优先）
- * @returns {Promise<Object>}
+ * 获取打卡统计（纯本地）
+ * @returns {Object}
  */
-async function getCheckinStatsAsync() {
-  if (!_isCloudMode()) return getCheckinStats()
-  const { success, data } = await _getDbCheckinRecords().getStats()
-  return success ? data : getCheckinStats()
+function getCheckinStatsAsync() {
+  return getCheckinStats()
 }
 
 // ─── 导出 ─────────────────────────────────────

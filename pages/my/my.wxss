@@ -419,4 +419,63 @@
   font-size: 28rpx;
 }
 
+/* ========== 设置弹窗样式 ========== */
+
+.settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.settings-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.settings-modal-content {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 48rpx 48rpx 0 0;
+  padding: 48rpx;
+  box-sizing: border-box;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  position: relative;
+}
+
+.settings-modal.show .settings-modal-content {
+  transform: translateY(0);
+}
+
+/* 设置项列表 */
+.settings-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  margin-top: 16rpx;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  padding: 32rpx;
+}
+
+.settings-item-text {
+  font-size: 32rpx;
+  font-weight: 400;
+  line-height: 32rpx;
+  color: #242529;
+}
+
 

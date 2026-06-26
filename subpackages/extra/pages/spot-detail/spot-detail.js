@@ -1,6 +1,7 @@
 // 觅食图 - 地点详情页（统一美食和景点）
 const app = getApp()
 const util = require('../../../../utils/util')
+const syncManager = require('../../../../utils/db/syncManager')
 const placesData = require('../../../../utils/placesData')
 const { DEFAULT_FOOD_COVERS } = require('../../../../config/cover-pool')
 
@@ -297,13 +298,13 @@ Page({
     }
   },
 
-  // TODO: 重构为乐观更新（先改本地 UI + setData，后台同步云端，避免等待）
-  async onCollect() {
-    const { spot, isFoodDetail } = this.data
+  // 收藏/取消收藏（乐观更新：先改本地 UI + setData，后台同步云端）
+  onCollect() {
+    const { spot } = this.data
     if (!spot) return
     if (!util.requireLogin()) return
 
-    const isCollected = await util.toggleCollectAsync(spot.id)
+    const isCollected = util.toggleCollectAsync(spot.id)
     this.setData({ isCollected })
     wx.showToast({
       title: isCollected ? '已收藏' : '已取消收藏',

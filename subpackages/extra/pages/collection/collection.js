@@ -39,6 +39,10 @@ Page({
     this._baseMarkerMetaMap = {}
     this._expandedClusterMarkerId = null
     this._loadToken = 0
+
+  },
+
+  onUnload() {
   },
 
   onShow() {
@@ -49,9 +53,11 @@ Page({
     if (!checkinUtil) return
     const loadToken = ++this._loadToken
 
-    const raw = await checkinUtil.getCheckinsAsync()
-    const stats = await checkinUtil.getCheckinStatsAsync()
-    const footprintItems = await util.getFootprintItemsAsync()
+    // 只读本地缓存，不同步。同步由 onShow 里的 enqueue 统一负责，
+    // 避免在 await buildMapMarkers 期间同步覆盖本地数据造成竞争条件。
+    const raw = checkinUtil.getCheckins()
+    const stats = checkinUtil.getCheckinStats()
+    const footprintItems = util.getFootprintItems()
 
     // 预处理日期和地址，避免在 WXML 里调用函数
     const checkins = raw.map((c) => {
@@ -82,22 +88,8 @@ Page({
     // 统计
     const spotCount = raw.filter(c => c.type === 'spot').length
 
-    // 地图模式：直接在地图上叠邮票和定位点，不再使用默认 marker 图标
-    const mapCheckins = checkins.filter(c => c.latitude && c.longitude)
-    const mapMarkers = await this.buildMapMarkers(mapCheckins)
+    // ── 第一步：列表数据先 setData，用户立刻能看到邮票 ──
     if (loadToken !== this._loadToken) return
-
-    // 地图中心：取最新一条，否则用深圳
-    let mapCenter = { lat: 22.543, lng: 114.057 }
-    if (mapCheckins.length > 0) {
-      const centerLat = mapCheckins.reduce((sum, item) => sum + parseFloat(item.latitude), 0) / mapCheckins.length
-      const centerLng = mapCheckins.reduce((sum, item) => sum + parseFloat(item.longitude), 0) / mapCheckins.length
-      mapCenter = {
-        lat: centerLat,
-        lng: centerLng
-      }
-    }
-
     this.setData({
       checkins,
       stats: {
@@ -105,9 +97,21 @@ Page({
         cityCount: stats.cityCount,
         footprintCount: footprintItems.length || spotCount
       },
-      mapMarkers,
-      mapCenter
     })
+
+    // ── 第二步：异步生成地图标记，不阻塞列表渲染 ──
+    const mapCheckins = checkins.filter(c => c.latitude && c.longitude)
+    const mapMarkers = await this.buildMapMarkers(mapCheckins)
+    if (loadToken !== this._loadToken) return
+
+    // 地图中心：取所有标记平均坐标，无数据则用深圳
+    let mapCenter = { lat: 22.543, lng: 114.057 }
+    if (mapCheckins.length > 0) {
+      const centerLat = mapCheckins.reduce((sum, item) => sum + parseFloat(item.latitude), 0) / mapCheckins.length
+      const centerLng = mapCheckins.reduce((sum, item) => sum + parseFloat(item.longitude), 0) / mapCheckins.length
+      mapCenter = { lat: centerLat, lng: centerLng }
+    }
+    this.setData({ mapMarkers, mapCenter })
   },
 
   // 地图改成真实 marker：
@@ -304,6 +308,24 @@ Page({
       }
 
       const shellPath = '/images/collection/stamp-ticket.png'
+
+      // 安全超时：防止 canvas 绘制失败时 Promise 永不 resolve
+      let settled = false
+      const timer = setTimeout(() => {
+        if (settled) return
+        settled = true
+        console.warn('[generateMapMarkerIcon] canvas 绘制超时，回退到壳图')
+        resolve(shellPath)
+      }, 3000)
+
+      const finish = (path) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timer)
+        if (path) this._markerIconCache[cacheKey] = path
+        resolve(path || shellPath)
+      }
+
       const ctx = wx.createCanvasContext('mapMarkerCanvas', this)
 
       ctx.clearRect(0, 0, 170, 318)
@@ -325,13 +347,8 @@ Page({
           destWidth: 170,
           destHeight: 221,
           fileType: 'png',
-          success: (res) => {
-            this._markerIconCache[cacheKey] = res.tempFilePath
-            resolve(res.tempFilePath)
-          },
-          fail: () => {
-            resolve(shellPath)
-          }
+          success: (res) => finish(res.tempFilePath),
+          fail: () => finish(shellPath),
         }, this)
       })
     })
@@ -492,8 +509,8 @@ Page({
     })
   },
 
-  // 编辑名称只更新邮票标题，保存后立即刷新列表。
-  async onConfirmEditName() {
+  // 编辑名称只更新邮票标题（本地优先 + 后台同步）。
+  onConfirmEditName() {
     const { activeCheckinId, editNameValue } = this.data
     if (!activeCheckinId || !checkinUtil) return
 
@@ -506,7 +523,7 @@ Page({
       return
     }
 
-    const updated = await checkinUtil.updateCheckinAsync(activeCheckinId, {
+    const updated = checkinUtil.updateCheckinAsync(activeCheckinId, {
       spotName: nextName
     })
 
@@ -522,6 +539,7 @@ Page({
       editNameSheetVisible: false,
       activeCheckinName: nextName
     })
+    // 立即刷新列表（读本地，零等待）
     this.loadData()
   },
 
@@ -535,10 +553,10 @@ Page({
       content: '删除后这张邮票会从我的采集中移除',
       confirmText: '删除',
       confirmColor: '#E05252',
-      success: async (res) => {
+      success: (res) => {
         if (!res.confirm) return
 
-        await checkinUtil.deleteCheckinAsync(activeCheckinId)
+        checkinUtil.deleteCheckinAsync(activeCheckinId)
         this.setData({
           actionSheetVisible: false,
           editNameSheetVisible: false,

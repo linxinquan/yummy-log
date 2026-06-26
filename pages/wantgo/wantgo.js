@@ -355,6 +355,9 @@ Page({
     })
   },
 
+  onUnload() {
+  },
+
   // ─── 返回 ─────────────────────────────
   onBack() {
     wx.navigateBack({ fail: () => {
@@ -367,7 +370,7 @@ Page({
     wx.switchTab({ url: '/pages/index/index' })
   },
 
-  // 页面重新显示时，刷新当前 Tab 的列表数据。
+  // 页面重新显示时，加载本地数据 + 后台触发同步。
   onShow() {
     const pendingTab = wx.getStorageSync('pendingWantgoTab')
     if (pendingTab) {
@@ -385,17 +388,17 @@ Page({
     this._loadData()
   },
 
-  // 按当前 Tab 读取不同的数据源：
+  // 按当前 Tab 读取不同的数据源（同步读本地 + 后台同步）：
   // want 读想去地点，plan 读我的路线，visited 读足迹。
-  async _loadData() {
+  _loadData() {
     this.setData({ loading: true })
     const { tab } = this.data
     let items = []
 
     if (tab === 'want') {
       // 新格式：userWantList 存储所有想去的 ID（美食+景点）
-      const wantIds = await util.getWantListAsync()
-      const userShops = await util.getUserShopsAsync()
+      const wantIds = util.getWantListAsync()
+      const userShops = util.getUserShopsAsync()
       
       // 通过 placesData.getPlaceById 一次性读取所有想去地点的完整数据
       const wantItems = wantIds
@@ -419,7 +422,7 @@ Page({
       console.log('wantgo', items)
       this.setData({ items, empty: items.length === 0, loading: false })
     } else if (tab === 'plan') {
-      const savedRoutes = await util.getRoutesAsync()
+      const savedRoutes = util.getRoutesAsync()
       const normalizedRoutes = savedRoutes.map((item, index) => {
         const routeCover = resolveRouteCardCover(item, index)
         const fallbackDayCount = Math.max((item.daySections || []).length || item.dayCount || 1, 1)
@@ -441,7 +444,7 @@ Page({
     } else {
       // tab === 'visited'
       // 足迹统一以 checkin_records 为准，再在这里转成卡片展示数据。
-      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(await util.getFootprintItemsAsync())))
+      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(util.getFootprintItemsAsync())))
       this.setData({ items, empty: items.length === 0, loading: false })
     }
   },
@@ -508,9 +511,9 @@ Page({
     }
   },
 
-  // 复制路线
-  async copyRoute(route) {
-    const savedRoutes = await util.getRoutesAsync()
+  // 复制路线（本地优先 + 后台同步）
+  copyRoute(route) {
+    const savedRoutes = util.getRoutesAsync()
     const newRoute = {
       ...route,
       id: Date.now(), // 生成新ID
@@ -520,8 +523,10 @@ Page({
     savedRoutes.push(newRoute)
     util.saveData('savedRoutes', savedRoutes)
     wx.showToast({ title: '已复制路线', icon: 'success' })
-    // 刷新列表
-    this.onShow()
+    // 同步推云端
+    util.saveRouteAsync(newRoute)
+    // 刷新列表（读本地，零等待）
+    this._loadData()
   },
 
   // 编辑路线
@@ -531,18 +536,18 @@ Page({
     wx.navigateTo({ url: `/subpackages/route/pages/my-route/my-route?route=${routeStr}&edit=1&returnTo=plan` })
   },
 
-  // 删除路线
+  // 删除路线（本地优先 + 后台同步）
   deleteRoute(route) {
-    const that = this // 保存 this 引用
+    const that = this
     wx.showModal({
       title: '确认删除',
       content: `确定要删除路线"${route.title}"吗？`,
-      success: async (res) => {
+      success: (res) => {
         if (res.confirm) {
-          await util.deleteRouteAsync(route._id || route.id)
+          util.deleteRouteAsync(route._id || route.id)
           wx.showToast({ title: '已删除', icon: 'success' })
-          // 刷新列表
-          that.onShow()
+          // 刷新列表（读本地，零等待）
+          that._loadData()
           // 关闭弹窗
           that.onCloseRouteActionSheet()
         }
@@ -736,15 +741,18 @@ Page({
       // 新格式：直接保存所有 ID 到 userWantList（不区分 spot/food）
       const sortedIds = items.map(item => String(item.id))
       util.saveData('userWantList', sortedIds)
+      const syncManager = require('../../utils/db/syncManager')
+      syncManager.enqueuePush('wantList')
     }
     this.setData({ dragging: false, dragIndex: -1 })
   },
 
 
-  // ─── 从"想去"里删除当前地点 ─────────────────────────────
-  async onRemove(e) {
+  // ─── 从"想去"里删除当前地点（本地优先 + 后台同步）─────────────────────────────
+  onRemove(e) {
     const id = String(e.currentTarget.dataset.id)
-    await util.toggleWantAsync(id)
+    util.toggleWantAsync(id)
+    // 立即刷新列表（读本地缓存，零等待）
     this._loadData()
     wx.showToast({ title: '已移除', icon: 'none', duration: 1000 })
   },

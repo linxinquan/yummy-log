@@ -8,7 +8,7 @@
         <block wx:if="{{isLoggedIn}}">
           <!-- 已登录：点击昵称可修改；点击资料区（头像或描述文字）可编辑资料或退出登录 -->
           <input class="user-nickname-input" type="nickname" placeholder="点击设置昵称" value="{{userInfo.nickName}}" bindblur="onUpdateNickname" />
-          <text class="user-desc" bindtap="onTapUserProfile">与你相遇的第 {{userInfo.days || 1}} 天</text>
+          <text class="user-desc">与你相遇的第 {{userInfo.days || 1}} 天</text>
         </block>
         <block wx:else>
           <!-- 未登录：显示请登录按钮 -->
@@ -69,7 +69,7 @@
       <text class="list-item-text">我的发布</text>
       <i class="mgc_right_line arrow-icon"></i>
     </view>
-    <view class="list-item" bindtap="onMenuTap" data-type="settings">
+    <view class="list-item" bindtap="showSettingsModal">
       <text class="list-item-text">设置</text>
       <i class="mgc_right_line arrow-icon"></i>
     </view>
@@ -131,6 +131,31 @@
       <!-- 暂不登录 -->
       <view class="cancel-login" bindtap="hideLoginModal">
         <text>暂不登录</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 设置弹窗 -->
+  <view class="settings-modal {{showSettingsModal ? 'show' : ''}}" bindtap="onSettingsModalMaskTap">
+    <view class="settings-modal-content" catchtap="onSettingsModalContentTap">
+      <!-- 关闭按钮 -->
+      <view class="modal-close" bindtap="hideSettingsModal">
+        <i class="mgc_close_line"></i>
+      </view>
+
+      <!-- 标题 -->
+      <view class="modal-header">
+        <text class="modal-title">设置</text>
+      </view>
+
+      <!-- 设置项 -->
+      <view class="settings-items">
+        <view class="settings-item" bindtap="showEditNickname">
+          <text class="settings-item-text">修改昵称</text>
+        </view>
+        <view class="settings-item" bindtap="onLogout">
+          <text class="settings-item-text">退出登录</text>
+        </view>
       </view>
     </view>
   </view>

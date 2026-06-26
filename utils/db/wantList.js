@@ -16,8 +16,8 @@ const _ = getDB().command
 // ─── 查询 ─────────────────────────────────────
 
 /**
- * 获取当前用户的想去列表（placeId 数组）
- * @returns {Promise<{success, data: string[], error}>}
+ * 获取当前用户的想去列表（含 placeId + placeType）
+ * @returns {Promise<{success, data: Array<{placeId: string, placeType: string}>, error}>}
  */
 function getList() {
   return safeCall(async () => {
@@ -26,7 +26,7 @@ function getList() {
         .orderBy('createdAt', 'desc')
         .get()
     )
-    return res.data.map(item => item.placeId)
+    return res.data.map(item => ({ placeId: item.placeId, placeType: item.placeType || 'food' }))
   })
 }
 

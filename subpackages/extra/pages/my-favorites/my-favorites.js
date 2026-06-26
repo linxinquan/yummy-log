@@ -36,6 +36,9 @@ Page({
     this.initNavigationBar()
   },
 
+  onUnload() {
+  },
+
   onShow() {
     this.loadData()
   },
@@ -54,12 +57,10 @@ Page({
     })
   },
 
-  // 加载收藏数据
-  async loadData() {
-    // 加载所有收藏 ID（不区分类型）
-    const allCollectedIds = await util.getCollectedListAsync()
-
-    const userAddedShops = await util.getUserShopsAsync()
+  // 加载收藏数据（同步读本地 + 后台同步）
+  loadData() {
+    const allCollectedIds = util.getCollectedListAsync()
+    const userAddedShops = util.getUserShopsAsync()
 
     // 用 getPlaceById 跨类型查找，避免 type 字段不匹配漏掉
     const findItem = (id) => {
@@ -113,23 +114,21 @@ Page({
     wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${item.id}` })
   },
 
-  // 取消收藏
-  async onRemoveCollect(e) {
+  // 取消收藏（本地即时移除 + 后台同步）
+  onRemoveCollect(e) {
     const item = e.currentTarget.dataset.item
     if (!item) return
 
-    await util.toggleCollectAsync(item.id)
+    util.toggleCollectAsync(item.id)
+
+    // 立即刷新列表（读本地缓存，零等待）
+    this.loadData()
 
     wx.showToast({
       title: '已取消收藏',
       icon: 'none',
       duration: 1000
     })
-
-    // 重新加载数据
-    setTimeout(() => {
-      this.loadData()
-    }, 500)
   },
 
   // 图片加载失败

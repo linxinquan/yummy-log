@@ -63,6 +63,15 @@ App({
     this.getUserLocation()
   },
 
+  // 小程序切入后台时备份数据到云端
+  onHide() {
+    const util = require('./utils/util')
+    if (util.isCloudMode()) {
+      const syncManager = require('./utils/db/syncManager')
+      syncManager.pushAll()
+    }
+  },
+
   // 强制刷新所有数据（下拉刷新时调用）
   async refreshAllData() {
     try {
