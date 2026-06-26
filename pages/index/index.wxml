@@ -39,7 +39,7 @@
     <!-- 天气单独一行 -->
     <view class="weather-row">
       <view class="weather-box">
-        <text class="weather-text">多云 23~28°C</text>
+        <text class="weather-text">{{weatherDesc}} {{weatherTemp}}</text>
       </view>
     </view>
 

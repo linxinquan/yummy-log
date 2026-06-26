@@ -1,7 +1,7 @@
 # 觅食图 / Me Tour - Code Wiki
 
 > 深圳蛇口美食探店地图 · 微信小程序代码文档
-> 版本: V1.0.2 | 更新日期: 2026-04-01
+> 版本: V1.1.0 | 更新日期: 2026-06-26
 
 ---
 
@@ -9,14 +9,16 @@
 
 1. [项目概述](#1-项目概述)
 2. [技术架构](#2-技术架构)
-3. [模块职责](#3-模块职责)
-4. [核心数据模型](#4-核心数据模型)
-5. [关键函数说明](#5-关键函数说明)
-6. [页面导航与路由](#6-页面导航与路由)
-7. [依赖关系](#7-依赖关系)
-8. [外部服务与API](#8-外部服务与api)
-9. [本地存储结构](#9-本地存储结构)
-10. [运行与部署](#10-运行与部署)
+3. [页面模块](#3-页面模块)
+4. [自定义组件](#4-自定义组件)
+5. [工具模块](#5-工具模块)
+6. [核心数据模型](#6-核心数据模型)
+7. [关键函数说明](#7-关键函数说明)
+8. [页面导航与路由](#8-页面导航与路由)
+9. [依赖关系](#9-依赖关系)
+10. [外部服务与API](#10-外部服务与api)
+11. [本地存储结构](#11-本地存储结构)
+12. [运行与部署](#12-运行与部署)
 
 ---
 
@@ -31,40 +33,59 @@
 | 框架 | 微信小程序原生框架 |
 | 地图 | 微信 Map 组件 + 腾讯地图 API |
 | 云服务 | 微信云开发 (CloudBase) |
-| 数据存储 | localStorage |
-| 样式 | WXSS + Design System |
-| 构建 | 微信开发者工具 |
+| 数据存储 | localStorage + 云数据库 (迁移中) |
+| 样式 | WXSS + MingCute 图标库 + Design Tokens |
+| 构建 | 微信开发者工具 + miniprogram-ci |
 
 ### 1.2 项目结构
 
 ```
-yummy-log/
-├── app.js                    # 小程序入口
-├── app.json                  # 全局配置
-├── app.wxss                  # 全局样式
-├── pages/                    # 页面目录
+yummy/
+├── app.js                    # 小程序入口（云初始化、定位、全局数据）
+├── app.json                  # 全局配置（路由、tabbar、分包、预加载）
+├── app.wxss                  # 全局样式（CSS变量设计系统）
+├── pages/                    # 主包页面（5个Tab）
 │   ├── index/               # 探索页（地图 + 店铺列表）
 │   ├── wantgo/              # 想去清单页
 │   ├── discover/            # 攻略发现页
-│   ├── my/                  # 个人中心页
-│   ├── shop-detail/         # 店铺详情页
-│   ├── spot-detail/         # 景点详情页
-│   ├── route/               # 路线规划页
 │   ├── route-entry/         # 中间路线入口页
-│   ├── checkin/             # 打卡采集页
-│   ├── collection/          # 采集记录页
-│   ├── my-favorites/       # 我的收藏页
-│   ├── my-guides/           # 我的攻略页
-│   ├── my-route/            # 我的路线页
-│   ├── district-guide/      # 区域攻略页
-│   ├── guide-detail/        # 攻略详情页
-│   ├── route-basic-edit/    # 路线基础编辑页
-│   └── webview/             # 网页容器页
+│   └── my/                  # 个人中心页
+├── subpackages/             # 分包页面（4个子包）
+│   ├── guide/               # 攻略子包
+│   │   ├── pages/district-guide/
+│   │   ├── pages/guide-detail/
+│   │   └── pages/my-guides/
+│   ├── checkin/             # 打卡子包
+│   │   ├── pages/checkin/
+│   │   ├── pages/checkin-camera/
+│   │   ├── pages/checkin-detail/
+│   │   └── utils/
+│   ├── route/               # 路线子包
+│   │   ├── pages/route/
+│   │   ├── pages/route-basic-edit/
+│   │   ├── pages/my-route/
+│   │   └── utils/
+│   └── extra/               # 扩展功能子包
+│       ├── pages/spot-detail/
+│       ├── pages/collection/
+│       ├── pages/link-import/
+│       ├── pages/webview/
+│       ├── pages/my-favorites/
+│       └── utils/
 ├── custom-tabbar/           # 自定义底部导航
+├── components/              # 自定义组件
+│   ├── route-map-preview-card/
+│   ├── transport-info-sheet/
+│   └── travel-meta-line/
 ├── utils/                   # 工具函数
+│   └── db/                  # 数据库访问层（DAL）
 ├── cloud/                   # 云函数
-├── design-system/           # 设计系统文档
-└── images/                  # 静态资源
+├── config/                  # 配置文件
+├── styles/                  # 全局样式文件
+├── images/                  # 静态资源
+├── assets/                  # 图标资源
+├── i18n/                    # 国际化
+└── __tests__/               # 单元测试
 ```
 
 ---
@@ -76,19 +97,21 @@ yummy-log/
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                      表现层 (UI)                        │
-│  pages/  ·  custom-tabbar/  ·  images/  ·  styles/     │
+│  pages/ · subpackages/ · custom-tabbar/ · images/      │
+│  components/ · styles/                                 │
 ├─────────────────────────────────────────────────────────┤
 │                      业务逻辑层                          │
-│  app.js (全局状态)  ·  各页面 .js (Page 逻辑)          │
+│  app.js (全局状态) · 各页面 .js (Page 逻辑)            │
 ├─────────────────────────────────────────────────────────┤
 │                      数据服务层                          │
-│  utils/util.js  ·  utils/checkinUtil.js              │
+│  utils/util.js · utils/cloudData.js · utils/db/        │
+│  utils/checkinUtil.js · utils/placesData.js            │
 ├─────────────────────────────────────────────────────────┤
 │                      数据持久层                          │
-│  localStorage  ·  微信云开发 (CloudBase)                │
+│  localStorage (legacy) · 微信云数据库 (migrating)       │
 ├─────────────────────────────────────────────────────────┤
 │                      外部服务层                          │
-│  腾讯地图 API  ·  百度地图 API  ·  和风天气 API          │
+│  腾讯地图 API · 腾讯天气 API · 百度地图 API              │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -103,18 +126,16 @@ App({
     location: null,            // 用户当前位置 {lat, lng, accuracy}
     locationReady: false,      // 定位是否就绪
     locationCallbacks: [],     // 定位回调队列
-    districtInfo: {},          // 行政区划信息 {city, district}
-    centerLocation: {},        // 默认中心坐标 (蛇口)
-    qqMapKey: '',              // 腾讯地图 Key
-    baiduMapKey: '',          // 百度地图 Key
-    locationDesc: ''          // 位置描述
+    districtInfo: { city: '深圳', district: '南山区' },  // 行政区划信息
+    centerLocation: { lat: 22.5322, lng: 113.9558 },    // 默认中心坐标
+    qqMapKey: 'SWGBZ-7P2CB-LK2UO-JZYYV-6BZYQ-KEBUG',   // 腾讯地图 Key
+    baiduMapKey: 'KuGlOjdoC0kmGUbU1Tw2OQyK6LKQ6gGa',   // 百度地图 Key（全景图）
+    locationDesc: ''           // 位置描述
   }
 })
 ```
 
 ### 2.3 回调机制
-
-提供两个关键的异步等待机制：
 
 | 方法 | 用途 |
 |------|------|
@@ -123,9 +144,9 @@ App({
 
 ---
 
-## 3. 模块职责
+## 3. 页面模块
 
-### 3.1 页面模块
+### 3.1 主包页面 (pages/)
 
 #### 探索页 (pages/index/)
 
@@ -133,7 +154,7 @@ App({
 |------|------|
 | `index.js` | 地图展示、店铺/景点列表、分类筛选、想去功能 |
 | `index.wxml` | 地图组件、底部抽屉、店铺卡片 |
-| `discover.wxs` | WXS 脚本（过滤器、格式化） |
+| `index.wxss` | 页面样式 |
 
 **核心功能：**
 - 地图 + 底部抽屉双视图
@@ -142,6 +163,7 @@ App({
 - 广东21城市切换
 - 想去/取消想去
 - 位置选择器
+- 使用 `custom-tabbar` 组件
 
 #### 想去清单页 (pages/wantgo/)
 
@@ -154,92 +176,19 @@ App({
 - 路线规划入口
 - 到访足迹展示
 - 项目移除
+- 使用 `travel-meta-line`、`transport-info-sheet` 组件
 
-#### 路线规划页 (pages/route/)
-
-| 文件 | 职责 |
-|------|------|
-| `route.js` | 贪心最近邻算法、双模式、导览导航 |
-
-**核心功能：**
-- 贪心最近邻路线优化
-- 起点/终点自定义选择
-- 出行方式切换（驾车/步行/公交）
-- 全选/自选店铺
-- 导览模式（逐步导航）
-- 地图可视化
-
-#### 店铺详情页 (pages/shop-detail/)
-
-| 文件 | 职责 |
-|------|------|
-| `shop-detail.js` | 店铺信息展示、收藏、导航、电话拨打 |
-
-**核心功能：**
-- 店铺基础信息（评分/价格/营业时间）
-- 推荐菜品展示
-- 微信内置地图导航
-- 电话拨打
-- 收藏功能
-
-#### 景点详情页 (pages/spot-detail/)
-
-| 文件 | 职责 |
-|------|------|
-| `spot-detail.js` | 景点信息展示、收藏、导航、简介 |
-
-**核心功能：**
-- 景点介绍与标签
-- 开放时间/门票信息
-- 全景图展示
-- 想去/收藏
-
-#### 个人中心页 (pages/my/)
-
-| 文件 | 职责 |
-|------|------|
-| `my.js` | 用户登录、数据统计、打卡地图、天气展示 |
-
-**核心功能：**
-- 快速登录（生成默认账号）
-- 想去/足迹/添加店铺统计
-- 打卡采集入口
-- 双地图展示（景点/美食打卡点）
-- 和风天气获取
-
-#### 打卡采集页 (pages/checkin/)
-
-| 文件 | 职责 |
-|------|------|
-| `checkin.js` | 拍照打卡、逆地理编码、AI描述生成 |
-
-**核心功能：**
-- 拍照或相册选择
-- 腾讯地图逆地理编码
-- AI诗意描述生成
-- 打卡记录保存
-
-#### 攻略页 (pages/discover/)
+#### 攻略发现页 (pages/discover/)
 
 | 文件 | 职责 |
 |------|------|
 | `discover.js` | 攻略列表、区域分类、攻略导入 |
+| `discover.wxs` | WXS 工具函数 |
 
 **核心功能：**
 - 区域筛选（福田/南山/罗湖等）
 - 精选攻略展示
 - 小红书/大众点评攻略文本解析
-
-#### 攻略详情页 (pages/guide-detail/)
-
-| 文件 | 职责 |
-|------|------|
-| `guide-detail.js` | 攻略内容展示、店铺关联 |
-
-**核心功能：**
-- 攻略详情展示
-- 店铺跳转
-- 路线规划入口
 
 #### 路线入口页 (pages/route-entry/)
 
@@ -252,41 +201,87 @@ App({
 - 跳转路线规划页
 - 创建空白路线
 
-#### 其他页面
+#### 个人中心页 (pages/my/)
+
+| 文件 | 职责 |
+|------|------|
+| `my.js` | 用户登录、数据统计、打卡地图 |
+
+**核心功能：**
+- 快速登录（生成默认账号）
+- 想去/足迹/添加店铺统计
+- 打卡采集入口
+- 双地图展示（景点/美食打卡点）
+
+### 3.2 分包页面 (subpackages/)
+
+#### guide 子包（攻略）
+
+| 页面 | 文件 | 职责 |
+|------|------|------|
+| `district-guide/` | 18.80KB | 区域攻略列表 |
+| `guide-detail/` | 34.95KB | 攻略详情、店铺关联、路线规划入口 |
+| `my-guides/` | 9.10KB | 用户创建的攻略列表 |
+
+#### checkin 子包（打卡）
+
+| 页面 | 文件 | 职责 |
+|------|------|------|
+| `checkin/` | 19.58KB | 拍照打卡、逆地理编码、AI描述生成 |
+| `checkin-camera/` | 2.42KB | 拍照页面（相机/相册选择） |
+| `checkin-detail/` | 8.10KB | 打卡详情展示 |
+
+#### route 子包（路线）
+
+| 页面 | 文件 | 职责 |
+|------|------|------|
+| `route/` | 36.66KB | 路线规划（贪心算法、双模式、导览导航） |
+| `route-basic-edit/` | 13.50KB | 路线基础编辑 |
+| `my-route/` | 64.15KB | 我的路线（最大页面） |
+
+#### extra 子包（扩展功能）
 
 | 页面 | 职责 |
 |------|------|
+| `spot-detail/` | 地点详情、收藏、导航 |
 | `collection/` | 打卡记录列表展示 |
-| `my-favorites/` | 收藏店铺列表 |
-| `my-guides/` | 用户创建的攻略列表 |
-| `my-route/` | 保存的路线列表 |
-| `district-guide/` | 区域攻略列表 |
-| `route-basic-edit/` | 路线基础编辑 |
+| `link-import/` | 链接导入页面 |
 | `webview/` | 网页容器 |
+| `my-favorites/` | 我的收藏列表 |
 
-### 3.2 自定义组件
+---
 
-#### custom-tabbar/
+## 4. 自定义组件
+
+### 4.1 custom-tabbar/
 
 自定义底部导航栏组件，包含5个Tab：
 
 | Tab | 路径 | 图标 |
 |-----|------|------|
-| 探索 | `/pages/index/index` | 地图图标 |
-| 想去 | `/pages/wantgo/wantgo` | 收藏图标 |
-| 中间入口 | `/pages/route-entry/route-entry` | 十字图标 |
-| 攻略 | `/pages/discover/discover` | 书本图标 |
-| 我的 | `/pages/my/my` | 用户图标 |
+| 探索 | `/pages/index/index` | `tabbar-home.png` |
+| 想去 | `/pages/wantgo/wantgo` | `tabbar-spots.png` |
+| (中间+) | `/pages/route-entry/route-entry` | `tabbar-add.png` |
+| 攻略 | `/pages/discover/discover` | `tabbar-discover.png` |
+| 我的 | `/pages/my/my` | `tabbar-my.png` |
 
 **关键方法：**
 - `updateSelected()` - 根据当前路由更新选中状态
-- `switchTab(e)` - 切换Tab页面
+- `switchTab(e)` - 切换Tab页面（中间按钮特殊处理+旋转动画）
 
-### 3.3 工具模块
+### 4.2 components/ 目录组件
 
-#### utils/util.js
+| 组件 | 说明 |
+|------|------|
+| `route-map-preview-card/` | 路线地图预览卡片 (2.13KB) |
+| `transport-info-sheet/` | 交通信息面板 (645B) |
+| `travel-meta-line/` | 旅行元信息行 (302B) |
 
-核心工具函数库，包含：
+---
+
+## 5. 工具模块
+
+### 5.1 utils/util.js（核心工具库, 37.4KB）
 
 | 函数 | 功能 |
 |------|------|
@@ -296,15 +291,19 @@ App({
 | `estimateTime()` | 出行时间估算 |
 | `parseBlockBasedGuide()` | 攻略文本智能解析 |
 | `openNavigation()` | 多地图导航选择 |
-| `toggleLike()` | 想去/取消想去 |
-| `toggleCollect()` | 收藏/取消收藏 |
+| `toggleLike()` / `isLiked()` | 想去/取消想去 |
+| `toggleCollect()` / `isCollected()` | 收藏/取消收藏 |
 | `saveData()` / `loadData()` | 本地存储读写 |
-| `getSpotData()` | 获取景点数据 |
-| `getNearbySpots()` | 获取附近景点 |
 
-#### utils/checkinUtil.js
+### 5.2 utils/placesData.js（地点数据, 11.56KB）
 
-打卡采集专用工具：
+统一的地点数据管理模块，替代原来的 `shopData.js` 和 `spotData.js`：
+
+| 导出项 | 说明 |
+|--------|------|
+| 统一的地点数据接口 | 覆盖美食店铺和景点数据 |
+
+### 5.3 utils/checkinUtil.js（打卡工具, 12.17KB）
 
 | 函数 | 功能 |
 |------|------|
@@ -314,42 +313,72 @@ App({
 | `getCheckinStats()` | 获取打卡统计 |
 | `generateDescription()` | AI生成诗意描述 |
 
-#### utils/markerIcons.js
+### 5.4 地图相关工具
 
-地图标记图标管理：
-
-| 函数 | 功能 |
+| 文件 | 功能 |
 |------|------|
-| `getIconPath()` | 获取分类图标路径 |
-| `getCategoryColor()` | 获取分类主色调 |
-| `getCategoryEmoji()` | 获取分类emoji |
-| `ensureIcons()` | 确保图标资源就绪 |
+| `utils/map-config.js` | 地图配置（2.25KB） |
+| `utils/map-preview.js` | 地图预览（4.16KB） |
+| `utils/mapRouteFetcher.js` | 地图路线获取（10.42KB） |
+| `utils/markerIcons.js` | 地图标记图标管理 |
 
-#### utils/shopData.js
+### 5.5 路线相关工具
 
-美食店铺数据模块：
+| 文件 | 功能 |
+|------|------|
+| `utils/routeHelper.js` | 路线辅助工具 (11.66KB) |
+| `utils/route-import.js` | 路线导入 (10.15KB) |
+| `utils/route-place-card.js` | 路线地点卡片 (3.09KB) |
+| `utils/travel.js` | 旅行工具 (4.26KB) |
+| `utils/trip-duration.js` | 行程时长 (1.68KB) |
 
-| 导出项 | 说明 |
-|--------|------|
-| `shops` | 蛇口地区24家美食店铺 |
-| `foods` | 深圳全市65家美食店铺 |
-| `shopNameMap` | 店铺别名映射表 |
-| `startPoints` | 起点选项列表 |
-| `categories` | 美食分类列表 |
+### 5.6 其他工具
 
-#### utils/spotData.js
+| 文件 | 功能 |
+|------|------|
+| `utils/cloudData.js` | 云端数据 (2.41KB) |
+| `utils/displayCategory.js` | 分类展示 (859B) |
+| `utils/guide-backfill.js` | 攻略回填 (3.31KB) |
+| `utils/likedCheck.wxs` | WXS脚本-检查收藏状态 (625B) |
 
-景点数据模块：
+### 5.7 数据库访问层 (utils/db/)
 
-| 导出项 | 说明 |
-|--------|------|
-| `spotData` | 深圳58个景点数据，覆盖10个行政区 |
+| 文件 | 功能 |
+|------|------|
+| `client.js` | 数据库客户端初始化 |
+| `base.js` | 基础数据库操作（CRUD） |
+| `index.js` | DAL入口（集合名称常量，8个集合） |
+| `users.js` | 用户数据访问 |
+| `places.js` | 地点数据访问 |
+| `routes.js` | 路线数据访问 |
+| `wantList.js` | 想去清单数据 |
+| `collectedList.js` | 收藏列表数据 |
+| `checkinRecords.js` | 打卡记录数据 |
+| `userAddedShops.js` | 用户添加店铺数据 |
+| `syncManager.js` | 同步管理器 |
+| `migration.js` | 数据迁移（localStorage → 云数据库） |
+| `restore.js` | 数据恢复 |
+
+### 5.8 子包内工具
+
+| 文件 | 位置 | 功能 |
+|------|------|------|
+| `photoStorage.js` | checkin/utils/ | 照片存储 |
+| `recognizePhoto.js` | checkin/utils/ | 照片识别 |
+| `photoStorage.js` | extra/utils/ | 照片存储（与checkin共用） |
+| `route-edit-behavior.js` | route/utils/ | 路线编辑行为 |
+| `route-map-behavior.js` | route/utils/ | 路线地图行为 (14.48KB) |
+| `route-nav-behavior.js` | route/utils/ | 路线导航行为 |
+| `route-place-behavior.js` | route/utils/ | 路线地点行为 |
+| `route-preview-behavior.js` | route/utils/ | 路线预览行为 |
+| `routeHelper.js` | route/utils/ | 路线帮助工具 (3.58KB) |
+| `my-route-edit-behavior.js` | route/utils/ | 我的路线编辑行为 |
 
 ---
 
-## 4. 核心数据模型
+## 6. 核心数据模型
 
-### 4.1 店铺数据 (Shop)
+### 6.1 店铺数据 (Shop)
 
 ```javascript
 {
@@ -359,7 +388,7 @@ App({
   rating: Number,        // 评分 (1-5)
   price: Number,         // 人均价格
   category: String,      // 分类 (粤菜/小吃/其他)
-  tags: String[],        // 标签 ['老字号', '糖水', '蛇口']
+  tags: String[],        // 标签
   address: String,      // 详细地址
   lat: Number,          // 纬度
   lng: Number,           // 经度
@@ -372,14 +401,14 @@ App({
 }
 ```
 
-### 4.2 景点数据 (Spot)
+### 6.2 景点数据 (Spot)
 
 ```javascript
 {
   id: Number,           // 唯一标识
   name: String,         // 景点名称
   district: String,     // 所属区域
-  category: String,     // 分类 (公园/海滨/山景/展馆等)
+  category: String,     // 分类
   rating: Number,       // 评分
   tags: String[],       // 标签
   desc: String,         // 详细介绍
@@ -392,7 +421,7 @@ App({
 }
 ```
 
-### 4.3 打卡记录 (Checkin)
+### 6.3 打卡记录 (Checkin)
 
 ```javascript
 {
@@ -409,7 +438,7 @@ App({
 }
 ```
 
-### 4.4 用户信息 (UserInfo)
+### 6.4 用户信息 (UserInfo)
 
 ```javascript
 {
@@ -427,9 +456,9 @@ App({
 
 ---
 
-## 5. 关键函数说明
+## 7. 关键函数说明
 
-### 5.1 路线规划算法
+### 7.1 路线规划算法
 
 **位置:** `utils/util.js` → `planRoute()`
 
@@ -451,7 +480,7 @@ function planRoute(items, startPoint, preserveOrder = false)
 4. 重复步骤2-3直到所有地点访问完毕
 5. 为每个地点注入 `distanceFromPrev` 属性
 
-### 5.2 攻略文本解析
+### 7.2 攻略文本解析
 
 **位置:** `utils/util.js` → `parseBlockBasedGuide()`
 
@@ -471,47 +500,27 @@ function parseBlockBasedGuide(text)
 4. 依次尝试：别名映射 → 关键词匹配 → 模糊匹配
 5. 返回匹配成功和未匹配的店铺
 
-### 5.3 距离计算
+### 7.3 距离计算
 
 **位置:** `utils/util.js` → `getDistance()`
 
 ```javascript
-/**
- * 计算两点之间的距离（米）
- * 使用 Haversine 公式
- */
 function getDistance(lat1, lng1, lat2, lng2)
 ```
+使用 Haversine 公式计算两点距离（米）。
 
-### 5.4 导航功能
+### 7.4 导航功能
 
 | 函数 | 导航方式 |
 |------|----------|
 | `openWechatNavigation()` | 微信内置地图 |
 | `openGaodeNavigation()` | 高德地图APP |
-| `openBaiduNavigation()` | 百度地图 |
+| `openBaiduNavigation()` | 百度地图（实际代理到微信导航） |
+| `openTencentNavigation()` | 腾讯地图（实际代理到微信导航） |
 | `openDirectNavigation()` | 微信导航 + 出行方式选择 |
 | `openNavigation()` | 多地图选择器 |
 
-### 5.5 想去/收藏功能
-
-```javascript
-// 想去功能
-toggleLike(id, type = 'food')  // type: 'food' | 'spot'
-isLiked(id, type = 'food')
-
-// 收藏功能
-toggleCollect(id, type = 'food')
-isCollected(id, type = 'food')
-
-// 存储key
-// 'userWantFoods' - 美食想去ID列表
-// 'userWantSpots' - 景点想去ID列表
-// 'userCollectedFoods' - 美食收藏ID列表
-// 'userCollectedSpots' - 景点收藏ID列表
-```
-
-### 5.6 打卡采集流程
+### 7.5 打卡采集流程
 
 ```javascript
 // 1. 获取定位
@@ -534,112 +543,116 @@ checkinUtil.saveCheckin({
 
 ---
 
-## 6. 页面导航与路由
+## 8. 页面导航与路由
 
-### 6.1 路由参数约定
+### 8.1 TabBar页面
+
+| Tab | 路径 |
+|-----|------|
+| 探索 | `/pages/index/index` |
+| 想去 | `/pages/wantgo/wantgo` |
+| 中间入口 | `/pages/route-entry/route-entry` |
+| 攻略 | `/pages/discover/discover` |
+| 我的 | `/pages/my/my` |
+
+### 8.2 路由参数约定
 
 | 页面 | 参数格式 | 示例 |
 |------|----------|------|
-| shop-detail | `?shopData=URL编码JSON` 或 `?id=数字` | `/shop-detail?shopData=%7B%22id%22%3A1%7D` |
-| spot-detail | `?id=数字` | `/spot-detail?id=101` |
-| route | `?type=food\|spot\|plan&ids=1,2,3` | `/route?type=food&ids=1,2,3` |
-| guide-detail | `?guide=URL编码JSON` | `/guide-detail?guide=%7B%22id%22%3A1%7D` |
-| district-guide | `?district=id&name=名称` | `/district-guide?district=nanshan&name=南山区` |
+| spot-detail | `?id=数字` | `subpackages/extra/pages/spot-detail/spot-detail?id=101` |
+| route | `?type=food\|spot\|plan&ids=1,2,3` | `subpackages/route/pages/route/route?type=food&ids=1,2,3` |
+| guide-detail | `?guide=URL编码JSON` | `subpackages/guide/pages/guide-detail/guide-detail?guide=...` |
+| district-guide | `?district=id&name=名称` | `subpackages/guide/pages/district-guide/district-guide?district=nanshan&name=南山区` |
 
-### 6.2 TabBar页面
+### 8.3 预加载规则
 
-必须在 `app.json` 的 `tabBar.list` 中注册：
-
-```
-pages/index/index      → 探索
-pages/wantgo/wantgo    → 想去
-pages/route-entry/route-entry → 中间入口
-pages/discover/discover → 攻略
-pages/my/my            → 我的
-```
-
-### 6.3 页面间跳转方式
-
-| 场景 | 方法 |
-|------|------|
-| Tab间跳转 | `wx.switchTab()` |
-| 非Tab跳转 | `wx.navigateTo()` |
-| 刷新当前页 | `wx.redirectTo()` |
-| 返回 | `wx.navigateBack()` |
+| 触发页面 | 预加载子包 |
+|----------|-----------|
+| `my` | `checkin` 子包 |
+| `route-entry` | `checkin` 子包 |
+| `discover` | `guide` 子包 |
+| `wantgo` | `route` 子包 |
 
 ---
 
-## 7. 依赖关系
+## 9. 依赖关系
 
-### 7.1 内部依赖图
+### 9.1 内部依赖图
 
 ```
 app.js (全局入口)
 ├── utils/util.js (核心工具)
-│   ├── utils/shopData.js
-│   ├── utils/spotData.js
-│   └── utils/markerIcons.js
+│   ├── utils/placesData.js
+│   ├── utils/markerIcons.js
+│   └── utils/db/* (DAL层)
 ├── utils/checkinUtil.js
+├── utils/cloudData.js
 ├── custom-tabbar/index.js
 └── pages/* (所有页面)
 
 pages/index/index.js
 ├── app.js (全局状态)
-├── utils/shopData.js
-├── utils/spotData.js
+├── utils/placesData.js
 ├── utils/util.js
 └── utils/markerIcons.js
 
-pages/route/route.js
-├── app.js
-├── utils/shopData.js
-└── utils/util.js
-
 pages/my/my.js
 ├── app.js
-├── utils/shopData.js
 ├── utils/util.js
-└── utils/checkinUtil.js
+├── utils/checkinUtil.js
+└── utils/db/*
 ```
 
-### 7.2 npm依赖
+### 9.2 npm依赖
 
 | 包名 | 版本 | 用途 |
 |------|------|------|
 | miniprogram-ci | ^2.1.31 | 小程序自动化构建/发布 |
+| jest | ^29.7.0 | 单元测试框架 |
 
 ---
 
-## 8. 外部服务与API
+## 10. 外部服务与API
 
-### 8.1 腾讯地图服务
+### 10.1 腾讯地图服务
 
-| 功能 | API端点 | Key |
-|------|---------|-----|
-| 逆地理编码 | `https://apis.map.qq.com/ws/geocoder/v1/` | YLBBZ-VLNWJ-HFSFO-5QBUJ-SJ633-CTBFF |
-| 静态地图 | `https://apis.map.qq.com/ws/staticmap/v2` | YLOBZ-VDFWB-AMSUJ-JCOQQ-GJ633-CTBR5 |
-| 打卡逆地理 | `https://apis.map.qq.com/ws/geocoder/v1/` | SWGBZ-7P2CB-LK2UO-JZYYV-6BZYQ-KEBUG |
+| 功能 | API端点 |
+|------|---------|
+| 逆地理编码 | `https://apis.map.qq.com/ws/geocoder/v1/` |
+| 静态地图 | `https://apis.map.qq.com/ws/staticmap/v2` |
+| 路径规划 | `https://apis.map.qq.com/ws/direction/v1/` |
 
-### 8.2 百度地图服务
+### 10.2 腾讯天气服务
 
-| 功能 | 用途 | Key |
-|------|------|-----|
-| 全景静态图 | 店铺详情页全景展示 | KuGlOjdoC0kmGUbU1Tw2OQyK6LKQ6gGa |
+| 功能 | API端点 |
+|------|---------|
+| 实时天气 | `https://apis.map.qq.com/ws/weather/v1/` |
 
-### 8.3 和风天气API
+### 10.3 百度地图服务
 
-| 功能 | 端点 | Key |
-|------|------|-----|
-| 实时天气 | `https://devapi.qweather.com/v7/weather/now` | 6e62e8e03d5e4e7ebc4e95e9e7e0a5e5 |
+| 功能 | 用途 |
+|------|------|
+| 全景静态图 | 地点详情页全景展示 (`getBaiduPanoramaUrl`) |
 
-### 8.4 微信云开发
+### 10.4 微信云开发
 
 | 配置 | 值 |
 |------|-----|
 | 环境ID | cloud1-9grc0ja0405b042a |
 | SDK | wx.cloud.init() |
 
-### 8.5 高德地图小程序
+### 10.5 云函数列表
+
+| 云函数 | 说明 |
+|--------|------|
+| `login/` | 用户登录（获取openid，创建/更新用户记录） |
+| `extractRouteFromLink/` | 从链接提取路线信息 (8.91KB) |
+| `recognizePhoto/` | 照片识别云函数 (6.71KB) |
+| `getUserInfo/` | 获取用户信息 |
+| `parsePhotoGPS/` | 解析照片GPS信息 |
+| `parseXiaohongshu/` | 解析小红书内容 |
+
+### 10.6 高德地图小程序
 
 | 字段 | 值 |
 |------|-----|
@@ -648,9 +661,9 @@ pages/my/my.js
 
 ---
 
-## 9. 本地存储结构
+## 11. 本地存储结构
 
-### 9.1 存储Key一览
+### 11.1 存储Key一览
 
 | Key | 数据类型 | 说明 |
 |-----|----------|------|
@@ -665,43 +678,40 @@ pages/my/my.js
 | `savedRoutes` | Object[] | 保存的路线 |
 | `myGuides` | Object[] | 用户创建的攻略 |
 
-### 9.2 打卡记录存储结构
+### 11.2 云数据库集合
 
-```javascript
-// key: 'checkin_records'
-[
-  {
-    id: 'CK1ABCDEF',          // 唯一ID
-    type: 'food',             // 'food' | 'spot'
-    photoPath: '/xxx.jpg',    // 照片路径
-    spotName: '百草堂糖水',   // 地点名
-    address: '南山区蛇口街道渔村路43号',
-    latitude: 22.4862,
-    longitude: 113.9021,
-    description: '清晨路过百草堂糖水...',
-    date: '2026-04-01T10:30:00.000Z',
-    city: '深圳'
-  },
-  // ...更多记录
-]
-```
+| 集合名 | 说明 | 状态 |
+|--------|------|------|
+| `users` | 用户账户表 | 已创建 |
+| `places` | 地点数据 | 已创建 |
+| `routes` | 路线数据 | 已创建 |
+| `wantList` | 想去清单 | 已创建 |
+| `collectedList` | 收藏列表 | 已创建 |
+| `checkinRecords` | 打卡记录 | 已创建 |
+| `userAddedShops` | 用户添加店铺 | 已创建 |
+| `guides` | 攻略数据 | 已创建 |
+
+### 11.3 数据迁移状态
+
+项目正在从 localStorage 向微信云数据库迁移。`utils/db/migration.js` 负责将本地数据迁移到云端。
 
 ---
 
-## 10. 运行与部署
+## 12. 运行与部署
 
-### 10.1 环境要求
+### 12.1 环境要求
 
 - 微信开发者工具 (最新版本)
 - Node.js (用于 npm ci 安装依赖)
-- 微信小程序AppID
+- 微信小程序AppID: `wxd63e0f59de062cd9`
+- 基础库版本: 3.15.1+
 
-### 10.2 本地运行步骤
+### 12.2 本地运行步骤
 
 1. **克隆项目**
    ```bash
    git clone <repository-url>
-   cd yummy-log
+   cd yummy
    ```
 
 2. **安装依赖**
@@ -709,78 +719,44 @@ pages/my/my.js
    npm install
    ```
 
-3. **配置AppID**
-   - 打开 `project.config.json`
-   - 设置 `appid` 为你的小程序AppID
-
-4. **导入项目**
+3. **导入项目**
    - 打开微信开发者工具
    - 新建项目 → 选择本项目目录 → 填入AppID
 
-5. **配置云开发**（可选）
-   - 在微信开发者工具中开通云开发
-   - 创建云环境
+4. **配置云开发**（如需要）
+   - 开通云开发，创建云环境
    - 更新 `app.js` 中的 `env` 配置
 
-6. **编译运行**
+5. **编译运行**
    - 点击「编译」按钮
    - 使用「真机调试」测试完整功能
 
-### 10.3 地图Key配置
-
-在 `app.js` 中配置：
-
-```javascript
-globalData: {
-  qqMapKey: 'YOUR_QQMAP_KEY',      // 腾讯地图Key
-  baiduMapKey: 'YOUR_BAIDU_KEY',   // 百度地图Key
-}
-```
-
-申请地址：
-- [腾讯位置服务](https://lbs.qq.com/)
-- [百度地图开放平台](https://lbsyun.baidu.com/)
-
-### 10.4 自动化构建
-
-使用 `miniprogram-ci` 进行自动化构建：
-
-```bash
-# 查看可用命令
-npm run
-
-# 或直接调用
-npx miniprogram-ci
-```
-
----
-
-## 附录
-
-### A. 设计系统概要
-
-详见 `design-system/` 目录下的文档：
-
-| 文件 | 内容 |
-|------|------|
-| `00-meta.md` | 设计原则与约束 |
-| `01-tokens.md` | 设计令牌（颜色/字体/间距） |
-| `02-components.md` | 组件库定义 |
-| `03-patterns.md` | 交互模式 |
-| `04-responsive.md` | 响应式规范 |
-| `05-dos-donts.md` | 设计禁忌 |
-
-### B. 关键常量
+### 12.3 关键常量
 
 | 常量 | 值 | 说明 |
 |------|-----|------|
 | 默认中心纬度 | 22.4846 | 蛇口区域 |
 | 默认中心经度 | 113.9046 | 蛇口区域 |
 | 地图缩放级别 | 15 | 默认 |
-| 标记图标大小 | 28px | PNG |
 | TabBar高度 | 50px | |
+| 主色 | #47BFFE | 清新浅蓝 |
 
-### C. 错误处理约定
+### 12.4 全局设计系统 (app.wxss)
+
+CSS变量设计系统包含：
+- **主色**: `--primary: #47BFFE` (清新浅蓝)
+- **中性色**: 6级文字颜色层级
+- **功能色**: success / warning / danger / info
+- **间距系统**: xs ~ 3xl (8rpx ~ 128rpx)
+- **圆角系统**: sm ~ full (12rpx ~ 9999rpx)
+- **字体层级**: display, heading-1/2/3, body, body-sm, caption
+- **扁平化设计**: 所有阴影设为 `none`
+
+---
+
+## 附录
+
+### A. 错误处理约定
 
 | 场景 | 处理方式 |
 |------|----------|
@@ -789,6 +765,12 @@ npx miniprogram-ci
 | 数据加载失败 | 显示Toast提示 |
 | 存储读写失败 | 打印日志，不影响流程 |
 
+### B. config/ 配置
+
+| 文件 | 说明 |
+|------|------|
+| `config/cover-pool.js` | 默认封面图池（5张美食封面 + 5张景点封面，来自腾讯COS + 高德） |
+
 ---
 
-*本文档由代码分析自动生成，最后更新于 2026-05-08*
+*本文档由代码分析自动生成，最后更新于 2026-06-26*

@@ -76,7 +76,11 @@ Page({
     showLocationPicker: false, 
     currentCity: '深圳市', 
     locationMode: 'my',
-    cityOptions: []
+    cityOptions: [],
+
+    // 天气信息
+    weatherDesc: '',
+    weatherTemp: '25°C',
   },
 
   onLoad() {
@@ -166,12 +170,16 @@ Page({
       this.ensureCurrentLocationMarkerIcon()
       // 使用统一调度，避免重复计算
       this._scheduleApplyFilters()
+      // 定位完成后获取天气
+      this.loadWeather()
     })
-    
+
     app.whenDistrictReady((info, locationDesc) => {
       this.setData({ 
         currentCity: info.city
       })
+      // 区划更新后重新获取天气
+      this.loadWeather()
     })
     
     // 监听图标加载完成事件
@@ -255,6 +263,35 @@ Page({
     this.setData({
       likedShops: wantList,
       visitedShops: checkedIn.map(item => String(item.id))
+    })
+  },
+
+  // 读取当前定位对应的天气信息。
+  loadWeather() {
+    const location = app.globalData.location
+    const key = app.globalData.qqMapKey
+    if (!location || !key) return
+
+    // 使用腾讯地图天气API
+    wx.request({
+      url: 'https://apis.map.qq.com/ws/weather/v1/',
+      data: {
+        location: `${location.lat},${location.lng}`,
+        key: key,
+        type: 'now'
+      },
+      success: (res) => {
+        if (res.data && res.data.status === 0) {
+          const infos = res.data.result.infos
+          this.setData({
+            weatherDesc: infos.weather || '',
+            weatherTemp: infos.temperature + '°C'
+          })
+        }
+      },
+      fail: () => {
+        // 静默失败，保持默认天气
+      }
     })
   },
 

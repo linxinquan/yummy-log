@@ -56,9 +56,7 @@ Page({
     currentDistrict: '南山区',  // 默认值，等待定位更新
     currentCity: '深圳市',
 
-    // 天气信息
-    weatherIcon: '☀️',
-    weatherTemp: '25°C',
+
 
     // 打卡采集统计
     checkinStats: { totalCount: 0, cityCount: 0 },
@@ -83,15 +81,13 @@ Page({
     showSettingsModal: false
   },
 
-  // 页面初始化：加载用户信息、统计数据、行政区和天气。
+  // 页面初始化：加载用户信息、统计数据和行政区划。
   onLoad() {
     this.loadUserInfo()
     this.loadData()
     this.loadCheckinStats()
     // 获取行政区划信息
     this.loadDistrictInfo()
-    // 获取天气
-    this.loadWeather()
   },
 
   // 回到页面时重新刷新用户和打卡数据（纯本地读取）。
@@ -326,47 +322,6 @@ Page({
         currentDistrict: info.district,
         currentCity: info.city
       })
-      // 区划更新后重新获取天气
-      this.loadWeather()
-    })
-  },
-
-  // 读取当前定位对应的天气信息。
-  loadWeather() {
-    const location = app.globalData.location
-    if (!location) return
-    
-    // 使用和风天气API（免费版）
-    wx.request({
-      url: 'https://devapi.qweather.com/v7/weather/now',
-      data: {
-        location: `${Math.round(location.lng * 100) / 100},${Math.round(location.lat * 100) / 100}`,
-        key: '6e62e8e03d5e4e7ebc4e95e9e7e0a5e5'  // 和风天气API Key
-      },
-      success: (res) => {
-        if (res.data && res.data.code === '200') {
-          const now = res.data.now
-          const iconMap = {
-            '100': '☀️', '101': '☁️', '102': '⛅', '103': '🌤️',
-            '104': '☁️', '200': '🌬️', '201': '🌬️', '202': '🌬️',
-            '300': '🌦️', '301': '🌧️', '302': '⛈️', '303': '🌨️',
-            '304': '❄️', '305': '🌧️', '306': '🌧️', '307': '🌨️',
-            '308': '🌨️', '309': '🌧️', '310': '🌧️', '311': '🌧️',
-            '312': '⛈️', '313': '⛈️', '314': '🌧️', '315': '🌧️',
-            '316': '🌨️', '317': '🌨️', '318': '🌨️', '400': '🌙',
-            '401': '☁️', '402': '🌨️', '403': '❄️', '404': '❄️',
-            '405': '🌨️', '406': '🌨️', '407': '❄️', '408': '❄️',
-            '409': '🌨️', '410': '❄️', '456': '🌧️', '457': '🌨️'
-          }
-          this.setData({
-            weatherIcon: iconMap[now.icon] || '🌡️',
-            weatherTemp: now.temp + '°C'
-          })
-        }
-      },
-      fail: () => {
-        // 静默失败，保持默认天气
-      }
     })
   },
 
