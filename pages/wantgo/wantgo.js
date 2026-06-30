@@ -284,6 +284,8 @@ function openPlaceDetail(item) {
 
 Page({
   data: {
+    // 登录状态
+    isLoggedIn: false,
     // 加载状态
     loading: false,
     // 当前Tab
@@ -319,6 +321,13 @@ Page({
     // 路线编辑弹窗默认不选中任何操作，需用户手动选择
     selectedRouteAction: '',
     routeActionTarget: null
+  },
+
+  // 检查登录状态
+  _checkLogin() {
+    const isLoggedIn = util.isCloudMode() && !!util.loadData('userInfo', null)
+    this.setData({ isLoggedIn })
+    return isLoggedIn
   },
 
   // 页面初始化：
@@ -370,14 +379,21 @@ Page({
     wx.switchTab({ url: '/pages/index/index' })
   },
 
-  // 页面重新显示时，加载本地数据 + 后台触发同步。
+  // ─── 跳转个人页登录 ─────────────────────────────
+  onGoLogin() {
+    wx.switchTab({ url: '/pages/my/my' })
+  },
+
+  // 页面重新显示时，检查登录状态并加载数据。
   onShow() {
     const pendingTab = wx.getStorageSync('pendingWantgoTab')
+    const effectiveTab = pendingTab || this.data.tab
     if (pendingTab) {
       wx.removeStorageSync('pendingWantgoTab')
       this.setData({ tab: pendingTab, ...getEmptyStateMeta(pendingTab), items: [], empty: true })
     }
-    this._loadData()
+    this._checkLogin()
+    this._loadData(effectiveTab)
   },
 
   // ─── Tab切换：想去 / 路线 / 足迹 ─────────────────────────────
@@ -385,14 +401,25 @@ Page({
     const tab = e.currentTarget.dataset.tab
     if (tab === this.data.tab) return
     this.setData({ tab, ...getEmptyStateMeta(tab), items: [], empty: true })
-    this._loadData()
+    this._loadData(tab)
   },
 
   // 按当前 Tab 读取不同的数据源（同步读本地 + 后台同步）：
   // want 读想去地点，plan 读我的路线，visited 读足迹。
-  _loadData() {
+  // tab 由调用方传入，不从 this.data 读取，避免 setData 批处理导致的脏读。
+  _loadData(tab) {
+    const isLoggedIn = this._checkLogin()
+    if (!isLoggedIn) {
+      this.setData({
+        items: [],
+        empty: true,
+        loading: false,
+        emptyIcon: 'mgc_user_3_line',
+        emptyHint: '请先登录，查看你的清单'
+      })
+      return
+    }
     this.setData({ loading: true })
-    const { tab } = this.data
     let items = []
 
     if (tab === 'want') {
@@ -526,7 +553,7 @@ Page({
     // 同步推云端
     util.saveRouteAsync(newRoute)
     // 刷新列表（读本地，零等待）
-    this._loadData()
+    this._loadData(this.data.tab)
   },
 
   // 编辑路线
@@ -547,7 +574,7 @@ Page({
           util.deleteRouteAsync(route._id || route.id)
           wx.showToast({ title: '已删除', icon: 'success' })
           // 刷新列表（读本地，零等待）
-          that._loadData()
+          that._loadData(that.data.tab)
           // 关闭弹窗
           that.onCloseRouteActionSheet()
         }
@@ -753,7 +780,7 @@ Page({
     const id = String(e.currentTarget.dataset.id)
     util.toggleWantAsync(id)
     // 立即刷新列表（读本地缓存，零等待）
-    this._loadData()
+    this._loadData(this.data.tab)
     wx.showToast({ title: '已移除', icon: 'none', duration: 1000 })
   },
 

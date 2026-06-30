@@ -26,7 +26,8 @@
     </view>
     <text class="empty-title">{{titles[tab]}}</text>
     <text class="empty-hint">{{emptyHint}}</text>
-    <view class="empty-btn" bindtap="onGoHome" wx:if="{{tab !== 'visited'}}">去探索</view>
+    <view class="empty-btn" bindtap="onGoLogin" wx:if="{{!isLoggedIn}}">去登录</view>
+    <view class="empty-btn" bindtap="onGoHome" wx:elif="{{tab !== 'visited'}}">去探索</view>
   </view>
 
   <block wx:else>

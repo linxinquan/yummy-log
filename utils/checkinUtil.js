@@ -222,16 +222,19 @@ function deleteCheckin(id) {
 function getCheckinStats() {
   const checkins = getCheckins()
   const cities = new Set()
+  const places = new Set()
   let spotCount = 0
   let foodCount = 0
   checkins.forEach(c => {
     if (c.city) cities.add(c.city)
+    if (c.spotName) places.add(c.spotName)
     if (c.type === 'spot') spotCount++
     if (c.type === 'food') foodCount++
   })
   return {
     totalCount: checkins.length,
     cityCount: cities.size,
+    visitedCount: places.size,
     spotCount,
     foodCount
   }

@@ -1,5 +1,4 @@
 ﻿// 觅食图 - 我的页面 v5.1 觅食迹版
-const app = getApp()
 const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
@@ -39,27 +38,14 @@ Page({
       visits: 0
     },
 
-    // 统计数据
-    stats: {
-      likedCount: 0,
-      visitedCount: 0,
-      userAddedCount: 0
-    },
-
     // 列表数据
     currentTab: 'liked',
     likedShops: [],
     visitedList: [],
     userAddedShops: [],
 
-    // 当前行政区划
-    currentDistrict: '南山区',  // 默认值，等待定位更新
-    currentCity: '深圳市',
-
-
-
     // 打卡采集统计
-    checkinStats: { totalCount: 0, cityCount: 0 },
+    checkinStats: { totalCount: 0, cityCount: 0, visitedCount: 0 },
 
     // 采集展示
     latestStamp: null,
@@ -69,30 +55,28 @@ Page({
     mapCenter: { latitude: 22.543099, longitude: 114.057868 },
     mapMarkers: [],
 
-    // 登录临时数据（直接在页面上设置）
-    loginAvatarUrl: '',
-    loginNickname: '',
-
     // 登录弹窗
     showLoginModal: false,
-    isAgreePrivacy: false,
 
     // 设置弹窗
-    showSettingsModal: false
+    showSettingsModal: false,
+
+    // 资料完善弹窗
+    showProfileDialog: false,
+    profileNickname: '',
+    profileAvatarUrl: ''
   },
 
-  // 页面初始化：加载用户信息、统计数据和行政区划。
-  onLoad() {
-    this.loadUserInfo()
+  // 页面初始化：加载用户信息和统计数据。
+  async onLoad() {
+    await this.loadUserInfo()
     this.loadData()
     this.loadCheckinStats()
-    // 获取行政区划信息
-    this.loadDistrictInfo()
   },
 
-  // 回到页面时重新刷新用户和打卡数据（纯本地读取）。
-  onShow() {
-    this.loadUserInfo()
+  // 回到页面时重新刷新用户和打卡数据。
+  async onShow() {
+    await this.loadUserInfo()
     this.loadData()
     this.loadCheckinStats()
   },
@@ -105,8 +89,7 @@ Page({
   // 显示登录弹窗
   showLoginModal() {
     this.setData({
-      showLoginModal: true,
-      isAgreePrivacy: false
+      showLoginModal: true
     })
   },
 
@@ -149,13 +132,6 @@ Page({
     // 什么都不做，只是阻止冒泡
   },
 
-  // 切换隐私协议勾选状态
-  togglePrivacyAgreement() {
-    this.setData({
-      isAgreePrivacy: !this.data.isAgreePrivacy
-    })
-  },
-
   // 点击隐私协议
   onTapPrivacyPolicy() {
     wx.navigateTo({
@@ -170,33 +146,16 @@ Page({
     })
   },
 
-  // 微信登录
+  // 静默登录：仅通过 openid 登录，不收集头像昵称
+  // openid 由云函数后端通过 wxContext 获取，无需用户授权
   async onWechatLogin() {
-    if (!this.data.isAgreePrivacy) {
-      wx.showToast({
-        title: '请先同意隐私协议',
-        icon: 'none'
-      })
-      return
-    }
-
     wx.showLoading({ title: '登录中...' })
 
     try {
-      // 获取微信用户信息
-      const profileRes = await wx.getUserProfile({
-        desc: '用于完善用户资料'
-      })
-
-      const { nickName, avatarUrl } = profileRes.userInfo
-
-      // 调用云函数登录
+      // 直接调用云函数登录，不传 nickName/avatarUrl
       const res = await wx.cloud.callFunction({
         name: 'login',
-        data: {
-          nickName: nickName,
-          avatarUrl: avatarUrl
-        }
+        data: {}
       })
 
       if (res.result.success) {
@@ -205,16 +164,33 @@ Page({
         // 保存到本地
         util.saveData('userInfo', userInfo)
 
+        // 判断头像昵称是否完整（云端已有则直接使用，否则等待用户补充）
+        const hasNickname = !!userInfo.nickName && userInfo.nickName !== '微信用户'
+        const hasAvatar = !!userInfo.avatarUrl
+
+        const fallbackAvatar = userInfo.avatarUrl || getRandomProfileImage()
+
         // 更新页面状态
         this.setData({
           isLoggedIn: true,
           userInfo: userInfo,
-          nickName: userInfo.nickName,
-          avatarUrl: userInfo.avatarUrl || getRandomProfileImage(),
-          hasNickname: true,
-          hasAvatar: true,
+          nickName: userInfo.nickName || '微信用户',
+          avatarUrl: fallbackAvatar,
+          hasNickname,
+          hasAvatar,
           showLoginModal: false
         })
+
+        // 资料不完整 → 弹出资料完善弹窗，让用户一次性完成
+        if (!hasNickname || !hasAvatar) {
+          this.setData({
+            showProfileDialog: true,
+            profileNickname: userInfo.nickName || '',
+            profileAvatarUrl: fallbackAvatar
+          })
+        } else {
+          wx.showToast({ title: '登录成功', icon: 'success' })
+        }
 
         // 异步从云端恢复数据
         const restore = require('../../utils/db/restore')
@@ -224,26 +200,115 @@ Page({
         if (res.result.isNew) {
           this.askSyncData()
         }
-
-        wx.showToast({ title: '登录成功', icon: 'success' })
       } else {
         wx.showToast({ title: res.result.error || '登录失败', icon: 'none' })
       }
     } catch (err) {
       console.error('[my.js] 微信登录失败:', err)
-      if (err.errMsg && err.errMsg.includes('deny')) {
-        wx.showToast({ title: '您拒绝了授权', icon: 'none' })
-      } else {
-        wx.showToast({ title: '登录失败，请重试', icon: 'none' })
-      }
+      wx.showToast({ title: '登录失败，请重试', icon: 'none' })
     } finally {
       wx.hideLoading()
     }
   },
 
-  // 读取打卡统计、最近邮票、地图点位这些"足迹"相关数据（同步读本地）。
+  // ========== 资料完善弹窗方法 ==========
+
+  // 选择头像
+  onProfileChooseAvatar(e) {
+    if (!e.detail.avatarUrl) return
+    this.setData({ profileAvatarUrl: e.detail.avatarUrl })
+  },
+
+  // 昵称选择完成后取值（用 bindblur 避免在弹窗中引发页面白屏）
+  onProfileNicknameBlur(e) {
+    this.setData({ profileNickname: e.detail.value || '' })
+  },
+
+  // 隐藏资料完善弹窗
+  hideProfileDialog() {
+    this.setData({ showProfileDialog: false })
+  },
+
+  // 保存资料（头像 + 昵称）
+  async onSaveProfile() {
+    const { profileNickname, profileAvatarUrl, userInfo } = this.data
+
+    if (!profileNickname) {
+      wx.showToast({ title: '请输入昵称', icon: 'none' })
+      return
+    }
+
+    wx.showLoading({ title: '保存中...' })
+
+    try {
+      // 准备更新数据
+      const updateData = {}
+      let changed = false
+
+      // 昵称有变化或为空
+      if (profileNickname && profileNickname !== userInfo.nickName) {
+        updateData.nickName = profileNickname
+        userInfo.nickName = profileNickname
+        changed = true
+      }
+
+      // 头像有变化
+      if (profileAvatarUrl && profileAvatarUrl !== userInfo.avatarUrl) {
+        updateData.avatarUrl = profileAvatarUrl
+        userInfo.avatarUrl = profileAvatarUrl
+        changed = true
+      }
+
+      // 有变化时通过 login 云函数同步更新到云端
+      // （login 已内置 nickName/avatarUrl 更新逻辑 + 返回最新数据）
+      if (changed && userInfo._id) {
+        const res = await wx.cloud.callFunction({
+          name: 'login',
+          data: updateData
+        })
+        if (!res.result.success) throw new Error(res.result.error || '更新失败')
+        // 用云函数返回的最新数据更新本地
+        if (res.result.user) {
+          Object.assign(userInfo, res.result.user)
+        }
+      }
+
+      // 更新本地缓存
+      util.saveData('userInfo', userInfo)
+
+      // 更新页面状态
+      this.setData({
+        userInfo: userInfo,
+        nickName: userInfo.nickName,
+        avatarUrl: userInfo.avatarUrl,
+        hasNickname: true,
+        hasAvatar: true,
+        showProfileDialog: false
+      })
+
+      wx.hideLoading()
+      wx.showToast({ title: '资料完善成功', icon: 'success' })
+    } catch (err) {
+      wx.hideLoading()
+      console.error('[my.js] 保存资料失败:', err)
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' })
+    }
+  },
+
+  // ========== 读取打卡统计 ==========
   loadCheckinStats() {
-    const stats = getCheckinStatsAsync() || { totalCount: 0, cityCount: 0 }
+    // 未登录不显示用户数据
+    if (!this.data.isLoggedIn) {
+      this.setData({
+        checkinStats: { totalCount: 0, cityCount: 0, visitedCount: 0 },
+        latestStamp: null,
+        recentStamps: [],
+        mapMarkers: [],
+        mapCenter: { latitude: 22.543099, longitude: 114.057868 }
+      })
+      return
+    }
+    const stats = getCheckinStatsAsync() || { totalCount: 0, cityCount: 0, visitedCount: 0 }
     const allCheckins = getCheckinsAsync() || []
 
     // 最新邮票（第一条）
@@ -306,7 +371,8 @@ Page({
     this.setData({
       checkinStats: {
         totalCount: stats.totalCount || 0,
-        cityCount: stats.cityCount || 0
+        cityCount: stats.cityCount || 0,
+        visitedCount: stats.visitedCount || 0
       },
       latestStamp,
       recentStamps,
@@ -315,22 +381,30 @@ Page({
     })
   },
 
-  // 读取定位后的城市和区信息
-  loadDistrictInfo() {
-    app.whenDistrictReady((info) => {
-      this.setData({
-        currentDistrict: info.district,
-        currentCity: info.city
-      })
-    })
-  },
-
-  // 从本地缓存读取登录用户信息。
-  loadUserInfo() {
+  // 从本地缓存 + 云端拉取最新用户信息。
+  async loadUserInfo() {
     const isCloudLogin = util.isCloudMode()
     if (isCloudLogin) {
-      const userInfo = util.loadData('userInfo', null)
-      // 兼容历史账号：如果之前没有头像，就补一张随机封面并写回缓存。
+      let userInfo = util.loadData('userInfo', null)
+
+      // 从云端拉取最新用户数据，确保头像/昵称是最新的
+      try {
+        const usersDal = require('../../utils/db/users')
+        const { success, data } = await usersDal.getById(userInfo._id)
+        if (success && data) {
+          // 用云端数据覆盖本地缓存
+          userInfo = {
+            ...userInfo,
+            ...data,
+            // 保留本地可能有的额外扩展字段（如有）
+          }
+          util.saveData('userInfo', userInfo)
+        }
+      } catch (err) {
+        console.warn('[my] 从云端拉取用户信息失败，使用本地缓存:', err)
+      }
+
+      // 兼容：如果云端/本地都没有头像，补一张随机封面
       const fallbackAvatar = userInfo.avatarUrl || getRandomProfileImage()
       const nextUserInfo = userInfo.avatarUrl
         ? userInfo
@@ -342,6 +416,8 @@ Page({
 
       this.setData({
         isLoggedIn: true,
+        hasNickname: !!(nextUserInfo.nickName),
+        hasAvatar: !!(nextUserInfo.avatarUrl),
         userInfo: nextUserInfo,
         nickName: nextUserInfo.nickName,
         avatarUrl: fallbackAvatar
@@ -360,49 +436,6 @@ Page({
       })
     }
   },
-
-  // 真实登录：调用云函数获取用户openid并创建/查询用户记录
-  async onLogin() {
-    wx.showLoading({ title: '登录中...' })
-    
-    try {
-      // 调用云函数登录
-      const res = await wx.cloud.callFunction({
-        name: 'login',
-        data: {}
-      })
-      
-      if (res.result.success) {
-        const userInfo = res.result.user
-        
-        // 保存到本地
-        util.saveData('userInfo', userInfo)
-        
-        // 更新页面状态
-        this.setData({
-          isLoggedIn: true,
-          userInfo: userInfo,
-          nickName: userInfo.nickName,
-          avatarUrl: userInfo.avatarUrl || getRandomProfileImage()
-        })
-        
-        // 如果是新用户，询问是否同步本地数据
-        if (res.result.isNew) {
-          this.askSyncData()
-        }
-        
-        wx.showToast({ title: '登录成功', icon: 'success' })
-      } else {
-        wx.showToast({ title: res.result.error || '登录失败', icon: 'none' })
-      }
-    } catch (err) {
-      console.error('[my.js] 登录失败:', err)
-      wx.showToast({ title: '登录失败，请重试', icon: 'none' })
-    } finally {
-      wx.hideLoading()
-    }
-  },
-
 
   // 询问是否同步本地打卡数据到云端
   askSyncData() {
@@ -477,18 +510,6 @@ Page({
     }
   },
 
-  // 未登录时点击顶部区域，初始化登录状态（直接在页面上操作）。
-  onShowLogin() {
-    if (this.data.isLoggedIn) {
-      return
-    }
-    // 直接在页面上显示头像和昵称设置控件
-    this.setData({
-      loginAvatarUrl: '',
-      loginNickname: ''
-    })
-  },
-
   // 点击顶部资料区：已登录走资料编辑。
   onTapUserProfile() {
     if (!this.data.isLoggedIn) {
@@ -530,66 +551,6 @@ Page({
     })
   },
 
-  // 登录相关方法：头像和昵称都获取后自动登录（调用云函数）
-  async onChooseAvatar(e) {
-    const { avatarUrl } = e.detail
-    const { loginNickname } = this.data
-
-    this.setData({ loginAvatarUrl: avatarUrl })
-
-    // 如果昵称也已获取，自动完成登录
-    if (loginNickname) {
-      await this.callLoginCloudFunction(loginNickname, avatarUrl)
-    }
-  },
-
-  // 调用云函数登录
-  async callLoginCloudFunction(nickName, avatarUrl) {
-    wx.showLoading({ title: '登录中...' })
-    
-    try {
-      // 调用云函数登录
-      const res = await wx.cloud.callFunction({
-        name: 'login',
-        data: {
-          nickName: nickName,
-          avatarUrl: avatarUrl
-        }
-      })
-      
-      if (res.result.success) {
-        const userInfo = res.result.user
-        
-        // 保存到本地
-        util.saveData('userInfo', userInfo)
-        
-        // 更新页面状态
-        this.setData({
-          isLoggedIn: true,
-          userInfo: userInfo,
-          nickName: userInfo.nickName,
-          avatarUrl: userInfo.avatarUrl || getRandomProfileImage(),
-          hasNickname: true,
-          hasAvatar: true
-        })
-        
-        // 如果是新用户，询问是否同步本地数据
-        if (res.result.isNew) {
-          this.askSyncData()
-        }
-        
-        wx.showToast({ title: '登录成功', icon: 'success' })
-      } else {
-        wx.showToast({ title: res.result.error || '登录失败', icon: 'none' })
-      }
-    } catch (err) {
-      console.error('[my.js] 登录失败:', err)
-      wx.showToast({ title: '登录失败，请重试', icon: 'none' })
-    } finally {
-      wx.hideLoading()
-    }
-  },
-
   // 更新昵称
   async onUpdateNickname(e) {
     const newNickName = e.detail.value
@@ -598,12 +559,13 @@ Page({
     }
 
     try {
-      const usersDal = require('../../utils/db/users')
-      const { success, error } = await usersDal.update(this.data.userInfo._id, {
-        nickName: newNickName,
+      // 通过 login 云函数更新昵称（服务端写入 + 验证通过 openid 都无需传）
+      const res = await wx.cloud.callFunction({
+        name: 'login',
+        data: { nickName: newNickName }
       })
 
-      if (!success) throw error || new Error('更新失败')
+      if (!res.result.success) throw new Error(res.result.error || '更新失败')
 
       // 更新本地数据
       const userInfo = { ...this.data.userInfo, nickName: newNickName }
@@ -625,12 +587,13 @@ Page({
     }
 
     try {
-      const usersDal = require('../../utils/db/users')
-      const { success, error } = await usersDal.update(this.data.userInfo._id, {
-        avatarUrl: newAvatarUrl,
+      // 通过 login 云函数更新头像（服务端写入 + 验证通过 openid 都无需传）
+      const res = await wx.cloud.callFunction({
+        name: 'login',
+        data: { avatarUrl: newAvatarUrl }
       })
 
-      if (!success) throw error || new Error('更新失败')
+      if (!res.result.success) throw new Error(res.result.error || '更新失败')
 
       // 更新本地数据
       const userInfo = { ...this.data.userInfo, avatarUrl: newAvatarUrl }
@@ -641,21 +604,6 @@ Page({
     } catch (err) {
       console.error('[my.js] 更新头像失败:', err)
       wx.showToast({ title: '更新失败', icon: 'none' })
-    }
-  },
-
-  onInputNickname(e) {
-    // 只保存昵称值，不在输入过程中自动登录，避免打断用户输入
-    this.setData({ loginNickname: e.detail.value })
-  },
-
-  async onNicknameBlur(e) {
-    const nickName = e.detail.value
-    const { loginAvatarUrl } = this.data
-
-    // 输入框失去焦点时，如果头像已获取，自动完成登录
-    if (loginAvatarUrl && nickName) {
-      await this.callLoginCloudFunction(nickName, loginAvatarUrl)
     }
   },
 
@@ -678,6 +626,7 @@ Page({
             userInfo: {}
           })
           wx.showToast({ title: '已退出登录', icon: 'none' })
+          this.loadCheckinStats()
         }
       }
     })
@@ -688,6 +637,10 @@ Page({
     const type = e.currentTarget.dataset.type
     
     if (type === 'favorites') {
+      if (!this.data.isLoggedIn) {
+        wx.showToast({ title: '请先登录', icon: 'none' })
+        return
+      }
       // 跳转到我的收藏页面
       wx.navigateTo({ url: '/subpackages/extra/pages/my-favorites/my-favorites' })
       return
@@ -707,6 +660,16 @@ Page({
 
   // 读取"想去 / 到访 / 自己添加的地点"等统计数据（同步读本地）。
   loadData() {
+    // 未登录不显示用户数据
+    if (!this.data.isLoggedIn) {
+      this.setData({
+        likedShops: [],
+        visitedList: [],
+        userAddedShops: [],
+        stats: { likedCount: 0, visitedCount: 0, userAddedCount: 0 }
+      })
+      return
+    }
     const userAddedShops = util.getUserShopsAsync()
     const allItems = [...placesData.getAllPlaces(), ...userAddedShops]
     const itemMap = {}
@@ -766,6 +729,10 @@ Page({
 
   // 跳到采集本页面。
   onGoCollection() {
+    if (!this.data.isLoggedIn) {
+      wx.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
     wx.navigateTo({ url: '/subpackages/extra/pages/collection/collection' })
   }
 

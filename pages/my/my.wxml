@@ -46,7 +46,7 @@
       </view>
       <view class="stat-item">
         <text class="stat-label">足迹</text>
-        <text class="stat-value">{{stats.visitedCount || 0}}</text>
+        <text class="stat-value">{{checkinStats.visitedCount || 0}}</text>
       </view>
     </view>
 
@@ -92,45 +92,65 @@
       </view>
       
       <!-- 标题 -->
-      <view class="modal-header">
-        <text class="modal-title">欢迎登录觅食迹</text>
-        <text class="modal-subtitle">授权微信账号，记录你的美食足迹</text>
+      <view class="modal-title">
+        <text>登录</text>
       </view>
-      
-      <!-- 用户信息预览 -->
-      <view class="modal-user-preview">
-        <view class="preview-avatar">
-          <open-data type="userAvatarUrl"></open-data>
-        </view>
-        <view class="preview-name">
-          <open-data type="userNickName"></open-data>
-        </view>
-      </view>
-      
-      <!-- 隐私协议 -->
-      <view class="privacy-agreement">
-        <checkbox class="agreement-checkbox" checked="{{isAgreePrivacy}}" bindtap="togglePrivacyAgreement"/>
-        <view class="agreement-text">
-          <text>我已阅读并同意</text>
-          <text class="agreement-link" bindtap="onTapPrivacyPolicy">《隐私协议》</text>
-          <text>和</text>
-          <text class="agreement-link" bindtap="onTapUserAgreement">《用户协议》</text>
-        </view>
+      <view class="modal-subtitle">
+        <text>记录你的美食足迹</text>
       </view>
       
       <!-- 登录按钮 -->
-      <button 
-        class="login-btn {{isAgreePrivacy ? '' : 'disabled'}}" 
-        bindtap="onWechatLogin"
-        disabled="{{!isAgreePrivacy}}"
-      >
+      <button class="login-btn" bindtap="onWechatLogin">
         <i class="mgc_wechat_fill wechat-icon"></i>
-        <text>授权微信登录</text>
+        <text>一键登录</text>
       </button>
+      
+      <!-- 隐私说明 -->
+      <view class="privacy-note">
+        <text>登录即表示同意</text>
+        <text class="agreement-link" bindtap="onTapPrivacyPolicy">《隐私协议》</text>
+        <text>和</text>
+        <text class="agreement-link" bindtap="onTapUserAgreement">《用户协议》</text>
+      </view>
       
       <!-- 暂不登录 -->
       <view class="cancel-login" bindtap="hideLoginModal">
         <text>暂不登录</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 资料完善弹窗 -->
+  <view class="profile-modal {{showProfileDialog ? 'show' : ''}}" bindtap="hideProfileDialog">
+    <view class="profile-modal-content" catchtap="onModalContentTap">
+      <!-- 关闭按钮 -->
+      <view class="modal-close" bindtap="hideProfileDialog">
+        <i class="mgc_close_line"></i>
+      </view>
+
+      <!-- 标题 -->
+      <view class="modal-title">完善资料</view>
+      <view class="modal-subtitle">选个头像和昵称，让大家认识你</view>
+
+      <!-- 头像选择 -->
+      <view class="profile-avatar-section">
+        <button class="profile-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onProfileChooseAvatar">
+          <image class="profile-avatar-img" src="{{profileAvatarUrl}}" mode="aspectFill" />
+        </button>
+        <text class="profile-avatar-hint">点击更换头像</text>
+      </view>
+
+      <!-- 昵称输入 -->
+      <view class="profile-nickname-section">
+        <input class="profile-nickname-input" type="nickname" placeholder="请输入昵称" bindblur="onProfileNicknameBlur" />
+      </view>
+
+      <!-- 保存按钮 -->
+      <button class="profile-save-btn" bindtap="onSaveProfile">保存</button>
+
+      <!-- 跳过 -->
+      <view class="profile-skip" bindtap="hideProfileDialog">
+        <text>稍后再说</text>
       </view>
     </view>
   </view>
