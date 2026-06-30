@@ -4,6 +4,7 @@ const util = require('../../utils/util')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 const { getCheckinsAsync, getCheckinStatsAsync } = require('../../utils/checkinUtil')
 const migration = require('../../utils/db/migration')
+const photoStorage = require('../../subpackages/checkin/utils/photoStorage')
 
 const DATA_MIGRATED_KEY = 'data_migrated'
 
@@ -213,10 +214,13 @@ Page({
 
   // ========== 资料完善弹窗方法 ==========
 
-  // 选择头像
-  onProfileChooseAvatar(e) {
+  // 选择头像：立即持久化到本地沙盒，避免临时路径失效
+  async onProfileChooseAvatar(e) {
     if (!e.detail.avatarUrl) return
-    this.setData({ profileAvatarUrl: e.detail.avatarUrl })
+    const tempPath = e.detail.avatarUrl
+    // 持久化图片
+    const { localPath } = await photoStorage.persistPhoto(tempPath).catch(() => ({ localPath: tempPath }))
+    this.setData({ profileAvatarUrl: localPath })
   },
 
   // 昵称选择完成后取值（用 bindblur 避免在弹窗中引发页面白屏）
@@ -252,10 +256,11 @@ Page({
         changed = true
       }
 
-      // 头像有变化
+      // 头像有变化：持久化本地 + 上传云存储，用 cloudFileID 同步到云端
       if (profileAvatarUrl && profileAvatarUrl !== userInfo.avatarUrl) {
-        updateData.avatarUrl = profileAvatarUrl
-        userInfo.avatarUrl = profileAvatarUrl
+        const { localPath, cloudFileID } = await photoStorage.persistPhoto(profileAvatarUrl)
+        userInfo.avatarUrl = localPath
+        updateData.avatarUrl = cloudFileID || localPath
         changed = true
       }
 
@@ -392,11 +397,15 @@ Page({
         const usersDal = require('../../utils/db/users')
         const { success, data } = await usersDal.getById(userInfo._id)
         if (success && data) {
-          // 用云端数据覆盖本地缓存
+          // 用云端数据覆盖本地缓存，但保留本地持久化头像路径（更快，可离线）
+          const localAvatar = userInfo.avatarUrl
           userInfo = {
             ...userInfo,
             ...data,
-            // 保留本地可能有的额外扩展字段（如有）
+          }
+          // 本地有持久化路径则优先使用，否则用云端 cloudFileID
+          if (localAvatar && !localAvatar.startsWith('http://tmp')) {
+            userInfo.avatarUrl = localAvatar
           }
           util.saveData('userInfo', userInfo)
         }
@@ -581,24 +590,27 @@ Page({
 
   // 更新头像
   async onUpdateAvatar(e) {
-    const newAvatarUrl = e.detail.avatarUrl
-    if (!newAvatarUrl || newAvatarUrl === this.data.userInfo.avatarUrl) {
+    const rawUrl = e.detail.avatarUrl
+    if (!rawUrl || rawUrl === this.data.userInfo.avatarUrl) {
       return
     }
 
     try {
-      // 通过 login 云函数更新头像（服务端写入 + 验证通过 openid 都无需传）
+      // 持久化临时头像（本地沙盒 + 云存储）
+      const { localPath, cloudFileID } = await photoStorage.persistPhoto(rawUrl)
+
+      // 通过 login 云函数更新头像（传 cloudFileID 确保跨设备可用）
       const res = await wx.cloud.callFunction({
         name: 'login',
-        data: { avatarUrl: newAvatarUrl }
+        data: { avatarUrl: cloudFileID || localPath }
       })
 
       if (!res.result.success) throw new Error(res.result.error || '更新失败')
 
-      // 更新本地数据
-      const userInfo = { ...this.data.userInfo, avatarUrl: newAvatarUrl }
+      // 更新本地数据（用持久化路径）
+      const userInfo = { ...this.data.userInfo, avatarUrl: localPath }
       util.saveData('userInfo', userInfo)
-      this.setData({ userInfo, avatarUrl: newAvatarUrl })
+      this.setData({ userInfo, avatarUrl: localPath })
 
       wx.showToast({ title: '头像已更新', icon: 'success' })
     } catch (err) {

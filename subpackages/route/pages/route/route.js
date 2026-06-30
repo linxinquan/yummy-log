@@ -771,9 +771,18 @@ Page({
     const options = [{
       type: 'current',
       icon: 'mgc_aiming_2_line',
-        // 弹窗选项文案也统一成"当前所在位置"。
         label: '使用当前所在位置'
     }]
+    // 如果当天有地点，增加"使用当天第一个地点"选项
+    const day = (this.data.daySections || [])[dayIndex]
+    const dayHasItems = day && day.items && day.items.length > 0
+    if (dayHasItems) {
+      options.push({
+        type: 'firstPlace',
+        icon: 'mgc_map_pin_line',
+        label: '使用第一个地点'
+      })
+    }
     if (dayIndex > 0) {
       options.push({
         type: 'prev',
@@ -817,6 +826,10 @@ Page({
     }
     if (type === 'prev') {
       this._setDayStartToPrevDayEnd(dayIndex)
+      return
+    }
+    if (type === 'firstPlace') {
+      this._setDayStartToFirstPlace(dayIndex)
       return
     }
     if (type === 'search') {
@@ -913,6 +926,39 @@ Page({
 
     const dayStartPointTexts = [...this.data.dayStartPointTexts]
     dayStartPointTexts[dayIndex] = prevDayLastShop.name
+
+    this.setData({
+      dayStartPoints,
+      dayStartPointTexts
+    })
+
+    // 更新 daySections 中的 startPointText
+    this._updateDayStartPointTexts()
+
+    // 重新规划路线
+    this._replanRoute()
+  },
+
+  // 设置起点为当天第一个地点
+  _setDayStartToFirstPlace(dayIndex) {
+    const daySections = this.data.daySections
+    if (!daySections || dayIndex < 0 || dayIndex >= daySections.length) return
+
+    const day = daySections[dayIndex]
+    const firstItem = day && day.items && day.items[0]
+    if (!firstItem) return
+
+    const startPoint = {
+      lat: firstItem.lat || firstItem.latitude,
+      lng: firstItem.lng || firstItem.longitude,
+      name: firstItem.name
+    }
+
+    const dayStartPoints = [...this.data.dayStartPoints]
+    dayStartPoints[dayIndex] = startPoint
+
+    const dayStartPointTexts = [...this.data.dayStartPointTexts]
+    dayStartPointTexts[dayIndex] = firstItem.name
 
     this.setData({
       dayStartPoints,

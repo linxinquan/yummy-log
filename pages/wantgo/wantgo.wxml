@@ -64,13 +64,26 @@
     </view>
 
     <view wx:else class="want-list" style="padding-top: {{listTop}}px;">
-      <view wx:if="{{tab === 'want'}}" class="want-toolbar">
-        <text class="want-toolbar-title">全部</text>
-        <view class="want-plan-entry" bindtap="onPlanRoute">
-          <i class="mgc_signature_2_ai_line"></i>
-          <text>路线规划</text>
+    <view wx:if="{{tab === 'want'}}" class="want-toolbar">
+      <view class="want-toolbar-left" bindtap="onCityFilterTap" hover-class="hover-opacity">
+        <text class="want-toolbar-title">{{cityFilterLabel}}</text>
+        <i class="mgc_arrow_down_line want-toolbar-arrow {{cityFilterVisible ? 'arrow-up' : ''}}"></i>
+      </view>
+      <view class="want-plan-entry" bindtap="onPlanRoute">
+        <i class="mgc_signature_2_ai_line"></i>
+        <text>路线规划</text>
+      </view>
+    </view>
+    <view wx:if="{{cityFilterVisible}}" class="city-filter-mask" bindtap="onCloseCityFilter">
+      <view class="city-filter-dropdown" style="top: {{cityFilterTop}}px;" catchtap="preventBubble">
+        <view class="city-filter-item {{!cityFilter ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="">
+          <text>全部</text>
+        </view>
+        <view wx:for="{{cityOptions}}" wx:key="*this" class="city-filter-item {{cityFilter === item ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="{{item}}">
+          <text>{{item}}</text>
         </view>
       </view>
+    </view>
       <block wx:for="{{items}}" wx:key="id">
         <view class="place-swipe-item">
           <view wx:if="{{tab === 'want'}}" class="place-delete-action" catchtap="onRemove" data-id="{{item.id}}">

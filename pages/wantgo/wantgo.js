@@ -320,7 +320,13 @@ Page({
     routeActionOptions: ROUTE_ACTION_OPTIONS,
     // 路线编辑弹窗默认不选中任何操作，需用户手动选择
     selectedRouteAction: '',
-    routeActionTarget: null
+    routeActionTarget: null,
+    // 城市筛选
+    cityFilter: '',
+    cityFilterLabel: '全部',
+    cityFilterVisible: false,
+    cityOptions: [],
+    cityFilterTop: 0
   },
 
   // 检查登录状态
@@ -351,7 +357,9 @@ Page({
     const listTop = contentTop + 25
     const deleteActionWidthPx = sysInfo.windowWidth * DELETE_ACTION_WIDTH_RPX / 750
     const emptyStateMeta = getEmptyStateMeta(tab)
-    
+    // 工具栏高度约 56rpx + margin-bottom 48rpx = 104rpx，转换为 px
+    const toolbarPx = 104 * sysInfo.windowWidth / 750
+
     this.setData({ 
       tab, 
       ...emptyStateMeta,
@@ -360,11 +368,15 @@ Page({
       menuRightInset,
       contentTop,
       listTop,
-      deleteActionWidthPx
+      deleteActionWidthPx,
+      cityFilterTop: listTop + toolbarPx
     })
   },
 
   onUnload() {
+  },
+
+  onHide() {
   },
 
   // ─── 返回 ─────────────────────────────
@@ -388,6 +400,14 @@ Page({
   onShow() {
     const pendingTab = wx.getStorageSync('pendingWantgoTab')
     const effectiveTab = pendingTab || this.data.tab
+    // 从 localStorage 恢复上次的 cityFilter（防页面重建丢失）
+    const savedFilter = wx.getStorageSync('wantgoCityFilter') || ''
+    if (savedFilter !== this.data.cityFilter) {
+      this.setData({
+        cityFilter: savedFilter,
+        cityFilterLabel: savedFilter || '全部'
+      })
+    }
     if (pendingTab) {
       wx.removeStorageSync('pendingWantgoTab')
       this.setData({ tab: pendingTab, ...getEmptyStateMeta(pendingTab), items: [], empty: true })
@@ -445,9 +465,29 @@ Page({
           type: item.type || (item.category === '景点' || item.category === '公园' ? 'spot' : 'food')
         }))
       
-      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(wantItems)))
-      console.log('wantgo', items)
-      this.setData({ items, empty: items.length === 0, loading: false })
+      // 从所有想去地点中提取城市列表（用户自建店铺可能没有城市字段，兜底为"其他"）
+      const cities = [...new Set(wantItems.map(item => item.city || '其他').filter(Boolean))].sort()
+      
+      // 如果当前筛选的城市已不在可选城市中，自动重置为"全部"
+      const cityFilter = this.data.cityFilter
+      const effectiveFilter = cityFilter && cities.includes(cityFilter) ? cityFilter : ''
+      
+      // 按城市筛选
+      const filteredItems = effectiveFilter
+        ? wantItems.filter(item => (item.city || '其他') === effectiveFilter)
+        : wantItems
+      
+      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(filteredItems)))
+      this.setData({
+        items,
+        empty: items.length === 0,
+        loading: false,
+        cityOptions: cities,
+        cityFilter: effectiveFilter,
+        cityFilterLabel: effectiveFilter || '全部'
+      })
+      // 把有效筛选同步到 localStorage，保持和显示一致
+      wx.setStorageSync('wantgoCityFilter', effectiveFilter)
     } else if (tab === 'plan') {
       const savedRoutes = util.getRoutesAsync()
       const normalizedRoutes = savedRoutes.map((item, index) => {
@@ -795,6 +835,30 @@ Page({
       planDaySheetVisible: true,
       selectedPlanDayCount: Math.max(1, Math.min(this.data.selectedPlanDayCount || DEFAULT_DAY, 10))
     })
+  },
+
+  // ─── 城市筛选 ─────────────────────────────
+  onCityFilterTap() {
+    this.setData({ cityFilterVisible: !this.data.cityFilterVisible })
+  },
+
+  onCloseCityFilter() {
+    this.setData({ cityFilterVisible: false })
+  },
+
+  onSelectCityFilter(e) {
+    const city = e.currentTarget.dataset.city || ''
+    if (city === this.data.cityFilter) {
+      this.setData({ cityFilterVisible: false })
+      return
+    }
+    wx.setStorageSync('wantgoCityFilter', city)
+    this.setData({
+      cityFilter: city,
+      cityFilterLabel: city || '全部',
+      cityFilterVisible: false
+    })
+    this._loadData('want')
   },
 
   // 确认天数后，带着地点 id 去路线规划页
