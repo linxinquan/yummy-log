@@ -28,14 +28,24 @@
   width: 100%;
   z-index: 100;
   pointer-events: none; /* 让事件穿透到地图 */
-  /* 添加与Figma一致的顶部白色渐变蒙层 */
-  background: linear-gradient(180deg, #FFFFFF 50%, rgba(255, 255, 255, 0) 100%);
   padding-bottom: 24rpx;
 }
 
-.top-panel > view,
-.top-panel > scroll-view {
-  pointer-events: auto; /* 恢复子元素的交互 */
+.top-panel-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  /* 把顶部白色渐变固定成独立层，避免二级卡片出现时一起被拉长。 */
+  background: linear-gradient(180deg, #FFFFFF 50%, rgba(255, 255, 255, 0) 100%);
+  z-index: 0;
+}
+
+.top-panel-content {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto; /* 恢复真正内容层的交互 */
 }
 
 /* ── 头部信息 (地址与天气) ── */
@@ -184,6 +194,95 @@
 
 .cat-pill.active .cat-icon-image {
   opacity: 1;
+}
+
+/* 二级美食 Tab：
+   外层是一整张大卡片，里面的 8 个美食项可以横向滑动。 */
+.secondary-category-wrap {
+  padding: 0 48rpx;
+  margin-top: 16rpx;
+}
+
+.secondary-category-panel {
+  width: 100%;
+  padding: 24rpx 0 24rpx;
+  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.96);
+  box-sizing: border-box;
+}
+
+.secondary-category-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.secondary-category-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.secondary-category-list {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: flex-start;
+  box-sizing: border-box;
+}
+
+.secondary-cat-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  /* 二级项改回固定宽度，横向滚动时整体节奏会更整齐。 */
+  width: 144rpx;
+  min-height: auto;
+  padding: 0rpx 0rpx 0rpx;
+  background: transparent;
+  flex-shrink: 0;
+  /* 每个二级项之间统一保留 24rpx 间距。 */
+  margin-right: 24rpx;
+  box-sizing: border-box;
+}
+
+.secondary-cat-item:last-child {
+  margin-right: 0rpx;
+}
+
+.secondary-cat-item.active {
+  /* 选中态不再加底色，只保留图标和彩色文字变化。 */
+  background: transparent;
+}
+
+.secondary-cat-image {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+  background: #F2F3F5;
+  /* 默认态图标先压成灰色，避免和选中态抢视觉。 */
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.secondary-cat-image.active {
+  /* 选中后恢复彩色图片。 */
+  filter: grayscale(0);
+  opacity: 1;
+}
+
+.secondary-cat-name {
+  font-family: 'PingFang SC';
+  font-size: 24rpx;
+  line-height: 32rpx;
+  font-weight: 500;
+  /* 默认态标题改成浅色。 */
+  color: #A0A4AE;
+  text-align: center;
+  white-space: normal;
+}
+
+.secondary-cat-name.active {
+  /* 选中后标题恢复深色。 */
+  color: #242529;
 }
 
 /* ─── Float Buttons (Right Bottom) ────────────────────────── */

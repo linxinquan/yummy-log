@@ -19,47 +19,86 @@
 
   <!-- ── Top Floating Area ── -->
   <view class="top-panel">
-    <!-- 头部信息 (适配胶囊按钮高度与宽度避让) -->
-    <view class="header-row" style="padding-top: {{menuTop}}px; height: {{menuHeight}}px; padding-right: {{menuRightInset}}px;">
-      <!-- 左侧：地址 -->
-      <view class="address-box" bindtap="onOpenLocationPicker">
-        <text class="city-name">{{currentCity}}</text>
-        <i class="mgc_down_small_fill arrow"></i>
-      </view>
-      
-      <!-- 右侧：地图按钮与搜索按钮 -->
-      <view class="header-right">
-        <!-- 地图图标：列表只要处于展开状态（半屏或全屏）就显示 -->
-        <view class="header-map-btn" bindtap="onToggleMap" wx:if="{{isSheetExpanded}}">
-          <i class="mgc_map_2_line"></i>
+    <!-- 顶部白色渐变单独拆成一层，避免二级卡片出现时把渐变一起拉长。 -->
+    <view class="top-panel-gradient" style="height: {{topGradientHeight}}px;"></view>
+    <view class="top-panel-content">
+      <!-- 头部信息 (适配胶囊按钮高度与宽度避让) -->
+      <view class="header-row" style="padding-top: {{menuTop}}px; height: {{menuHeight}}px; padding-right: {{menuRightInset}}px;">
+        <!-- 左侧：地址 -->
+        <view class="address-box" bindtap="onOpenLocationPicker">
+          <text class="city-name">{{currentCity}}</text>
+          <i class="mgc_down_small_fill arrow"></i>
+        </view>
+        
+        <!-- 右侧：地图按钮与搜索按钮 -->
+        <view class="header-right">
+          <!-- 地图图标：列表只要处于展开状态（半屏或全屏）就显示 -->
+          <view class="header-map-btn" bindtap="onToggleMap" wx:if="{{isSheetExpanded}}">
+            <i class="mgc_map_2_line"></i>
+          </view>
         </view>
       </view>
-    </view>
 
-    <!-- 天气单独一行 -->
-    <view class="weather-row">
-      <view class="weather-box">
-        <text class="weather-text">{{weatherDesc}} {{weatherTemp}}</text>
+      <!-- 天气单独一行 -->
+      <view class="weather-row">
+        <view class="weather-box">
+          <text class="weather-text">{{weatherDesc}} {{weatherTemp}}</text>
+        </view>
       </view>
-    </view>
 
-    <!-- 分类标签 (胶囊样式) -->
-    <view class="category-scroll">
-      <view
-        wx:for="{{exploreCategories}}"
-        wx:key="name"
-        id="cat-{{item.name}}"
-        class="cat-pill {{currentCategory === item.name ? 'active' : ''}}"
-        bindtap="onCategoryChange"
-        data-category="{{item.name}}"
-      >
-        <!-- 分类图标统一改用 marker PNG，和地图点位保持同一套资源 -->
-        <image
-          class="cat-icon-image {{currentCategory === item.name ? 'active' : ''}}"
-          src="{{item.iconPath}}"
-          mode="aspectFit"
-        />
-        <text class="cat-name {{currentCategory === item.name ? 'active' : ''}}">{{item.name}}</text>
+      <!-- 分类标签 (胶囊样式) -->
+      <view class="category-scroll">
+        <view
+          wx:for="{{exploreCategories}}"
+          wx:key="name"
+          id="cat-{{item.name}}"
+          class="cat-pill {{currentCategory === item.name ? 'active' : ''}}"
+          bindtap="onCategoryChange"
+          data-category="{{item.name}}"
+        >
+          <!-- 分类图标统一改用 marker PNG，和地图点位保持同一套资源 -->
+          <image
+            class="cat-icon-image {{currentCategory === item.name ? 'active' : ''}}"
+            src="{{item.iconPath}}"
+            mode="aspectFit"
+          />
+          <text class="cat-name {{currentCategory === item.name ? 'active' : ''}}">{{item.name}}</text>
+        </view>
+      </view>
+
+      <!-- 二级分类卡片：
+           美食和景点共用同一套 UI 结构与样式。
+           只有当前一级分类支持二级分类且处于展开状态时，才显示这张大卡片。 -->
+      <view class="secondary-category-wrap" wx:if="{{showSecondaryCategoryPanel && secondaryTabs.length > 0}}">
+        <view class="secondary-category-panel">
+          <scroll-view
+            class="secondary-category-scroll"
+            scroll-x
+            enable-flex
+            scroll-with-animation
+            scroll-left="{{secondaryTabScrollLeft}}"
+            show-scrollbar="{{false}}"
+          >
+            <view class="secondary-category-list">
+              <view
+                wx:for="{{secondaryTabs}}"
+                wx:key="label"
+                class="secondary-cat-item {{currentSecondaryTab === item.label ? 'active' : ''}}"
+                bindtap="onSecondaryTabChange"
+                data-tab="{{item.label}}"
+                data-index="{{index}}"
+              >
+                <!-- 每个二级项内部都保持“上图下字”，只复用同一张大卡片容器。 -->
+                <image
+                  class="secondary-cat-image {{currentSecondaryTab === item.label ? 'active' : ''}}"
+                  src="{{item.iconPath}}"
+                  mode="aspectFill"
+                />
+                <text class="secondary-cat-name {{currentSecondaryTab === item.label ? 'active' : ''}}">{{item.label}}</text>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
       </view>
     </view>
   </view>
