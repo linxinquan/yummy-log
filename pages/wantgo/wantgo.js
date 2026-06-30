@@ -1,4 +1,4 @@
-﻿// 觅食图 V1 - 想去清单页（支持美食/景点/到访，拖拽排序）
+// 觅食图 V1 - 想去清单页（支持美食/景点/到访，拖拽排序）
 const app = getApp()
 const util = require('../../utils/util')
 const placesData = require('../../utils/placesData')
@@ -318,6 +318,8 @@ Page({
     deleteActionWidthPx: 72,
     routeActionSheetVisible: false,
     routeActionOptions: ROUTE_ACTION_OPTIONS,
+    // 删除路线确认统一改成自定义底部弹窗。
+    deleteRouteConfirmVisible: false,
     // 路线编辑弹窗默认不选中任何操作，需用户手动选择
     selectedRouteAction: '',
     routeActionTarget: null,
@@ -605,21 +607,37 @@ Page({
 
   // 删除路线（本地优先 + 后台同步）
   deleteRoute(route) {
-    const that = this
-    wx.showModal({
-      title: '确认删除',
-      content: `确定要删除路线"${route.title}"吗？`,
-      success: (res) => {
-        if (res.confirm) {
-          util.deleteRouteAsync(route._id || route.id)
-          wx.showToast({ title: '已删除', icon: 'success' })
-          // 刷新列表（读本地，零等待）
-          that._loadData(that.data.tab)
-          // 关闭弹窗
-          that.onCloseRouteActionSheet()
-        }
-      }
+    if (!route) return
+    // 关闭路线操作弹层后，改为展示自定义删除确认层。
+    this.setData({
+      routeActionSheetVisible: false,
+      selectedRouteAction: '',
+      routeActionTarget: route,
+      deleteRouteConfirmVisible: true
     })
+  },
+
+  // 关闭删除路线确认层。
+  onCloseDeleteRouteConfirm() {
+    this.setData({
+      deleteRouteConfirmVisible: false,
+      routeActionTarget: null
+    })
+  },
+
+  // 用户确认后再真正执行删除。
+  onConfirmDeleteRoute() {
+    const route = this.data.routeActionTarget
+    if (!route) return
+
+    util.deleteRouteAsync(route._id || route.id)
+    wx.showToast({ title: '已删除', icon: 'success' })
+    this.setData({
+      deleteRouteConfirmVisible: false,
+      routeActionTarget: null
+    })
+    // 刷新列表（读本地，零等待）
+    this._loadData(this.data.tab)
   },
 
   // 把一条路线发布成攻略，并保存到 myGuides 里

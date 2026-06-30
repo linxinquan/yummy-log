@@ -604,23 +604,6 @@ Page({
     console.log('[route] onConfirmTransportMode 完成')
   },
 
-  // 清空整条路线，并移除相关"想去"记录。
-  onClearRoute() {
-    wx.showModal({
-      title: '确认清空',
-      content: '清空后将取消所有「想去」记录，确定吗？',
-      success: (res) => {
-        if (res.confirm) {
-          this.data.allLikedShops.forEach(shop => {
-            util.toggleWant(shop.id)
-          })
-          this.loadRoute()
-          wx.showToast({ title: '已清空', icon: 'none' })
-        }
-      }
-    })
-  },
-
   // 重新定位当前位置，并刷新路线起点。
   onLocateMe() {
     wx.showLoading({ title: '定位中...' })

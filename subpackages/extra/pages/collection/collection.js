@@ -1,4 +1,4 @@
-﻿// pages/collection/collection.js
+// pages/collection/collection.js
 let checkinUtil = null
 const util = require('../../../../utils/util')
 let photoStorage = null
@@ -23,6 +23,8 @@ Page({
     mapScale: 12,
     actionSheetVisible: false,
     editNameSheetVisible: false,
+    // 删除确认也改成自定义底部弹窗，避免再走原生确认框。
+    deleteConfirmVisible: false,
     activeCheckinId: '',
     activeCheckinName: '',
     editNameValue: ''
@@ -487,6 +489,13 @@ Page({
     })
   },
 
+  // 关闭自定义删除确认弹窗。
+  onCloseDeleteConfirm() {
+    this.setData({
+      deleteConfirmVisible: false
+    })
+  },
+
   onEditCheckin() {
     this.setData({
       actionSheetVisible: false,
@@ -548,25 +557,27 @@ Page({
     const { activeCheckinId } = this.data
     if (!activeCheckinId || !checkinUtil) return
 
-    wx.showModal({
-      title: '删除采集',
-      content: '删除后这张邮票会从我的采集中移除',
-      confirmText: '删除',
-      confirmColor: '#E05252',
-      success: (res) => {
-        if (!res.confirm) return
-
-        checkinUtil.deleteCheckinAsync(activeCheckinId)
-        this.setData({
-          actionSheetVisible: false,
-          editNameSheetVisible: false,
-          activeCheckinId: '',
-          activeCheckinName: '',
-          editNameValue: ''
-        })
-        this.loadData()
-      }
+    // 先关闭编辑操作面板，再打开删除确认面板。
+    this.setData({
+      actionSheetVisible: false,
+      editNameSheetVisible: false,
+      deleteConfirmVisible: true
     })
+  },
+
+  // 真正执行删除动作，只在用户点了自定义确认按钮后触发。
+  onConfirmDeleteCheckin() {
+    const { activeCheckinId } = this.data
+    if (!activeCheckinId || !checkinUtil) return
+
+    checkinUtil.deleteCheckinAsync(activeCheckinId)
+    this.setData({
+      deleteConfirmVisible: false,
+      activeCheckinId: '',
+      activeCheckinName: '',
+      editNameValue: ''
+    })
+    this.loadData()
   },
 
   onGoCheckin() {

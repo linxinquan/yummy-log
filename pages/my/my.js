@@ -1,10 +1,12 @@
-﻿// 觅食图 - 我的页面 v5.1 觅食迹版
+// 觅食图 - 我的页面 v5.1 觅食迹版
 const placesData = require('../../utils/placesData')
 const util = require('../../utils/util')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 const { getCheckinsAsync, getCheckinStatsAsync } = require('../../utils/checkinUtil')
 const migration = require('../../utils/db/migration')
-const photoStorage = require('../../subpackages/checkin/utils/photoStorage')
+// “我的”页属于主包页面，这里只引用主包 utils。
+// 避免主包直接加载分包脚本，导致切到“我的”时页面初始化白屏。
+const photoStorage = require('../../utils/photoStorage')
 
 const DATA_MIGRATED_KEY = 'data_migrated'
 

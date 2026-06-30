@@ -180,4 +180,21 @@
       </view>
     </view>
   </view>
+
+  <!-- 删除路线确认：统一改成自定义底部确认层。 -->
+  <view class="route-action-mask {{deleteRouteConfirmVisible ? 'show' : ''}}" bindtap="onCloseDeleteRouteConfirm">
+    <view class="route-action-sheet route-delete-confirm-sheet" catchtap="preventBubble">
+      <view class="route-action-header">
+        <text class="route-action-title">删除路线</text>
+        <i class="mgc_close_line route-action-close" bindtap="onCloseDeleteRouteConfirm"></i>
+      </view>
+      <view class="route-action-body">
+        <text class="route-delete-confirm-desc">删除后无法恢复，确认删除这条路线吗？</text>
+        <view class="route-delete-confirm-actions">
+          <view class="route-delete-confirm-btn cancel" bindtap="onCloseDeleteRouteConfirm">取消</view>
+          <view class="route-delete-confirm-btn danger" bindtap="onConfirmDeleteRoute">确认删除</view>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>

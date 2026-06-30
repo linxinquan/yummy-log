@@ -147,4 +147,21 @@
       </view>
     </view>
   </view>
+
+  <!-- 删除确认：统一改成自定义底部确认层，不再使用原生 showModal。 -->
+  <view class="route-action-mask {{deleteConfirmVisible ? 'show' : ''}}" bindtap="onCloseDeleteConfirm">
+    <view class="route-action-sheet route-delete-confirm-sheet" catchtap="preventBubble">
+      <view class="route-action-header">
+        <text class="route-action-title">删除采集</text>
+        <i class="mgc_close_line route-action-close" bindtap="onCloseDeleteConfirm"></i>
+      </view>
+      <view class="route-action-body">
+        <text class="route-delete-confirm-desc">删除后这张邮票会从我的采集中移除</text>
+        <view class="route-delete-confirm-actions">
+          <view class="route-delete-confirm-btn cancel" bindtap="onCloseDeleteConfirm">取消</view>
+          <view class="route-delete-confirm-btn danger" bindtap="onConfirmDeleteCheckin">确认删除</view>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>

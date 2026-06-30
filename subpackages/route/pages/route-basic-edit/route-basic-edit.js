@@ -1,4 +1,4 @@
-﻿const util = require('../../../../utils/util')
+const util = require('../../../../utils/util')
 const { getCityOptions } = util
 const placesData = require('../../../../utils/placesData')
 const {
@@ -142,6 +142,8 @@ Page({
     showCityPicker: false,
     showDayPicker: false,
     showTransportPicker: false,
+    // 删除路线确认统一改为自定义弹层。
+    showDeleteConfirm: false,
     cityOptions: [],
     dayOptions: DAY_OPTIONS,
     dayPickerIndex: 2,
@@ -316,36 +318,48 @@ Page({
 
   // 删除当前路线（同步云端）
   onDeleteRoute() {
+    // 点击删除图标时先展示自定义确认层，不再走原生确认框。
+    this.setData({
+      showDeleteConfirm: true
+    })
+  },
+
+  // 关闭删除确认层。
+  onCloseDeleteConfirm() {
+    this.setData({
+      showDeleteConfirm: false
+    })
+  },
+
+  // 用户确认后，真正执行路线删除。
+  async onConfirmDeleteRoute() {
     const routeId = this.data.route && this.data.route.id
     const routeCloudId = this.data.route && this.data.route._id
-    wx.showModal({
-      title: '删除路线',
-      content: '删除后无法恢复，确认删除吗？',
-      success: async (res) => {
-        if (!res.confirm) return
-        // 本地删除
-        const savedRoutes = util.loadData('savedRoutes', [])
-        const nextRoutes = savedRoutes.filter(item => String(item.id) !== String(routeId))
-        wx.setStorageSync('savedRoutes', nextRoutes)
-        // 云端删除
-        if (routeCloudId) {
-          try {
-            await util.deleteRouteAsync(routeCloudId)
-          } catch (err) {
-            console.warn('[route-basic-edit] 云端删除失败:', err)
-          }
-        }
-        wx.showToast({ title: '已删除', icon: 'success' })
-        setTimeout(() => {
-          wx.navigateBack({
-            delta: 2,
-            fail: () => {
-              wx.switchTab({ url: '/pages/wantgo/wantgo' })
-            }
-          })
-        }, 300)
-      }
+    this.setData({
+      showDeleteConfirm: false
     })
+
+    // 本地删除
+    const savedRoutes = util.loadData('savedRoutes', [])
+    const nextRoutes = savedRoutes.filter(item => String(item.id) !== String(routeId))
+    wx.setStorageSync('savedRoutes', nextRoutes)
+    // 云端删除
+    if (routeCloudId) {
+      try {
+        await util.deleteRouteAsync(routeCloudId)
+      } catch (err) {
+        console.warn('[route-basic-edit] 云端删除失败:', err)
+      }
+    }
+    wx.showToast({ title: '已删除', icon: 'success' })
+    setTimeout(() => {
+      wx.navigateBack({
+        delta: 2,
+        fail: () => {
+          wx.switchTab({ url: '/pages/wantgo/wantgo' })
+        }
+      })
+    }, 300)
   },
 
   // 阻止弹窗内容点击冒泡

@@ -1,4 +1,4 @@
-﻿// pages/checkin-detail/checkin-detail.js
+// pages/checkin-detail/checkin-detail.js
 // 采集详情页：承接"我的采集"里的邮票点击，只在这里展示时间和完整信息
 let checkinUtil = null
 try {
@@ -33,6 +33,8 @@ Page({
     editGeneratingDescription: false,
     actionSheetVisible: false,
     editNameSheetVisible: false,
+    // 删除确认也统一走自定义底部弹窗。
+    deleteConfirmVisible: false,
     editNameValue: ''
   },
 
@@ -121,6 +123,13 @@ Page({
     })
   },
 
+  // 关闭删除确认弹窗。
+  onCloseDeleteConfirm() {
+    this.setData({
+      deleteConfirmVisible: false
+    })
+  },
+
   onEditCheckin() {
     const detail = this.data.detail || {}
     this.setData({
@@ -180,17 +189,24 @@ Page({
     const { currentId } = this.data
     if (!checkinUtil || !currentId) return
 
-    wx.showModal({
-      title: '删除采集',
-      content: '删除后这张邮票会从我的采集中移除',
-      confirmText: '删除',
-      confirmColor: '#E05252',
-      success: async (res) => {
-        if (!res.confirm) return
-        await checkinUtil.deleteCheckinAsync(currentId)
-        wx.navigateBack()
-      }
+    // 关闭动作面板，改成展示自定义删除确认层。
+    this.setData({
+      actionSheetVisible: false,
+      editNameSheetVisible: false,
+      deleteConfirmVisible: true
     })
+  },
+
+  // 用户确认后，再真正执行删除。
+  async onConfirmDeleteCheckin() {
+    const { currentId } = this.data
+    if (!checkinUtil || !currentId) return
+
+    this.setData({
+      deleteConfirmVisible: false
+    })
+    await checkinUtil.deleteCheckinAsync(currentId)
+    wx.navigateBack()
   },
 
   onCloseEditSheet() {
