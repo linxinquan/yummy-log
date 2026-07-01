@@ -253,6 +253,8 @@ Page({
         tags: filteredTags,
       };
     })
+    // 将 cloud:// 封面转为临时 URL，避免网络波动时解析失败
+    await util.resolveCloudUrls(allPlaces, 'coverImage')
     // 直接设置为总列表，不再需要合并演示数据
     this.setData({ allItems: allPlaces })
     this._scheduleApplyFilters()

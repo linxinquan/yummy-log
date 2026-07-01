@@ -1137,6 +1137,64 @@ function getFootprintItemsAsync() {
   return getFootprintItems()
 }
 
+// ─── 云存储 fileID → 临时 URL ──────────────────
+
+/**
+ * 批量将 cloud:// 文件 ID 转为可访问的临时 HTTPS URL
+ * 使用 wx.cloud.getTempFileURL 转换
+ * 非 cloud:// 的 URL 原样保留
+ * 
+ * @param {string[]} fileIDs - 云文件 ID 数组
+ * @returns {Promise<Object<string, string>>} fileID → tempURL 映射
+ */
+async function resolveCloudFileIDs(fileIDs) {
+  if (!fileIDs || fileIDs.length === 0) return {}
+  const cloudIDs = fileIDs.filter(id => id && typeof id === 'string' && id.startsWith('cloud://'))
+  if (cloudIDs.length === 0) return {}
+  try {
+    const res = await wx.cloud.getTempFileURL({ fileList: cloudIDs })
+    const map = {}
+    if (res && res.fileList) {
+      res.fileList.forEach(item => { map[item.fileID] = item.tempFileURL || item.fileID })
+    }
+    return map
+  } catch (err) {
+    console.warn('[util] getTempFileURL 失败:', err)
+    return {}
+  }
+}
+
+/**
+ * 将对象数组中指定字段的 cloud:// 地址批量转为临时 URL
+ * 原地修改（mutable）传入的数组对象
+ * 
+ * @param {Object[]} items - 数据对象数组
+ * @param {string|string[]} urlFields - 要转换的字段名，如 'coverImage' 或 ['coverImage', 'avatarUrl']
+ * @returns {Promise<void>}
+ */
+async function resolveCloudUrls(items, urlFields) {
+  if (!items || items.length === 0) return
+  const fields = Array.isArray(urlFields) ? urlFields : [urlFields]
+  const allFileIDs = []
+  items.forEach(item => {
+    fields.forEach(field => {
+      const val = item[field]
+      if (val && typeof val === 'string' && val.startsWith('cloud://')) {
+        allFileIDs.push(val)
+      }
+    })
+  })
+  if (allFileIDs.length === 0) return
+  const urlMap = await resolveCloudFileIDs(allFileIDs)
+  items.forEach(item => {
+    fields.forEach(field => {
+      if (item[field] && urlMap[item[field]]) {
+        item[field] = urlMap[item[field]]
+      }
+    })
+  })
+}
+
 // ─── 导出扩展 ─────────────────────────────────
 
 module.exports = {
@@ -1193,4 +1251,7 @@ module.exports = {
   getFootprintItemsAsync,
   // 登录状态判断
   isCloudMode,
+  // 云存储 fileID 转换
+  resolveCloudFileIDs,
+  resolveCloudUrls,
 }
