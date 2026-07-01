@@ -163,7 +163,7 @@ App({
           }
           this.globalData.locationDesc = locationDesc
           console.log('📍 位置描述:', locationDesc, city, district)
-          
+
           // 通知所有等待区划信息的回调
           if (this.globalData.districtCallbacks) {
             this.globalData.districtCallbacks.forEach(cb => cb(this.globalData.districtInfo, locationDesc))
