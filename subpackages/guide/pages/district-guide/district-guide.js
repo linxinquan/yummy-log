@@ -37,6 +37,7 @@ function inferGuideCity(guide = {}) {
   if (/新竹/.test(sourceText)) return '新竹市'
   if (/宁德/.test(sourceText)) return '宁德市'
   if (/惠州/.test(sourceText)) return '惠州市'
+  if (/乌兰察布/.test(sourceText)) return '乌兰察布市'
   return '深圳市'
 }
 

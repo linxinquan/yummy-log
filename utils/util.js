@@ -797,7 +797,7 @@ function getCityShortName(fullCityName) {
     '台州市': '台州', '台南市': '台南', '台中市': '台中', '高雄市': '高雄',
     '温州市': '温州', '泉州市': '泉州', '扬州市': '扬州', '常州市': '常州',
     '新北市': '新北', '新竹县': '新竹县', '新竹市': '新竹', '宁德市': '宁德',
-    '惠州市': '惠州', '深圳市': '深圳'
+    '惠州市': '惠州', '乌兰察布市': '乌兰察布', '深圳市': '深圳'
   }
   return cityMap[fullCityName] || fullCityName.replace(/[市县特别行政区]$/, '')
 }
@@ -849,7 +849,8 @@ const GUANGDONG_CITIES = [
   { id: 23, name: '新竹', fullName: '新竹市', lat: 24.8036, lng: 120.9686, bgColor: '#DCE5DE' },
   { id: 24, name: '宁德', fullName: '宁德市', lat: 26.6657, lng: 119.5482, bgColor: '#E6DBD8' },
   { id: 25, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168, bgColor: '#DCE3E8' },
-  { id: 26, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 8270 }
+  { id: 26, name: '乌兰察布', fullName: '乌兰察布市', lat: 41.0006, lng: 113.1336, bgColor: '#E0E6DC' },
+  { id: 27, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 8270 }
 ]
 
 /**
