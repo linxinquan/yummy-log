@@ -235,7 +235,7 @@ Page({
     await placesData.whenReady()
     const userShops = util.getUserShopsAsync()
     const currentCity = this.data.currentCity || '广州市'
-    
+
     // 为用户添加的数据补充 city 字段
     const userShopsWithCity = userShops.map(shop => {
       if (!shop.city) {
