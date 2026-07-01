@@ -29,8 +29,8 @@ App({
     baiduMapKey: 'KuGlOjdoC0kmGUbU1Tw2OQyK6LKQ6gGa',
     // 用户行政区划信息
     districtInfo: {
-      city: '深圳',      // 城市（不带"市"后缀，与 districtMap key 一致）
-      district: '南山区'   // 区
+      city: '广州',      // 城市（不带"市"后缀）
+      district: '天河区'   // 区
     },
     // 用户详细位置描述
     locationDesc: '',  // 如 "南山街道" 或 "海上世界附近"

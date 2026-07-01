@@ -32,7 +32,7 @@ function normalizeLocation(place) {
 
 const CACHE_KEY = 'places_cache'       // localStorage key
 const CACHE_VERSION = 1                // 缓存版本，结构变更时递增使旧缓存失效
-const DEFAULT_CITY = '深圳'            // 首屏城市
+const DEFAULT_CITY = '广州'            // 首屏城市
 
 /**
  * 序列化前剥离不可 JSON 化的 GeoPoint 对象（已有 lat/lng 兜底）

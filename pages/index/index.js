@@ -74,7 +74,7 @@ Page({
     currentDistrict: '', 
     currentDistance: 0, 
     showLocationPicker: false, 
-    currentCity: '深圳市', 
+    currentCity: '广州市', 
     locationMode: 'my',
     cityOptions: [],
 
@@ -175,8 +175,10 @@ Page({
     })
 
     app.whenDistrictReady((info, locationDesc) => {
+      // 将逆地址解析返回的城市短名（如'深圳'）映射为城市选择器的 fullName（如'深圳市'）
+      const cityFullName = util.getCityFullName(info.city)
       this.setData({ 
-        currentCity: info.city
+        currentCity: cityFullName
       })
       // 区划更新后重新获取天气
       this.loadWeather()
@@ -230,7 +232,7 @@ Page({
     // 等待 placesData 初始化完成（解决启动时序竞争问题）
     await placesData.whenReady()
     const userShops = util.getUserShopsAsync()
-    const currentCity = this.data.currentCity || '深圳市'
+    const currentCity = this.data.currentCity || '广州市'
     
     // 为用户添加的数据补充 city 字段
     const userShopsWithCity = userShops.map(shop => {
