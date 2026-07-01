@@ -502,6 +502,9 @@ Page({
         currentSecondaryTab: '',
         secondaryTabScrollLeft: 0
       })
+      // 城市切换后重新筛选数据并刷新地图
+      this._scheduleApplyFilters()
+      // 区划更新后重新获取天气
       this.scheduleWeatherLoad()
     })
     
@@ -556,10 +559,7 @@ Page({
     // 等待 placesData 初始化完成（解决启动时序竞争问题）
     await placesData.whenReady()
     const userShops = util.getUserShopsAsync()
-<<<<<<< HEAD
-=======
     const currentCity = this.data.currentCity || '广州市'
->>>>>>> efa4576 (增加城市)
     
     // 自定义地点只对“已有 city 字段”的数据做标准化处理，
     // 不再把缺少 city 的点强行归到当前城市。
