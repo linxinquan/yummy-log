@@ -382,7 +382,7 @@ Page({
     currentDistrict: '', 
     currentDistance: 0, 
     showLocationPicker: false, 
-    currentCity: '深圳市', 
+    currentCity: '广州市', 
     locationMode: 'my',
     cityOptions: [],
 
@@ -492,19 +492,16 @@ Page({
     })
 
     app.whenDistrictReady((info, locationDesc) => {
-      // 当前城市变化后，如果景点二级面板正处于展开状态，就同步刷新当前二级项。
-      const nextCity = info.city
-      const syncedCityName = syncSelectedExploreCity(nextCity)
+      const cityFullName = util.getCityFullName(info.city)
       const secondaryTabs = (this.data.showSecondaryCategoryPanel && categoryHasSecondaryTabs(this.data.currentCategory))
         ? getSecondaryTabsByCategory(this.data.currentCategory)
         : []
       this.setData({ 
-        currentCity: syncedCityName,
+        currentCity: cityFullName,
         secondaryTabs,
         currentSecondaryTab: '',
         secondaryTabScrollLeft: 0
       })
-      // 区划更新后重新获取天气
       this.scheduleWeatherLoad()
     })
     
@@ -559,6 +556,10 @@ Page({
     // 等待 placesData 初始化完成（解决启动时序竞争问题）
     await placesData.whenReady()
     const userShops = util.getUserShopsAsync()
+<<<<<<< HEAD
+=======
+    const currentCity = this.data.currentCity || '广州市'
+>>>>>>> efa4576 (增加城市)
     
     // 自定义地点只对“已有 city 字段”的数据做标准化处理，
     // 不再把缺少 city 的点强行归到当前城市。

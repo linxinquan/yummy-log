@@ -150,9 +150,9 @@ function reverseGeocode(latitude, longitude) {
  * 提取城市名
  */
 function extractCity(address) {
-  if (!address) return '深圳'
+  if (!address) return '广州'
   const match = address.match(/([^省市区县]+?[市])/)
-  return match ? match[1] : '深圳'
+  return match ? match[1] : '广州'
 }
 
 /**

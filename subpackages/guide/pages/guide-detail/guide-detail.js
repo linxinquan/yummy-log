@@ -19,12 +19,31 @@ const CURRENT_LOCATION_FOCUS_SCALE = 15
 
 // 根据攻略标题、城市等字段推断城市和中心点。
 const CITY_PRESETS = [
-  { match: /西安|长安/, name: '西安市', lat: 34.3416, lng: 108.9398 },
+  { match: /香港/, name: '香港特别行政区', lat: 22.3193, lng: 114.1694 },
+  { match: /上海/, name: '上海市', lat: 31.2304, lng: 121.4737 },
+  { match: /北京/, name: '北京市', lat: 39.9042, lng: 116.4074 },
   { match: /广州/, name: '广州市', lat: 23.1291, lng: 113.2644 },
-  { match: /汕头/, name: '汕头市', lat: 23.3541, lng: 116.6819 },
-  { match: /湛江/, name: '湛江市', lat: 21.2707, lng: 110.3594 },
-  { match: /佛山/, name: '佛山市', lat: 23.0218, lng: 113.1219 },
-  { match: /珠海/, name: '珠海市', lat: 22.2707, lng: 113.5767 },
+  { match: /杭州/, name: '杭州市', lat: 30.2741, lng: 120.1551 },
+  { match: /台北/, name: '台北市', lat: 25.0330, lng: 121.5654 },
+  { match: /澳门/, name: '澳门特别行政区', lat: 22.1987, lng: 113.5439 },
+  { match: /成都/, name: '成都市', lat: 30.5728, lng: 104.0668 },
+  { match: /厦门/, name: '厦门市', lat: 24.4798, lng: 118.0894 },
+  { match: /南京/, name: '南京市', lat: 32.0603, lng: 118.7969 },
+  { match: /苏州/, name: '苏州市', lat: 31.2990, lng: 120.5853 },
+  { match: /福州/, name: '福州市', lat: 26.0745, lng: 119.2965 },
+  { match: /台州/, name: '台州市', lat: 28.6564, lng: 121.4208 },
+  { match: /台南/, name: '台南市', lat: 22.9999, lng: 120.2270 },
+  { match: /台中/, name: '台中市', lat: 24.1477, lng: 120.6736 },
+  { match: /高雄/, name: '高雄市', lat: 22.6273, lng: 120.3014 },
+  { match: /温州/, name: '温州市', lat: 27.9939, lng: 120.6994 },
+  { match: /泉州/, name: '泉州市', lat: 24.8746, lng: 118.6759 },
+  { match: /扬州/, name: '扬州市', lat: 32.3936, lng: 119.4213 },
+  { match: /常州/, name: '常州市', lat: 31.8101, lng: 119.9736 },
+  { match: /新北/, name: '新北市', lat: 25.0620, lng: 121.4570 },
+  { match: /新竹县/, name: '新竹县', lat: 24.8393, lng: 121.0020 },
+  { match: /新竹/, name: '新竹市', lat: 24.8036, lng: 120.9686 },
+  { match: /宁德/, name: '宁德市', lat: 26.6657, lng: 119.5482 },
+  { match: /惠州/, name: '惠州市', lat: 23.1118, lng: 114.4168 },
   { match: /深圳|南山|福田|罗湖|宝安|龙岗|盐田|龙华|光明|坪山|大鹏/, name: '深圳市', lat: 22.5431, lng: 114.0579 }
 ]
 

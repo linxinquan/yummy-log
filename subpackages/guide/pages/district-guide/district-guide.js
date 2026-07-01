@@ -1,4 +1,4 @@
-﻿const app = getApp()
+const app = getApp()
 const { normalizeTripDurationText } = require('../../../../utils/trip-duration')
 const { backfillStoredGuides } = require('../../../../utils/guide-backfill')
 // 区攻略页位于分包里，这里要回到项目根目录读取封面池配置。
@@ -13,10 +13,31 @@ function inferGuideCity(guide = {}) {
     guide.desc
   ].join(' ')
 
+  if (/香港/.test(sourceText)) return '香港特别行政区'
+  if (/上海/.test(sourceText)) return '上海市'
+  if (/北京/.test(sourceText)) return '北京市'
   if (/广州/.test(sourceText)) return '广州市'
-  if (/汕头/.test(sourceText)) return '汕头市'
-  if (/佛山/.test(sourceText)) return '佛山市'
-  if (/珠海/.test(sourceText)) return '珠海市'
+  if (/杭州/.test(sourceText)) return '杭州市'
+  if (/台北/.test(sourceText)) return '台北市'
+  if (/澳门/.test(sourceText)) return '澳门特别行政区'
+  if (/成都/.test(sourceText)) return '成都市'
+  if (/厦门/.test(sourceText)) return '厦门市'
+  if (/南京/.test(sourceText)) return '南京市'
+  if (/苏州/.test(sourceText)) return '苏州市'
+  if (/福州/.test(sourceText)) return '福州市'
+  if (/台州/.test(sourceText)) return '台州市'
+  if (/台南/.test(sourceText)) return '台南市'
+  if (/台中/.test(sourceText)) return '台中市'
+  if (/高雄/.test(sourceText)) return '高雄市'
+  if (/温州/.test(sourceText)) return '温州市'
+  if (/泉州/.test(sourceText)) return '泉州市'
+  if (/扬州/.test(sourceText)) return '扬州市'
+  if (/常州/.test(sourceText)) return '常州市'
+  if (/新北/.test(sourceText)) return '新北市'
+  if (/新竹县/.test(sourceText)) return '新竹县'
+  if (/新竹/.test(sourceText)) return '新竹市'
+  if (/宁德/.test(sourceText)) return '宁德市'
+  if (/惠州/.test(sourceText)) return '惠州市'
   return '深圳市'
 }
 
