@@ -180,6 +180,8 @@ Page({
       this.setData({ 
         currentCity: cityFullName
       })
+      // 城市切换后重新筛选数据并刷新地图
+      this._scheduleApplyFilters()
       // 区划更新后重新获取天气
       this.loadWeather()
     })
