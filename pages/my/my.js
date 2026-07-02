@@ -4,7 +4,7 @@ const util = require('../../utils/util')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 const { getCheckinsAsync, getCheckinStatsAsync } = require('../../utils/checkinUtil')
 const migration = require('../../utils/db/migration')
-const photoStorage = require('../../subpackages/checkin/utils/photoStorage')
+const photoStorage = require('../../utils/photoStorage')
 
 const DATA_MIGRATED_KEY = 'data_migrated'
 

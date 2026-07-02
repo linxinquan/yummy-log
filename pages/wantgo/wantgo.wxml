@@ -74,13 +74,19 @@
         <text>路线规划</text>
       </view>
     </view>
-    <view wx:if="{{cityFilterVisible}}" class="city-filter-mask" bindtap="onCloseCityFilter">
-      <view class="city-filter-dropdown" style="top: {{cityFilterTop}}px;" catchtap="preventBubble">
-        <view class="city-filter-item {{!cityFilter ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="">
-          <text>全部</text>
+    <view wx:if="{{cityFilterVisible}}" class="city-filter-mask {{cityFilterVisible ? 'show' : ''}}" bindtap="onCloseCityFilter">
+      <view class="city-filter-sheet" catchtap="preventBubble">
+        <view class="city-filter-header">
+          <text class="city-filter-title">城市筛选</text>
+          <i class="mgc_close_line city-filter-close" bindtap="onCloseCityFilter"></i>
         </view>
-        <view wx:for="{{cityOptions}}" wx:key="*this" class="city-filter-item {{cityFilter === item ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="{{item}}">
-          <text>{{item}}</text>
+        <view class="city-filter-body">
+          <view class="city-filter-item {{!cityFilter ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="">
+            <text>全部</text>
+          </view>
+          <view wx:for="{{cityOptions}}" wx:key="*this" class="city-filter-item {{cityFilter === item ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="{{item}}">
+            <text>{{item}}</text>
+          </view>
         </view>
       </view>
     </view>

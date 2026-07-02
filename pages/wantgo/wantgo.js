@@ -325,8 +325,7 @@ Page({
     cityFilter: '',
     cityFilterLabel: '全部',
     cityFilterVisible: false,
-    cityOptions: [],
-    cityFilterTop: 0
+    cityOptions: []
   },
 
   // 检查登录状态
@@ -357,8 +356,6 @@ Page({
     const listTop = contentTop + 25
     const deleteActionWidthPx = sysInfo.windowWidth * DELETE_ACTION_WIDTH_RPX / 750
     const emptyStateMeta = getEmptyStateMeta(tab)
-    // 工具栏高度约 56rpx + margin-bottom 48rpx = 104rpx，转换为 px
-    const toolbarPx = 104 * sysInfo.windowWidth / 750
 
     this.setData({ 
       tab, 
@@ -369,7 +366,7 @@ Page({
       contentTop,
       listTop,
       deleteActionWidthPx,
-      cityFilterTop: listTop + toolbarPx
+    
     })
   },
 
@@ -826,7 +823,11 @@ Page({
 
   // ─── 打开路线规划天数弹窗 ─────────────────────────────
   onPlanRoute() {
-    const { items } = this.data
+    const { items, cityFilter } = this.data
+    console.log('[路线规划] cityFilter:', cityFilter)
+    console.log('[路线规划] items 数量:', items.length)
+    console.log('[路线规划] items IDs:', items.map(i => i._id))
+    console.log('[路线规划] items 城市:', items.map(i => i.city || i.城市 || '无'))
     if (items.length === 0) {
       wx.showToast({ title: '清单为空', icon: 'none' })
       return
@@ -863,12 +864,17 @@ Page({
 
   // 确认天数后，带着地点 id 去路线规划页
   onConfirmPlanRoute() {
-    const { items, selectedPlanDayCount } = this.data
+    const { items, selectedPlanDayCount, cityFilter } = this.data
+    console.log('[路线规划-确认] cityFilter:', cityFilter)
+    console.log('[路线规划-确认] items 数量:', items.length)
+    console.log('[路线规划-确认] items IDs:', items.map(i => i._id))
+    console.log('[路线规划-确认] items 城市:', items.map(i => i.city || i.城市 || '无'))
     if (items.length === 0) {
       wx.showToast({ title: '清单为空', icon: 'none' })
       return
     }
-    const ids = items.map(i => i.id).join(',')
+    const ids = items.map(i => i._id).join(',')
+    console.log('[路线规划-确认] 最终传递的 ids:', ids)
     const dayCount = Math.max(1, parseInt(selectedPlanDayCount, 10) || 1)
     console.log('dayCount', dayCount)
     this.setData({ planDaySheetVisible: false })

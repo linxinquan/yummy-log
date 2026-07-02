@@ -274,7 +274,7 @@ Page({
     const userAddedShops = util.loadData('userAddedShops', [])
     let allItems = [...placesData.getAllPlaces(), ...userAddedShops];
     const rawItems = likedIds
-      .map(id => allItems.find(s => String(s.id) === String(id)))
+      .map(id => allItems.find(s => String(s._id) === String(id)))
       .filter(Boolean)
 
     if (rawItems.length === 0) {
