@@ -382,7 +382,7 @@ Page({
     currentDistrict: '', 
     currentDistance: 0, 
     showLocationPicker: false, 
-    currentCity: '广州市', 
+    currentCity: '深圳市', 
     locationMode: 'my',
     cityOptions: [],
 
@@ -476,6 +476,7 @@ Page({
     })
     
     app.whenLocationReady((loc) => {
+      console.log('[index] whenLocationReady 触发, currentCity:', this.data.currentCity)
       this.setData({
         mapCenter: { lat: loc.lat, lng: loc.lng },
         // 页面首次拿到定位后，同时保存当前位置，
@@ -493,6 +494,7 @@ Page({
 
     app.whenDistrictReady((info, locationDesc) => {
       const cityFullName = util.getCityFullName(info.city)
+      console.log('[index] whenDistrictReady 触发, info.city:', info.city, '→ cityFullName:', cityFullName)
       const secondaryTabs = (this.data.showSecondaryCategoryPanel && categoryHasSecondaryTabs(this.data.currentCategory))
         ? getSecondaryTabsByCategory(this.data.currentCategory)
         : []
@@ -749,6 +751,7 @@ Page({
       currentSecondaryTab,
       secondaryTabs
     } = this.data
+    console.log('[applyFilters] currentCity:', currentCity, 'allItems:', allItems.length, '条')
     
     let filtered = allItems
     
