@@ -74,7 +74,7 @@ Page({
     currentDistrict: '', 
     currentDistance: 0, 
     showLocationPicker: false, 
-    currentCity: '广州市', 
+    currentCity: '深圳市', 
     locationMode: 'my',
     cityOptions: [],
 
@@ -159,6 +159,7 @@ Page({
     })
     
     app.whenLocationReady((loc) => {
+      console.log('[index] whenLocationReady 触发, currentCity:', this.data.currentCity)
       this.setData({
         mapCenter: { lat: loc.lat, lng: loc.lng },
         // 页面首次拿到定位后，同时保存当前位置，
@@ -177,6 +178,7 @@ Page({
     app.whenDistrictReady((info, locationDesc) => {
       // 将逆地址解析返回的城市短名（如'深圳'）映射为城市选择器的 fullName（如'深圳市'）
       const cityFullName = util.getCityFullName(info.city)
+      console.log('[index] whenDistrictReady 触发, info.city:', info.city, '→ cityFullName:', cityFullName)
       this.setData({ 
         currentCity: cityFullName
       })
@@ -305,6 +307,7 @@ Page({
   // 全量数据存入 _fullFilteredList，UI 只展示第一页
   applyFilters() {
     let { allItems, currentCategory, sortType, currentDistance, mapCenter, currentCity, pageSize } = this.data
+    console.log('[applyFilters] currentCity:', currentCity, 'allItems:', allItems.length, '条')
     
     let filtered = allItems
     

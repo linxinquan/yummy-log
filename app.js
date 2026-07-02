@@ -29,9 +29,10 @@ App({
     baiduMapKey: 'KuGlOjdoC0kmGUbU1Tw2OQyK6LKQ6gGa',
     // 用户行政区划信息
     districtInfo: {
-      city: '广州',      // 城市（不带"市"后缀）
-      district: '天河区'   // 区
+      city: '深圳',      // 城市（不带"市"后缀）
+      district: '南山区'   // 区
     },
+    districtReady: false,  // 区划信息是否已由真实定位确定
     // 用户详细位置描述
     locationDesc: '',  // 如 "南山街道" 或 "海上世界附近"
   },
@@ -161,8 +162,9 @@ App({
             city: city,
             district: district
           }
+          this.globalData.districtReady = true
           this.globalData.locationDesc = locationDesc
-          console.log('📍 位置描述:', locationDesc, city, district)
+          console.log('📍 逆地址解析成功, city:', city, 'district:', district, '→ 触发 districtCallbacks')
 
           // 通知所有等待区划信息的回调
           if (this.globalData.districtCallbacks) {
@@ -178,7 +180,14 @@ App({
           city: '深圳市',
           district: '南山区'
         }
+        this.globalData.districtReady = true
         this.globalData.locationDesc = '南山区'
+        console.log('❌ 逆地址解析失败，使用默认区划：深圳市南山区')
+        // 通知等待回调（此时 districtInfo 被更新为真实/兜底值）
+        if (this.globalData.districtCallbacks) {
+          this.globalData.districtCallbacks.forEach(cb => cb(this.globalData.districtInfo, '南山区'))
+          this.globalData.districtCallbacks = []
+        }
       }
     })
   },
@@ -194,7 +203,7 @@ App({
 
   // 等待区划信息就绪后执行
   whenDistrictReady(callback) {
-    if (this.globalData.districtInfo && this.globalData.districtInfo.district) {
+    if (this.globalData.districtReady && this.globalData.districtInfo && this.globalData.districtInfo.district) {
       callback(this.globalData.districtInfo)
     } else {
       if (!this.globalData.districtCallbacks) {
