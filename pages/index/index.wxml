@@ -12,6 +12,7 @@
     scale="{{mapScale}}"
     markers="{{allMarkers}}"
     bindmarkertap="onMarkerTap"
+    bindregionchange="onMainMapRegionChange"
     enable-rotate
     enable-overlooking
     show-location="{{false}}"

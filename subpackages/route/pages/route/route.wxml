@@ -340,10 +340,19 @@
         <view class="map-floating-icon" bindtap="onSwitchMode" data-mode="list">
           <i class="mgc_layout_4_line"></i>
         </view>
-        <view style="display: flex; flex-direction: column; gap: 24rpx; pointer-events: auto;">
-          <!-- 地图模式浮动操作：全屏图标下方新增“定位到我”按钮 -->
+        <view class="map-side-action-group">
+          <!-- 地图模式右侧按钮顺序统一为：全览 / 放大缩小 / 定位。 -->
           <view class="map-floating-icon" bindtap="onFitRoute">
             <i class="mgc_fullscreen_line"></i>
+          </view>
+          <!-- 缩放按钮组结构和首页地图保持一致。 -->
+          <view class="map-zoom-controls">
+            <view class="map-zoom-btn" bindtap="onMapZoomIn">
+              <i class="mgc_add_line map-zoom-icon"></i>
+            </view>
+            <view class="map-zoom-btn" bindtap="onMapZoomOut">
+              <i class="mgc_minimize_line map-zoom-icon"></i>
+            </view>
           </view>
           <view class="map-floating-icon" bindtap="onLocateMe">
             <i class="mgc_aiming_2_line"></i>

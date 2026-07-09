@@ -1043,6 +1043,49 @@ Page({
     }
   },
 
+  // 地图拖动或缩放结束后，同步当前真实中心点。
+  // 这样首页再点“放大 / 缩小”时，就会基于用户刚刚看到的区域来缩放，
+  // 不会再跳回上一次定位写入的旧中心点。
+  onMainMapRegionChange(e) {
+    if (!e || e.type !== 'end') return
+
+    // 复用同一个 mapContext，避免每次都重复创建。
+    if (!this._mainMapCtx) {
+      this._mainMapCtx = wx.createMapContext('mainMap', this)
+    }
+
+    this._mainMapCtx.getCenterLocation({
+      success: (res) => {
+        if (
+          typeof res.latitude !== 'number' ||
+          Number.isNaN(res.latitude) ||
+          typeof res.longitude !== 'number' ||
+          Number.isNaN(res.longitude)
+        ) {
+          return
+        }
+
+        const nextCenter = {
+          lat: res.latitude,
+          lng: res.longitude
+        }
+
+        const currentCenter = this.data.mapCenter || {}
+        // 中心点变化极小时不重复 setData，避免缩放和拖动后连续抖动。
+        if (
+          Math.abs((currentCenter.lat || 0) - nextCenter.lat) < 0.000001 &&
+          Math.abs((currentCenter.lng || 0) - nextCenter.lng) < 0.000001
+        ) {
+          return
+        }
+
+        this.setData({
+          mapCenter: nextCenter
+        })
+      }
+    })
+  },
+
   // 重新定位到当前用户位置
   onMyLocation() {
     wx.showLoading({ title: '定位中...' })
@@ -1079,21 +1122,27 @@ Page({
     })
   },
 
-  // 地图放大一级
+  // 地图放大一级：
+  // 这里只改缩放级别，不主动改中心点，手感更接近双指缩放。
   onMapZoomIn() {
     const currentScale = this.data.mapScale
     if (currentScale < 20) {
       const newScale = Math.min(currentScale + 1, 20)
-      this.setData({ mapScale: newScale })
+      this.setData({
+        mapScale: newScale
+      })
     }
   },
 
-  // 地图缩小一级
+  // 地图缩小一级：
+  // 这里只改缩放级别，不主动改中心点，手感更接近双指缩放。
   onMapZoomOut() {
     const currentScale = this.data.mapScale
     if (currentScale > 3) {
       const newScale = Math.max(currentScale - 1, 3)
-      this.setData({ mapScale: newScale })
+      this.setData({
+        mapScale: newScale
+      })
     }
   },
 

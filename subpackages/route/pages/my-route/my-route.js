@@ -871,6 +871,65 @@ Page({
     });
   },
 
+  // 地图放大一级：
+  // 这里只改缩放级别，不主动改中心点，手感更接近双指缩放。
+  onMapZoomIn() {
+    const currentScale = Number(this.data.mapScale) || 12;
+    if (currentScale >= 20) return;
+    this.setData({
+      mapScale: Math.min(currentScale + 1, 20),
+    });
+  },
+
+  // 地图缩小一级：
+  // 这里只改缩放级别，不主动改中心点，手感更接近双指缩放。
+  onMapZoomOut() {
+    const currentScale = Number(this.data.mapScale) || 12;
+    if (currentScale <= 3) return;
+    this.setData({
+      mapScale: Math.max(currentScale - 1, 3),
+    });
+  },
+
+  // 地图区域变化结束后，同步真实中心点。
+  // 这样点完缩放按钮后，下一次继续缩放会围绕当前屏幕中心。
+  onMapRegionChange(e) {
+    if (!e || e.type !== "end") return;
+
+    if (!this._myRouteMapCtx) {
+      this._myRouteMapCtx = wx.createMapContext("myRouteMap", this);
+    }
+
+    this._myRouteMapCtx.getCenterLocation({
+      success: (res) => {
+        if (
+          typeof res.latitude !== "number" ||
+          Number.isNaN(res.latitude) ||
+          typeof res.longitude !== "number" ||
+          Number.isNaN(res.longitude)
+        ) {
+          return;
+        }
+
+        const nextCenter = {
+          lat: res.latitude,
+          lng: res.longitude,
+        };
+        const currentCenter = this.data.mapCenter || {};
+        if (
+          Math.abs((currentCenter.lat || 0) - nextCenter.lat) < 0.000001 &&
+          Math.abs((currentCenter.lng || 0) - nextCenter.lng) < 0.000001
+        ) {
+          return;
+        }
+
+        this.setData({
+          mapCenter: nextCenter,
+        });
+      },
+    });
+  },
+
   // 刷新地图模式上方的预览卡片内容。
   refreshMapPreview(daySections, previewIndex = 0, currentDayOverride) {
     const places = flattenDaySections(daySections);

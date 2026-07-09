@@ -207,14 +207,34 @@ module.exports = Behavior({
       const currentDaySection = (this.data.daySections || [])[effectiveDayIndex] || {}
       const currentItems = (currentDaySection.items || []).length ? currentDaySection.items : (this.data.routeShops || [])
       if (currentItems.length === 0) return
-      const points = currentItems
-        .map(item => {
-          let lat = typeof item.lat === 'number' && !isNaN(item.lat) ? item.lat : 
-                   typeof item.latitude === 'number' && !isNaN(item.latitude) ? item.latitude : 0
-          let lng = typeof item.lng === 'number' && !isNaN(item.lng) ? item.lng : 
-                   typeof item.longitude === 'number' && !isNaN(item.longitude) ? item.longitude : 0
-          return { latitude: lat, longitude: lng }
-        })
+      const { currentStart, dayStartPoints } = this.data
+
+      // “全览”需要把当前这一天真正的起点一起纳入范围，
+      // 否则地图只会框住中间地点，看起来像只轻微移动了一点点。
+      let startPoint = null
+      if (dayStartPoints && dayStartPoints[effectiveDayIndex]) {
+        startPoint = dayStartPoints[effectiveDayIndex]
+      } else if (currentStart) {
+        startPoint = currentStart
+        if (currentStart.type === 'current') {
+          startPoint = app.globalData.location || mapConfig.DEFAULT_CENTER
+        }
+      }
+
+      const points = [
+        ...(startPoint && typeof startPoint.lat === 'number' && typeof startPoint.lng === 'number'
+          ? [{ latitude: startPoint.lat, longitude: startPoint.lng }]
+          : []),
+        ...currentItems
+          .map(item => {
+            let lat = typeof item.lat === 'number' && !isNaN(item.lat) ? item.lat : 
+                     typeof item.latitude === 'number' && !isNaN(item.latitude) ? item.latitude : 0
+            let lng = typeof item.lng === 'number' && !isNaN(item.lng) ? item.lng : 
+                     typeof item.longitude === 'number' && !isNaN(item.longitude) ? item.longitude : 0
+            return { latitude: lat, longitude: lng }
+          })
+      ]
+        // 去掉无效点位，避免 includePoints 被脏数据影响。
         .filter(item => typeof item.latitude === 'number' && typeof item.longitude === 'number')
       if (!points.length) return
 
@@ -234,9 +254,63 @@ module.exports = Behavior({
       })
     },
 
-    // 地图区域变化的预留入口，当前暂时不处理。
-    onMapRegionChange() {
-      // 可扩展：地图区域变化时的处理
+    // 地图放大一级：
+    // 这里只改缩放级别，不主动改中心点，手感更接近双指缩放。
+    onMapZoomIn() {
+      const currentScale = Number(this.data.mapScale) || 14
+      if (currentScale >= 20) return
+      this.setData({
+        mapScale: Math.min(currentScale + 1, 20)
+      })
+    },
+
+    // 地图缩小一级：
+    // 这里只改缩放级别，不主动改中心点，手感更接近双指缩放。
+    onMapZoomOut() {
+      const currentScale = Number(this.data.mapScale) || 14
+      if (currentScale <= 3) return
+      this.setData({
+        mapScale: Math.max(currentScale - 1, 3)
+      })
+    },
+
+    // 地图区域变化结束后，同步真实中心点。
+    // 这样后续继续缩放时，就会围绕当前屏幕中心，而不是旧中心点。
+    onMapRegionChange(e) {
+      if (!e || e.type !== 'end') return
+
+      if (!this._routeMapCtx) {
+        this._routeMapCtx = wx.createMapContext('routeMap', this)
+      }
+
+      this._routeMapCtx.getCenterLocation({
+        success: (res) => {
+          if (
+            typeof res.latitude !== 'number' ||
+            Number.isNaN(res.latitude) ||
+            typeof res.longitude !== 'number' ||
+            Number.isNaN(res.longitude)
+          ) {
+            return
+          }
+
+          const nextCenter = {
+            lat: res.latitude,
+            lng: res.longitude
+          }
+          const currentCenter = this.data.mapCenter || {}
+          if (
+            Math.abs((currentCenter.lat || 0) - nextCenter.lat) < 0.000001 &&
+            Math.abs((currentCenter.lng || 0) - nextCenter.lng) < 0.000001
+          ) {
+            return
+          }
+
+          this.setData({
+            mapCenter: nextCenter
+          })
+        }
+      })
     },
 
     // ─── 设置地图数据 ─────────────────────────────
