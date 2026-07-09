@@ -23,7 +23,7 @@
     <block wx:for="{{allList}}" wx:key="id">
       <view class="place-swipe-item">
         <!-- 左滑后露出的删除操作：这里只删除收藏，不影响想去。 -->
-        <view class="place-delete-action" catchtap="onRemoveCollect" data-id="{{item.id}}">
+        <view class="place-delete-action {{(item.swipeOffset || 0) < 0 ? 'show' : ''}}" catchtap="onRemoveCollect" data-id="{{item.id}}">
           <view class="place-delete-inner">
             <i class="mgc_delete_2_line place-delete-icon"></i>
             <text class="place-delete-text">删除</text>

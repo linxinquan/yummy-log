@@ -101,7 +101,7 @@
     </view>
       <block wx:for="{{items}}" wx:key="id">
         <view class="place-swipe-item">
-          <view wx:if="{{tab === 'want'}}" class="place-delete-action" catchtap="onRemove" data-id="{{item.id}}">
+          <view wx:if="{{tab === 'want'}}" class="place-delete-action {{(item.swipeOffset || 0) < 0 ? 'show' : ''}}" catchtap="onRemove" data-id="{{item.id}}">
             <view class="place-delete-inner">
               <i class="mgc_delete_2_line place-delete-icon"></i>
               <text class="place-delete-text">删除</text>

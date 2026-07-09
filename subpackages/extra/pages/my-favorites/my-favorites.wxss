@@ -112,6 +112,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* 默认完全隐藏，只有开始左滑后再显示，避免未滑开时透出来。 */
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.place-delete-action.show {
+  opacity: 1;
 }
 
 .place-delete-inner {
