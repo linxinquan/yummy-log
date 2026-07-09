@@ -51,7 +51,8 @@ page {
   width: 64rpx;
   height: 64rpx;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.25);
+  /* 详情页顶部自定义返回按钮统一改成白底黑图标。 */
+  background: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -59,7 +60,7 @@ page {
 
 .top-icon i {
   font-size: 40rpx;
-  color: #FFFFFF;
+  color: #242529;
 }
 
 /* 顶部列表 / 地图切换胶囊 */
@@ -83,7 +84,8 @@ page {
   gap: 8rpx;
   min-width: 120rpx;
   height: 56rpx;
-  padding: 0 20rpx;
+  /* 用户要求把详情 / 路线切换按钮的横向内边距从 10 改成 8。 */
+  padding: 0 16rpx;
   border-radius: 999rpx;
   color: #A0A4AE;
   font-size: 28rpx;
@@ -833,8 +835,8 @@ page {
 
 .map-panel {
   position: fixed;
-  left: 48rpx;
-  right: 48rpx;
+  left: 32rpx;
+  right: 32rpx;
   bottom: 48rpx;
   z-index: 20;
 }

@@ -1,7 +1,8 @@
 ﻿const app = getApp()
 const { normalizeTripDurationText } = require('../../../../utils/trip-duration')
 const { backfillStoredGuides } = require('../../../../utils/guide-backfill')
-const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
+// 区攻略页位于分包里，这里要回到项目根目录读取封面池配置。
+const { DEFAULT_COVER_POOL } = require('../../../../config/cover-pool')
 
 // 根据攻略已有文案，尽量推断出城市名称。
 function inferGuideCity(guide = {}) {
@@ -12,7 +13,6 @@ function inferGuideCity(guide = {}) {
     guide.desc
   ].join(' ')
 
-  if (/西安|长安/.test(sourceText)) return '西安市'
   if (/广州/.test(sourceText)) return '广州市'
   if (/汕头/.test(sourceText)) return '汕头市'
   if (/佛山/.test(sourceText)) return '佛山市'
@@ -76,7 +76,10 @@ Page({
     districtName: '',
     districtId: '',
     guideSource: [],
-    guides: []
+    guides: [],
+    // 用一个明确布尔值控制“列表 / 空状态”显示，
+    // 避免直接在 WXML 里用数组长度判断时出现渲染不稳定。
+    hasGuides: false
   },
 
   // 页面初始化：接收区县参数，然后加载该区的攻略列表。
@@ -94,11 +97,11 @@ Page({
 
   // 回到页面时，重新把卡片做一遍展示字段补齐。
   onShow() {
-    if (this.data.guideSource.length) {
-      this.setData({
-        guides: decorateGuideCards(this.data.guideSource)
-      })
-    }
+    const nextGuides = decorateGuideCards(this.data.guideSource || [])
+    this.setData({
+      guides: nextGuides,
+      hasGuides: nextGuides.length > 0
+    })
   },
 
   // 读取当前区县下的攻略数据，并合并用户已发布攻略。
@@ -590,10 +593,12 @@ Page({
     const filteredGuides = this.data.districtId
       ? mergedGuides.filter(g => g.district === this.data.districtId)
       : mergedGuides
+    const decoratedGuides = decorateGuideCards(filteredGuides)
 
     this.setData({
       guideSource: filteredGuides,
-      guides: decorateGuideCards(filteredGuides)
+      guides: decoratedGuides,
+      hasGuides: decoratedGuides.length > 0
     })
   },
 

@@ -20,8 +20,58 @@ const CITY_PRESETS = [
   { match: /深圳|南山|福田|罗湖|宝安|龙岗|盐田|龙华|光明|坪山|大鹏/, name: '深圳市', lat: 22.5431, lng: 114.0579 }
 ]
 
-// 默认的路线描述词，用于自动生成路线标题。
-const TRIP_DESCRIPTORS = ['自由', '漫游', '轻享', '悠游', '随心', '惬意', '探索', '慢享']
+// 自动路线标题的关键词规则：
+// 先按“美食 / 景点 / 吃逛”判断主类型，再从地点关键词里提炼细主题。
+const ROUTE_TITLE_THEME_RULES = {
+  food: [
+    // 广州、佛山这类老广路线，优先提炼更有辨识度的茶点主题。
+    { label: '广式美食', keywords: ['早茶', '点心', '虾饺', '烧卖', '叉烧包', '流沙包', '云吞面', '双皮奶', '肠粉'] },
+    // 潮汕路线常见的牛肉火锅、粿条、蚝烙统一归到潮味主题。
+    { label: '潮味美食', keywords: ['潮汕', '牛肉火锅', '粿条', '蚝烙', '卤鹅', '砂锅粥', '甘草水果'] },
+    { label: '海鲜美食', keywords: ['海鲜', '生蚝', '蚝', '鱼生', '海鲜火锅'] },
+    { label: '老广小吃', keywords: ['肠粉', '牛杂', '煲仔饭', '艇仔粥', '云吞面', '糖水'] }
+    ,
+    // 甜品和糖水路线单独提炼，避免总被归到“老广小吃”。
+    { label: '糖水甜品', keywords: ['双皮奶', '姜撞奶', '糖水', '甜品', '杨枝甘露', '芝麻糊', '豆花', '凉粉'] },
+    // 烧味是广东路线里很高频的独立主题。
+    { label: '烧味茶点', keywords: ['烧鹅', '烧腊', '烧味', '叉烧', '乳鸽', '豉油鸡', '点心', '茶楼'] },
+    // 宵夜和路边摊路线，经常和白天正餐完全不是一类体验。
+    { label: '宵夜小吃', keywords: ['夜宵', '宵夜', '烧烤', '串串', '小龙虾', '排档', '夜市', '大排档'] },
+    // 咖啡、面包、brunch 这种轻餐路线，单独给一个更轻松的主题。
+    { label: '咖啡轻食', keywords: ['咖啡', '面包', '甜点', 'brunch', '贝果', '轻食', '下午茶', '烘焙'] }
+  ],
+  spot: [
+    { label: '海边', keywords: ['海', '湾', '沙滩', '海岸', '海滨', '海岛', '岛', '码头', '滨海'] },
+    { label: '城市公园', keywords: ['公园', '植物园', '绿道', '湿地', '森林公园', '郊野公园'] },
+    { label: '岭南人文', keywords: ['古镇', '古村', '祠堂', '书院', '故居', '博物馆', '纪念馆', '寺', '庙'] },
+    { label: '山野徒步', keywords: ['山', '徒步', '步道', '栈道', '郊野', '瀑布', '溪谷'] },
+    { label: '城市地标', keywords: ['广场', '塔', '地标', '步行街', '夜景', '摩天轮', '观景'] }
+    ,
+    // 展馆、美术馆、艺术中心这类更偏城市文化体验。
+    { label: '展馆艺术', keywords: ['美术馆', '艺术馆', '展馆', '展览', '音乐厅', '剧院', '创意园', '艺术中心'] },
+    // 亲子路线和普通公园路线的体验差别比较大，单独区分。
+    { label: '亲子乐园', keywords: ['乐园', '动物园', '海洋馆', '儿童公园', '亲子', '游乐场', '水族馆', '欢乐世界'] },
+    // 海岛类地点单独提炼，避免都落到“海边”。
+    { label: '海岛休闲', keywords: ['海岛', '小岛', '离岛', '外伶仃', '东澳岛', '桂山岛', '南澳', '岛'] },
+    // 古镇古村是广东路线里很常见的单独玩法。
+    { label: '古镇漫游', keywords: ['古镇', '古村', '骑楼', '老街', '古街', '牌坊', '巷子', '旧址'] },
+    // 夜景路线通常会和白天的城市地标体验不同。
+    { label: '夜游观景', keywords: ['夜景', '灯光秀', '江景', '夜游', '观景台', '天际线', '夜市', '摩天轮'] }
+  ],
+  mixed: [
+    { label: '海边吃逛', keywords: ['海', '湾', '沙滩', '海岸', '海滨', '海鲜', '生蚝', '码头'] },
+    { label: '岭南吃逛', keywords: ['古镇', '祠堂', '书院', '博物馆', '双皮奶', '早茶', '点心'] },
+    { label: '城市吃逛', keywords: ['步行街', '广场', '地标', '夜景', '商圈', '咖啡', '甜品'] },
+    // 古镇+小吃、骑楼+老店这类混合路线很适合单独给主题。
+    { label: '古镇吃逛', keywords: ['古镇', '古村', '老街', '骑楼', '小吃', '糖水', '茶楼', '巷子'] },
+    // 公园散步配轻食咖啡，是很常见的周末路线。
+    { label: '公园轻逛', keywords: ['公园', '绿道', '植物园', '咖啡', 'brunch', '面包', '甜品', '散步'] },
+    // 夜游和夜宵放在一起，更符合晚上路线的真实命名习惯。
+    { label: '夜游夜宵', keywords: ['夜景', '夜游', '夜市', '宵夜', '烧烤', '大排档', '酒吧', '灯光秀'] },
+    // 适合珠海、深圳沿海城市的海岛+海鲜混合路线。
+    { label: '海岛吃逛', keywords: ['海岛', '岛', '码头', '海鲜', '生蚝', '沙滩', '海边', '船'] }
+  ]
+}
 
 // 判断一个地点更像景点还是美食。
 function isSpotItem(item) {
@@ -121,19 +171,97 @@ function decorateRouteCardItem(item = {}) {
   }
 }
 
-// 自动生成路线标题，例如"深圳市三天两夜自由之旅"。
-function buildPreviewTitle(cityText, dayCount = 1, routeDaySections = []) {
-  const cityName = String(cityText || '').trim() || '深圳市'
+// 统一把路线里的地点信息拼成一段检索文案，供标题主题提取复用。
+function buildRouteTitleSearchText(item = {}) {
+  const tagsText = Array.isArray(item.tags) ? item.tags.join('|') : ''
+  return [
+    item.name,
+    item.category,
+    item.displayCategory,
+    item.tagText,
+    item.address,
+    item.district,
+    tagsText
+  ].filter(Boolean).join('|')
+}
+
+// 路线标题里只区分“美食”和“非美食”两大类：
+// 购物、公园、展馆这类都归到“景点/逛”的方向，避免标题过碎。
+function getRouteTitleItemType(item = {}) {
+  return item.type === 'food' ? 'food' : 'spot'
+}
+
+// 根据地点类型占比，判断这条路线更像“美食 / 景点 / 吃逛”哪一种。
+function resolveRouteTitleType(items = []) {
+  if (!items.length) return 'mixed'
+  let foodCount = 0
+  items.forEach((item) => {
+    if (getRouteTitleItemType(item) === 'food') {
+      foodCount += 1
+    }
+  })
+  const foodRatio = foodCount / items.length
+  if (foodRatio >= 0.7) return 'food'
+  if (foodRatio <= 0.3) return 'spot'
+  return 'mixed'
+}
+
+// 统计某条主题规则命中了多少个地点。
+// 这里按“命中了几个地点”来算分，避免单个地点重复堆词把主题带偏。
+function getRouteThemeScore(items = [], keywords = []) {
+  return items.reduce((score, item) => {
+    const searchText = buildRouteTitleSearchText(item)
+    if (!searchText) return score
+    const hit = keywords.some(keyword => searchText.indexOf(keyword) !== -1)
+    return hit ? score + 1 : score
+  }, 0)
+}
+
+// 从关键词规则里挑一个最适合当前路线的细主题。
+function resolveRouteThemeLabel(items = [], routeType = 'mixed') {
+  const rules = ROUTE_TITLE_THEME_RULES[routeType] || []
+  let bestRule = null
+
+  rules.forEach((rule) => {
+    const score = getRouteThemeScore(items, rule.keywords)
+    if (!bestRule || score > bestRule.score) {
+      bestRule = {
+        label: rule.label,
+        score
+      }
+    }
+  })
+
+  if (!bestRule || bestRule.score <= 0) {
+    if (routeType === 'food') return '美食'
+    if (routeType === 'spot') return '景点'
+    return '吃逛'
+  }
+
+  // 混合路线至少命中 2 个地点，再使用细主题；
+  // 否则直接回退成“吃逛”，避免只靠一个词生成过窄标题。
+  if (routeType === 'mixed' && bestRule.score < 2) {
+    return '吃逛'
+  }
+
+  return bestRule.label
+}
+
+// 把天数整理成更适合路线标题的短文案。
+// 例如：1 -> “1 日”，2 -> “2 天”。
+function buildRouteDurationLabel(dayCount = 1) {
   const safeDayCount = Math.max(1, parseInt(dayCount, 10) || 1)
-  const nightCount = Math.max(safeDayCount - 1, 0)
-  const durationText = nightCount > 0
-    ? `${toChineseNumber(safeDayCount)}天${toChineseNumber(nightCount)}夜`
-    : `${toChineseNumber(safeDayCount)}天`
-  const seedText = (routeDaySections || [])
-    .flatMap(day => (day.items || []).map(item => item.id || item.name || ''))
-    .join('|')
-  const descriptor = TRIP_DESCRIPTORS[hashText(`${cityName}-${durationText}-${seedText}`) % TRIP_DESCRIPTORS.length]
-  return `${cityName}${durationText}${descriptor}之旅`
+  return safeDayCount === 1 ? '1 日' : `${safeDayCount} 天`
+}
+
+// 自动生成路线标题，例如“深圳海边 1 日路线”。
+function buildPreviewTitle(cityText, dayCount = 1, routeDaySections = []) {
+  const cityName = util.getCityShortName(String(cityText || '').trim() || '深圳市')
+  const routeItems = (routeDaySections || []).flatMap(day => (day.items || []))
+  const routeType = resolveRouteTitleType(routeItems)
+  const themeLabel = resolveRouteThemeLabel(routeItems, routeType)
+  const durationLabel = buildRouteDurationLabel(dayCount)
+  return `${cityName}${themeLabel} ${durationLabel}路线`
 }
 
 // 生成"第几天"文案。
@@ -141,31 +269,6 @@ function buildDayLabel(dayNumber) {
   const labels = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
   if (dayNumber <= 10) return `第${labels[dayNumber - 1]}天`
   return `第${dayNumber}天`
-}
-
-// 把阿拉伯数字转成中文数字，给默认路线标题用。
-function toChineseNumber(num) {
-  const digitMap = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九']
-  const value = Math.max(0, parseInt(num, 10) || 0)
-  if (value <= 10) return value === 10 ? '十' : digitMap[value]
-  if (value < 20) return `十${digitMap[value % 10]}`
-  if (value < 100) {
-    const tens = Math.floor(value / 10)
-    const ones = value % 10
-    return `${digitMap[tens]}十${ones ? digitMap[ones] : ''}`
-  }
-  return String(value)
-}
-
-// 生成稳定 hash，让同一条路线每次得到相同的描述词。
-function hashText(text) {
-  const source = String(text || '')
-  let hash = 0
-  for (let i = 0; i < source.length; i += 1) {
-    hash = ((hash << 5) - hash) + source.charCodeAt(i)
-    hash |= 0
-  }
-  return Math.abs(hash)
 }
 
 // 生成路线顶部 Tab：行程总览 + 每一天。
@@ -301,7 +404,7 @@ function stripEditState(daySections) {
 
 module.exports = {
   CITY_PRESETS,
-  TRIP_DESCRIPTORS,
+  ROUTE_TITLE_THEME_RULES,
   isSpotItem,
   getCoverImage,
   getModeLabel,
@@ -315,8 +418,6 @@ module.exports = {
   decorateRouteCardItem,
   buildPreviewTitle,
   buildDayLabel,
-  toChineseNumber,
-  hashText,
   buildTabs,
   buildSummaryText,
   getCityInfo,

@@ -4,40 +4,52 @@
     <view class="district-title">{{districtName}}</view>
   </view>
   
-  <!-- 攻略列表：结构和总攻略页卡片保持一致 -->
-  <view class="guide-list">
-    <view 
-      wx:for="{{guides}}" 
-      wx:key="id" 
-      class="guide-card"
-      bindtap="onGuideTap"
-      data-guide="{{item}}"
-    >
-      <view class="guide-cover-wrap">
-        <image class="guide-cover" src="{{item.coverImage}}" mode="aspectFill" />
-      </view>
-      <view class="guide-info">
-        <view class="guide-title">{{item.title}}</view>
-        <view class="guide-city">{{item.cityText}}</view>
-        <view class="guide-stats">{{item.duration}} · {{item.shopCount}}个地点</view>
-      </view>
-      <view class="guide-divider"></view>
-      <view class="guide-footer">
-        <view class="guide-meta">
-          <view class="guide-author-wrap">
-            <image class="guide-author-avatar" src="{{item.authorAvatar || item.coverImage}}" mode="aspectFill" />
-            <text class="guide-author">{{item.author}}</text>
+  <block wx:if="{{hasGuides}}">
+    <!-- 有内容时正常显示攻略列表。 -->
+    <view class="guide-list">
+      <view 
+        wx:for="{{guides}}" 
+        wx:key="id" 
+        class="guide-card"
+        bindtap="onGuideTap"
+        data-guide="{{item}}"
+      >
+        <view class="guide-cover-wrap">
+          <image class="guide-cover" src="{{item.coverImage}}" mode="aspectFill" />
+        </view>
+        <view class="guide-info">
+          <view class="guide-title">{{item.title}}</view>
+          <view class="guide-city">{{item.cityText}}</view>
+          <view class="guide-stats">{{item.duration}} · {{item.shopCount}}个地点</view>
+        </view>
+        <view class="guide-divider"></view>
+        <view class="guide-footer">
+          <view class="guide-meta">
+            <view class="guide-author-wrap">
+              <image class="guide-author-avatar" src="{{item.authorAvatar || item.coverImage}}" mode="aspectFill" />
+              <text class="guide-author">{{item.author}}</text>
+            </view>
+            <text class="guide-likes">{{item.useRouteCount}}人使用路线</text>
           </view>
-          <text class="guide-likes">{{item.useRouteCount}}人使用路线</text>
         </view>
       </view>
+
+      <!-- 底部结束提示 -->
+      <view class="no-more">
+        <view class="no-more-line"></view>
+        <text class="no-more-text">已经没有更多了</text>
+        <view class="no-more-line"></view>
+      </view>
     </view>
-    
-    <!-- 底部结束提示 -->
-    <view class="no-more">
-      <view class="no-more-line"></view>
-      <text class="no-more-text">已经没有更多了</text>
-      <view class="no-more-line"></view>
+  </block>
+  <block wx:if="{{!hasGuides}}">
+    <!-- 某个城市某个区暂时没有攻略时，显示明确提示，避免看起来像白页异常。 -->
+    <view class="empty-wrap">
+      <view class="empty-illustration">
+        <i class="mgc_file_search_line empty-icon"></i>
+      </view>
+      <text class="empty-title">{{districtName}} 暂无攻略</text>
+      <text class="empty-desc">这个地区的攻略还在整理中，晚点再来看看</text>
     </view>
-  </view>
+  </block>
 </view>

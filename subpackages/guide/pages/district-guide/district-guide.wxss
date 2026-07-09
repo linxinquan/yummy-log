@@ -32,6 +32,52 @@ page {
   padding: 0 48rpx;
 }
 
+/* 空状态：当当前区没有攻略数据时，给用户一个明确反馈。 */
+.empty-wrap {
+  min-height: calc(100vh - 160rpx);
+  padding: 64rpx 48rpx 96rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.empty-illustration {
+  width: 176rpx;
+  height: 176rpx;
+  border-radius: 999rpx;
+  background: #F7F8FA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  line-height: 80rpx;
+  color: #A0A4AE;
+}
+
+.empty-title {
+  font-family: 'PingFang SC';
+  font-weight: 500;
+  font-size: 36rpx;
+  line-height: 44rpx;
+  color: #242529;
+}
+
+.empty-desc {
+  margin-top: 20rpx;
+  font-family: 'PingFang SC';
+  font-weight: 400;
+  font-size: 26rpx;
+  line-height: 38rpx;
+  color: #A0A4AE;
+}
+
 /* 单张攻略卡片 */
 .guide-card {
   width: 100%;

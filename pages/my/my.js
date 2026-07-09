@@ -543,6 +543,8 @@ Page({
 
   // 弹出昵称编辑框，并把结果写回缓存。
   showEditNickname() {
+    // 先收起底部设置弹窗，再打开系统输入框，避免两个弹层叠在一起。
+    this.hideSettingsModal()
     wx.showModal({
       title: '修改昵称',
       editable: true,
@@ -666,9 +668,24 @@ Page({
       return
     }
     
-    if (type === 'share') {
-      wx.showToast({ title: '分享我们', icon: 'none' })
-      return
+  },
+
+  // “分享我们”默认分享整个小程序首页：
+  // 标题和封面图都固定成产品介绍型文案，方便在微信里展示。
+  onShareAppMessage() {
+    return {
+      title: '觅食图：找美食、逛景点、规划路线',
+      path: '/pages/index/index',
+      imageUrl: '/images/create/wechat-card.png'
+    }
+  },
+
+  // 朋友圈分享也走同一套产品介绍文案，保持对外口径一致。
+  onShareTimeline() {
+    return {
+      title: '觅食图：发现广东好吃好玩的地方',
+      query: '',
+      imageUrl: '/images/create/wechat-card.png'
     }
   },
 

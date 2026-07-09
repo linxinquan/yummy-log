@@ -220,8 +220,6 @@ Page({
 
   onBack() { wx.navigateBack() },
 
-  onShareTap() { wx.showToast({ title: '请点击右上角分享', icon: 'none' }) },
-
   onOpenNavMapSheet() {
     const { spot, addressText } = this.data
     if (!spot) return

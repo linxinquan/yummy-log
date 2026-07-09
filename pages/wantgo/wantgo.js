@@ -13,7 +13,11 @@ const DEFAULT_DAY = 2; // 默认天数
 const ITEM_H = 60 // px，每项高度用于计算排序
 const DEFAULT_COVER = '/images/app-logo.jpg'
 const DAY_OPTIONS = Array.from({ length: 10 }, (_, index) => index + 1)
-const DELETE_ACTION_WIDTH_RPX = 144
+// picker-view 在快速滑动后，最后一次 bindchange 可能会晚一点到。
+// 点击“确定”时固定等待这一小段时间，再读取最终天数，避免拿到旧值。
+const PLAN_DAY_CONFIRM_DELAY_MS = 220
+// 删除按钮本身是 120rpx，这里额外多滑出 48rpx，统一所有页面的删除间距。
+const DELETE_ACTION_WIDTH_RPX = 168
 const DEFAULT_ROUTE_AVATAR = '/images/app-logo.jpg'
 const ROUTE_ACTION_OPTIONS = [
   { key: 'publish', label: '发布攻略', icon: 'mgc_send_plane_line' },
@@ -323,12 +327,12 @@ Page({
     // 路线编辑弹窗默认不选中任何操作，需用户手动选择
     selectedRouteAction: '',
     routeActionTarget: null,
-    // 城市筛选
+    // 城市筛选：
+    // 顶部“全部”点击后改成底部弹窗选择，不再使用顶部下拉框。
     cityFilter: '',
     cityFilterLabel: '全部',
     cityFilterVisible: false,
-    cityOptions: [],
-    cityFilterTop: 0
+    cityOptions: []
   },
 
   // 检查登录状态
@@ -359,8 +363,6 @@ Page({
     const listTop = contentTop + 25
     const deleteActionWidthPx = sysInfo.windowWidth * DELETE_ACTION_WIDTH_RPX / 750
     const emptyStateMeta = getEmptyStateMeta(tab)
-    // 工具栏高度约 56rpx + margin-bottom 48rpx = 104rpx，转换为 px
-    const toolbarPx = 104 * sysInfo.windowWidth / 750
 
     this.setData({ 
       tab, 
@@ -370,8 +372,7 @@ Page({
       menuRightInset,
       contentTop,
       listTop,
-      deleteActionWidthPx,
-      cityFilterTop: listTop + toolbarPx
+      deleteActionWidthPx
     })
   },
 
@@ -777,6 +778,12 @@ Page({
 
   // 关闭旅行天数弹窗
   onClosePlanDaySheet() {
+    // 关闭弹窗时一并清掉延时确认，避免用户取消后还继续跳转。
+    if (this._planRouteConfirmTimer) {
+      clearTimeout(this._planRouteConfirmTimer)
+      this._planRouteConfirmTimer = null
+    }
+    this._isConfirmingPlanRoute = false
     this.setData({ planDaySheetVisible: false })
   },
 
@@ -787,6 +794,10 @@ Page({
     if (Number.isNaN(pickerIndex)) return
     const dayCount = this.data.dayOptions[pickerIndex]
     if (!dayCount) return
+    // picker-view 切换后，先把最新值同步到实例字段。
+    // 这样用户刚滑到“1 天”就立刻点确定时，也不会因为 setData 还没完成而读到旧值 2。
+    this._lastPlanDayChangeAt = Date.now()
+    this._pendingPlanDayCount = dayCount
     this.setData({ selectedPlanDayCount: dayCount })
   },
 
@@ -849,14 +860,19 @@ Page({
       wx.showToast({ title: '清单为空', icon: 'none' })
       return
     }
+    const selectedPlanDayCount = Math.max(1, Math.min(this.data.selectedPlanDayCount || DEFAULT_DAY, 10))
+    // 每次打开弹窗时，把当前天数同步到实例字段，作为确认时的兜底最新值。
+    this._lastPlanDayChangeAt = 0
+    this._pendingPlanDayCount = selectedPlanDayCount
     this.setData({
       planDaySheetVisible: true,
-      selectedPlanDayCount: Math.max(1, Math.min(this.data.selectedPlanDayCount || DEFAULT_DAY, 10))
+      selectedPlanDayCount
     })
   },
 
   // ─── 城市筛选 ─────────────────────────────
   onCityFilterTap() {
+    // 顶部入口点击后，打开底部弹窗供用户选择地点城市。
     this.setData({ cityFilterVisible: !this.data.cityFilterVisible })
   },
 
@@ -886,11 +902,21 @@ Page({
       wx.showToast({ title: '清单为空', icon: 'none' })
       return
     }
+    if (this._isConfirmingPlanRoute) return
+    this._isConfirmingPlanRoute = true
     const ids = items.map(i => i.id).join(',')
-    const dayCount = Math.max(1, parseInt(selectedPlanDayCount, 10) || 1)
-    console.log('dayCount', dayCount)
     this.setData({ planDaySheetVisible: false })
-    wx.navigateTo({ url: `/subpackages/route/pages/route/route?&ids=${ids}&dayCount=${dayCount}` })
+    if (this._planRouteConfirmTimer) {
+      clearTimeout(this._planRouteConfirmTimer)
+    }
+    // 给 picker-view 一个固定收敛窗口，让最后一次变更事件先落地。
+    this._planRouteConfirmTimer = setTimeout(() => {
+      const latestSelectedPlanDayCount = this._pendingPlanDayCount || this.data.selectedPlanDayCount || selectedPlanDayCount
+      const dayCount = Math.max(1, parseInt(latestSelectedPlanDayCount, 10) || 1)
+      this._planRouteConfirmTimer = null
+      this._isConfirmingPlanRoute = false
+      wx.navigateTo({ url: `/subpackages/route/pages/route/route?&ids=${ids}&dayCount=${dayCount}` })
+    }, PLAN_DAY_CONFIRM_DELAY_MS)
   },
 
 })

@@ -52,7 +52,7 @@
   "envId": "cloud1-9grc0ja0405b042a",
   "condition": {},
   "simulatorPluginLibVersion": {
-    "wxext14566970e7e9f62": "2.27.3"
+    "wxext14566970e7e9f62": "3.6.5-41"
   },
   "packOptions": {
     "ignore": [

@@ -1050,8 +1050,8 @@ page {
 
 .map-panel {
   position: fixed;
-  left: 48rpx;
-  right: 48rpx;
+  left: 32rpx;
+  right: 32rpx;
   bottom: 48rpx;
   z-index: 20;
 }

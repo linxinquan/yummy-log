@@ -4,6 +4,9 @@ const { normalizeTripDurationText } = require("../../utils/trip-duration");
 const { backfillStoredGuides } = require("../../utils/guide-backfill");
 const { DEFAULT_COVER_POOL } = require("../../config/cover-pool");
 const placesData = require("../../utils/placesData");
+const util = require("../../utils/util");
+// 读取首页当前选中的城市时，和首页共用同一个缓存 key。
+const EXPLORE_SELECTED_CITY_STORAGE_KEY = "selectedExploreCity";
 
 // 云端头像资源路径
 const cloudFile =
@@ -18,6 +21,80 @@ const authorImages = [
  "img_00007.jpg",
  "img_00008.jpg",
 ];
+
+// 不同城市对应不同的行政区 Tab。
+// 攻略页顶部地区栏要跟首页当前选中的城市保持一致。
+const CITY_DISTRICT_MAP = {
+ 深圳: [
+  { name: "福田区", id: "futian" },
+  { name: "南山区", id: "nanshan" },
+  { name: "罗湖区", id: "luohu" },
+  { name: "宝安区", id: "baoan" },
+  { name: "龙岗区", id: "longgang" },
+  { name: "龙华区", id: "longhua" },
+  { name: "光明区", id: "guangming" },
+  { name: "坪山区", id: "pingshan" },
+  { name: "盐田区", id: "yantian" },
+  { name: "大鹏新区", id: "dapeng" },
+ ],
+ 广州: [
+  { name: "天河区", id: "tianhe" },
+  { name: "越秀区", id: "yuexiu" },
+  { name: "海珠区", id: "haizhu" },
+  { name: "荔湾区", id: "liwan" },
+  { name: "白云区", id: "baiyun" },
+  { name: "黄埔区", id: "huangpu" },
+  { name: "番禺区", id: "panyu" },
+  { name: "花都区", id: "huadu" },
+  { name: "南沙区", id: "nansha" },
+  { name: "从化区", id: "conghua" },
+  { name: "增城区", id: "zengcheng" },
+ ],
+ 汕头: [
+  { name: "金平区", id: "jinping" },
+  { name: "龙湖区", id: "longhu" },
+  { name: "濠江区", id: "haojiang" },
+  { name: "潮阳区", id: "chaoyang" },
+  { name: "潮南区", id: "chaonan" },
+  { name: "澄海区", id: "chenghai" },
+  { name: "南澳县", id: "nanao" },
+ ],
+ 佛山: [
+  { name: "禅城区", id: "chancheng" },
+  { name: "南海区", id: "nanhai" },
+  { name: "顺德区", id: "shunde" },
+  { name: "三水区", id: "sanshui" },
+  { name: "高明区", id: "gaoming" },
+ ],
+ 珠海: [
+  { name: "香洲区", id: "xiangzhou" },
+  { name: "斗门区", id: "doumen" },
+  { name: "金湾区", id: "jinwan" },
+ ],
+};
+
+// 把城市名称统一成简称，方便读取对应的行政区配置。
+function normalizeGuideCityName(cityName = "") {
+ return util.getCityShortName(String(cityName || "").trim() || "深圳市");
+}
+
+// 优先读取首页当前选中的城市。
+// 如果用户还没手动切过城市，再退回定位得到的当前城市。
+function getSelectedExploreCity() {
+ const savedCity =
+  wx.getStorageSync(EXPLORE_SELECTED_CITY_STORAGE_KEY) ||
+  app.globalData.selectedExploreCity ||
+  (app.globalData.districtInfo && app.globalData.districtInfo.city) ||
+  "深圳市";
+ return normalizeGuideCityName(savedCity);
+}
+
+// 根据当前城市生成对应的地区 Tab。
+// 没配到的城市先兜底回深圳，避免页面出现空数组。
+function getDistrictsByCity(cityName = "") {
+ const cityShortName = normalizeGuideCityName(cityName);
+ return CITY_DISTRICT_MAP[cityShortName] || CITY_DISTRICT_MAP.深圳;
+}
 
 // 随机获取一个作者头像
 function getRandomAuthorAvatar() {
@@ -36,7 +113,6 @@ function inferGuideCity(guide = {}) {
   ...(guide.shops || []),
  ].join(" ");
 
- if (/西安|长安/.test(sourceText)) return "西安市";
  if (/广州/.test(sourceText)) return "广州市";
  if (/汕头/.test(sourceText)) return "汕头市";
  if (/佛山/.test(sourceText)) return "佛山市";
@@ -107,18 +183,8 @@ Page({
   contentTop: 108,
 
   // 区域
-  districts: [
-   { name: "福田区", id: "futian" },
-   { name: "南山区", id: "nanshan" },
-   { name: "罗湖区", id: "luohu" },
-   { name: "宝安区", id: "baoan" },
-   { name: "龙岗区", id: "longgang" },
-   { name: "龙华区", id: "longhua" },
-   { name: "光明区", id: "guangming" },
-   { name: "坪山区", id: "pingshan" },
-   { name: "盐田区", id: "yantian" },
-   { name: "大鹏新区", id: "dapeng" },
-  ],
+  currentCity: "深圳",
+  districts: getDistrictsByCity("深圳"),
 
   // 分类
   categories: [
@@ -158,12 +224,26 @@ Page({
    contentTop,
   });
 
+  // 首次进入攻略页时，先按首页当前城市刷新顶部地区 Tab。
+  this.syncDistrictTabsWithSelectedCity();
+
   this.loadGuides();
  },
 
  // 每次回到页面都重新加载，保证新发布的攻略能出现。
  onShow() {
+  // 首页切换城市后再进入攻略页，这里要同步刷新地区 Tab。
+  this.syncDistrictTabsWithSelectedCity();
   this.loadGuides(this.data.currentCategory || "全部");
+ },
+
+ // 让攻略页顶部地区 Tab 跟首页当前城市保持一致。
+ syncDistrictTabsWithSelectedCity() {
+  const currentCity = getSelectedExploreCity();
+  this.setData({
+   currentCity,
+   districts: getDistrictsByCity(currentCity),
+  });
  },
 
  // 根据顶部分类切换当前列表。

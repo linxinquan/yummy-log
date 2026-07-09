@@ -6,49 +6,37 @@
 
   <scroll-view class="guide-list" scroll-y wx:if="{{myGuides.length > 0}}">
     <block wx:for="{{myGuides}}" wx:key="id">
-      <view class="guide-swipe-item">
-        <view class="guide-delete-action" catchtap="onDeleteGuide" data-id="{{item.id}}">
-          <view class="guide-delete-inner">
-            <i class="mgc_delete_2_line guide-delete-icon"></i>
-            <text class="guide-delete-text">删除</text>
-          </view>
+      <view
+        class="guide-card"
+        bindtap="onGuideTap"
+        bindlongpress="onGuideLongPress"
+        data-guide="{{item}}"
+        data-index="{{index}}"
+      >
+        <view class="guide-cover-wrap">
+          <image
+            class="guide-cover"
+            src="{{item.coverImage}}"
+            mode="aspectFill"
+            binderror="onImageError"
+            data-index="{{index}}"
+          />
         </view>
-        <view
-          class="guide-card"
-          bindtap="onGuideTap"
-          bindtouchstart="onCardTouchStart"
-          bindtouchmove="onCardTouchMove"
-          bindtouchend="onCardTouchEnd"
-          bindtouchcancel="onCardTouchEnd"
-          data-guide="{{item}}"
-          data-index="{{index}}"
-          style="transform: translateX({{item.swipeOffset || 0}}px);"
-        >
-          <view class="guide-cover-wrap">
-            <image
-              class="guide-cover"
-              src="{{item.coverImage}}"
-              mode="aspectFill"
-              binderror="onImageError"
-              data-index="{{index}}"
-            />
-          </view>
-          <view class="guide-info">
-            <text class="guide-title">{{item.title}}</text>
-            <text class="guide-city">{{item.cityText}}</text>
-            <text class="guide-stats">{{item.duration}} · {{item.shopCount}} 个地点</text>
-          </view>
-          <view class="guide-divider"></view>
-          <view class="guide-footer">
-            <view class="guide-meta">
-              <view class="guide-author-wrap">
-                <view class="guide-time-icon">
-                  <i class="mgc_time_line"></i>
-                </view>
-                <text class="guide-author">{{item.publishedAtText}}</text>
+        <view class="guide-info">
+          <text class="guide-title">{{item.title}}</text>
+          <text class="guide-city">{{item.cityText}}</text>
+          <text class="guide-stats">{{item.duration}} · {{item.shopCount}} 个地点</text>
+        </view>
+        <view class="guide-divider"></view>
+        <view class="guide-footer">
+          <view class="guide-meta">
+            <view class="guide-author-wrap">
+              <view class="guide-time-icon">
+                <i class="mgc_time_line"></i>
               </view>
-              <text class="guide-likes">{{item.useRouteCount}} 人使用路线</text>
+              <text class="guide-author">{{item.publishedAtText}}</text>
             </view>
+            <text class="guide-likes">{{item.useRouteCount}} 人使用路线</text>
           </view>
         </view>
       </view>
@@ -56,6 +44,7 @@
 
     <view class="safe-area-bottom"></view>
   </scroll-view>
+
 
   <view class="empty-state" wx:else>
     <view class="empty-illustration">
@@ -66,4 +55,42 @@
     <view class="empty-btn" bindtap="onGoGuidePage">去我的路线</view>
   </view>
 
+  <view class="route-action-mask {{routeActionSheetVisible ? 'show' : ''}}" bindtap="onCloseRouteActionSheet">
+    <view class="route-action-sheet" catchtap="preventBubble">
+      <view class="route-action-header">
+        <text class="route-action-title">发布路线编辑</text>
+        <i class="mgc_close_line route-action-close" bindtap="onCloseRouteActionSheet"></i>
+      </view>
+      <view class="route-action-body">
+        <view class="route-action-grid">
+          <view
+            wx:for="{{routeActionOptions}}"
+            wx:key="key"
+            class="route-action-card {{item.danger ? 'danger' : ''}}"
+            bindtap="onSelectRouteAction"
+            data-action="{{item.key}}"
+          >
+            <i class="route-action-icon {{item.icon}}"></i>
+            <text class="route-action-label">{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="route-action-mask {{deleteRouteConfirmVisible ? 'show' : ''}}" bindtap="onCloseDeleteRouteConfirm">
+    <view class="route-action-sheet route-delete-confirm-sheet" catchtap="preventBubble">
+      <view class="route-action-header">
+        <text class="route-action-title">删除路线</text>
+        <i class="mgc_close_line route-action-close" bindtap="onCloseDeleteRouteConfirm"></i>
+      </view>
+      <view class="route-action-body">
+        <text class="route-delete-confirm-desc">删除后无法恢复，确认删除这条路线吗？</text>
+        <view class="route-delete-confirm-actions">
+          <view class="route-delete-confirm-btn cancel" bindtap="onCloseDeleteRouteConfirm">取消</view>
+          <view class="route-delete-confirm-btn danger" bindtap="onConfirmDeleteRoute">确认删除</view>
+        </view>
+      </view>
+    </view>
+  </view>
 </view>

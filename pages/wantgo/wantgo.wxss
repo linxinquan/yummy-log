@@ -438,6 +438,7 @@
   gap: 24rpx;
   min-height: 160rpx;
   background: #FFFFFF;
+  border-radius: 24rpx;
   transition: transform 0.2s ease;
   box-sizing: border-box;
 }
@@ -846,70 +847,14 @@
 }
 
 .want-toolbar-arrow {
-  color: #A0A4AE;
-  font-size: 28rpx;
-  line-height: 28rpx;
-  transition: transform 0.2s;
-}
-
-.want-toolbar-arrow.arrow-up {
-  transform: rotate(180deg);
-}
-
-.hover-opacity {
-  opacity: 0.6;
-}
-
-.city-filter-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: transparent;
-}
-
-.city-filter-dropdown {
-  position: fixed;
-  left: 48rpx;
-  min-width: 200rpx;
-  background: #FFFFFF;
-  border-radius: 16rpx;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
-  padding: 8rpx 0;
-  z-index: 101;
-}
-
-.city-filter-item {
-  padding: 20rpx 32rpx;
-  display: flex;
-  align-items: center;
-  min-height: 48rpx;
-  box-sizing: border-box;
-}
-
-.city-filter-item text {
   color: #242529;
-  font-size: 28rpx;
-  line-height: 28rpx;
+  font-size: 40rpx;
+  line-height: 40rpx;
 }
 
-.city-filter-item.active text {
+/* 城市选择沿用现有底部弹窗结构，但选中后不做颜色变化。 */
+.city-filter-sheet .route-action-card.active,
+.city-filter-sheet .route-action-card.active .route-action-label {
+  border-color: #E5E7EB;
   color: #242529;
-  font-weight: 600;
-}
-
-.city-filter-item.active {
-  position: relative;
-}
-
-.city-filter-item.active::before {
-  content: '✓';
-  position: absolute;
-  right: 32rpx;
-  color: #242529;
-  font-size: 24rpx;
-  font-weight: 600;
-}
-
-.city-filter-item:active {
-  background: #F7F8FA;
 }

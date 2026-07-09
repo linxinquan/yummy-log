@@ -65,22 +65,37 @@
 
     <view wx:else class="want-list" style="padding-top: {{listTop}}px;">
     <view wx:if="{{tab === 'want'}}" class="want-toolbar">
-      <view class="want-toolbar-left" bindtap="onCityFilterTap" hover-class="hover-opacity">
+      <view class="want-toolbar-left" bindtap="onCityFilterTap">
         <text class="want-toolbar-title">{{cityFilterLabel}}</text>
-        <i class="mgc_arrow_down_line want-toolbar-arrow {{cityFilterVisible ? 'arrow-up' : ''}}"></i>
+        <i class="mgc_down_line want-toolbar-arrow"></i>
       </view>
       <view class="want-plan-entry" bindtap="onPlanRoute">
         <i class="mgc_signature_2_ai_line"></i>
         <text>路线规划</text>
       </view>
     </view>
-    <view wx:if="{{cityFilterVisible}}" class="city-filter-mask" bindtap="onCloseCityFilter">
-      <view class="city-filter-dropdown" style="top: {{cityFilterTop}}px;" catchtap="preventBubble">
-        <view class="city-filter-item {{!cityFilter ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="">
-          <text>全部</text>
+    <!-- 城市筛选改成底部弹窗，不再使用顶部下拉框。 -->
+    <view class="route-action-mask {{cityFilterVisible ? 'show' : ''}}" bindtap="onCloseCityFilter">
+      <view class="route-action-sheet city-filter-sheet" catchtap="preventBubble">
+        <view class="route-action-header">
+          <text class="route-action-title">选择地点范围</text>
+          <i class="mgc_close_line route-action-close" bindtap="onCloseCityFilter"></i>
         </view>
-        <view wx:for="{{cityOptions}}" wx:key="*this" class="city-filter-item {{cityFilter === item ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="{{item}}">
-          <text>{{item}}</text>
+        <view class="route-action-body">
+          <view class="route-action-grid">
+            <view class="route-action-card {{!cityFilter ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="">
+              <text class="route-action-label">全部</text>
+            </view>
+            <view
+              wx:for="{{cityOptions}}"
+              wx:key="*this"
+              class="route-action-card {{cityFilter === item ? 'active' : ''}}"
+              bindtap="onSelectCityFilter"
+              data-city="{{item}}"
+            >
+              <text class="route-action-label">{{item}}</text>
+            </view>
+          </view>
         </view>
       </view>
     </view>

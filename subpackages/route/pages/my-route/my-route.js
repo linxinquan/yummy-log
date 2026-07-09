@@ -65,7 +65,8 @@ const XIAN_POI_MAP = {
   大唐不夜城: { lat: 34.2174, lng: 108.968, type: "spot" },
 };
 
-const MAX_DELETE_OFFSET = -72;
+// 删除按钮本身是 120rpx，这里按 48rpx 间距换算成 px 后，统一地点卡片左滑打开距离。
+const MAX_DELETE_OFFSET = -84;
 
 // 统一处理名称，方便做模糊匹配。
 function normalizeName(name) {
@@ -1878,7 +1879,8 @@ Page({
     const item =
       (((this.data.daySections || [])[dayIndex] || {}).items || [])[index] ||
       {};
-    const isOpen = (item.swipeOffset || 0) < -36;
+    // 打开阈值同步按一半偏移量判断，避免改了滑出距离后手感不一致。
+    const isOpen = Math.abs(item.swipeOffset || 0) > Math.abs(MAX_DELETE_OFFSET) / 2;
     this.setData({
       daySections: this.resetSwipeOffsets(
         this.data.daySections,

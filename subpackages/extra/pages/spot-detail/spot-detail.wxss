@@ -31,16 +31,39 @@
 .icon-btn {
   width: 64rpx; /* 32px */
   height: 64rpx; /* 32px */
-  background: rgba(0, 0, 0, 0.24);
+  /* 顶部返回 / 分享按钮统一改成白底黑图标，和详情页其他操作保持一致。 */
+  background: #FFFFFF;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* 分享按钮拆成“视觉层 + 透明点击层”，避免原生 button 把白色圆底撑变形。 */
+.share-btn-wrap {
+  position: relative;
+}
+
+.share-hit-btn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  opacity: 0;
+}
+
+.share-hit-btn::after {
+  border: none;
+}
+
 .icon-btn i {
   font-size: 40rpx; /* 20px */
-  color: #FFFFFF;
+  color: #242529;
 }
 
 .hero-stats {

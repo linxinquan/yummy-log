@@ -73,9 +73,23 @@
       <text class="list-item-text">设置</text>
       <i class="mgc_right_line arrow-icon"></i>
     </view>
-    <view class="list-item" bindtap="onMenuTap" data-type="share">
-      <text class="list-item-text">分享我们</text>
-      <i class="mgc_right_line arrow-icon"></i>
+    <!-- “分享我们”外层继续保持普通列表结构，内部把点击区拆成文字 / 中间 / 箭头三段分享按钮。 -->
+    <view class="list-item share-list-item">
+      <view class="share-list-content">
+        <!-- 左侧文字区域只负责显示，不直接承接点击。 -->
+        <view class="share-label-wrap">
+          <text class="list-item-text">分享我们</text>
+        </view>
+        <!-- 中间空白区占满剩余宽度，视觉上仍和“设置”保持一致。 -->
+        <view class="share-spacer"></view>
+        <!-- 右侧箭头区域单独包一层，方便和点击区一一对应。 -->
+        <view class="share-arrow-wrap">
+          <i class="mgc_right_line arrow-icon"></i>
+        </view>
+      </view>
+      <button class="share-hit-btn share-hit-left" open-type="share"></button>
+      <button class="share-hit-btn share-hit-middle" open-type="share"></button>
+      <button class="share-hit-btn share-hit-right" open-type="share"></button>
     </view>
 
   </view>
@@ -155,26 +169,23 @@
     </view>
   </view>
 
-  <!-- 设置弹窗 -->
-  <view class="settings-modal {{showSettingsModal ? 'show' : ''}}" bindtap="onSettingsModalMaskTap">
-    <view class="settings-modal-content" catchtap="onSettingsModalContentTap">
-      <!-- 关闭按钮 -->
-      <view class="modal-close" bindtap="hideSettingsModal">
-        <i class="mgc_close_line"></i>
+  <!-- 设置弹窗：改成和路线编辑一致的底部卡片结构。 -->
+  <view class="route-action-mask {{showSettingsModal ? 'show' : ''}}" bindtap="onSettingsModalMaskTap">
+    <view class="route-action-sheet settings-action-sheet" catchtap="onSettingsModalContentTap">
+      <view class="route-action-header">
+        <text class="route-action-title">设置</text>
+        <i class="mgc_close_line route-action-close" bindtap="hideSettingsModal"></i>
       </view>
-
-      <!-- 标题 -->
-      <view class="modal-header">
-        <text class="modal-title">设置</text>
-      </view>
-
-      <!-- 设置项 -->
-      <view class="settings-items">
-        <view class="settings-item" bindtap="showEditNickname">
-          <text class="settings-item-text">修改昵称</text>
-        </view>
-        <view class="settings-item" bindtap="onLogout">
-          <text class="settings-item-text">退出登录</text>
+      <view class="route-action-body">
+        <view class="route-action-grid">
+          <view class="route-action-card" bindtap="showEditNickname">
+            <i class="route-action-icon mgc_user_edit_line"></i>
+            <text class="route-action-label">修改昵称</text>
+          </view>
+          <view class="route-action-card danger" bindtap="onLogout">
+            <i class="route-action-icon mgc_exit_line"></i>
+            <text class="route-action-label">退出登录</text>
+          </view>
         </view>
       </view>
     </view>

@@ -92,7 +92,7 @@
                 <image
                   class="secondary-cat-image {{currentSecondaryTab === item.label ? 'active' : ''}}"
                   src="{{item.iconPath}}"
-                  mode="aspectFill"
+                  mode="aspectFit"
                 />
                 <text class="secondary-cat-name {{currentSecondaryTab === item.label ? 'active' : ''}}">{{item.label}}</text>
               </view>
@@ -107,7 +107,7 @@
   <view class="float-btns-group" style="bottom: {{sheetHeight + 16 + sheetBottom}}px" wx:if="{{!isDragging && sheetHeight < sysMaxHeight - 10}}">
     <!-- 左侧：列表展开按钮 -->
     <view class="float-btn explore-float-btn" bindtap="onListBtnTap">
-      <i class="mgc_list_check_3_line"></i>
+      <i class="mgc_menu_line"></i>
     </view>
     
     <!-- 右侧：放大缩小按钮组 + 定位按钮 -->

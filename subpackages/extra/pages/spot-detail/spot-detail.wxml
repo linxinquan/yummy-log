@@ -8,8 +8,10 @@
       <view class="icon-btn back-btn" bindtap="onBack">
         <i class="mgc_left_line back-icon"></i>
       </view>
-      <view class="icon-btn share-btn" bindtap="onShareTap">
+      <!-- 视觉层继续复用圆形图标按钮，透明 button 只负责承接微信原生分享能力。 -->
+      <view class="icon-btn share-btn-wrap">
         <i class="mgc_share_forward_line share-icon"></i>
+        <button class="share-hit-btn" open-type="share"></button>
       </view>
     </view>
 

@@ -86,12 +86,12 @@
     <!-- 列表 / 地图 模式切换 -->
     <view class="mode-switch" style="top: {{modeSwitchTop}}px;" wx:if="{{routeShops.length > 0 && !isEditing}}">
       <view class="mode-chip {{viewMode === 'list' ? 'active' : ''}}" bindtap="onSwitchMode" data-mode="list">
-        <i class="mgc_list_check_line"></i>
-        <text>列表</text>
+        <i class="mgc_layout_4_line"></i>
+        <text>详情</text>
       </view>
       <view class="mode-chip {{viewMode === 'map' ? 'active' : ''}}" bindtap="onSwitchMode" data-mode="map">
-        <i class="mgc_world_2_line"></i>
-        <text>地图</text>
+        <i class="mgc_route_line"></i>
+        <text>路线</text>
       </view>
     </view>
 
@@ -338,7 +338,7 @@
       <view class="map-panel">
       <view class="map-panel-actions" wx:if="{{mapPreviewShop}}">
         <view class="map-floating-icon" bindtap="onSwitchMode" data-mode="list">
-          <i class="mgc_left_line"></i>
+          <i class="mgc_layout_4_line"></i>
         </view>
         <view style="display: flex; flex-direction: column; gap: 24rpx; pointer-events: auto;">
           <!-- 地图模式浮动操作：全屏图标下方新增“定位到我”按钮 -->

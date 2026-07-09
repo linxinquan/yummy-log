@@ -301,9 +301,6 @@ Page({
       isAllSelected: true
     })
     
-    // 调试：打印 daySections 数据
-    console.log('[loadRoute] daySections:', daySections)
-    
     this.refreshPreviewRoute(routeShops)
   } else {
       const prev = this.data.allLikedShops

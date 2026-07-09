@@ -5,14 +5,35 @@ const util = require('../../utils/util')
 const checkinUtil = require('../../utils/checkinUtil')
 const markerIcons = require('../../utils/markerIcons')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
+// 首页当前选中的城市要同步给攻略页使用。
+// 这样攻略页的地区 Tab 就能跟着首页城市一起切换。
+const EXPLORE_SELECTED_CITY_STORAGE_KEY = 'selectedExploreCity'
 
 // 探索地图里的“当前位置”使用一个单独的 marker id，
 // 避免和正常地点数据的 id 混在一起。
 const CURRENT_LOCATION_MARKER_ID = -1001
 const CURRENT_LOCATION_ICON_PATH = '/images/markers/marker_current_location.png'
-// 二级分类卡片先统一使用同一张本地测试图，
-// 这样美食和景点都能快速看整体视觉效果。
-const SECONDARY_TAB_ICON_PATH = '/images/food-tabs/food-tab-unified.webp'
+// 用户提供了 6 张透明背景 PNG，这里按“美食名称 -> 图片路径”做映射。
+// 这样首页二级美食 Tab 就能直接看到真实图标效果。
+const FOOD_SECONDARY_TAB_ICON_MAP = {
+  椰子鸡: '/images/food-tabs/椰子鸡.png',
+  海鲜砂锅粥: '/images/food-tabs/海鲜砂锅粥.png',
+  早茶点心: '/images/food-tabs/早茶点心.png',
+  云吞面: '/images/food-tabs/云吞面.png',
+  双皮奶: '/images/food-tabs/双皮奶.png',
+  煲仔饭: '/images/food-tabs/煲仔饭.png'
+}
+// 没有专属图片的二级美食，先从这 6 张透明 PNG 里“随机”分配。
+// 为了避免每次渲染都变图，这里用名称做一个稳定映射，看起来随机但不会乱跳。
+const FOOD_SECONDARY_TAB_FALLBACK_ICONS = Object.values(FOOD_SECONDARY_TAB_ICON_MAP)
+// 用户新提供的 4 张 PNG 名称正好对应景点二级 Tab。
+// 这里按“景点名称 -> 图片路径”映射，首页切到景点时直接显示对应图标。
+const SPOT_SECONDARY_TAB_ICON_MAP = {
+  自然景色: '/images/spot-tabs/自然景色.png',
+  历史人文: '/images/spot-tabs/历史人文.png',
+  风景名胜: '/images/spot-tabs/风景名胜.png',
+  城市公园: '/images/spot-tabs/城市公园.png'
+}
 // 二级横向卡片当前使用固定宽度布局，
 // 这里把宽度和间距提成常量，方便后面统一改动。
 const SECONDARY_TAB_ITEM_WIDTH_RPX = 144
@@ -22,8 +43,112 @@ const SECONDARY_TAB_WRAP_HORIZONTAL_PADDING_RPX = 48
 // 首页天气拿不到数据时，统一显示这句更自然的提示文案，
 // 避免页面出现空白或误导性的默认温度。
 const WEATHER_FALLBACK_TEXT = '天气加载中，请稍候'
+// 首页天气缓存 10 分钟，避免短时间内重复请求把天气 key 打到限流。
+const WEATHER_CACHE_KEY = 'indexWeatherCache'
+const WEATHER_CACHE_TTL = 10 * 60 * 1000
 // 重新定位后，把地图拉近到当前位置附近，避免只更新中心点却看起来没变化。
 const MY_LOCATION_FOCUS_SCALE = 17
+// 首页城市列表本身只覆盖广东城市。
+// 这里顺手缓存一份中心点，后面给地图筛选做“坐标兜底校验”。
+const EXPLORE_CITY_OPTIONS = util.getCityOptions(DEFAULT_COVER_POOL)
+// 不同城市允许的最大偏移半径（公里）。
+// 这不是行政区精确边界，只是用来挡掉明显跑到省外的脏数据。
+const CITY_LOCATION_SANITY_RADIUS_KM_MAP = {
+  广州: 90,
+  深圳: 80,
+  汕头: 80,
+  湛江: 110,
+  汕尾: 90,
+  清远: 110,
+  佛山: 70,
+  东莞: 80,
+  珠海: 70,
+  中山: 70,
+  江门: 90,
+  惠州: 100,
+  肇庆: 100,
+  茂名: 110,
+  阳江: 100,
+  梅州: 100,
+  河源: 100,
+  韶关: 120,
+  揭阳: 90,
+  潮州: 80,
+  云浮: 100
+}
+const CITY_CENTER_MAP = EXPLORE_CITY_OPTIONS.reduce((result, item) => {
+  result[item.name] = {
+    lat: item.lat,
+    lng: item.lng
+  }
+  return result
+}, {})
+
+// 把城市名称统一整理成“XX市”的形式，方便跨页面复用。
+function normalizeSelectedCityName(cityName = '') {
+  const source = String(cityName || '').trim()
+  if (!source) return '深圳市'
+  return /市$/.test(source) ? source : `${util.getCityShortName(source)}市`
+}
+
+// 首页城市一旦变化，就同步写到全局和本地缓存。
+// 攻略页返回时直接读取这里，就能拿到和首页一致的城市。
+function syncSelectedExploreCity(cityName = '') {
+  const normalizedCityName = normalizeSelectedCityName(cityName)
+  app.globalData.selectedExploreCity = normalizedCityName
+  wx.setStorageSync(EXPLORE_SELECTED_CITY_STORAGE_KEY, normalizedCityName)
+  return normalizedCityName
+}
+
+// 统一整理天气展示字段，避免多处重复拼接文案。
+function buildWeatherState(weather = '', temperature = '') {
+  const weatherDesc = weather || WEATHER_FALLBACK_TEXT
+  const weatherTemp = temperature !== undefined && temperature !== null && temperature !== ''
+    ? `${temperature}°C`
+    : ''
+  return {
+    weatherDesc,
+    weatherTemp
+  }
+}
+
+// 读取本地天气缓存。
+// 只有在缓存没过期、并且带有基础天气字段时才复用。
+function getCachedWeatherState() {
+  const cache = wx.getStorageSync(WEATHER_CACHE_KEY)
+  if (!cache || !cache.timestamp) return null
+  if (Date.now() - cache.timestamp > WEATHER_CACHE_TTL) return null
+  if (!cache.weatherDesc) return null
+  return {
+    weatherDesc: cache.weatherDesc,
+    weatherTemp: cache.weatherTemp || ''
+  }
+}
+
+// 把最新天气写入本地缓存，给短时间内重复进入首页时直接复用。
+function saveWeatherStateToCache(weatherState = {}) {
+  if (!weatherState.weatherDesc) return
+  wx.setStorageSync(WEATHER_CACHE_KEY, {
+    ...weatherState,
+    timestamp: Date.now()
+  })
+}
+
+// 根据当前城市做一层坐标兜底校验。
+// 如果历史数据把省外点误写成“深圳/广州”，这里会直接挡掉。
+function isItemNearCurrentCity(item = {}, currentCity = '') {
+  const cityShort = util.getCityShortName(currentCity || '')
+  const cityCenter = CITY_CENTER_MAP[cityShort]
+  if (!cityShort || !cityCenter) return true
+
+  const lat = typeof item.lat === 'number' ? item.lat : Number(item.lat || item.latitude)
+  const lng = typeof item.lng === 'number' ? item.lng : Number(item.lng || item.longitude)
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return true
+
+  const distance = util.getDistance(cityCenter.lat, cityCenter.lng, lat, lng)
+  const maxDistance = (CITY_LOCATION_SANITY_RADIUS_KM_MAP[cityShort] || 100) * 1000
+  return distance <= maxDistance
+}
 
 
 // 顶部分类导航统一复用 marker 图标资源。
@@ -113,22 +238,9 @@ const SPOT_SECONDARY_TAB_CONFIG = [
 ]
 
 // 判断当前一级分类是否需要显示二级卡片。
-// 目前只有“美食”和“景点”会走这套交互。
+// 目前首页只保留“景点”二级 Tab，“美食”二级 Tab 暂时关闭。
 function categoryHasSecondaryTabs(category) {
-  return category === '美食' || category === '景点'
-}
-
-// 根据当前城市取对应的美食二级 Tab。
-// currentCity 可能是“深圳市”或“深圳”，这里统一转成短城市名再查配置。
-function getFoodSecondaryTabsByCity(currentCity) {
-  const cityShort = util.getCityShortName(currentCity || '')
-  const tabs = FOOD_SECONDARY_TAB_CONFIG[cityShort] || []
-  // 二级 Tab 现在统一替换成用户提供的本地图片，
-  // 这样所有美食项都能先用同一张图快速看整体效果。
-  return tabs.map((item) => ({
-    ...item,
-    iconPath: SECONDARY_TAB_ICON_PATH
-  }))
+  return category === '景点'
 }
 
 // 景点二级 Tab 先做成全城市通用配置。
@@ -136,16 +248,33 @@ function getFoodSecondaryTabsByCity(currentCity) {
 function getSpotSecondaryTabs() {
   return SPOT_SECONDARY_TAB_CONFIG.map((item) => ({
     ...item,
-    iconPath: SECONDARY_TAB_ICON_PATH
+    iconPath: getSpotSecondaryTabIconPath(item.label)
   }))
 }
 
-// 按一级分类统一返回二级 Tab 配置。
-// 这样城市切换、一级切换和初始化时都能复用同一套取值逻辑。
-function getSecondaryTabsByCategory(category, currentCity) {
-  if (category === '美食') {
-    return getFoodSecondaryTabsByCity(currentCity)
+// 根据二级美食名称返回图片路径。
+// 有专属图就直接用专属图；没有就按名称稳定分配一张现有 PNG。
+function getFoodSecondaryTabIconPath(label = '') {
+  if (FOOD_SECONDARY_TAB_ICON_MAP[label]) {
+    return FOOD_SECONDARY_TAB_ICON_MAP[label]
   }
+  const fallbackIcons = FOOD_SECONDARY_TAB_FALLBACK_ICONS
+  if (!fallbackIcons.length) {
+    return '/images/food-tabs/food-tab-unified.webp'
+  }
+  const hash = String(label).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  return fallbackIcons[hash % fallbackIcons.length]
+}
+
+// 根据景点二级名称返回图片路径。
+// 有同名 PNG 就直接使用；没有时回退到原来的统一占位图。
+function getSpotSecondaryTabIconPath(label = '') {
+  return SPOT_SECONDARY_TAB_ICON_MAP[label] || '/images/food-tabs/food-tab-unified.webp'
+}
+
+// 按一级分类统一返回二级 Tab 配置。
+// 目前首页只保留景点二级 Tab，美食配置先保留，后面需要时再恢复。
+function getSecondaryTabsByCategory(category) {
   if (category === '景点') {
     return getSpotSecondaryTabs()
   }
@@ -354,14 +483,14 @@ Page({
     })
 
     app.whenDistrictReady((info, locationDesc) => {
-      // 当前城市变化后，同步刷新美食二级 Tab。
-      // 一级“美食”只负责显示这张大卡片，不再默认选中第一个细分项。
+      // 当前城市变化后，如果景点二级面板正处于展开状态，就同步刷新当前二级项。
       const nextCity = info.city
+      const syncedCityName = syncSelectedExploreCity(nextCity)
       const secondaryTabs = (this.data.showSecondaryCategoryPanel && categoryHasSecondaryTabs(this.data.currentCategory))
-        ? getSecondaryTabsByCategory(this.data.currentCategory, nextCity)
+        ? getSecondaryTabsByCategory(this.data.currentCategory)
         : []
       this.setData({ 
-        currentCity: nextCity,
+        currentCity: syncedCityName,
         secondaryTabs,
         currentSecondaryTab: '',
         secondaryTabScrollLeft: 0
@@ -378,8 +507,7 @@ Page({
   },
 
   initCityOptions() {
-    const cityOptions = util.getCityOptions(DEFAULT_COVER_POOL)
-    this.setData({ cityOptions })
+    this.setData({ cityOptions: EXPLORE_CITY_OPTIONS })
   },
 
   ensureCurrentLocationMarkerIcon(fitMap = true) {
@@ -521,6 +649,18 @@ Page({
 
   // 读取当前定位对应的天气信息。
   loadWeather() {
+    // 短时间内重复进入首页时，优先用缓存，避免再次打天气接口。
+    const cachedWeatherState = getCachedWeatherState()
+    if (cachedWeatherState) {
+      this.setData(cachedWeatherState)
+      return
+    }
+
+    // 如果上一次天气请求还没结束，就不要再重复发起。
+    if (this._weatherLoading) {
+      return
+    }
+
     const location = app.globalData.location
     const key = app.globalData.qqMapKey
     // 没有定位或 key 时，直接回退到提示文案，
@@ -534,6 +674,7 @@ Page({
     }
 
     // 使用腾讯地图天气API
+    this._weatherLoading = true
     wx.request({
       url: 'https://apis.map.qq.com/ws/weather/v1/',
       data: {
@@ -549,17 +690,11 @@ Page({
             ? res.data.result.realtime[0]
             : (res.data.result && res.data.result.realtime)
           const infos = (realtime && realtime.infos) || (res.data.result && res.data.result.infos) || {}
-          // 只有接口真的返回了温度，才拼接 °C，
-          // 这样接口失败或字段缺失时，就不会再显示假的固定温度。
-          const weatherTemp = infos.temperature !== undefined && infos.temperature !== null && infos.temperature !== ''
-            ? `${infos.temperature}°C`
-            : ''
           // 只有接口真的返回了天气或温度时，才覆盖默认提示；
           // 如果接口成功但字段为空，仍然保留兜底提示。
-          this.setData({
-            weatherDesc: infos.weather || WEATHER_FALLBACK_TEXT,
-            weatherTemp
-          })
+          const weatherState = buildWeatherState(infos.weather, infos.temperature)
+          this.setData(weatherState)
+          saveWeatherStateToCache(weatherState)
         } else {
           // 接口返回异常状态时，统一回退到提示文案。
           this.setData({
@@ -567,6 +702,7 @@ Page({
             weatherTemp: ''
           })
         }
+        this._weatherLoading = false
       },
       fail: () => {
         // 请求失败时显示提示文案，不再保留旧的假数据。
@@ -574,6 +710,7 @@ Page({
           weatherDesc: WEATHER_FALLBACK_TEXT,
           weatherTemp: ''
         })
+        this._weatherLoading = false
       }
     })
   },
@@ -598,7 +735,10 @@ Page({
     // 城市筛选：根据当前选中的城市进行筛选
     if (currentCity) {
       const cityShort = util.getCityShortName(currentCity)
-      filtered = filtered.filter(i => i.city === cityShort)
+      filtered = filtered.filter(item => {
+        if (item.city !== cityShort) return false
+        return isItemNearCurrentCity(item, cityShort)
+      })
     }
     
     // 分类筛选
@@ -831,19 +971,27 @@ Page({
     const category = e.currentTarget.dataset.category
     const isSameCategory = category === this.data.currentCategory
     const hasSecondaryTabs = categoryHasSecondaryTabs(category)
-    // 一级“美食 / 景点”第一次点击时展开二级卡片，
+    // 一级“景点”第一次点击时展开二级卡片，
     // 再点击同一个一级分类时就把二级卡片收起。
     const showSecondaryCategoryPanel = hasSecondaryTabs
       ? (isSameCategory ? !this.data.showSecondaryCategoryPanel : true)
       : false
     const secondaryTabs = showSecondaryCategoryPanel
-      ? getSecondaryTabsByCategory(category, this.data.currentCity)
+      ? getSecondaryTabsByCategory(category)
       : []
+    // 点击“景点”一级分类时，默认选中第一个二级 Tab。
+    // 这样用户进入景点后会直接看到首个推荐分类，其它交互保持不变。
+    const defaultSecondaryTab = showSecondaryCategoryPanel && secondaryTabs.length
+      ? secondaryTabs[0].label
+      : ''
+    const defaultSecondaryTabScrollLeft = defaultSecondaryTab
+      ? getSecondaryTabScrollLeft(0, secondaryTabs.length)
+      : 0
     this.setData({ 
       currentCategory: category, 
       secondaryTabs,
-      currentSecondaryTab: '',
-      secondaryTabScrollLeft: 0,
+      currentSecondaryTab: defaultSecondaryTab,
+      secondaryTabScrollLeft: defaultSecondaryTabScrollLeft,
       showSecondaryCategoryPanel,
       currentPage: 1,
       scrollToCategory: '' // 先清空触发重新滚动
@@ -867,7 +1015,7 @@ Page({
       secondaryTabScrollLeft,
       currentPage: 1
     }, () => {
-      // 二级美食 / 景点每次点击后，都要按“当前二级筛选出的全部结果”重新缩放地图。
+      // 二级景点每次点击后，都要按“当前二级筛选出的全部结果”重新缩放地图。
       // 这里不再只在 tab 变化时才触发，避免重复点击当前二级项时地图范围不更新。
       this._scheduleApplyFilters(true)
     })
@@ -904,6 +1052,8 @@ Page({
       success: (res) => {
         wx.hideLoading()
         const loc = { lat: res.latitude, lng: res.longitude }
+        const resolvedCity = (app.globalData.districtInfo && app.globalData.districtInfo.city) || this.data.currentCity
+        const syncedCityName = syncSelectedExploreCity(resolvedCity)
         app.globalData.location = loc
         this.setData({ 
           mapCenter: loc,
@@ -913,7 +1063,7 @@ Page({
           // 否则地图中心变了，但自定义当前位置图标不会跟着走。
           currentLocation: loc,
           currentDistrict: '',
-          currentCity: (app.globalData.districtInfo && app.globalData.districtInfo.city) || this.data.currentCity,
+          currentCity: syncedCityName,
           locationMode: 'my'
         })
         // 重新定位后重新确认当前位置 iconPath 已挂上，
@@ -1028,13 +1178,14 @@ Page({
   onSelectCity(e) {
     const item = e.currentTarget.dataset.item
     if (!item) return
-    // 切换城市时，如果当前一级分类正处于二级卡片展开状态，
+    const syncedCityName = syncSelectedExploreCity(item.fullName)
+    // 切换城市时，如果景点二级卡片正处于展开状态，
     // 就同步刷新卡片内容，但不保留旧的二级选中项。
     const secondaryTabs = (this.data.showSecondaryCategoryPanel && categoryHasSecondaryTabs(this.data.currentCategory))
-      ? getSecondaryTabsByCategory(this.data.currentCategory, item.fullName)
+      ? getSecondaryTabsByCategory(this.data.currentCategory)
       : []
     this.setData({ 
-      currentCity: item.fullName,
+      currentCity: syncedCityName,
       currentDistrict: '',
       mapCenter: {
         lat: item.lat,
