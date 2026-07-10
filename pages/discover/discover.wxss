@@ -40,7 +40,7 @@ page {
   font-weight: 500;
   font-size: 48rpx;
   line-height: 64rpx;
-  color: #242529;
+  color: #1A2739;
 }
 
 .nav-right {
@@ -90,13 +90,13 @@ page {
   gap: 20rpx;
   height: 72rpx;
   background: #FFFFFF;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   border-radius: 999rpx;
   font-family: 'PingFang SC';
   font-weight: 500;
   font-size: 24rpx;
   line-height: 100%;
-  color: #6E727A;
+  color: #808B9A;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -118,12 +118,12 @@ page {
   font-weight: 500;
   font-size: 40rpx;
   line-height: 100%;
-  color: #A0A4AE;
+  color: #9DA4AD;
   flex-shrink: 0;
 }
 
 .category-item.active {
-  color: #242529;
+  color: #1A2739;
 }
 
 /* ─── 精选攻略卡片（横向滚动）── */
@@ -164,7 +164,7 @@ page {
   font-weight: 400;
   font-size: 28rpx;
   line-height: 100%;
-  color: #A0A4AE;
+  color: #9DA4AD;
 }
 
 .featured-name {
@@ -172,7 +172,7 @@ page {
   font-weight: 500;
   font-size: 40rpx;
   line-height: 100%;
-  color: #242529;
+  color: #1A2739;
 }
 
 .featured-cover-wrap {
@@ -228,7 +228,7 @@ page {
   box-sizing: border-box;
   position: relative;
   border: 2rpx solid #F6F7F7;
-  background: linear-gradient(180deg, #F7F8FA 0%, #FFFFFF 100%);
+  background: linear-gradient(180deg, #F6F8FA 0%, #FFFFFF 100%);
 }
 
 .guide-cover-wrap {
@@ -267,10 +267,10 @@ page {
   display: -webkit-box;
   overflow: hidden;
   font-family: 'PingFang SC';
-  font-weight: 500;
+  font-weight: 400;
   font-size: 32rpx;
   line-height: 48rpx;
-  color: #242529;
+  color: #1A2739;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   word-break: break-all;
@@ -282,7 +282,7 @@ page {
   font-weight: 400;
   font-size: 24rpx;
   line-height: 100%;
-  color: #A0A4AE;
+  color: #9DA4AD;
 }
 
 .guide-stats {
@@ -290,7 +290,7 @@ page {
   font-weight: 400;
   font-size: 24rpx;
   line-height: 100%;
-  color: #A0A4AE;
+  color: #9DA4AD;
   margin-top: 16rpx;
 }
 
@@ -301,7 +301,7 @@ page {
   left: 32rpx;
   top: 272rpx;
   height: 2rpx;
-  background: linear-gradient(to right, #EEF0F3 50%, transparent 50%);
+  background: linear-gradient(to right, #F6F8FA 50%, transparent 50%);
   background-size: 16rpx 2rpx;
 }
 
@@ -338,7 +338,7 @@ page {
   font-weight: 400;
   font-size: 24rpx;
   line-height: 100%;
-  color: #A0A4AE;
+  color: #9DA4AD;
 }
 
 .guide-likes {
@@ -346,7 +346,7 @@ page {
   font-weight: 400;
   font-size: 24rpx;
   line-height: 100%;
-  color: #A0A4AE;
+  color: #9DA4AD;
 }
 
 .no-more {
@@ -370,5 +370,5 @@ page {
   font-weight: 400;
   font-size: 24rpx;
   line-height: 100%;
-  color: #A0A4AE;
+  color: #9DA4AD;
 }

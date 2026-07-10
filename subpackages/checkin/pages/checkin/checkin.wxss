@@ -19,7 +19,7 @@ page {
   gap: 12rpx;
   margin-bottom: 32rpx;
   padding: 28rpx 32rpx;
-  background: #F7F8FA;
+  background: #F6F8FA;
   border-radius: 24rpx;
 }
 
@@ -27,18 +27,18 @@ page {
   width: 16rpx;
   height: 16rpx;
   border-radius: 999rpx;
-  background: #242529;
+  background: #1A2739;
 }
 
 .gt-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   font-weight: 500;
   line-height: 44rpx;
 }
 
 .gt-sub {
-  color: #8F949C;
+  color: #9DA4AD;
   font-size: 26rpx;
   line-height: 38rpx;
 }
@@ -46,7 +46,7 @@ page {
 .photo-card {
   min-height: 420rpx;
   border-radius: 32rpx;
-  background: #F7F8FA;
+  background: #F6F8FA;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,18 +77,18 @@ page {
 .pce-camera i {
   font-size: 52rpx;
   line-height: 52rpx;
-  color: #242529;
+  color: #1A2739;
 }
 
 .pce-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   font-weight: 500;
   line-height: 32rpx;
 }
 
 .pce-sub {
-  color: #8F949C;
+  color: #9DA4AD;
   font-size: 26rpx;
   line-height: 38rpx;
   text-align: center;
@@ -112,17 +112,17 @@ page {
 }
 
 .photo-extra-btn.secondary {
-  background: #F7F8FA;
+  background: #F6F8FA;
 }
 
 .photo-extra-btn i {
   font-size: 32rpx;
   line-height: 32rpx;
-  color: #242529;
+  color: #1A2739;
 }
 
 .photo-extra-btn text {
-  color: #242529;
+  color: #1A2739;
   font-size: 28rpx;
   font-weight: 500;
   line-height: 28rpx;
@@ -172,7 +172,7 @@ page {
 }
 
 .detail-stamp-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 48rpx;
   font-weight: 500;
   line-height: 64rpx;
@@ -198,7 +198,7 @@ page {
 
 .refresh-spot-btn i {
   font-size: 28rpx;
-  color: #8F949C;
+  color: #9DA4AD;
   line-height: 1;
 }
 
@@ -232,7 +232,7 @@ page {
 .info-ai-icon {
   font-size: 28rpx;
   line-height: 28rpx;
-  color: #242529;
+  color: #1A2739;
   flex-shrink: 0;
 }
 
@@ -256,7 +256,7 @@ page {
 }
 
 .info-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 28rpx;
   font-weight: 500;
   line-height: 28rpx;
@@ -264,7 +264,7 @@ page {
 
 .info-regenerate {
   margin-left: auto;
-  color: #47BFFE;
+  color: #25bbe7;
   font-size: 28rpx;
   font-weight: 400;
   line-height: 28rpx;
@@ -276,7 +276,7 @@ page {
 
 .info-value {
   width: 100%;
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 28rpx;
   font-weight: 400;
   line-height: 44rpx;
@@ -342,7 +342,7 @@ page {
 }
 
 .action-btn-light text {
-  color: #060606;
+  color: #1A2739;
 }
 
 .action-btn-text-secondary {
@@ -358,7 +358,7 @@ page {
 }
 
 .action-btn-icon i {
-  color: #060606;
+  color: #1A2739;
   font-size: 40rpx;
   line-height: 40rpx;
 }
@@ -373,7 +373,7 @@ page {
 .action-btn-dark {
   flex: 1 1 0;
   min-width: 0;
-  background: #242529;
+  background: #25bbe7;
 }
 
 .action-btn-main {
@@ -385,7 +385,7 @@ page {
 }
 
 .action-btn-light .action-btn-inline-icon {
-  color: #060606;
+  color: #1A2739;
 }
 
 .action-btn-dark .action-btn-inline-icon {
@@ -433,7 +433,7 @@ page {
 }
 
 .sheet-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   font-weight: 500;
   line-height: 100%;
@@ -445,7 +445,7 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #242529;
+  color: #1A2739;
   font-size: 48rpx;
 }
 
@@ -474,14 +474,14 @@ page {
 }
 
 .edit-field-label {
-  color: #242529;
+  color: #1A2739;
   font-size: 28rpx;
   font-weight: 500;
   line-height: 28rpx;
 }
 
 .edit-field-action {
-  color: #47BFFE;
+  color: #25bbe7;
   font-size: 28rpx;
   font-weight: 400;
   line-height: 28rpx;
@@ -493,10 +493,10 @@ page {
   width: 100%;
   padding: 0 32rpx 0;
   border-radius: 24rpx;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   background: #FFFFFF;
   box-sizing: border-box;
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   font-weight: 400;
 }
@@ -546,12 +546,12 @@ page {
 }
 
 .edit-sheet-btn-light text {
-  color: #242529;
+  color: #1A2739;
 }
 
 .edit-sheet-btn-dark {
   flex: 1;
-  background: #242529;
+  background: #25bbe7;
 }
 
 .edit-sheet-btn-dark text {

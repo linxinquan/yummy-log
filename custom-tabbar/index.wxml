@@ -1,19 +1,116 @@
-<view class="custom-tabbar">
-  <view 
-    wx:for="{{list}}" 
-    wx:key="index" 
-    class="tabbar-item"
-    data-path="{{item.pagePath}}"
-    data-index="{{index}}"
-    bindtap="switchTab"
-  >
-    <view class="tabbar-icon {{index === 2 ? 'tabbar-icon-add' : ''}} {{selected === 2 && index === 2 ? 'is-active' : ''}}" style="{{index === 2 ? 'width: 72rpx; height: 72rpx;' : ''}}">
-      <image 
-        src="{{selected === index ? item.selectedIconPath : item.iconPath}}" 
-        mode="aspectFit" 
-        class="icon {{index === 2 ? 'add-icon' : ''}}"
-      />
+<view class="custom-tabbar-shell">
+  <view class="custom-tabbar">
+    <view 
+      wx:for="{{list}}" 
+      wx:key="index" 
+      class="tabbar-item"
+      data-path="{{item.pagePath}}"
+      data-index="{{index}}"
+      bindtap="switchTab"
+    >
+      <view class="tabbar-icon {{index === 2 ? 'tabbar-icon-add' : ''}} {{selected === 2 && index === 2 ? 'is-active' : ''}}" style="{{index === 2 ? 'width: 72rpx; height: 72rpx;' : ''}}">
+        <image 
+          src="{{selected === index ? item.selectedIconPath : item.iconPath}}" 
+          mode="aspectFit" 
+          class="icon {{index === 2 ? 'add-icon' : ''}}"
+        />
+      </view>
+      <text class="tabbar-text" style="color: {{selected === index ? selectedColor : color}}">{{item.text}}</text>
     </view>
-    <text class="tabbar-text" style="color: {{selected === index ? selectedColor : color}}">{{item.text}}</text>
+  </view>
+
+  <!-- 点击中间“添加”后显示的遮罩层。 -->
+  <view
+    class="entry-sheet-mask {{addSheetVisible ? 'show' : ''}}"
+    bindtap="closeAddSheet"
+  ></view>
+  
+  <!-- “添加”底部弹窗：保留原来三张入口卡片。 -->
+  <view
+    class="entry-sheet {{addSheetVisible ? 'show' : ''}}"
+    catchtap="preventBubble"
+  >
+    <view class="entry-sheet-body">
+      <!-- 三张添加入口卡片统一改成纵向排列、左对齐的长条样式。 -->
+      <view class="entry-card-list">
+        <view class="entry-action-card entry-action-card-bar entry-create-route-card" bindtap="onCreateRoute">
+          <view class="entry-action-card-content">
+            <view class="entry-action-card-text">
+              <text class="entry-action-card-label">创建路线</text>
+              <text class="entry-action-card-desc">从空白路线开始创建行程</text>
+            </view>
+            <i class="entry-action-card-icon entry-action-card-icon-gradient mgc_add_circle_line"></i>
+          </view>
+        </view>
+
+        <view class="entry-action-card entry-action-card-bar entry-parse-card" bindtap="onOpenLinkImport">
+          <view class="entry-action-card-content">
+            <view class="entry-action-card-text">
+              <text class="entry-action-card-label">解析路线</text>
+              <text class="entry-action-card-desc">粘贴链接或正文生成路线</text>
+            </view>
+            <i class="entry-action-card-icon entry-action-card-icon-gradient mgc_ai_line"></i>
+          </view>
+        </view>
+
+        <view class="entry-action-card entry-action-card-bar entry-checkin-card" bindtap="onOpenCheckin">
+          <view class="entry-action-card-content">
+            <view class="entry-action-card-text">
+              <text class="entry-action-card-label">采集打卡</text>
+              <text class="entry-action-card-desc">拍照记录地点和打卡内容</text>
+            </view>
+            <i class="entry-action-card-icon entry-action-card-icon-gradient mgc_camera_2_ai_line"></i>
+          </view>
+        </view>
+      </view>
+
+      <!-- 关闭按钮改成独立居中显示，放在三个卡片下方。 -->
+      <view class="entry-sheet-close-wrap">
+        <view class="entry-sheet-close-btn" bindtap="closeAddSheet">
+          <i class="entry-sheet-close-icon mgc_close_circle_line"></i>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 解析路线输入弹窗：从“添加”弹窗里继续往下走。 -->
+  <view
+    class="import-sheet-mask {{importSheetVisible ? 'show' : ''}}"
+    bindtap="onCloseLinkImport"
+  ></view>
+  <view
+    class="import-sheet {{importSheetVisible ? 'show' : ''}}"
+    catchtap="preventBubble"
+  >
+    <view class="import-sheet-header">
+      <text class="import-sheet-title">解析路线</text>
+      <view class="import-sheet-close" bindtap="onCloseLinkImport">
+        <i class="mgc_close_line"></i>
+      </view>
+    </view>
+
+    <view class="import-sheet-body">
+      <view class="import-input-wrap">
+        <textarea
+          class="import-textarea"
+          value="{{guideLink}}"
+          placeholder="粘贴纯链接、攻略正文或分享文案"
+          placeholder-class="import-placeholder"
+          maxlength="-1"
+          auto-height
+          cursor-spacing="24"
+          bindinput="onLinkInput"
+        ></textarea>
+      </view>
+
+      <view class="import-hint-list">
+        <text class="import-hint">支持识别微信公众号、小红书笔记的文本内容或者链接</text>
+      </view>
+    </view>
+
+    <view class="import-sheet-footer">
+      <view class="import-secondary-btn" bindtap="onPasteLink">粘贴内容</view>
+      <view class="import-primary-btn" bindtap="onConfirmLink">确认</view>
+    </view>
   </view>
 </view>

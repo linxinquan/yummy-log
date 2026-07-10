@@ -8,32 +8,32 @@
 page {
   /* ── Colors · 颜色系统 ── */
   /* 主色调 (Primary)：决定了整个小程序的品牌主色，比如按钮、图标选中的颜色 */
-  --primary: #47BFFE; /* 品牌主色 (清新的浅蓝色) */
-  --primary-light: #EAF7FF; /* 主色的浅色底，常用于按钮背景、图标背景 */
-  --primary-dark: #3AA1D9; /* 主色的加深版，常用于按钮按下的点击状态 (active) */
+  --primary: #25bbe7; /* 品牌主色：统一切到当前主题色 */
+  --primary-light: #E9F8FD; /* 主色浅底：用于选中态弱背景和浅色强调 */
+  --primary-dark: #1aa6cf; /* 主色按下态：用于按钮点击反馈 */
 
   /* 中性色 (Neutral)：主要用于文字、背景、卡片底色等 */
-  --text-primary: #242529; /* 主要文字颜色：用于标题、正文等最重要的信息 */
-  --text-body: #3A3C42; /* 一级正文：用于正文内容和中高优先级说明 */
-  --text-secondary: #6E727A; /* 次要文字颜色：用于副标题、描述、时间等 */
-  --text-tertiary: #A0A4AE; /* 弱提示文字：用于轻提示、辅助信息 */
-  --text-disabled: #C7CAD1; /* 禁用文字颜色：用于不可点击的按钮或占位符提示 */
+  --text-primary: #1A2739; /* 主要文字颜色：用于标题、正文等最重要的信息 */
+  --text-body: #495664; /* 一级正文：用于正文内容和中高优先级说明 */
+  --text-secondary: #808B9A; /* 次要文字颜色：用于副标题、描述、时间等 */
+  --text-tertiary: #9DA4AD; /* 弱提示文字：用于轻提示、辅助信息 */
+  --text-disabled: #BAC4CC; /* 禁用文字颜色：用于不可点击的按钮或占位符提示 */
   --background: #FFFFFF; /* 全局页面背景色：纯白色 */
   --surface: #FFFFFF; /* 表面/卡片颜色：所有卡片、模块的默认纯白底色 */
-  --surface-subtle: #F7F8FA; /* 浅层背景：用于弱区块、空状态和浅灰容器 */
+  --surface-subtle: #F6F8FA; /* 浅层背景：用于弱区块、空状态和浅灰容器 */
   --surface-muted: #F2F4F7; /* 次级浅底：用于更明显的分层背景 */
-  --surface-active: #F7F8FA; /* 表面按下时的颜色：卡片被点击时的反馈底色 */
-  --border: #E5E7EB; /* 边框颜色：用于按钮边框、浅色卡片描边 */
-  --divider: #EEF0F3; /* 分割线颜色：用于列表、模块之间的细线条 */
+  --surface-active: #F6F8FA; /* 表面按下时的颜色：卡片被点击时的反馈底色 */
+  --border: #F6F8FA; /* 边框颜色：用于按钮边框、浅色卡片描边 */
+  --divider: #F6F8FA; /* 分割线颜色：用于列表、模块之间的细线条 */
 
   /* 功能色 (Semantic)：用于表示状态的辅助颜色 */
   --success: #3A9B6F; /* 成功色：如操作成功、安全状态 */
   --warning: #E6A817; /* 警告色：如必吃榜标签、提示信息 */
   --danger: #FF5A5F; /* 危险色：如删除按钮、报错信息 */
   --info: #4A7FC1; /* 信息色：普通的通知或引导 */
-  --dark-button: #242529; /* 深色主按钮、深色胶囊按钮 */
-  --tag-bg-warning: #FDF8E3; /* 标签浅黄底 */
-  --tag-text-warning: #EE8733; /* 标签橙色文字 */
+  --dark-button: #25bbe7; /* 深色主按钮、深色胶囊按钮统一切到新的产品主题色 */
+  --tag-bg-warning: #F6F8FA; /* 警告标签底色：统一改成更轻的浅灰底 */
+  --tag-text-warning: #9DA4AD; /* 警告标签文字：统一改成更柔和的浅灰文字 */
 
   /* 渐变 (Gradient)：用于一些特殊的背景 */
   --gradient-warm: linear-gradient(135deg, #E6F7FF 0%, #FFFFFF 100%); /* 浅蓝到纯白的渐变，如“今日推荐”卡片底色 */
@@ -133,7 +133,7 @@ button.btn-primary {
   color: var(--surface);
 }
 button.btn-primary:active {
-  background: var(--text-body);
+  background: #1aa6cf;
 }
 button.btn-secondary {
   background: var(--surface-muted);

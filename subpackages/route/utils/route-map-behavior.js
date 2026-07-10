@@ -104,7 +104,7 @@ module.exports = Behavior({
           height: 14,
           textAlign: 'center',
           borderRadius: 15,
-          bgColor: '#47BFFE',
+          bgColor: '#25bbe7',
           padding: 8,
           borderWidth: 2,
           borderColor: '#FFFFFF',
@@ -114,7 +114,7 @@ module.exports = Behavior({
         },
         callout: {
           content: shop.name,
-          color: '#1A1A2E',
+          color: '#1A2739',
           fontSize: 12,
           borderRadius: 6,
           padding: 6,

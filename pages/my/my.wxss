@@ -13,7 +13,7 @@
   align-items: flex-start;
   padding: 256rpx 48rpx 64rpx;
   gap: 64rpx;
-  background: #F7F8FA;
+  background: #F6F8FA;
   /* 只给底部两个角加圆角，顶部保持原来的直角。 */
   border-radius: 0 0 48rpx 48rpx;
   box-sizing: border-box;
@@ -38,7 +38,7 @@
 }
 
 .user-nickname {
-  color: #242529;
+  color: #1A2739;
   font-size: 64rpx;
   font-weight: 500;
   line-height: 64rpx;
@@ -46,7 +46,7 @@
 
 /* 昵称输入框：未登录和已登录都用 */
 .user-nickname-input {
-  color: #242529;
+  color: #1A2739;
   font-size: 64rpx;
   font-weight: 500;
   line-height: 72rpx;
@@ -58,7 +58,7 @@
 }
 
 .user-desc {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 28rpx;
   font-weight: 400;
   line-height: 28rpx;
@@ -153,7 +153,7 @@
 
 .stat-label {
   width: 100%;
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx;
   font-weight: 600;
   line-height: 24rpx;
@@ -161,7 +161,7 @@
 
 .stat-value {
   width: 100%;
-  color: #242529;
+  color: #1A2739;
   font-family: 'DIN Alternate', 'PingFang SC', sans-serif;
   font-size: 48rpx;
   font-weight: 700;
@@ -202,7 +202,7 @@
 }
 
 .shortcut-card text {
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   font-weight: 500;
   line-height: 40rpx;
@@ -292,21 +292,21 @@
 }
 
 .list-item-text {
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   font-weight: 400;
   line-height: 32rpx;
 }
 
 .arrow-icon {
-  color: #C7CAD1;
+  color: #BAC4CC;
   font-size: 40rpx;
   line-height: 40rpx;
 }
 
 /* 退出登录文字样式 */
 .list-item-danger {
-  color: #FF4D4F !important;
+  color: #FF5A5F !important;
 }
 
 /* ========== 登录弹窗样式 ========== */
@@ -319,7 +319,7 @@
 }
 
 .login-prompt-text {
-  color: #242529;
+  color: #1A2739;
   font-size: 48rpx;
   font-weight: 500;
   line-height: 56rpx;
@@ -377,14 +377,14 @@
 
 .modal-close i {
   font-size: 40rpx;
-  color: #A0A4AE;
+  color: #9DA4AD;
 }
 
 /* 弹窗头部 */
 
 .modal-title {
   text-align: center;
-  color: #242529;
+  color: #1A2739;
   font-size: 44rpx;
   font-weight: 600;
   line-height: 52rpx;
@@ -393,7 +393,7 @@
 
 .modal-subtitle {
   text-align: center;
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 28rpx;
   line-height: 36rpx;
   margin-bottom: 48rpx;
@@ -402,7 +402,7 @@
 /* 隐私说明 */
 .privacy-note {
   text-align: center;
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx;
   line-height: 32rpx;
   margin-bottom: 32rpx;
@@ -447,7 +447,7 @@
 }
 
 .cancel-login text {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 28rpx;
 }
 
@@ -522,7 +522,7 @@
 }
 
 .profile-avatar-hint {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx;
   line-height: 32rpx;
 }
@@ -535,12 +535,12 @@
 .profile-nickname-input {
   width: 100%;
   height: 96rpx;
-  background: #F7F8FA;
+  background: #F6F8FA;
   border-radius: 24rpx;
   padding: 0 32rpx;
   box-sizing: border-box;
   font-size: 32rpx;
-  color: #242529;
+  color: #1A2739;
   text-align: center;
 }
 
@@ -551,7 +551,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #242529;
+  background: #25bbe7;
   border-radius: 48rpx;
   color: #FFFFFF;
   font-size: 32rpx;
@@ -570,7 +570,7 @@
 }
 
 .profile-skip text {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 28rpx;
 }
 
@@ -615,14 +615,14 @@
 }
 
 .route-action-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   line-height: 100%;
   font-weight: 500;
 }
 
 .route-action-close {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   line-height: 40rpx;
 }
@@ -642,7 +642,7 @@
   width: 100%;
   min-height: 104rpx;
   border-radius: 24rpx;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   background: #FFFFFF;
   display: flex;
   align-items: center;
@@ -653,14 +653,14 @@
 }
 
 .route-action-icon {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   line-height: 40rpx;
   flex-shrink: 0;
 }
 
 .route-action-label {
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   line-height: 32rpx;
   font-weight: 400;

@@ -39,7 +39,7 @@
 }
 
 .transport-sheet-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   font-weight: 500;
   line-height: 100%;
@@ -51,7 +51,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #242529;
+  color: #1A2739;
 }
 
 .transport-sheet-close i {
@@ -75,12 +75,12 @@
   height: 104rpx;
   padding: 0 32rpx;
   background: #FFFFFF;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   border-radius: 24rpx;
 }
 
 .transport-option.active {
-  border-color: #242529;
+  border-color: #1A2739;
 }
 
 .transport-option-main {
@@ -103,13 +103,13 @@
 
 .transport-option-icon {
   flex-shrink: 0;
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   line-height: 40rpx;
 }
 
 .transport-option-label {
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   line-height: 32rpx;
 }
@@ -124,15 +124,15 @@
 }
 
 .transport-option-distance {
-  color: #6E727A;
+  color: #808B9A;
 }
 
 .transport-option-dot {
-  color: #6E727A;
+  color: #808B9A;
 }
 
 .transport-option-time {
-  color: #242529;
+  color: #1A2739;
 }
 
 .transport-sheet-footer {
@@ -142,7 +142,7 @@
 .transport-confirm-btn {
   height: 96rpx;
   border-radius: 999rpx;
-  background: #242529;
+  background: #25bbe7;
   color: #FFFFFF;
   display: flex;
   align-items: center;

@@ -468,7 +468,7 @@ Page({
           color: '#FFFFFF',
           fontWeight: 'bold',
           borderRadius: 15,
-          bgColor: '#47BFFE',
+          bgColor: '#25bbe7',
           padding: 8,
           borderWidth: 2,
           borderColor: '#FFFFFF',
