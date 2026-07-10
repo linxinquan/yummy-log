@@ -271,7 +271,7 @@
   <!-- 地图模式：顶部预览卡片和浮动按钮 -->
   <block wx:else>
     <view class="map-panel">
-      <view class="map-panel-actions" wx:if="{{mapPreviewPlace}}">
+      <view class="map-panel-actions">
         <view class="map-floating-icon" bindtap="onSwitchMode" data-mode="list">
           <i class="mgc_layout_4_line"></i>
         </view>
@@ -294,6 +294,7 @@
           </view>
         </view>
       </view>
+
       <route-map-preview-card
         class="map-card"
         wx:if="{{mapPreviewPlace}}"
@@ -313,6 +314,14 @@
         bindstep="onMapPreviewStep"
         bindtapmeta="onOpenMapTransportSheet"
       ></route-map-preview-card>
+
+      <view class="map-card map-empty-card" wx:else>
+        <view class="map-empty-icon">
+          <i class="mgc_route_line"></i>
+        </view>
+        <text class="map-empty-title">还没有添加地点</text>
+        <text class="map-empty-hint">当前是空路线，右侧地图工具仍可使用。点击左侧返回详情，再点底部“编辑”添加地点</text>
+      </view>
     </view>
   </block>
 

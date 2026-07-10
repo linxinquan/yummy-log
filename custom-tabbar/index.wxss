@@ -38,15 +38,14 @@
   justify-content: center;
 }
 
+/* 中间添加按钮保持静态展示，点击后不再旋转。 */
 .tabbar-icon-add .add-icon {
   transform: rotate(0deg) scale(1);
-  transform-origin: center;
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
 }
 
+/* 激活态也保持和默认态一致，避免点击后出现旋转动画。 */
 .tabbar-icon-add.is-active .add-icon {
-  transform: rotate(45deg) scale(1.04);
+  transform: rotate(0deg) scale(1);
 }
 
 .tabbar-text {

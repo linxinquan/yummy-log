@@ -1107,6 +1107,49 @@
   box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.05);
 }
 
+/* 地图空状态卡片：
+和正常地图悬浮卡片保持同一块白色容器，只是内容改成空状态提示。 */
+.map-empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+  padding: 40rpx 32rpx;
+  min-height: 320rpx;
+  box-sizing: border-box;
+}
+
+.map-empty-icon {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: #F7F8FA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-empty-icon i {
+  color: #A0A4AE;
+  font-size: 48rpx;
+  line-height: 48rpx;
+}
+
+.map-empty-title {
+  color: #242529;
+  font-size: 32rpx;
+  line-height: 32rpx;
+  font-weight: 500;
+}
+
+.map-empty-hint {
+  color: #6E727A;
+  font-size: 26rpx;
+  line-height: 38rpx;
+  text-align: center;
+}
+
 .route-map-preview-card {
   box-sizing: border-box;
   display: flex;
