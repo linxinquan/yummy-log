@@ -476,10 +476,11 @@ page {
 
 .entry-action-card-icon {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  font-size: 48rpx;
-  line-height: 48rpx;
+  /* 图标贴近卡片右上角，并向外溢出 24rpx。 */
+  right: -24rpx;
+  top: -24rpx;
+  font-size: 96rpx;
+  line-height: 96rpx;
   flex: 0 0 auto;
 }
 
@@ -496,7 +497,8 @@ page {
   gap: 24rpx;
   flex: 1;
   min-width: 0;
-  max-width: calc(100% - 96rpx);
+  /* 图标放大并移到右上角后，给文字区多预留一点空间。 */
+  max-width: calc(100% - 136rpx);
 }
 
 .entry-action-card-label {

@@ -302,8 +302,9 @@ page {
 }
 
 .tab-item.active {
-  color: #1A2739;
-  border-color: #D7DEE6;
+  /* 选中态统一跟随当前项目主题色。 */
+  color: #25BBE7;
+  border-color: #25BBE7;
 }
 
 .tab-item i {
