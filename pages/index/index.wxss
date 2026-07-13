@@ -358,6 +358,7 @@
   z-index: 120;
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* 把滚动区域约束在浮窗内部，避免 scroll-view 高度跑出容器。 */
   transition: height 0.5s cubic-bezier(0.32, 0.72, 0, 1), transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -370,9 +371,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 20rpx 0; /* 10px 0 */
   box-sizing: border-box;
-  background: transparent; /* 透明背景，让内容可以透过显示 */
+  background: transparent; /* 手柄区域保持透明，让下面内容可以透过显示。 */
   border-radius: 48rpx 48rpx 0 0;
   position: absolute;
   top: 0;
@@ -381,12 +383,20 @@
   z-index: 10;
 }
 
+.sheet-handle-touch-area {
+  width: 144rpx; /* 72px */
+  height: 48rpx; /* 扩大手柄热区，但不改变中间那条灰线的视觉尺寸。 */
+  position: absolute; /* 透明热区覆盖在灰线上方，不占额外高度。 */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .sheet-handle {
   width: 144rpx; /* 72px */
   height: 8rpx; /* 4px */
   background: #F2F4F7;
   border-radius: 4rpx; /* 2px */
-  margin-bottom: 0;
 }
 
 /* （在最新 UI 中已去掉搜索框区域，隐藏） */
@@ -396,13 +406,13 @@
 
 .sheet-content {
   flex: 1;
-  height: calc(100% +100rpx); /* 增加高度确保覆盖底部 */
+  height: 100%; /* 使用稳定高度，让 scroll-view 正常接管内部滚动。 */
   width: 100%;
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.5s cubic-bezier(0.32, 0.72, 0, 1), transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
   box-sizing: border-box;
-  padding-top: 0; /* 内容从顶部开始，可穿过拖拽区域 */
+  padding-top: 0; /* 让滚动内容从手柄区域下方开始延伸，内容才能透过手柄显示。 */
   background: #FFFFFF; /* 内容区域有白色背景 */
   border-radius: 48rpx 48rpx 0 0; /* 24px */
 }
@@ -417,9 +427,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 48rpx; /* 24px */
-  margin-top: 64rpx; /* 32px - 避开拖拽区域，让标题不被遮挡 */
-  margin-bottom: 48rpx; /* 24px */
+  padding: 0; /* 按盒模型图改成无内边距。 */
+  margin: 48rpx; /* 四边统一 24px 外边距。 */
 }
 
 .list-title {

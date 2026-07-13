@@ -136,18 +136,26 @@
     style="height: {{sheetHeight}}px; bottom: {{sheetBottom}}px;"
   >
     <!-- 拖拽手柄区域 -->
-    <view 
-      class="sheet-handle-area-inner" 
-      bindtouchstart="onSheetTouchStart" 
-      bindtouchmove="onSheetTouchMove" 
-      bindtouchend="onSheetTouchEnd"
-    >
+    <view class="sheet-handle-area-inner">
       <view class="sheet-handle"></view>
+      <view
+        class="sheet-handle-touch-area"
+        bindtouchstart="onSheetTouchStart"
+        bindtouchmove="onSheetTouchMove"
+        bindtouchend="onSheetTouchEnd"
+      ></view>
     </view>
 
     <!-- 列表内容：
          收起态继续保留结构，只通过更低的收起高度把下面内容收进去。 -->
-    <scroll-view class="sheet-content" scroll-y enable-back-to-top bindscrolltolower="onLoadMore">
+    <scroll-view
+      class="sheet-content"
+      scroll-y="{{isSheetExpanded}}"
+      enhanced="{{true}}"
+      show-scrollbar="{{false}}"
+      enable-back-to-top
+      bindscrolltolower="onLoadMore"
+    >
       
       <!-- 列表头 -->
       <view class="list-header">
