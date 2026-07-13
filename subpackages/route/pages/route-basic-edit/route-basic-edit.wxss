@@ -165,7 +165,7 @@ border: 2rpx solid #F6F8FA;
 
 .bottom-btn.primary {
   flex: 1;
-  background: #25bbe7;
+  background: #25BBE7;
   color: #FFFFFF;
 }
 
@@ -343,7 +343,7 @@ border: 2rpx solid #F6F8FA;
   height: 96rpx;
   border-radius: 999rpx;
   margin-top: 32rpx;
-  background: #25bbe7;
+  background: #25BBE7;
   display: flex;
   align-items: center;
   justify-content: center;

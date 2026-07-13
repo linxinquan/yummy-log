@@ -322,6 +322,6 @@
 
 .import-primary-btn {
   flex: 1;
-  background: #25bbe7;
+  background: #25BBE7;
   color: #FFFFFF;
 }

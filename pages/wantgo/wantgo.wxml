@@ -152,7 +152,95 @@
     </view>
   </block>
 
-  <custom-tabbar></custom-tabbar>
+  <!-- 公用右下角悬浮入口：后续改样式时，想去页和攻略页会自动同步。 -->
+  <entry-fab-button
+    iconType="{{addEntryVisible || importEntryVisible ? 'close' : 'add'}}"
+    overlay="{{addEntryVisible || importEntryVisible}}"
+    bind:tapentry="onEntryFabTap"
+  />
+
+  <!-- 悬浮入口三卡片菜单：点击遮罩关闭。 -->
+  <view
+    class="entry-sheet-mask {{addEntryVisible ? 'show' : ''}}"
+    bindtap="closeAddEntrySheet"
+  ></view>
+  <view
+    class="entry-sheet {{addEntryVisible ? 'show' : ''}}"
+    catchtap="preventBubble"
+  >
+    <view class="entry-sheet-body">
+      <view class="entry-card-list">
+        <view class="entry-action-card entry-action-card-bar entry-create-route-card" bindtap="onCreateRouteFromFab">
+          <view class="entry-action-card-content">
+            <view class="entry-action-card-text">
+              <text class="entry-action-card-label">创建路线</text>
+              <text class="entry-action-card-desc">从空白路线开始创建行程</text>
+            </view>
+            <i class="entry-action-card-icon entry-action-card-icon-gradient mgc_add_circle_line"></i>
+          </view>
+        </view>
+
+        <view class="entry-action-card entry-action-card-bar entry-parse-card" bindtap="onOpenLinkImport">
+          <view class="entry-action-card-content">
+            <view class="entry-action-card-text">
+              <text class="entry-action-card-label">解析路线</text>
+              <text class="entry-action-card-desc">粘贴链接或正文生成路线</text>
+            </view>
+            <i class="entry-action-card-icon entry-action-card-icon-gradient mgc_ai_line"></i>
+          </view>
+        </view>
+
+        <view class="entry-action-card entry-action-card-bar entry-checkin-card" bindtap="onOpenCheckinFromFab">
+          <view class="entry-action-card-content">
+            <view class="entry-action-card-text">
+              <text class="entry-action-card-label">采集打卡</text>
+              <text class="entry-action-card-desc">拍照记录地点和打卡内容</text>
+            </view>
+            <i class="entry-action-card-icon entry-action-card-icon-gradient mgc_camera_2_ai_line"></i>
+          </view>
+        </view>
+      </view>
+
+    </view>
+  </view>
+
+  <!-- 解析路线输入弹窗：从三卡片菜单继续下钻。 -->
+  <view
+    class="import-sheet-mask {{importEntryVisible ? 'show' : ''}}"
+    bindtap="onCloseLinkImport"
+  ></view>
+  <view
+    class="import-sheet {{importEntryVisible ? 'show' : ''}}"
+    catchtap="preventBubble"
+  >
+    <view class="import-sheet-header">
+      <text class="import-sheet-title">解析路线</text>
+    </view>
+
+    <view class="import-sheet-body">
+      <view class="import-input-wrap">
+        <textarea
+          class="import-textarea"
+          value="{{guideLink}}"
+          placeholder="粘贴纯链接、攻略正文或分享文案"
+          placeholder-class="import-placeholder"
+          maxlength="-1"
+          auto-height
+          cursor-spacing="24"
+          bindinput="onLinkInput"
+        ></textarea>
+      </view>
+
+      <view class="import-hint-list">
+        <text class="import-hint">支持识别微信公众号、小红书笔记的文本内容或者链接</text>
+      </view>
+    </view>
+
+    <view class="import-sheet-footer">
+      <view class="import-secondary-btn" bindtap="onPasteLink">粘贴内容</view>
+      <view class="import-primary-btn" bindtap="onConfirmLink">确认</view>
+    </view>
+  </view>
 
   <view class="plan-day-mask {{planDaySheetVisible ? 'show' : ''}}" bindtap="onClosePlanDaySheet">
     <view class="plan-day-sheet" catchtap="preventBubble">

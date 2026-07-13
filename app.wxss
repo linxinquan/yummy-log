@@ -8,9 +8,9 @@
 page {
   /* ── Colors · 颜色系统 ── */
   /* 主色调 (Primary)：决定了整个小程序的品牌主色，比如按钮、图标选中的颜色 */
-  --primary: #25bbe7; /* 品牌主色：统一切到当前主题色 */
+  --primary: #25BBE7; /* 品牌主色：统一回退到原来的主题色 */
   --primary-light: #E9F8FD; /* 主色浅底：用于选中态弱背景和浅色强调 */
-  --primary-dark: #1aa6cf; /* 主色按下态：用于按钮点击反馈 */
+  --primary-dark: #1AA6CF; /* 主色按下态：用于按钮点击反馈 */
 
   /* 中性色 (Neutral)：主要用于文字、背景、卡片底色等 */
   --text-primary: #1A2739; /* 主要文字颜色：用于标题、正文等最重要的信息 */
@@ -31,7 +31,7 @@ page {
   --warning: #E6A817; /* 警告色：如必吃榜标签、提示信息 */
   --danger: #FF5A5F; /* 危险色：如删除按钮、报错信息 */
   --info: #4A7FC1; /* 信息色：普通的通知或引导 */
-  --dark-button: #25bbe7; /* 深色主按钮、深色胶囊按钮统一切到新的产品主题色 */
+  --dark-button: #25BBE7; /* 深色主按钮、深色胶囊按钮统一回退到原来的产品主题色 */
   --tag-bg-warning: #F6F8FA; /* 警告标签底色：统一改成更轻的浅灰底 */
   --tag-text-warning: #9DA4AD; /* 警告标签文字：统一改成更柔和的浅灰文字 */
 
@@ -133,7 +133,7 @@ button.btn-primary {
   color: var(--surface);
 }
 button.btn-primary:active {
-  background: #1aa6cf;
+  background: #1AA6CF;
 }
 button.btn-secondary {
   background: var(--surface-muted);

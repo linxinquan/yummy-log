@@ -420,7 +420,7 @@
   height: 96rpx; /* 48px */
   flex-shrink: 0;
   border-radius: 999rpx;
-  background: #F2F4F7;
+  background: #F6F8FA; /* 收藏按钮灰底改回当前统一的浅灰背景色 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -434,13 +434,13 @@
 }
 
 .collect-action-icon.collected {
-  color: #EEB237;
+  color: #EEB237; /* 恢复收藏态星标颜色，不跟主题色联动 */
 }
 
 .want-btn {
   flex: 1;
   height: 96rpx; /* 48px */
-  background: #25bbe7;
+  background: #25BBE7;
   border-radius: 999rpx;
   display: flex;
   align-items: center;

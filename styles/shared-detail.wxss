@@ -285,7 +285,7 @@ page {
 
 .add-item {
   gap: 8rpx;
-  color: #25bbe7;
+  color: #25BBE7;
 }
 
 .add-item i,
@@ -830,7 +830,7 @@ page {
 }
 
 .bottom-btn.primary {
-  background: #25bbe7;
+  background: #25BBE7;
   color: #FFFFFF;
 }
 

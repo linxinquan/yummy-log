@@ -406,9 +406,10 @@ Page({
     const headerRowHeight = menuHeight + 20 // nav-bar(含padding) + weather-row(含padding)
     const topPanelHeight = menuTop + headerRowHeight + categoryAreaHeight
     
-    // 计算收起时的高度:
-    // 收起状态只显示拖拽区域，使用屏幕高度百分比
-    const minHeight = windowInfo.windowHeight * 0.08
+    // 计算收起时的高度：
+    // 收起态只需要露出手柄区域，并把“全部 / 距离 / 好评”再多收进去一点。
+    // 这里改成固定的手柄高度，而不是按屏幕百分比算，避免不同机型下露出过多内容。
+    const minHeight = Math.round(56 * rpxToPx)
     
     // 计算最大高度：屏幕高度 - 顶部面板高度(不含分类菜单) - tabBar高度(50px) - 安全区域底部
     // 保留部分顶部空间给分类菜单，避免遮挡
@@ -416,8 +417,9 @@ Page({
     const topReserve = 100 // 顶部预留空间，防止遮挡分类菜单
     const sysMaxHeight = windowInfo.windowHeight - topPanelHeight + categoryAreaHeight - tabBarHeight - (windowInfo.safeAreaBottom || 0) - topReserve
     
-    // 计算弹窗底部偏移（tabBar高度 + 安全区域底部）
-    const sheetBottom = tabBarHeight + (windowInfo.safeAreaBottom || 0)
+    // 改回微信原生 tabbar 后，页面可视区域本身就已经停在 tabbar 上方。
+    // 这里不能再额外加 tabBarHeight，否则收起态会被整体抬高，露出后面的地图。
+    const sheetBottom = 0
     
     // 计算半屏高度
     const midHeight = windowInfo.windowHeight * 0.45

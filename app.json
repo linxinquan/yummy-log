@@ -72,27 +72,34 @@
     "navigationBarTextStyle": "black"
   },
   "tabBar": {
-    "custom": true,
+    "color": "#BAC4CC",
+    "selectedColor": "#1A2739",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "探索"
+        "text": "探索",
+        "iconPath": "assets/icons/tabbar-home.png",
+        "selectedIconPath": "assets/icons/tabbar-home-active.png"
       },
       {
         "pagePath": "pages/wantgo/wantgo",
-        "text": "想去"
-      },
-      {
-        "pagePath": "pages/route-entry/route-entry",
-        "text": ""
+        "text": "想去",
+        "iconPath": "assets/icons/tabbar-spots.png",
+        "selectedIconPath": "assets/icons/tabbar-spots-active.png"
       },
       {
         "pagePath": "pages/discover/discover",
-        "text": "攻略"
+        "text": "攻略",
+        "iconPath": "assets/icons/tabbar-discover.png",
+        "selectedIconPath": "assets/icons/tabbar-discover-active.png"
       },
       {
         "pagePath": "pages/my/my",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "assets/icons/tabbar-my.png",
+        "selectedIconPath": "assets/icons/tabbar-my-active.png"
       }
     ]
   },

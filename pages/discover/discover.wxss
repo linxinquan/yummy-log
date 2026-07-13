@@ -372,3 +372,265 @@ page {
   line-height: 100%;
   color: #9DA4AD;
 }
+
+/* 攻略页悬浮入口菜单：沿用想去页同一套三卡片结构。 */
+.entry-sheet-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.28s ease;
+}
+
+.entry-sheet-mask.show {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.entry-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 221;
+  padding: 0 48rpx 188rpx; /* 关闭按钮顶边是 140rpx，这里再加 48rpx，确保视觉间距固定为 48rpx。 */
+  background: transparent;
+  opacity: 0;
+  transform: translateY(16rpx) scale(0.99); /* 收一点起始位移和缩放，让整体出现更轻。 */
+  transform-origin: right bottom;
+  pointer-events: none;
+  transition: opacity 0.24s ease, transform 0.3s cubic-bezier(0.2, 0.9, 0.22, 1); /* 换成更柔和的缓动曲线。 */
+}
+
+.entry-sheet.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.entry-sheet-body {
+  padding: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* 三卡片菜单整体改成右对齐。 */
+  transform-origin: right bottom;
+}
+
+.entry-card-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 24rpx;
+}
+
+.entry-action-card {
+  position: relative;
+  width: 480rpx;
+  height: 164rpx;
+  border-radius: 48rpx;
+  background: linear-gradient(180deg, #FFF 0%, #FFFFFF 100%);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(12rpx) scale(0.985); /* 卡片起始动作再轻一点，避免生硬。 */
+  transform-origin: right bottom;
+  transition: opacity 0.22s ease, transform 0.32s cubic-bezier(0.18, 0.9, 0.24, 1);
+  transition-delay: 0s; /* 默认不延迟，避免关闭时也跟着拖慢。 */
+}
+
+.entry-sheet.show .entry-action-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.entry-sheet.show .entry-action-card:nth-child(1) {
+  transition-delay: 0.03s;
+}
+
+.entry-sheet.show .entry-action-card:nth-child(2) {
+  transition-delay: 0.08s;
+}
+
+.entry-sheet.show .entry-action-card:nth-child(3) {
+  transition-delay: 0.13s;
+}
+
+.entry-action-card-bar {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.entry-action-card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+}
+
+.entry-action-card-icon {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  font-size: 48rpx;
+  line-height: 48rpx;
+  flex: 0 0 auto;
+}
+
+.entry-action-card-icon-gradient {
+  background: linear-gradient(180deg, #C5D3E3 0%, #D8E1EC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.entry-action-card-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24rpx;
+  flex: 1;
+  min-width: 0;
+  max-width: calc(100% - 96rpx);
+}
+
+.entry-action-card-label {
+  color: #1A2739;
+  font-size: 36rpx;
+  font-weight: 400;
+  line-height: 36rpx;
+  text-align: left;
+}
+
+.entry-action-card-desc {
+  color: #7B808A;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* 解析路线输入弹窗：和想去页保持一致。 */
+.import-sheet-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 230;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.28s ease;
+}
+
+.import-sheet-mask.show {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.import-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 231;
+  padding: 0 0 calc(188rpx + env(safe-area-inset-bottom)); /* 让右下角关闭按钮和底部内容互不遮挡。 */
+  border-radius: 32rpx 32rpx 0 0;
+  background: #FFFFFF;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.import-sheet.show {
+  transform: translateY(0);
+}
+
+.import-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 128rpx;
+  padding: 0 48rpx;
+  box-sizing: border-box;
+}
+
+.import-sheet-title {
+  color: #1A2739;
+  font-size: 40rpx;
+  font-weight: 500;
+  line-height: 100%;
+}
+
+.import-sheet-body {
+  padding: 0 48rpx;
+  box-sizing: border-box;
+}
+
+.import-input-wrap {
+  box-sizing: border-box;
+  min-height: 320rpx;
+  padding: 32rpx;
+  background: #F6F8FA;
+  border: 2rpx solid #F6F8FA;
+  border-radius: 24rpx;
+}
+
+.import-textarea {
+  width: 100%;
+  min-height: 240rpx;
+  color: #1A2739;
+  font-size: 32rpx;
+  line-height: 48rpx;
+}
+
+.import-placeholder {
+  color: #9DA4AD;
+  font-size: 32rpx;
+  line-height: 48rpx;
+}
+
+.import-hint-list {
+  margin-top: 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.import-hint {
+  color: #808B9A;
+  font-size: 24rpx;
+  line-height: 24rpx;
+}
+
+.import-sheet-footer {
+  display: flex;
+  gap: 24rpx;
+  padding: 48rpx 48rpx 0;
+}
+
+.import-secondary-btn,
+.import-primary-btn {
+  height: 96rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  line-height: 32rpx;
+  font-weight: 500;
+}
+
+.import-secondary-btn {
+  width: 220rpx;
+  flex: 0 0 220rpx;
+  background: #F2F4F7;
+  color: #1A2739;
+}
+
+.import-primary-btn {
+  flex: 1;
+  background: #25BBE7;
+  color: #FFFFFF;
+}

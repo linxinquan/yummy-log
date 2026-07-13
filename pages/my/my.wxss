@@ -551,7 +551,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #25bbe7;
+  background: #25BBE7;
   border-radius: 48rpx;
   color: #FFFFFF;
   font-size: 32rpx;

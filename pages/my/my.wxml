@@ -94,9 +94,6 @@
 
   </view>
 
-  <!-- 自定义 TabBar -->
-  <custom-tabbar></custom-tabbar>
-
   <!-- 登录弹窗 -->
   <view class="login-modal {{showLoginModal ? 'show' : ''}}" bindtap="onModalMaskTap">
     <view class="login-modal-content" catchtap="onModalContentTap">

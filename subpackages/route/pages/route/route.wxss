@@ -91,7 +91,7 @@ page {
 }
 
 .exit-confirm-btn.primary {
-  background: #25bbe7;
+  background: #25BBE7;
 }
 
 .exit-confirm-btn.primary text {
@@ -268,7 +268,7 @@ page {
   padding: 12rpx 24rpx;
   border-radius: 999rpx;
   background: #E9F8FD;
-  color: #25bbe7;
+  color: #25BBE7;
   font-size: 22rpx;
   line-height: 22rpx;
 }
@@ -301,8 +301,8 @@ page {
 }
 
 .candidate-check.on {
-  background: #25bbe7;
-  border-color: #25bbe7;
+  background: #25BBE7;
+  border-color: #25BBE7;
   color: #FFFFFF;
 }
 
@@ -359,7 +359,7 @@ page {
 
 .candidate-order.show {
   opacity: 1;
-  background: #25bbe7;
+  background: #25BBE7;
   color: #FFFFFF;
 }
 
@@ -377,7 +377,7 @@ page {
   padding: 12rpx 20rpx;
   border-radius: 999rpx;
   background: #E9F8FD;
-  color: #25bbe7;
+  color: #25BBE7;
   font-size: 22rpx;
   line-height: 22rpx;
 }
@@ -593,7 +593,7 @@ page {
 
 .route-action-btn.nav {
   background: #E9F8FD;
-  color: #25bbe7;
+  color: #25BBE7;
 }
 
 .route-action-btn.del {
@@ -746,7 +746,7 @@ page {
   height: 80rpx;
   padding: 0 32rpx;
   border-radius: 999rpx;
-  background: #25bbe7;
+  background: #25BBE7;
   color: #FFFFFF;
   font-size: 26rpx;
   display: flex;
@@ -792,7 +792,7 @@ page {
 .bottom-btn.primary {
   flex: 1;
   min-width: 0;
-  background: #25bbe7;
+  background: #25BBE7;
   color: #FFFFFF;
 }
 
@@ -823,7 +823,7 @@ page {
 
 .route-preview-bar .route-save-btn {
   flex: 1 1 0;
-  background: #25bbe7;
+  background: #25BBE7;
 }
 
 .route-preview-bar .bottom-btn text {
@@ -868,7 +868,7 @@ page {
 }
 
 .progress-dot.done {
-  background: #25bbe7;
+  background: #25BBE7;
 }
 
 .progress-dot.active {
@@ -906,7 +906,7 @@ page {
 
 .complete-icon {
   font-size: 140rpx;
-  color: #25bbe7;
+  color: #25BBE7;
 }
 
 .complete-title {
@@ -929,7 +929,7 @@ page {
   padding: 0 32rpx;
   border-radius: 999rpx;
   background: #E9F8FD;
-  color: #25bbe7;
+  color: #25BBE7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1041,7 +1041,7 @@ page {
 }
 
 .nav-btn.primary {
-  background: #25bbe7;
+  background: #25BBE7;
   color: #FFFFFF;
 }
 

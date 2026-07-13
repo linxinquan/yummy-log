@@ -10,7 +10,7 @@ Component({
   data: {
     selected: 0,
     color: "#BAC4CC",
-    selectedColor: "#25bbe7",
+    selectedColor: "#1A2739",
     // 控制“添加”底部弹窗显示。
     addSheetVisible: false,
     // 控制“解析路线”输入弹窗显示。

@@ -104,7 +104,7 @@ module.exports = Behavior({
           height: 14,
           textAlign: 'center',
           borderRadius: 15,
-          bgColor: '#25bbe7',
+          bgColor: '#25BBE7',
           padding: 8,
           borderWidth: 2,
           borderColor: '#FFFFFF',

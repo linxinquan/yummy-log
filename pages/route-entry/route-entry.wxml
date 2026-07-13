@@ -99,6 +99,4 @@
       <view class="import-primary-btn" bindtap="onConfirmLink">确认</view>
     </view>
   </view>
-
-  <custom-tabbar></custom-tabbar>
 </view>

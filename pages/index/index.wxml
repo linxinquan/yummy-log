@@ -145,7 +145,8 @@
       <view class="sheet-handle"></view>
     </view>
 
-    <!-- 列表内容 -->
+    <!-- 列表内容：
+         收起态继续保留结构，只通过更低的收起高度把下面内容收进去。 -->
     <scroll-view class="sheet-content" scroll-y enable-back-to-top bindscrolltolower="onLoadMore">
       
       <!-- 列表头 -->
@@ -269,6 +270,4 @@
     </view>
   </view>
 
-  <!-- 自定义TabBar -->
-  <custom-tabbar></custom-tabbar>
 </view>

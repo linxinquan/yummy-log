@@ -142,7 +142,7 @@
 .transport-confirm-btn {
   height: 96rpx;
   border-radius: 999rpx;
-  background: #25bbe7;
+  background: #25BBE7;
   color: #FFFFFF;
   display: flex;
   align-items: center;
