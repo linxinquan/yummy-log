@@ -747,7 +747,7 @@ const allGuides = [
 
    setTimeout(() => {
     wx.navigateTo({
-     url: `/subpackages/route/pages/route/route?ids=${parseResult.routeIds.join(",")}&dayCount=${parseResult.dayCount}`,
+     url: `/subpackages/route/pages/my-route/my-route?ids=${parseResult.routeIds.join(",")}&dayCount=${parseResult.dayCount}`,
     });
    }, 300);
   } finally {

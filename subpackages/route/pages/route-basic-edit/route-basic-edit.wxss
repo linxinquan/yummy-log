@@ -250,7 +250,7 @@ border: 2rpx solid #F6F8FA;
 }
 
 .picker-content {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  padding: 0 48rpx 48rpx;
   height: 960rpx;
   box-sizing: border-box;
 }
@@ -320,7 +320,7 @@ border: 2rpx solid #F6F8FA;
 }
 
 .sheet-body {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  padding: 0 48rpx 48rpx;
 }
 
 /* 旅行天数滚轮 */
@@ -353,7 +353,7 @@ border: 2rpx solid #F6F8FA;
   font-weight: 500;
 }
 
-.delete-confirm-sheet .sheet-body {
+.delete-confirm-body {
   padding-top: 0;
 }
 

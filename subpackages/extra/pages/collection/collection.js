@@ -59,8 +59,6 @@ Page({
     // 避免在 await buildMapMarkers 期间同步覆盖本地数据造成竞争条件。
     const raw = checkinUtil.getCheckins()
     const stats = checkinUtil.getCheckinStats()
-    const footprintItems = util.getFootprintItems()
-
     // 预处理日期和地址，避免在 WXML 里调用函数
     const checkins = raw.map((c) => {
       const d = new Date(c.date)
@@ -89,6 +87,10 @@ Page({
 
     // 统计
     const spotCount = raw.filter(c => c.type === 'spot').length
+    // “我的采集”页只统计采集本身，不把手动足迹混进来。
+    const collectedFootprintKeys = new Set(
+      raw.map(item => `${item.type || 'food'}:${item.spotName || ''}:${item.address || ''}`)
+    )
 
     // ── 第一步：列表数据先 setData，用户立刻能看到邮票 ──
     if (loadToken !== this._loadToken) return
@@ -97,7 +99,7 @@ Page({
       stats: {
         totalCount: checkins.length,
         cityCount: stats.cityCount,
-        footprintCount: footprintItems.length || spotCount
+        footprintCount: collectedFootprintKeys.size || spotCount
       },
     })
 

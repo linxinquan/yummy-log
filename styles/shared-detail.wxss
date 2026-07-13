@@ -114,7 +114,21 @@ page {
   overflow: hidden;
 }
 
+.detail-sheet-corner-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32rpx;
+  border-radius: 48rpx 48rpx 0 0;
+  background: #FFFFFF;
+  pointer-events: none;
+  z-index: 24;
+}
+
 .detail-scroll {
+  position: relative;
+  z-index: 1;
   height: 100%;
 }
 
@@ -160,8 +174,11 @@ page {
   position: sticky;
   top: 0;
   z-index: 22;
-  padding-top: 48rpx;
+  /* 顶部按钮改成胶囊后，这里要收紧高度，避免吸顶区过高。 */
+  padding-top: 32rpx;
+  border-radius: 48rpx 48rpx 0 0;
   background: #FFFFFF;
+  overflow: hidden;
 }
 
 .sheet-content {
@@ -175,7 +192,8 @@ page {
 
 .overview-anchor {
   position: relative;
-  top: -132rpx;
+  /* Tab 上下边距调整后，同步微调定位锚点，保证点击 Tab 时标题落点准确。 */
+  top: -160rpx;
   height: 0;
 }
 
@@ -260,23 +278,32 @@ page {
 
 .tab-row {
   display: inline-flex;
-  align-items: flex-start;
-  gap: 48rpx;
+  align-items: center;
+  gap: 16rpx;
   padding: 0 48rpx;
 }
 
+/* 顶部 Tab 改成常规白底按钮，并补一圈浅描边。 */
 .tab-item {
   display: inline-flex;
   align-items: center;
-  color: #9DA4AD;
-  font-size: 32rpx;
-  font-weight: 500;
-  line-height: 32rpx;
+  justify-content: center;
+  min-height: 64rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid #E6EBF0;
+  background: #FFFFFF;
+  box-sizing: border-box;
+  color: #808B9A;
+  font-size: 28rpx;
+  font-weight: 400;
+  line-height: 28rpx;
   flex-shrink: 0;
 }
 
 .tab-item.active {
   color: #1A2739;
+  border-color: #D7DEE6;
 }
 
 .tab-item i {
@@ -286,6 +313,7 @@ page {
 .add-item {
   gap: 8rpx;
   color: #25BBE7;
+  border-color: #E9F8FD;
 }
 
 .add-item i,
@@ -295,7 +323,7 @@ page {
 
 .section-divider {
   margin: 32rpx 0 0;
-  height: 1rpx;
+  height: 2rpx;
   background: #F2F4F7;
 }
 
@@ -342,7 +370,8 @@ page {
 
 .day-anchor {
   position: relative;
-  top: -132rpx;
+  /* 和概览保持同一套偏移，避免点击“第几天”后落点偏上或偏下。 */
+  top: -184rpx;
   height: 0;
 }
 
@@ -602,13 +631,9 @@ page {
   font-size: 48rpx;
 }
 
-/* 攻略详情里的导航地图选择弹窗 */
-.route-action-sheet {
-  z-index: 1002;
-}
-
 .route-sheet-option-list {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  /* 公用底部弹窗壳已经统一提供内边距，这里只保留列表本身结构。 */
+  padding: 0;
 }
 
 .route-sheet-option {

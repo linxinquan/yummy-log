@@ -1,6 +1,7 @@
 {
   "navigationStyle": "custom",
   "usingComponents": {
+    "bottom-action-sheet": "/components/bottom-action-sheet/index",
     "travel-meta-line": "/components/travel-meta-line/index",
     "transport-info-sheet": "/components/transport-info-sheet/index",
     "route-map-preview-card": "/components/route-map-preview-card/index"

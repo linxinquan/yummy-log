@@ -149,6 +149,8 @@ function extractCity(address) {
  * 获取打卡采集列表
  */
 function getCheckins() {
+  // 先做一次历史数据清理，把以前误写进采集里的足迹迁出去。
+  util.migrateLegacyFootprintsFromCheckins()
   return wx.getStorageSync('checkin_records') || []
 }
 

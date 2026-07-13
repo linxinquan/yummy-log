@@ -29,7 +29,6 @@
       "root": "subpackages/route",
       "name": "route",
       "pages": [
-        "pages/route/route",
         "pages/route-basic-edit/route-basic-edit",
         "pages/my-route/my-route"
       ]

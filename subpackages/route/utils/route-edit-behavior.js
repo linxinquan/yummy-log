@@ -1,4 +1,4 @@
-﻿const util = require('../../../utils/util')
+const util = require('../../../utils/util')
 const { buildPreviewRouteData, flattenDaySections } = require('../../../utils/routeHelper')
 const { buildPreviewStateFromRoute } = require('./routeHelper')
 
@@ -61,7 +61,11 @@ module.exports = Behavior({
           success: (res) => {
             res.eventChannel.on('routeBasicSaved', (updatedRoute) => {
               if (!updatedRoute) return
-              this.setData(buildPreviewStateFromRoute(updatedRoute, this.data.currentStart))
+              this.setData(buildPreviewStateFromRoute(updatedRoute, this.data.currentStart), () => {
+                if (typeof this.ensureAutoSavedPreviewRoute === 'function') {
+                  this.ensureAutoSavedPreviewRoute()
+                }
+              })
               this.updateMap()
               if (updatedRoute.daySections && updatedRoute.daySections.length) {
                 this.focusPreviewByIndex(0, -1)

@@ -43,7 +43,10 @@
   <!-- 列表模式：概览 + 每天行程 + 编辑入口 -->
   <block wx:if="{{viewMode === 'list'}}">
     <view class="detail-sheet">
-      <scroll-view class="detail-scroll" scroll-y="{{!dragging}}" scroll-into-view="{{sheetScrollTarget}}" show-scrollbar="{{false}}">
+      <!-- 顶部单独补一层圆角遮罩，避免 sticky 区在切到“第几天”时把大卡片视觉顶成直角。 -->
+      <view class="detail-sheet-corner-mask"></view>
+      <!-- 这里不使用 scroll-with-animation，避免小程序在动画滚动时把 sticky Tab 闪没一下。 -->
+      <scroll-view class="detail-scroll" scroll-y="{{!dragging}}" scroll-into-view="{{sheetScrollTarget}}" scroll-top="{{detailScrollTop}}" show-scrollbar="{{false}}">
         <view class="detail-scroll-inner">
           <!-- 路线标题和摘要 -->
           <view class="detail-header" id="route-scroll-top">
@@ -83,7 +86,7 @@
           <view class="sheet-content">
             <view class="overview-anchor" id="route-overview-anchor" wx:if="{{!isEditing}}"></view>
             <view class="overview-section" wx:if="{{!isEditing}}">
-              <text class="overview-title">概览</text>
+              <text class="overview-title" id="route-overview-title">概览</text>
               <view class="overview-list" wx:if="{{hasRoutePlaces}}">
                 <view
                   class="overview-card"
@@ -110,6 +113,7 @@
               </view>
               <view class="overview-empty" wx:else>暂未添加行程地点</view>
             </view>
+            <!-- 恢复概览和分天内容之间的分隔带，切到“第几天”时也保留结构连续性。 -->
             <view class="day-separator overview-separator" wx:if="{{!isEditing}}"></view>
 
             <view
@@ -122,9 +126,21 @@
               data-day-index="{{dayIndex}}"
             >
               <view class="day-anchor" id="route-day-anchor-{{dayIndex}}"></view>
-              <view class="day-header">
+              <view class="day-header" id="route-day-header-{{dayIndex}}">
                 <text class="day-title">{{day.title}}</text>
                 <text class="day-count">{{day.countText}}</text>
+              </view>
+
+              <!-- 起点卡片恢复成页面内原始结构，不再走组件，避免样式边界被打乱。 -->
+              <view class="day-start-trigger" bindtap="onSetDayStart" data-day-index="{{dayIndex}}">
+                <view class="day-start-trigger-header">
+                  <text class="day-start-trigger-label">起点位置</text>
+                  <view class="day-start-trigger-action">
+                    <i class="mgc_shoe_line"></i>
+                    <text>{{day.startPointText ? '重选起点' : '选择起点'}}</text>
+                  </view>
+                </view>
+                <text class="day-start-trigger-address" wx:if="{{day.startPointText}}">{{day.startPointText}}</text>
               </view>
 
               <view class="place-list" wx:if="{{day.items.length}}">
@@ -325,15 +341,14 @@
     </view>
   </block>
 
-  <!-- 编辑路线规划：路线详情和规划路线详情统一使用同一套选择方式 -->
-  <view class="reorder-sheet-mask" wx:if="{{reorderSheetVisible}}" bindtap="onCloseReorderSheet"></view>
-  <view class="reorder-sheet" wx:if="{{reorderSheetVisible}}">
-    <view class="reorder-sheet-header">
-      <text class="reorder-sheet-title">路线规划</text>
-      <view class="reorder-sheet-close" bindtap="onCloseReorderSheet">
-        <i class="mgc_close_line"></i>
-      </view>
-    </view>
+  <!-- 编辑路线规划：只复用底部弹窗外壳组件，内容结构保持页面内这一版。 -->
+  <bottom-action-sheet
+    visible="{{reorderSheetVisible}}"
+    title="路线规划"
+    custom-panel-class="reorder-sheet"
+    custom-body-class="reorder-sheet-body"
+    bind:close="onCloseReorderSheet"
+  >
     <view class="reorder-sheet-option-list">
       <view
         class="reorder-sheet-option"
@@ -358,70 +373,94 @@
         </view>
       </view>
     </view>
-  </view>
+  </bottom-action-sheet>
 
-  <view class="place-picker-mask {{placePickerVisible ? 'show' : ''}}" bindtap="onClosePlacePicker">
-    <view class="place-picker-panel" catchtap="preventBubble">
-      <view class="picker-header">
-        <text class="picker-title">添加地点</text>
-        <i class="mgc_close_line picker-close" bindtap="onClosePlacePicker"></i>
-      </view>
-      <view class="picker-body">
-        <view class="picker-toolbar">
-          <view class="picker-tabs">
-            <view class="picker-tab {{placePickerTab === 'all' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="all">全部</view>
-            <view class="picker-tab {{placePickerTab === 'want' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="want">想去</view>
-            <view class="picker-tab {{placePickerTab === 'collect' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="collect">收藏</view>
+  <!-- 起点选择弹窗恢复成页面内结构，不再走公用弹窗组件。 -->
+  <view class="day-start-sheet-mask {{showDayStartSheet ? 'show' : ''}}" bindtap="onCloseDayStartSheet"></view>
+  <view class="day-start-sheet-panel {{showDayStartSheet ? 'show' : ''}}" catchtap="preventBubble">
+    <view class="day-start-sheet-header">
+      <text class="day-start-sheet-title">选择起点</text>
+      <i class="mgc_close_line day-start-sheet-close" bindtap="onCloseDayStartSheet"></i>
+    </view>
+    <view class="day-start-sheet-body">
+      <view class="route-sheet-option-list">
+        <view
+          class="route-sheet-option"
+          wx:for="{{dayStartOptions}}"
+          wx:key="type"
+          bindtap="onSelectDayStartOption"
+          data-type="{{item.type}}"
+        >
+          <view class="route-sheet-option-main {{item.type === 'clear' ? 'route-sheet-option-main-danger' : ''}}">
+            <i class="{{item.icon}}"></i>
+            <text>{{item.label}}</text>
           </view>
-          <view class="picker-map-btn" bindtap="onChoosePlaceFromMap">
-            <i class="mgc_location_line"></i>
-            <text>地图选点</text>
-          </view>
+          <i class="mgc_right_line route-sheet-option-arrow"></i>
         </view>
-        <scroll-view class="place-picker-scroll" scroll-y show-scrollbar="{{false}}">
-          <block wx:if="{{placePickerCurrentItems.length}}">
-            <view
-              class="picker-place-card"
-              wx:for="{{placePickerCurrentItems}}"
-              wx:key="sourceKey"
-              bindtap="onAddPlaceToDay"
-              data-item="{{item}}"
-            >
-              <!-- 添加地点列表改成和详情页地点卡片同一套视觉，只保留右侧加号图标 -->
-              <view class="picker-route-place-main">
-                <view class="picker-route-place-cover-wrap">
-                  <image class="picker-place-image" src="{{item.coverImage}}" mode="aspectFill"></image>
-                  <view class="picker-place-tag" wx:if="{{item.displayCategory || item.tag}}">{{item.displayCategory || item.tag}}</view>
-                </view>
-                <view class="picker-route-place-info-row">
-                  <view class="picker-route-place-content">
-                    <view class="picker-route-place-top">
-                      <text class="picker-place-name">{{item.name}}</text>
-                      <view class="picker-place-rating">
-                        <view class="picker-rating-star" wx:if="{{item.rating}}">
-                          <text>{{item.rating}}</text>
-                        </view>
-                        <text class="picker-place-chip" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
-                      </view>
-                    </view>
-                    <view class="picker-place-footer">
-                      <text class="picker-place-meta">{{item.sourceText}}</text>
-                    </view>
-                  </view>
-                </view>
-              </view>
-              <view class="picker-place-add-btn">
-                <i class="mgc_add_line"></i>
-              </view>
-            </view>
-          </block>
-          <view class="picker-empty" wx:else>
-            <text>还没有可添加的地点</text>
-          </view>
-        </scroll-view>
       </view>
     </view>
   </view>
+
+  <!-- 添加地点弹窗只接回“外壳组件”，里面的内容结构和样式保持页面内这版不变。 -->
+  <bottom-action-sheet
+    visible="{{placePickerVisible}}"
+    title="添加地点"
+    custom-panel-class="place-picker-sheet"
+    custom-body-class="place-picker-body"
+    bind:close="onClosePlacePicker"
+  >
+    <view class="picker-toolbar">
+      <view class="picker-tabs">
+        <view class="picker-tab {{placePickerTab === 'all' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="all">全部</view>
+        <view class="picker-tab {{placePickerTab === 'want' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="want">想去</view>
+        <view class="picker-tab {{placePickerTab === 'collect' ? 'active' : ''}}" bindtap="onSwitchPlacePickerTab" data-tab="collect">收藏</view>
+      </view>
+      <view class="picker-map-btn" bindtap="onChoosePlaceFromMap">
+        <i class="mgc_location_line"></i>
+        <text>地图选点</text>
+      </view>
+    </view>
+    <scroll-view class="place-picker-scroll" scroll-y show-scrollbar="{{false}}">
+      <block wx:if="{{placePickerCurrentItems.length}}">
+        <view
+          class="picker-place-card"
+          wx:for="{{placePickerCurrentItems}}"
+          wx:key="sourceKey"
+          bindtap="onAddPlaceToDay"
+          data-item="{{item}}"
+        >
+          <view class="picker-route-place-main">
+            <view class="picker-route-place-cover-wrap">
+              <image class="picker-place-image" src="{{item.coverImage}}" mode="aspectFill"></image>
+              <view class="picker-place-tag" wx:if="{{item.displayCategory || item.tag}}">{{item.displayCategory || item.tag}}</view>
+            </view>
+            <view class="picker-route-place-info-row">
+              <view class="picker-route-place-content">
+                <view class="picker-route-place-top">
+                  <text class="picker-place-name">{{item.name}}</text>
+                  <view class="picker-place-rating">
+                    <view class="picker-rating-star" wx:if="{{item.rating}}">
+                      <text>{{item.rating}}</text>
+                    </view>
+                    <text class="picker-place-chip" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+                  </view>
+                </view>
+                <view class="picker-place-footer">
+                  <text class="picker-place-meta">{{item.sourceText}}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+          <view class="picker-place-add-btn">
+            <i class="mgc_add_line"></i>
+          </view>
+        </view>
+      </block>
+      <view class="picker-empty" wx:else>
+        <text>还没有可添加的地点</text>
+      </view>
+    </scroll-view>
+  </bottom-action-sheet>
 
   <transport-info-sheet
     visible="{{transportSheetVisible}}"
@@ -432,40 +471,40 @@
     bindconfirm="onConfirmTransportMode"
   ></transport-info-sheet>
 
-  <!-- 请选择导航地图：这里提供腾讯地图、高德地图和复制地址 -->
-  <view class="sheet-mask nav-map-sheet-mask {{navMapSheetVisible ? 'show' : ''}}" bindtap="onCloseNavMapSheet">
-    <view class="sheet-panel route-action-sheet nav-map-sheet-panel" catchtap="preventBubble">
-      <view class="sheet-modal-header">
-        <text class="sheet-modal-title">请选择导航地图</text>
-        <i class="mgc_close_line sheet-modal-close" bindtap="onCloseNavMapSheet"></i>
+  <!-- 导航地图选择弹窗也统一接入公用底部弹窗壳。 -->
+  <bottom-action-sheet
+    visible="{{navMapSheetVisible}}"
+    title="请选择导航地图"
+    custom-mask-class="nav-map-sheet-mask"
+    custom-panel-class="nav-map-sheet-panel"
+    bind:close="onCloseNavMapSheet"
+  >
+    <view class="route-sheet-option-list">
+      <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="gaode">
+        <view class="route-sheet-option-main">
+          <!-- 地图品牌图标：改用用户提供的 png -->
+          <image class="route-sheet-option-logo" src="/images/navigation/nav-map-amap.png" mode="aspectFit"></image>
+          <text>高德地图</text>
+        </view>
+        <i class="mgc_right_line route-sheet-option-arrow"></i>
       </view>
-      <view class="route-sheet-option-list">
-        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="gaode">
-          <view class="route-sheet-option-main">
-            <!-- 地图品牌图标：改用用户提供的 png -->
-            <image class="route-sheet-option-logo" src="/images/navigation/nav-map-amap.png" mode="aspectFit"></image>
-            <text>高德地图</text>
-          </view>
-          <i class="mgc_right_line route-sheet-option-arrow"></i>
+      <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="tencent">
+        <view class="route-sheet-option-main">
+          <!-- 地图品牌图标：改用用户提供的 png -->
+          <image class="route-sheet-option-logo" src="/images/navigation/nav-map-tencent.png" mode="aspectFit"></image>
+          <text>腾讯地图</text>
         </view>
-        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="tencent">
-          <view class="route-sheet-option-main">
-            <!-- 地图品牌图标：改用用户提供的 png -->
-            <image class="route-sheet-option-logo" src="/images/navigation/nav-map-tencent.png" mode="aspectFit"></image>
-            <text>腾讯地图</text>
-          </view>
-          <i class="mgc_right_line route-sheet-option-arrow"></i>
+        <i class="mgc_right_line route-sheet-option-arrow"></i>
+      </view>
+      <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="copy">
+        <view class="route-sheet-option-main">
+          <i class="mgc_copy_2_line"></i>
+          <text>复制地址</text>
         </view>
-        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="copy">
-          <view class="route-sheet-option-main">
-            <i class="mgc_copy_2_line"></i>
-            <text>复制地址</text>
-          </view>
-          <i class="mgc_right_line route-sheet-option-arrow"></i>
-        </view>
+        <i class="mgc_right_line route-sheet-option-arrow"></i>
       </view>
     </view>
-  </view>
+  </bottom-action-sheet>
 
   <!-- 地点简介底部弹窗：内容沿用探索详情，只保留封面和核心信息 -->
   <view class="sheet-mask {{placeIntroVisible ? 'show' : ''}}" bindtap="onClosePlaceIntro">
@@ -505,18 +544,18 @@
   <view class="sheet-mask {{exitConfirmVisible ? 'show' : ''}}" bindtap="onCloseExitConfirm">
     <view class="sheet-panel exit-confirm-sheet" catchtap="preventBubble">
       <view class="sheet-modal-header">
-        <text class="sheet-modal-title">是否保持当前修改？</text>
+        <text class="sheet-modal-title">{{exitConfirmTitle}}</text>
         <i class="mgc_close_line sheet-modal-close" bindtap="onCloseExitConfirm"></i>
       </view>
       <view class="exit-confirm-body">
-        <text class="exit-confirm-desc">保持并退出后会更新当前路线，直接退出则不保留这次修改</text>
+        <text class="exit-confirm-desc">{{exitConfirmDesc}}</text>
       </view>
       <view class="exit-confirm-footer">
         <view class="exit-confirm-btn secondary" bindtap="onConfirmDirectExit">
-          <text>直接退出</text>
+          <text>{{exitConfirmCancelText}}</text>
         </view>
         <view class="exit-confirm-btn primary" bindtap="onConfirmSaveExit">
-          <text>保持并退出</text>
+          <text>{{exitConfirmConfirmText}}</text>
         </view>
       </view>
     </view>

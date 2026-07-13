@@ -165,25 +165,20 @@ Page({
     wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${item.id}` })
   },
 
-  // 右侧心形按钮：点击后把地点加入“想去”。
+  // 右侧心形按钮：点击后切换“想去”状态，和首页、详情页保持一致。
   onAddWant(e) {
     const item = e.currentTarget.dataset.item
     if (!item) return
 
-    if (util.isWant(item.id)) {
-      wx.showToast({
-        title: '已在想去',
-        icon: 'none',
-        duration: 1000
-      })
-      return
-    }
+    // 没登录时先走统一登录拦截，避免本地状态和其他页面行为不一致。
+    if (!util.requireLogin()) return
 
-    util.toggleWantAsync(item.id)
+    // 直接切换想去状态，已加入时再次点击会移出。
+    const isWanted = util.toggleWantAsync(item.id)
     this.loadData()
     wx.showToast({
-      title: '已添加到想去',
-      icon: 'success',
+      title: isWanted ? '已添加到想去' : '已移出想去',
+      icon: 'none',
       duration: 1000
     })
   },

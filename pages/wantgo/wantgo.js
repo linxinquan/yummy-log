@@ -7,6 +7,7 @@ const { resolveDisplayCategory } = require('../../utils/displayCategory')
 const { formatTripDuration, normalizeTripSummaryText } = require('../../utils/trip-duration')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 const { parseRouteTextToIds, resolveRouteImportText } = require('../../utils/route-import')
+const markerIcons = require('../../utils/markerIcons')
 
 
 const DEFAULT_DAY = 2; // 默认天数
@@ -20,6 +21,8 @@ const PLAN_DAY_CONFIRM_DELAY_MS = 220
 // 删除按钮本身是 120rpx，这里额外多滑出 48rpx，统一所有页面的删除间距。
 const DELETE_ACTION_WIDTH_RPX = 168
 const DEFAULT_ROUTE_AVATAR = '/images/app-logo.jpg'
+const DEFAULT_VISITED_MAP_CENTER = { latitude: 22.543099, longitude: 114.057868 }
+const PLANNED_WANT_FILTER = '__planned__'
 const ROUTE_ACTION_OPTIONS = [
   { key: 'publish', label: '发布攻略', icon: 'mgc_send_plane_line' },
   { key: 'copy', label: '复制路线', icon: 'mgc_copy_2_line' },
@@ -185,6 +188,33 @@ function buildRouteCards(items) {
   })
 }
 
+// 想去卡片右侧点击“添加到路线”后，需要把地点塞进目标路线。
+// 这里统一把地点整理成路线 daySections 可直接接收的结构，避免各页面字段不一致。
+function buildRoutePlaceFromWantItem(item = {}) {
+  const lat = item.lat || item.latitude || 0
+  const lng = item.lng || item.longitude || 0
+  return {
+    id: item.id,
+    name: item.name || '未命名地点',
+    tag: inferTagText(item),
+    coverImage: item.coverImage || item.image || DEFAULT_COVER,
+    type: item.type || (isSpotItem(item) ? 'spot' : 'food'),
+    rating: item.rating || item.score || '',
+    tags: Array.isArray(item.tags) ? item.tags.slice(0, 2) : [],
+    displayCategory: item.displayCategory || resolveDisplayCategory(item),
+    desc: item.desc || '',
+    hours: item.hours || '',
+    openHours: item.openHours || '',
+    free: item.free,
+    price: item.price || '',
+    address: item.address || '',
+    lat,
+    lng,
+    latitude: lat,
+    longitude: lng
+  }
+}
+
 // 发布攻略前，先把每个地点的展示字段补齐。
 // 这样攻略详情页就不用依赖"再次猜测"才能拿到评分和标签。
 function normalizeGuideDaySections(daySections) {
@@ -275,6 +305,161 @@ function getEmptyStateMeta(tab) {
   }
 }
 
+// 足迹统计卡片统一走这一份默认值。
+// 这样未登录、无数据、切换 Tab 时都能保持页面结构稳定。
+function buildDefaultVisitedStats() {
+  return [
+    { key: 'province', value: 0, label: '地区', icon: 'mgc_map_2_line' },
+    { key: 'city', value: 0, label: '城市', icon: 'mgc_map_pin_line' },
+    { key: 'place', value: 0, label: '地点', icon: 'mgc_location_line' },
+    { key: 'checkin', value: 0, label: '采集', icon: 'mgc_time_line' }
+  ]
+}
+
+// 省级地区目前没有单独字段，所以这里优先从地址里提取。
+// 直辖市 / 特别行政区直接按完整名称统计，避免被归错。
+function extractVisitedProvince(record = {}, place = {}) {
+  const address = String(record.address || place.address || '').trim()
+  if (!address) return ''
+
+  const municipalityMatch = address.match(/(北京市|天津市|上海市|重庆市)/)
+  if (municipalityMatch) return municipalityMatch[1]
+
+  const specialRegionMatch = address.match(/(香港特别行政区|澳门特别行政区)/)
+  if (specialRegionMatch) return specialRegionMatch[1]
+
+  const autonomousRegionMatch = address.match(/((?:内蒙古自治区|广西壮族自治区|西藏自治区|宁夏回族自治区|新疆维吾尔自治区))/)
+  if (autonomousRegionMatch) return autonomousRegionMatch[1]
+
+  const provinceMatch = address.match(/([^省]+省)/)
+  return provinceMatch ? provinceMatch[1] : ''
+}
+
+// 城市优先用打卡时已经存下来的 city；
+// 历史数据缺 city 时，再从地址里补提取。
+function extractVisitedCity(record = {}, place = {}) {
+  const savedCity = String(record.city || place.city || '').trim()
+  if (savedCity) return savedCity
+
+  const address = String(record.address || place.address || '').trim()
+  if (!address) return ''
+
+  const municipalityMatch = address.match(/(北京市|天津市|上海市|重庆市)/)
+  if (municipalityMatch) return municipalityMatch[1]
+
+  const cityPatterns = [
+    /省([^省]+?市)/,
+    /自治区([^区]+?市)/,
+    /特别行政区([^区]+?市)/,
+    /([^省]+?市)/
+  ]
+
+  for (let index = 0; index < cityPatterns.length; index += 1) {
+    const match = address.match(cityPatterns[index])
+    if (match && match[1]) {
+      return match[1]
+    }
+  }
+
+  return ''
+}
+
+// 足迹地图上的点位颜色直接跟地点类型走，和探索页保持同一套 marker 资源。
+function resolveVisitedMarkerCategory(item = {}) {
+  if (item.type === 'spot' || item.category === '景点' || item.category === '公园') {
+    return '景点'
+  }
+  return '美食'
+}
+
+// 这里不用特别精细地算缩放级别，只要让全国 / 跨城 / 同城几种场景都能大致看全。
+function resolveVisitedMapScale(markers = []) {
+  if (!markers.length) return 11
+  if (markers.length === 1) return 14
+
+  const latitudes = markers.map(item => item.latitude)
+  const longitudes = markers.map(item => item.longitude)
+  const maxSpan = Math.max(
+    Math.max(...latitudes) - Math.min(...latitudes),
+    Math.max(...longitudes) - Math.min(...longitudes)
+  )
+
+  if (maxSpan > 20) return 4
+  if (maxSpan > 10) return 5
+  if (maxSpan > 5) return 6
+  if (maxSpan > 2) return 7
+  if (maxSpan > 1) return 8
+  if (maxSpan > 0.5) return 9
+  if (maxSpan > 0.2) return 10
+  if (maxSpan > 0.08) return 11
+  if (maxSpan > 0.03) return 12
+  return 13
+}
+
+// 足迹页顶部的地图和统计卡片都从这里统一组装。
+// 这样页面只负责展示，不需要在 WXML 里再拼复杂逻辑。
+function buildVisitedOverview() {
+  const footprintItems = util.getFootprintItemsAsync() || []
+  const footprintSourceRecords = util.getFootprintSourceRecordsAsync() || []
+  const checkinRecords = util.loadData('checkin_records', []) || []
+  const provinceSet = new Set()
+  const citySet = new Set()
+  const mapMarkers = []
+
+  footprintSourceRecords.forEach(record => {
+    const province = extractVisitedProvince(record)
+    const city = extractVisitedCity(record)
+
+    if (province) provinceSet.add(province)
+    if (city) citySet.add(city)
+  })
+
+  footprintItems.forEach((item, index) => {
+    const latitude = typeof item.lat === 'number' ? item.lat : Number(item.lat || item.latitude)
+    const longitude = typeof item.lng === 'number' ? item.lng : Number(item.lng || item.longitude)
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return
+
+    mapMarkers.push({
+      id: item.checkedInRecordId || item.id || `visited-marker-${index}`,
+      latitude,
+      longitude,
+      iconPath: markerIcons.getMapIconPath(resolveVisitedMarkerCategory(item)),
+      width: 32,
+      height: 32
+    })
+  })
+
+  let mapCenter = DEFAULT_VISITED_MAP_CENTER
+  if (mapMarkers.length) {
+    const latitudes = mapMarkers.map(item => item.latitude)
+    const longitudes = mapMarkers.map(item => item.longitude)
+    mapCenter = {
+      latitude: (Math.min(...latitudes) + Math.max(...latitudes)) / 2,
+      longitude: (Math.min(...longitudes) + Math.max(...longitudes)) / 2
+    }
+  }
+
+  return {
+    hasVisited: footprintItems.length > 0,
+    items: footprintItems,
+    visitedStats: [
+      { key: 'province', value: provinceSet.size, label: '地区', icon: 'mgc_map_2_line' },
+      { key: 'city', value: citySet.size, label: '城市', icon: 'mgc_map_pin_line' },
+      { key: 'place', value: footprintItems.length, label: '地点', icon: 'mgc_location_line' },
+      // “采集”只统计拍照采集记录，不把手动足迹算进去。
+      { key: 'checkin', value: checkinRecords.length, label: '采集', icon: 'mgc_time_line' }
+    ],
+    visitedMapMarkers: mapMarkers,
+    visitedMapCenter: mapCenter,
+    visitedMapScale: resolveVisitedMapScale(mapMarkers)
+  }
+}
+
+// 足迹页现在固定展示地图和统计卡片，不再走空状态页。
+function shouldKeepVisitedLayout(tab) {
+  return tab === 'visited'
+}
+
 // 统一打开地点详情：
 // 足迹里如果是"系统未收录但用户采集过的地点"，就把完整对象直接带去详情页。
 function openPlaceDetail(item) {
@@ -328,12 +513,21 @@ Page({
     // 路线编辑弹窗默认不选中任何操作，需用户手动选择
     selectedRouteAction: '',
     routeActionTarget: null,
+    // 想去地点右侧加号：弹出“添加到路线”底部卡片列表。
+    routePickerVisible: false,
+    routePickerRoutes: [],
+    routePickerTargetPlace: null,
     // 城市筛选：
-    // 顶部“全部”点击后改成底部弹窗选择，不再使用顶部下拉框。
+    // “全部 / 城市 / 路线规划地点” 都统一放到左上角底部弹窗里。
     cityFilter: '',
     cityFilterLabel: '全部',
     cityFilterVisible: false,
     cityOptions: [],
+    // 足迹页顶部展示区：地图 + 3 张统计卡片。
+    visitedStats: buildDefaultVisitedStats(),
+    visitedMapMarkers: [],
+    visitedMapCenter: DEFAULT_VISITED_MAP_CENTER,
+    visitedMapScale: 11,
     // 想去页右下角悬浮入口：承接原来 tabbar 中间“添加”的三张入口卡片。
     addEntryVisible: false,
     // 解析路线输入弹窗：从悬浮入口继续下钻。
@@ -418,6 +612,91 @@ Page({
     wx.switchTab({ url: '/pages/my/my' })
   },
 
+  // 足迹地图右上角：重新定位到用户当前位置。
+  // 这里只更新足迹地图自己的中心点和缩放，不改其他页面状态。
+  onVisitedMapMyLocation() {
+    wx.showLoading({ title: '定位中...' })
+    wx.getLocation({
+      type: 'gcj02',
+      isHighAccuracy: true,
+      success: (res) => {
+        wx.hideLoading()
+        this.setData({
+          visitedMapCenter: {
+            latitude: res.latitude,
+            longitude: res.longitude
+          },
+          // 重新定位后顺手拉近一些，方便看到当前位置周边。
+          visitedMapScale: 14
+        })
+        wx.showToast({
+          title: '已定位到当前位置',
+          icon: 'success',
+          duration: 1500
+        })
+      },
+      fail: () => {
+        wx.hideLoading()
+        wx.showToast({
+          title: '定位失败',
+          icon: 'none'
+        })
+      }
+    })
+  },
+
+  // 足迹地图右下角：添加足迹。
+  // 这是独立于“采集”的一套记录，只存地点，不存照片。
+  onOpenVisitedCheckin() {
+    // 足迹属于用户自己的记录，先走统一登录校验。
+    if (!util.requireLogin({ toastText: '请先登录后添加足迹' })) return
+
+    wx.chooseLocation({
+      success: (res) => {
+        // 地图返回的地点名有时会为空，这里统一做兜底，保证足迹记录可展示。
+        const spotName = String(res.name || res.address || '未命名地点').trim()
+        const address = String(res.address || res.name || '').trim()
+        const latitude = Number(res.latitude)
+        const longitude = Number(res.longitude)
+
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+          wx.showToast({
+            title: '地点信息不完整',
+            icon: 'none'
+          })
+          return
+        }
+
+        wx.showLoading({ title: '添加中...' })
+
+        // 手动足迹单独存储，避免“我的采集”页面误把它当成采集记录。
+        util.saveManualFootprintAsync({
+          type: 'spot',
+          spotName,
+          address,
+          latitude,
+          longitude,
+          description: ''
+        })
+
+        wx.hideLoading()
+        this._loadData('visited')
+        wx.showToast({
+          title: '已添加足迹',
+          icon: 'success'
+        })
+      },
+      fail: (err) => {
+        // 用户主动取消选点时不提示，避免打断操作节奏。
+        if (err && String(err.errMsg || '').includes('cancel')) return
+        wx.showToast({
+          title: '打开地图失败',
+          icon: 'none'
+        })
+      }
+    })
+  },
+
   // 页面重新显示时，检查登录状态并加载数据。
   onShow() {
     const pendingTab = wx.getStorageSync('pendingWantgoTab')
@@ -427,12 +706,18 @@ Page({
     if (savedFilter !== this.data.cityFilter) {
       this.setData({
         cityFilter: savedFilter,
-        cityFilterLabel: savedFilter || '全部'
+        cityFilterLabel: savedFilter === PLANNED_WANT_FILTER ? '路线规划地点' : (savedFilter || '全部')
       })
     }
     if (pendingTab) {
       wx.removeStorageSync('pendingWantgoTab')
-      this.setData({ tab: pendingTab, ...getEmptyStateMeta(pendingTab), items: [], empty: true })
+      this.setData({
+        tab: pendingTab,
+        ...getEmptyStateMeta(pendingTab),
+        items: [],
+        // 足迹页固定展示，不再显示空状态页。
+        empty: shouldKeepVisitedLayout(pendingTab) ? false : true
+      })
     }
     this._checkLogin()
     this.setData({
@@ -450,7 +735,8 @@ Page({
       tab,
       ...getEmptyStateMeta(tab),
       items: [],
-      empty: true,
+      // 切到足迹时直接保留页面骨架，避免先闪一下空状态。
+      empty: shouldKeepVisitedLayout(tab) ? false : true,
       addEntryVisible: false,
       importEntryVisible: false
     })
@@ -463,10 +749,30 @@ Page({
   _loadData(tab) {
     const isLoggedIn = this._checkLogin()
     if (!isLoggedIn) {
+      if (shouldKeepVisitedLayout(tab)) {
+        // 足迹页未登录时也保留地图和统计卡片，只展示 0 数据。
+        this.setData({
+          items: [],
+          empty: false,
+          loading: false,
+          visitedStats: buildDefaultVisitedStats(),
+          visitedMapMarkers: [],
+          visitedMapCenter: DEFAULT_VISITED_MAP_CENTER,
+          visitedMapScale: 11,
+          emptyIcon: 'mgc_user_3_line',
+          emptyHint: '请先登录，查看你的清单'
+        })
+        return
+      }
+
       this.setData({
         items: [],
         empty: true,
         loading: false,
+        visitedStats: buildDefaultVisitedStats(),
+        visitedMapMarkers: [],
+        visitedMapCenter: DEFAULT_VISITED_MAP_CENTER,
+        visitedMapScale: 11,
         emptyIcon: 'mgc_user_3_line',
         emptyHint: '请先登录，查看你的清单'
       })
@@ -479,6 +785,19 @@ Page({
       // 新格式：userWantList 存储所有想去的 ID（美食+景点）
       const wantIds = util.getWantListAsync()
       const userShops = util.getUserShopsAsync()
+      const savedRoutes = util.getRoutesAsync()
+      const plannedWantIds = new Set(
+        savedRoutes.reduce((result, route) => {
+          ;(route.daySections || []).forEach(day => {
+            ;(day.items || []).forEach(item => {
+              if (item && item.id !== undefined && item.id !== null) {
+                result.push(String(item.id))
+              }
+            })
+          })
+          return result
+        }, [])
+      )
       
       // 通过 placesData.getPlaceById 一次性读取所有想去地点的完整数据
       const wantItems = wantIds
@@ -495,20 +814,29 @@ Page({
         .map(item => ({
           ...item,
           // 确保有 type 字段（美食或景点）
-          type: item.type || (item.category === '景点' || item.category === '公园' ? 'spot' : 'food')
+          type: item.type || (item.category === '景点' || item.category === '公园' ? 'spot' : 'food'),
+          isPlannedRoute: plannedWantIds.has(String(item.id))
         }))
       
-      // 从所有想去地点中提取城市列表（用户自建店铺可能没有城市字段，兜底为"其他"）
+      const plannedWantItems = wantItems.filter(item => item.isPlannedRoute)
       const cities = [...new Set(wantItems.map(item => item.city || '其他').filter(Boolean))].sort()
-      
-      // 如果当前筛选的城市已不在可选城市中，自动重置为"全部"
+
+      // 如果当前筛选已失效，就自动重置为“全部”。
       const cityFilter = this.data.cityFilter
-      const effectiveFilter = cityFilter && cities.includes(cityFilter) ? cityFilter : ''
+      const effectiveFilter = cityFilter === PLANNED_WANT_FILTER
+        ? PLANNED_WANT_FILTER
+        : (cityFilter && cities.includes(cityFilter) ? cityFilter : '')
       
-      // 按城市筛选
-      const filteredItems = effectiveFilter
-        ? wantItems.filter(item => (item.city || '其他') === effectiveFilter)
-        : wantItems
+      // 全部：显示所有地点
+      // 城市：显示该城市对应地点
+      // 路线规划地点：显示已经进入路线规划的地点
+      const filteredItems = effectiveFilter === PLANNED_WANT_FILTER
+        ? plannedWantItems
+        : (
+          effectiveFilter
+            ? wantItems.filter(item => (item.city || '其他') === effectiveFilter)
+            : wantItems
+        )
       
       items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(filteredItems)))
       this.setData({
@@ -517,7 +845,7 @@ Page({
         loading: false,
         cityOptions: cities,
         cityFilter: effectiveFilter,
-        cityFilterLabel: effectiveFilter || '全部'
+        cityFilterLabel: effectiveFilter === PLANNED_WANT_FILTER ? '路线规划地点' : (effectiveFilter || '全部')
       })
       // 把有效筛选同步到 localStorage，保持和显示一致
       wx.setStorageSync('wantgoCityFilter', effectiveFilter)
@@ -543,9 +871,19 @@ Page({
       this.setData({ items: routeCards, empty: routeCards.length === 0, loading: false })
     } else {
       // tab === 'visited'
-      // 足迹统一以 checkin_records 为准，再在这里转成卡片展示数据。
-      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(util.getFootprintItemsAsync())))
-      this.setData({ items, empty: items.length === 0, loading: false })
+      // 足迹页先只做展示：顶部地图 + 3 张统计卡片。
+      // 地图点位和统计数据都从打卡记录统一派生，避免和列表逻辑互相干扰。
+      const visitedOverview = buildVisitedOverview()
+      this.setData({
+        items: visitedOverview.items,
+        // 足迹页固定展示地图和卡片，没有数据时只显示 0。
+        empty: false,
+        loading: false,
+        visitedStats: visitedOverview.visitedStats,
+        visitedMapMarkers: visitedOverview.visitedMapMarkers,
+        visitedMapCenter: visitedOverview.visitedMapCenter,
+        visitedMapScale: visitedOverview.visitedMapScale
+      })
     }
   },
 
@@ -707,6 +1045,93 @@ Page({
 
     const item = e.currentTarget.dataset.item
     openPlaceDetail(item)
+  },
+
+  // 想去卡片右侧“+”按钮：打开路线卡片弹窗，把当前地点添加到指定路线。
+  onOpenRoutePicker(e) {
+    const item = e.currentTarget.dataset.item
+    if (!item) return
+
+    const savedRoutes = util.getRoutesAsync().filter(route => !route.isDraft)
+    if (!savedRoutes.length) {
+      wx.showToast({ title: '还没有路线', icon: 'none' })
+      return
+    }
+    const routeCards = buildRouteCards(savedRoutes)
+    this.setData({
+      routePickerVisible: true,
+      routePickerRoutes: routeCards,
+      routePickerTargetPlace: item
+    })
+  },
+
+  // 关闭“添加到路线”弹窗。
+  onCloseRoutePicker() {
+    this.setData({
+      routePickerVisible: false,
+      routePickerRoutes: [],
+      routePickerTargetPlace: null
+    })
+  },
+
+  // 选中一条路线后，直接把当前地点追加进去并保存。
+  onSelectRoutePickerCard(e) {
+    const route = e.currentTarget.dataset.route
+    const place = this.data.routePickerTargetPlace
+    if (!route || !place) return
+
+    const savedRoutes = util.getRoutesAsync()
+    const routeIndex = savedRoutes.findIndex(item => String(item.id) === String(route.id))
+    if (routeIndex < 0) {
+      wx.showToast({ title: '路线不存在', icon: 'none' })
+      return
+    }
+
+    const targetRoute = savedRoutes[routeIndex]
+    const nextSections = (targetRoute.daySections || []).map(day => ({
+      ...day,
+      items: Array.isArray(day.items) ? day.items.slice() : []
+    }))
+
+    // 没有天数时自动补第一天；已有天数时默认加到最后一天，避免打乱前面行程。
+    if (!nextSections.length) {
+      nextSections.push({
+        id: `day-0`,
+        title: '第1天',
+        items: []
+      })
+    }
+
+    const routePlace = buildRoutePlaceFromWantItem(place)
+    const hasExistingPlace = nextSections.some(day =>
+      (day.items || []).some(item => String(item.id) === String(routePlace.id))
+    )
+    if (hasExistingPlace) {
+      wx.showToast({ title: '该地点已在路线中', icon: 'none' })
+      return
+    }
+
+    const lastDayIndex = Math.max(nextSections.length - 1, 0)
+    nextSections[lastDayIndex].items.push(routePlace)
+
+    const totalPlaceCount = nextSections.reduce((sum, day) => sum + ((day.items || []).length), 0)
+    const updatedRoute = {
+      ...targetRoute,
+      daySections: nextSections,
+      dayCount: Math.max(nextSections.length, 1),
+      subtitle: normalizeTripSummaryText(targetRoute.subtitle, nextSections.length, totalPlaceCount),
+      updatedAt: Date.now()
+    }
+
+    savedRoutes[routeIndex] = updatedRoute
+    util.saveData('savedRoutes', savedRoutes)
+    util.updateRouteAsync(updatedRoute._id || updatedRoute.id, updatedRoute)
+
+    wx.showToast({ title: '已添加到路线', icon: 'success' })
+    this.onCloseRoutePicker()
+    if (this.data.tab === 'plan') {
+      this._loadData('plan')
+    }
   },
 
   // 左滑开始：记录起点坐标和当前卡片状态
@@ -919,7 +1344,9 @@ Page({
       })
       setTimeout(() => {
         wx.navigateTo({
-          url: `/subpackages/route/pages/route/route?ids=${parseResult.routeIds.join(',')}&dayCount=${parseResult.dayCount}`
+          // 从“想去”页进入路线规划时，返回后应直接落回“我的路线”Tab，
+          // 这样用户能第一时间看到刚刚自动保存的路线。
+          url: `/subpackages/route/pages/my-route/my-route?ids=${parseResult.routeIds.join(',')}&dayCount=${parseResult.dayCount}&returnTo=plan`
         })
       }, 300)
     } finally {
@@ -1061,7 +1488,7 @@ Page({
     wx.setStorageSync('wantgoCityFilter', city)
     this.setData({
       cityFilter: city,
-      cityFilterLabel: city || '全部',
+      cityFilterLabel: city === PLANNED_WANT_FILTER ? '路线规划地点' : (city || '全部'),
       cityFilterVisible: false
     })
     this._loadData('want')
@@ -1087,7 +1514,10 @@ Page({
       const dayCount = Math.max(1, parseInt(latestSelectedPlanDayCount, 10) || 1)
       this._planRouteConfirmTimer = null
       this._isConfirmingPlanRoute = false
-      wx.navigateTo({ url: `/subpackages/route/pages/route/route?&ids=${ids}&dayCount=${dayCount}` })
+      wx.navigateTo({
+        // 从“想去”页发起规划，给详情页带上返回来源，返回时自动切到“我的路线”Tab。
+        url: `/subpackages/route/pages/my-route/my-route?ids=${ids}&dayCount=${dayCount}&returnTo=plan`
+      })
     }, PLAN_DAY_CONFIRM_DELAY_MS)
   },
 

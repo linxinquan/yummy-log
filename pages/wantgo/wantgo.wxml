@@ -63,42 +63,84 @@
       </block>
     </view>
 
-    <view wx:else class="want-list" style="padding-top: {{listTop}}px;">
-    <view wx:if="{{tab === 'want'}}" class="want-toolbar">
-      <view class="want-toolbar-left" bindtap="onCityFilterTap">
-        <text class="want-toolbar-title">{{cityFilterLabel}}</text>
-        <i class="mgc_down_line want-toolbar-arrow"></i>
-      </view>
-      <view class="want-plan-entry" bindtap="onPlanRoute">
-        <i class="mgc_signature_2_ai_line"></i>
-        <text>路线规划</text>
-      </view>
-    </view>
-    <!-- 城市筛选改成底部弹窗，不再使用顶部下拉框。 -->
-    <view class="route-action-mask {{cityFilterVisible ? 'show' : ''}}" bindtap="onCloseCityFilter">
-      <view class="route-action-sheet city-filter-sheet" catchtap="preventBubble">
-        <view class="route-action-header">
-          <text class="route-action-title">选择地点范围</text>
-          <i class="mgc_close_line route-action-close" bindtap="onCloseCityFilter"></i>
+    <view wx:elif="{{tab === 'visited'}}" class="visited-layout" style="padding-top: {{listTop}}px;">
+      <!-- 足迹顶部地图：只负责展示去过地点的分布。 -->
+      <view class="visited-map-card">
+        <map
+          id="visitedMap"
+          class="visited-map"
+          latitude="{{visitedMapCenter.latitude}}"
+          longitude="{{visitedMapCenter.longitude}}"
+          scale="{{visitedMapScale}}"
+          markers="{{visitedMapMarkers}}"
+          show-location="{{false}}"
+          enable-zoom="{{true}}"
+          enable-scroll="{{true}}"
+        ></map>
+        <!-- 地图右上角：定位当前位置按钮，样式和探索页的定位悬浮按钮保持一致。 -->
+        <view class="visited-map-action visited-map-action-top" bindtap="onVisitedMapMyLocation">
+          <i class="mgc_aiming_2_line"></i>
         </view>
-        <view class="route-action-body">
-          <view class="route-action-grid">
-            <view class="route-action-card {{!cityFilter ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="">
-              <text class="route-action-label">全部</text>
-            </view>
-            <view
-              wx:for="{{cityOptions}}"
-              wx:key="*this"
-              class="route-action-card {{cityFilter === item ? 'active' : ''}}"
-              bindtap="onSelectCityFilter"
-              data-city="{{item}}"
-            >
-              <text class="route-action-label">{{item}}</text>
-            </view>
+        <!-- 地图右下角：独立“添加足迹”入口，直接打开地图选点。 -->
+        <view class="visited-map-action visited-map-action-bottom visited-map-action-text" bindtap="onOpenVisitedCheckin">
+          <text class="visited-map-action-label">添加足迹</text>
+        </view>
+      </view>
+
+      <!-- 足迹统计卡片：保持简洁，只展示数量和名称。 -->
+      <view class="visited-stats-grid">
+        <view
+          wx:for="{{visitedStats}}"
+          wx:key="key"
+          class="visited-stat-card"
+        >
+          <view class="visited-stat-main">
+            <text class="visited-stat-value">{{item.value}}</text>
+            <text class="visited-stat-label">{{item.label}}</text>
+          </view>
+          <view class="visited-stat-icon-wrap">
+            <i class="visited-stat-icon {{item.icon}}"></i>
           </view>
         </view>
       </view>
     </view>
+
+    <view wx:else class="want-list" style="padding-top: {{listTop}}px;">
+      <view wx:if="{{tab === 'want'}}" class="want-toolbar">
+        <view class="want-toolbar-left" bindtap="onCityFilterTap">
+          <text class="want-toolbar-title">{{cityFilterLabel}}</text>
+          <i class="mgc_down_line want-toolbar-arrow"></i>
+        </view>
+        <view class="want-plan-entry" bindtap="onPlanRoute">
+          <i class="mgc_signature_2_ai_line"></i>
+          <text>路线规划</text>
+        </view>
+      </view>
+      <!-- 城市筛选改成底部弹窗，不再使用顶部下拉框。 -->
+      <bottom-action-sheet
+        visible="{{cityFilterVisible}}"
+        title="选择地点范围"
+        custom-panel-class="city-filter-sheet"
+        bind:close="onCloseCityFilter"
+      >
+        <view class="route-action-grid">
+          <view class="route-action-card city-filter-card {{!cityFilter ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="">
+            <text class="route-action-label">全部</text>
+          </view>
+          <view class="route-action-card city-filter-card {{cityFilter === '__planned__' ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="__planned__">
+            <text class="route-action-label">路线规划地点</text>
+          </view>
+          <view
+            wx:for="{{cityOptions}}"
+            wx:key="*this"
+            class="route-action-card city-filter-card {{cityFilter === item ? 'active' : ''}}"
+            bindtap="onSelectCityFilter"
+            data-city="{{item}}"
+          >
+            <text class="route-action-label">{{item}}</text>
+          </view>
+        </view>
+      </bottom-action-sheet>
       <block wx:for="{{items}}" wx:key="id">
         <view class="place-swipe-item">
           <view wx:if="{{tab === 'want'}}" class="place-delete-action {{(item.swipeOffset || 0) < 0 ? 'show' : ''}}" catchtap="onRemove" data-id="{{item.id}}">
@@ -125,7 +167,7 @@
                 <image class="place-cover" src="{{item.coverImage}}" mode="aspectFill"></image>
                 <view class="card-cat-badge" wx:if="{{item.displayCategory}}">{{item.displayCategory}}</view>
               </view>
-              <!-- 中间信息和右侧箭头 -->
+              <!-- 中间信息和右侧加号：整卡点详情，右侧单独点开“添加到路线”。 -->
               <view class="place-info-row">
                 <view class="place-main">
                   <text class="place-name">{{item.name}}</text>
@@ -141,8 +183,8 @@
                     <text class="place-footer-text">{{item.distanceText}}</text>
                   </view>
                 </view>
-                <view class="place-arrow">
-                  <i class="mgc_right_line"></i>
+                <view class="place-arrow" catchtap="onOpenRoutePicker" data-item="{{item}}">
+                  <i class="mgc_add_line"></i>
                 </view>
               </view>
             </view>
@@ -261,43 +303,82 @@
     </view>
   </view>
 
-  <view class="route-action-mask {{routeActionSheetVisible ? 'show' : ''}}" bindtap="onCloseRouteActionSheet">
-    <view class="route-action-sheet" catchtap="preventBubble">
-      <view class="route-action-header">
-        <text class="route-action-title">路线编辑</text>
-        <i class="mgc_close_line route-action-close" bindtap="onCloseRouteActionSheet"></i>
+  <bottom-action-sheet
+    visible="{{routeActionSheetVisible}}"
+    title="路线编辑"
+    bind:close="onCloseRouteActionSheet"
+  >
+    <view class="route-action-grid">
+      <view
+        wx:for="{{routeActionOptions}}"
+        wx:key="key"
+        class="route-action-card {{item.danger ? 'danger' : ''}}"
+        bindtap="onSelectRouteAction"
+        data-action="{{item.key}}"
+      >
+        <i class="route-action-icon {{item.icon}}"></i>
+        <text class="route-action-label">{{item.label}}</text>
       </view>
-      <view class="route-action-body">
-        <view class="route-action-grid">
-          <view
-            wx:for="{{routeActionOptions}}"
-            wx:key="key"
-            class="route-action-card {{item.danger ? 'danger' : ''}}"
-            bindtap="onSelectRouteAction"
-            data-action="{{item.key}}"
-          >
-            <i class="route-action-icon {{item.icon}}"></i>
-            <text class="route-action-label">{{item.label}}</text>
+    </view>
+  </bottom-action-sheet>
+
+  <!-- 想去地点添加到路线：复用现有路线卡片样式，直接选一条路线追加地点。 -->
+  <bottom-action-sheet
+    visible="{{routePickerVisible}}"
+    title="添加到路线"
+    custom-panel-class="route-picker-sheet"
+    bind:close="onCloseRoutePicker"
+  >
+    <view wx:if="{{!routePickerRoutes.length}}" class="route-picker-empty">
+      <text class="route-picker-empty-text">还没有路线，先去创建一条路线吧</text>
+    </view>
+    <scroll-view wx:else class="route-picker-scroll" scroll-y>
+      <view
+        wx:for="{{routePickerRoutes}}"
+        wx:key="id"
+        class="route-card-frame"
+      >
+        <view class="route-card-backdrop"></view>
+        <view class="route-card route-card-theme-{{index % 4}}" bindtap="onSelectRoutePickerCard" data-route="{{item}}">
+          <view class="route-card-stroke"></view>
+          <view class="route-card-top">
+            <image class="route-image" src="{{item.coverImage}}" mode="aspectFill" />
+            <view class="route-main">
+              <text class="route-title">{{item.title}}</text>
+              <text class="route-subtitle">{{item.subtitle}}</text>
+            </view>
+          </view>
+          <view class="route-cutout-wrap route-cutout-wrap-left">
+            <view class="route-cutout route-cutout-left"></view>
+          </view>
+          <view class="route-cutout-wrap route-cutout-wrap-right">
+            <view class="route-cutout route-cutout-right"></view>
+          </view>
+          <view class="route-divider"></view>
+          <view class="route-footer">
+            <view class="route-author-wrap">
+              <image class="route-author-avatar" src="{{item.authorAvatar}}" mode="aspectFill" />
+              <text class="route-author">{{item.author}}</text>
+            </view>
+            <text class="route-city">{{item.city}}</text>
           </view>
         </view>
       </view>
-    </view>
-  </view>
+    </scroll-view>
+  </bottom-action-sheet>
 
   <!-- 删除路线确认：统一改成自定义底部确认层。 -->
-  <view class="route-action-mask {{deleteRouteConfirmVisible ? 'show' : ''}}" bindtap="onCloseDeleteRouteConfirm">
-    <view class="route-action-sheet route-delete-confirm-sheet" catchtap="preventBubble">
-      <view class="route-action-header">
-        <text class="route-action-title">删除路线</text>
-        <i class="mgc_close_line route-action-close" bindtap="onCloseDeleteRouteConfirm"></i>
-      </view>
-      <view class="route-action-body">
-        <text class="route-delete-confirm-desc">删除后无法恢复，确认删除这条路线吗？</text>
-        <view class="route-delete-confirm-actions">
-          <view class="route-delete-confirm-btn cancel" bindtap="onCloseDeleteRouteConfirm">取消</view>
-          <view class="route-delete-confirm-btn danger" bindtap="onConfirmDeleteRoute">确认删除</view>
-        </view>
-      </view>
+  <bottom-action-sheet
+    visible="{{deleteRouteConfirmVisible}}"
+    title="删除路线"
+    custom-panel-class="route-delete-confirm-sheet"
+    custom-body-class="route-delete-confirm-body"
+    bind:close="onCloseDeleteRouteConfirm"
+  >
+    <text class="route-delete-confirm-desc">删除后无法恢复，确认删除这条路线吗？</text>
+    <view class="route-delete-confirm-actions">
+      <view class="route-delete-confirm-btn cancel" bindtap="onCloseDeleteRouteConfirm">取消</view>
+      <view class="route-delete-confirm-btn danger" bindtap="onConfirmDeleteRoute">确认删除</view>
     </view>
-  </view>
+  </bottom-action-sheet>
 </view>

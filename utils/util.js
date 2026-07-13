@@ -458,10 +458,130 @@ function buildFootprintItem(record = {}) {
   }
 }
 
+// 手动添加的足迹单独存一份，避免污染“我的采集”的图片列表和地图。
+function getManualFootprintRecords() {
+  return loadData('manual_footprint_records', []) || []
+}
+
+// 统一给足迹原始记录生成一个稳定 key。
+// 这样做迁移和去重时，就不会因为 id 不同把同一地点重复写进去。
+function buildFootprintRecordKey(record = {}) {
+  return [
+    String(record.type || 'spot'),
+    normalizeCompareText(record.spotName || record.name || ''),
+    normalizeCompareText(record.address || ''),
+    String(record.latitude || ''),
+    String(record.longitude || '')
+  ].join(':')
+}
+
+// 这批历史遗留数据的共同点是：
+// 1. 曾经被误写进了 checkin_records
+// 2. 没有照片，也没有云端图片 id
+// 3. 当时“添加足迹”只写景点类型，所以这里一并用 type=spot 收口
+function isLegacyManualFootprintRecord(record = {}) {
+  const hasPhoto = Boolean(record.photoPath || record.cloudFileID)
+  const hasLocation = Number(record.latitude) || Number(record.longitude)
+  return record.type === 'spot' && !hasPhoto && Boolean(hasLocation)
+}
+
+let _isMigratingLegacyFootprints = false
+
+// 自动把历史上误写进采集记录的“足迹”迁出来。
+// 迁移后：
+// - 采集页只保留真正的采集记录
+// - 足迹页继续能读到这些地点，不丢数据
+function migrateLegacyFootprintsFromCheckins() {
+  if (_isMigratingLegacyFootprints) return 0
+
+  const checkinRecords = loadData('checkin_records', []) || []
+  if (!checkinRecords.length) return 0
+
+  const manualRecords = getManualFootprintRecords()
+  const manualRecordKeys = new Set(manualRecords.map(item => buildFootprintRecordKey(item)))
+  const nextCheckins = []
+  const nextManualRecords = manualRecords.slice()
+  let movedCount = 0
+
+  _isMigratingLegacyFootprints = true
+  try {
+    checkinRecords.forEach(record => {
+      if (!isLegacyManualFootprintRecord(record)) {
+        nextCheckins.push(record)
+        return
+      }
+
+      const recordKey = buildFootprintRecordKey(record)
+      if (!manualRecordKeys.has(recordKey)) {
+        nextManualRecords.push({
+          id: record.id || ('FP' + Date.now().toString(36).toUpperCase()),
+          type: 'spot',
+          spotName: record.spotName || record.name || '',
+          address: record.address || '',
+          latitude: Number(record.latitude) || 0,
+          longitude: Number(record.longitude) || 0,
+          description: record.description || '',
+          date: record.date || new Date().toISOString(),
+          city: record.city || ''
+        })
+        manualRecordKeys.add(recordKey)
+      }
+      movedCount += 1
+    })
+
+    if (movedCount > 0) {
+      saveData('checkin_records', nextCheckins)
+      saveData('manual_footprint_records', nextManualRecords)
+    }
+  } finally {
+    _isMigratingLegacyFootprints = false
+  }
+
+  if (movedCount > 0) {
+    syncLegacyCheckedInFromRecords()
+  }
+
+  return movedCount
+}
+
+// 新增一条“手动足迹”记录：
+// 这里只保存地点本身，不要求照片，也不进入采集记录。
+function saveManualFootprintRecord(data = {}) {
+  const manualRecords = getManualFootprintRecords()
+  const record = {
+    id: 'FP' + Date.now().toString(36).toUpperCase(),
+    type: data.type || 'spot',
+    spotName: data.spotName || '',
+    address: data.address || '',
+    latitude: Number(data.latitude) || 0,
+    longitude: Number(data.longitude) || 0,
+    description: data.description || '',
+    date: data.date || new Date().toISOString(),
+    city: data.city || ''
+  }
+
+  manualRecords.unshift(record)
+  saveData('manual_footprint_records', manualRecords)
+  // 老页面如果还在读 userCheckedIn，这里也顺手同步一下。
+  syncLegacyCheckedInFromRecords()
+  return record
+}
+
+// 足迹页的真实来源分成两部分：
+// 1. 采集打卡生成的记录
+// 2. 地图选点新增的手动足迹
+function getFootprintSourceRecords() {
+  migrateLegacyFootprintsFromCheckins()
+  const checkinRecords = loadData('checkin_records', []) || []
+  const manualRecords = getManualFootprintRecords()
+  // 采集记录放前面，和手动足迹重复时优先保留采集那条。
+  return checkinRecords.concat(manualRecords)
+}
+
 // 统一读取"足迹/已去过"的真实数据源。
-// 这里以 checkin_records 为准，并按地点去重，避免同一个地方多次采集重复展示。
+// 这里把“采集记录”和“手动足迹”合并后再去重，避免同一地点重复展示。
 function getFootprintItems() {
-  const records = loadData('checkin_records', []) || []
+  const records = getFootprintSourceRecords()
   const seenKeys = new Set()
   const items = []
 
@@ -1057,8 +1177,18 @@ function deleteRouteAsync(id) {
  */
 function saveRouteAsync(routeData) {
   // 1. 立即写本地
+  // 如果本地已经有同一条路线（同 id 或同 _id），这里直接覆盖，
+  // 避免上层已经先写过一次本地后，又在这里追加出重复卡片。
   const list = loadData('savedRoutes', [])
-  list.push(routeData)
+  const idx = list.findIndex(route =>
+    String(route.id) === String(routeData.id) ||
+    (routeData._id && String(route._id) === String(routeData._id))
+  )
+  if (idx > -1) {
+    list[idx] = { ...list[idx], ...routeData }
+  } else {
+    list.push(routeData)
+  }
   saveData('savedRoutes', list)
 
   // 2. 后台推云端
@@ -1121,6 +1251,23 @@ function getFootprintItemsAsync() {
   return getFootprintItems()
 }
 
+/**
+ * 获取足迹原始记录（纯本地）
+ * @returns {Array}
+ */
+function getFootprintSourceRecordsAsync() {
+  return getFootprintSourceRecords()
+}
+
+/**
+ * 保存手动足迹（纯本地）
+ * @param {Object} data - 地点数据
+ * @returns {Object}
+ */
+function saveManualFootprintAsync(data) {
+  return saveManualFootprintRecord(data)
+}
+
 // ─── 导出扩展 ─────────────────────────────────
 
 module.exports = {
@@ -1145,6 +1292,8 @@ module.exports = {
   getUserShops,
   findKnownPlace,
   getFootprintItems,
+  getFootprintSourceRecords,
+  migrateLegacyFootprintsFromCheckins,
   syncLegacyCheckedInFromRecords,
   requireLogin,
   toggleLike,
@@ -1174,6 +1323,8 @@ module.exports = {
   updateRouteAsync,
   deleteRouteAsync,
   getFootprintItemsAsync,
+  getFootprintSourceRecordsAsync,
+  saveManualFootprintAsync,
   // 登录状态判断
   isCloudMode,
 }

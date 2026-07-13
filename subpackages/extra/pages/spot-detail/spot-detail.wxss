@@ -428,7 +428,7 @@
 }
 
 .collect-action-icon {
-  font-size: 48rpx; /* 24px */
+  font-size: 40rpx; /* 2px */
   color: #1A2739;
   line-height: 1;
 }
@@ -546,12 +546,9 @@
   font-size: 48rpx;
 }
 
-.route-action-sheet {
-  z-index: 1002;
-}
-
 .route-sheet-option-list {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  /* 公用底部弹窗壳已经统一提供内边距，这里只保留选项列表本身。 */
+  padding: 0;
 }
 
 .route-sheet-option {

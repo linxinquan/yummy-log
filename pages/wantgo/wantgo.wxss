@@ -146,10 +146,133 @@
   padding-bottom: calc(132rpx + env(safe-area-inset-bottom));
 }
 
+.visited-layout {
+  box-sizing: border-box;
+  padding-right: 48rpx;
+  padding-bottom: calc(132rpx + env(safe-area-inset-bottom));
+  padding-left: 48rpx;
+}
+
+/* 足迹顶部地图卡片：只保留一层轻背景，避免页面显得太重。 */
+.visited-map-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 32rpx;
+  background: #F6F8FA;
+}
+
+.visited-map {
+  width: 100%;
+  height: 654rpx;
+}
+
+/* 足迹地图上的两个悬浮按钮直接复用探索页的白底小浮块风格。 */
+.visited-map-action {
+  position: absolute;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 24rpx;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.visited-map-action i {
+  color: #1A2739;
+  font-size: 48rpx;
+  line-height: 48rpx;
+}
+
+.visited-map-action-top {
+  top: 24rpx;
+  right: 24rpx;
+}
+
+.visited-map-action-bottom {
+  right: 24rpx;
+  bottom: 24rpx;
+}
+
+/* “添加足迹”是文字按钮，不再和右上角定位按钮共用正方形尺寸。 */
+.visited-map-action-text {
+  width: auto;
+  min-width: 168rpx;
+  padding: 0 24rpx;
+  box-sizing: border-box;
+}
+
+.visited-map-action-label {
+  color: #1A2739;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  font-weight: 500;
+}
+
+/* 统计卡片现在固定 4 张，直接两列排布，版面会更整齐。 */
+.visited-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24rpx;
+  margin-top: 32rpx;
+}
+
+.visited-stat-card {
+  position: relative;
+  min-height: 168rpx;
+  padding: 32rpx;
+  border-radius: 32rpx;
+  background: #F6F8FA;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+/* 左侧只放数字和文案，保证信息层级清楚。 */
+.visited-stat-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.visited-stat-value {
+  color: #1A2739;
+  font-size: 48rpx;
+  line-height: 48rpx;
+  font-weight: 600;
+}
+
+.visited-stat-label {
+  margin-top: 16rpx;
+  color: #1A2739;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  font-weight: 400;
+}
+
+.visited-stat-icon-wrap {
+  position: absolute;
+  right: 20rpx;
+  bottom: 16rpx;
+  z-index: 0;
+}
+
+.visited-stat-icon {
+  color: rgba(26, 39, 57, 0.08);
+  font-size: 80rpx;
+  line-height: 80rpx;
+}
+
 .want-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16rpx;
   width: 100%;
   height: 56rpx;
   margin-bottom: 48rpx;
@@ -578,7 +701,7 @@
   flex-shrink: 0;
 }
 
-/* 右侧箭头：这里只是进入详情，不改语义 */
+/* 右侧加号：单独点击后弹出路线列表，把地点加到路线里。 */
 .place-arrow {
   width: 40rpx;
   height: 40rpx;
@@ -591,6 +714,27 @@
 .place-arrow i {
   color: #BAC4CC;
   font-size: 40rpx;
+  line-height: 40rpx;
+}
+
+.route-picker-sheet {
+  max-height: 80vh;
+}
+
+.route-picker-scroll {
+  max-height: 58vh;
+}
+
+.route-picker-empty {
+  padding: 48rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.route-picker-empty-text {
+  color: #808B9A;
+  font-size: 28rpx;
   line-height: 40rpx;
 }
 
@@ -621,62 +765,6 @@
 
 .plan-day-mask.show .plan-day-sheet {
   transform: translateY(0);
-}
-
-.route-action-mask {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0);
-  z-index: 1004;
-  pointer-events: none;
-  transition: background 0.3s;
-}
-
-.route-action-mask.show {
-  background: rgba(0, 0, 0, 0.4);
-  pointer-events: auto;
-}
-
-.route-action-sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #FFFFFF;
-  border-radius: 32rpx 32rpx 0 0;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.route-action-mask.show .route-action-sheet {
-  transform: translateY(0);
-}
-
-.route-action-header {
-  height: 128rpx;
-  padding: 0 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-sizing: border-box;
-}
-
-.route-action-title {
-  color: #1A2739;
-  font-size: 40rpx;
-  line-height: 100%;
-  font-weight: 500;
-}
-
-.route-action-close {
-  color: #1A2739;
-  font-size: 40rpx;
-  line-height: 40rpx;
-}
-
-.route-action-body {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
-  box-sizing: border-box;
 }
 
 .route-action-grid {
@@ -745,7 +833,7 @@
   justify-content: center;
 }
 
-.route-delete-confirm-sheet .route-action-body {
+.route-delete-confirm-body {
   padding-top: 0;
 }
 
@@ -813,7 +901,7 @@
 }
 
 .plan-day-body {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  padding: 0 48rpx 48rpx;
 }
 
 .plan-day-picker-view {
@@ -851,6 +939,7 @@
   align-items: center;
   gap: 8rpx;
   padding: 8rpx 16rpx 8rpx 0;
+  flex-shrink: 0;
 }
 
 .want-toolbar-arrow {
@@ -860,8 +949,8 @@
 }
 
 /* 城市选择沿用现有底部弹窗结构，但选中后不做颜色变化。 */
-.city-filter-sheet .route-action-card.active,
-.city-filter-sheet .route-action-card.active .route-action-label {
+.city-filter-card.active,
+.city-filter-card.active .route-action-label {
   border-color: #F6F8FA;
   color: #1A2739;
 }

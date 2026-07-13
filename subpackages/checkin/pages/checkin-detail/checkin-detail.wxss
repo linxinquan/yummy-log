@@ -382,62 +382,6 @@ page {
   color: #FFFFFF;
 }
 
-.route-action-mask {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0);
-  z-index: 1004;
-  pointer-events: none;
-  transition: background 0.3s;
-}
-
-.route-action-mask.show {
-  background: rgba(0, 0, 0, 0.4);
-  pointer-events: auto;
-}
-
-.route-action-sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #FFFFFF;
-  border-radius: 32rpx 32rpx 0 0;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.route-action-mask.show .route-action-sheet {
-  transform: translateY(0);
-}
-
-.route-action-header {
-  height: 128rpx;
-  padding: 0 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-sizing: border-box;
-}
-
-.route-action-title {
-  color: #1A2739;
-  font-size: 40rpx;
-  line-height: 40rpx;
-  font-weight: 500;
-}
-
-.route-action-close {
-  color: #1A2739;
-  font-size: 40rpx;
-  line-height: 40rpx;
-}
-
-.route-action-body {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
-  box-sizing: border-box;
-}
-
 .route-action-grid {
   display: flex;
   flex-direction: column;
@@ -504,10 +448,6 @@ page {
   justify-content: center;
 }
 
-.route-edit-name-sheet .route-action-body {
-  padding-top: 0rpx;
-}
-
 .route-edit-name-input {
   width: 100%;
   height: 104rpx;
@@ -521,7 +461,7 @@ page {
   font-weight: 400;
 }
 
-.route-delete-confirm-sheet .route-action-body {
+.route-delete-confirm-body {
   padding-top: 0;
 }
 

@@ -101,9 +101,83 @@
   margin: 0 48rpx;
 }
 
+/* 每天标题和起点卡片之间保持和路线规划页一致的留白。 */
+.day-header {
+  margin-bottom: 48rpx;
+}
+
+/* 起点卡片恢复成页面内样式，不再依赖组件。 */
+.day-start-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24rpx;
+  min-height: 112rpx;
+  margin: 0 48rpx 48rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: #F6F8FA;
+  box-sizing: border-box;
+}
+
+.day-start-trigger-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10rpx;
+}
+
+.day-start-trigger-label {
+  flex-shrink: 0;
+  color: #1A2739;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  font-weight: 500;
+}
+
+.day-start-trigger-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-shrink: 0;
+  min-height: 64rpx;
+  padding: 16rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  box-sizing: border-box;
+}
+
+.day-start-trigger-action i {
+  flex-shrink: 0;
+  color: #1A2739;
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+.day-start-trigger-action text {
+  color: #1A2739;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.day-start-trigger-address {
+  width: 100%;
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .day-anchor {
   position: relative;
-  top: -132rpx;
+  /* my-route 页本地有同名样式覆盖，这里同步跟随新的锚点偏移。 */
+  top: -184rpx;
   height: 0;
 }
 
@@ -474,59 +548,19 @@
   font-weight: 500;
 }
 
-/* 编辑路线规划底部弹窗：路线详情和规划路线详情统一 */
-.reorder-sheet-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  background: rgba(0, 0, 0, 0.26);
-}
-
+/* 编辑路线规划底部弹窗：只复用公用外壳组件，保留页面内选项内容样式。 */
 .reorder-sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 91;
-  border-radius: 32rpx 32rpx 0 0;
-  background: #FFFFFF;
+  padding-bottom: 0;
+}
+
+.reorder-sheet-body {
   padding: 0 0 calc(24rpx + env(safe-area-inset-bottom));
-}
-
-.reorder-sheet-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 128rpx;
-  padding: 0 48rpx;
-  box-sizing: border-box;
-}
-
-.reorder-sheet-title {
-  color: #1A2739;
-  font-size: 40rpx;
-  font-weight: 500;
-  line-height: 100%;
-}
-
-.reorder-sheet-close {
-  width: 48rpx;
-  height: 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #1A2739;
-}
-
-.reorder-sheet-close i {
-  font-size: 48rpx;
 }
 
 .reorder-sheet-option-list {
   display: flex;
   flex-direction: column;
   gap: 32rpx;
-  padding: 0 48rpx;
   box-sizing: border-box;
 }
 
@@ -619,8 +653,7 @@
 }
 
 .exit-confirm-btn.secondary {
-  border: 2rpx solid #F6F8FA;
-  background: #FFFFFF;
+  background: #F2F4F7;
 }
 
 .exit-confirm-btn.secondary text {
@@ -635,23 +668,74 @@
   color: #FFFFFF;
 }
 
-/* 添加地点底部弹窗 */
-.place-picker-mask {
+/* 添加地点弹窗重新接回公用外壳，只保留面板高度和内容区布局差异。 */
+.place-picker-sheet {
+  height: 78vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.route-sheet-option-list {
+  /* 公用底部弹窗壳已经统一提供内边距，这里只保留选项列表本身。 */
+  padding: 0;
+}
+
+/* 起点选择弹窗恢复成页面内结构，不再依赖公用组件样式。 */
+.day-start-sheet-mask {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0);
-  z-index: 90;
+  z-index: 1004;
   pointer-events: none;
   transition: background 0.3s;
 }
 
-/* 路线详情里的操作弹窗：用于选择导航地图 */
-.route-action-sheet {
-  z-index: 1002;
+.day-start-sheet-mask.show {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
 }
 
-.route-sheet-option-list {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+.day-start-sheet-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 1005;
+}
+
+.day-start-sheet-panel.show {
+  transform: translateY(0);
+}
+
+.day-start-sheet-header {
+  height: 128rpx;
+  padding: 0 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.day-start-sheet-title {
+  color: #1A2739;
+  font-size: 40rpx;
+  line-height: 100%;
+  font-weight: 500;
+}
+
+.day-start-sheet-close {
+  color: #1A2739;
+  font-size: 40rpx;
+  line-height: 40rpx;
+}
+
+.day-start-sheet-body {
+  padding: 0 48rpx 48rpx;
+  box-sizing: border-box;
 }
 
 .route-sheet-option {
@@ -669,6 +753,7 @@
   margin-top: 24rpx;
 }
 
+/* “清空起点位置”属于危险操作，用红色做语义强调。 */
 .route-sheet-option-main {
   display: flex;
   align-items: center;
@@ -676,9 +761,18 @@
   color: #1A2739;
 }
 
+.route-sheet-option-main-danger {
+  color: #FF5A5F;
+}
+
 .route-sheet-option-main i {
   font-size: 40rpx;
   color: #1A2739;
+}
+
+.route-sheet-option-main-danger i,
+.route-sheet-option-main-danger text {
+  color: #FF5A5F;
 }
 
 /* 地图品牌图片：统一控制尺寸，保证两张 png 显示一致 */
@@ -695,10 +789,16 @@
   color: #1A2739;
 }
 
+/* 提高选择器优先级，避免通用文字颜色把“清空起点位置”的红色覆盖掉。 */
+.route-sheet-option-main.route-sheet-option-main-danger text {
+  color: #FF5A5F;
+}
+
 .route-sheet-option-arrow {
   font-size: 36rpx;
   color: #BAC4CC;
 }
+
 
 /* 地点简介底部弹窗：只保留封面和探索详情里的核心信息 */
 .place-intro-sheet {
@@ -711,7 +811,7 @@
 }
 
 .place-intro-body {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  padding: 0 48rpx 48rpx;
   box-sizing: border-box;
 }
 
@@ -808,57 +908,8 @@
   line-height: 48rpx;
 }
 
-.place-picker-mask.show {
-  background: rgba(0, 0, 0, 0.4);
-  pointer-events: auto;
-}
-
-.place-picker-panel {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 78vh;
-  background: #FFFFFF;
-  border-radius: 48rpx 48rpx 0 0;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.place-picker-mask.show .place-picker-panel {
-  transform: translateY(0);
-}
-
-.picker-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 128rpx;
-  padding: 0 48rpx;
-  box-sizing: border-box;
-}
-
-.picker-title {
-  color: #1A2739;
-  font-size: 40rpx;
-  font-weight: 500;
-  line-height: 40rpx;
-}
-
-.picker-close {
-  width: 48rpx;
-  height: 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #1A2739;
-  font-size: 48rpx;
-}
-
-.picker-body {
+.place-picker-body {
+  /* 覆盖组件默认的 body padding，内部继续沿用页面原有布局。 */
   padding: 0;
   flex: 1;
   min-height: 0;
@@ -931,7 +982,7 @@
 .place-picker-scroll {
   flex: 1;
   min-height: 0;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  padding-bottom: 24rpx;
   box-sizing: border-box;
 }
 
@@ -1091,7 +1142,7 @@
   height: 240rpx;
   color: #808B9A;
   font-size: 26rpx;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  padding-bottom: 24rpx;
 }
 
 .map-panel {

@@ -265,10 +265,10 @@ function buildPreviewTitle(cityText, dayCount = 1, routeDaySections = []) {
 }
 
 // 生成"第几天"文案。
+// 用户要求统一改成阿拉伯数字写法，例如：第 1 天。
 function buildDayLabel(dayNumber) {
-  const labels = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
-  if (dayNumber <= 10) return `第${labels[dayNumber - 1]}天`
-  return `第${dayNumber}天`
+  const safeDayNumber = Math.max(1, parseInt(dayNumber, 10) || 1)
+  return `第 ${safeDayNumber} 天`
 }
 
 // 生成路线顶部 Tab：行程总览 + 每一天。

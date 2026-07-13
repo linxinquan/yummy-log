@@ -53,68 +53,58 @@
     </view>
   </view>
 
-  <view class="route-action-mask {{actionSheetVisible ? 'show' : ''}}" bindtap="onCloseActionSheet">
-    <view class="route-action-sheet" catchtap="preventBubble">
-      <view class="route-action-header">
-        <text class="route-action-title">采集编辑</text>
-        <i class="mgc_close_line route-action-close" bindtap="onCloseActionSheet"></i>
+  <!-- 这三组标准操作弹窗统一切到公用底部弹窗壳，样式和想去页保持一致。 -->
+  <bottom-action-sheet
+    visible="{{actionSheetVisible}}"
+    title="采集编辑"
+    bind:close="onCloseActionSheet"
+  >
+    <view class="route-action-grid">
+      <view
+        class="route-action-card"
+        bindtap="onEditCheckin"
+      >
+        <i class="route-action-icon mgc_pencil_3_line"></i>
+        <text class="route-action-label">编辑名称</text>
       </view>
-      <view class="route-action-body">
-        <view class="route-action-grid">
-          <view
-            class="route-action-card"
-            bindtap="onEditCheckin"
-          >
-            <i class="route-action-icon mgc_pencil_3_line"></i>
-            <text class="route-action-label">编辑名称</text>
-          </view>
-          <view
-            class="route-action-card danger"
-            bindtap="onDeleteCheckin"
-          >
-            <i class="route-action-icon mgc_delete_2_line"></i>
-            <text class="route-action-label">删除采集</text>
-          </view>
-        </view>
+      <view
+        class="route-action-card danger"
+        bindtap="onDeleteCheckin"
+      >
+        <i class="route-action-icon mgc_delete_2_line"></i>
+        <text class="route-action-label">删除采集</text>
       </view>
     </view>
-  </view>
+  </bottom-action-sheet>
 
-  <view class="route-action-mask {{editNameSheetVisible ? 'show' : ''}}" bindtap="onCloseEditNameSheet">
-    <view class="route-action-sheet route-edit-name-sheet" catchtap="preventBubble">
-      <view class="route-action-header">
-        <text class="route-action-title">编辑名称</text>
-        <i class="mgc_close_line route-action-close" bindtap="onCloseEditNameSheet"></i>
-      </view>
-      <view class="route-action-body">
-        <input
-          class="route-edit-name-input"
-          value="{{editNameValue}}"
-          bindinput="onEditNameInput"
-          placeholder="请输入采集名称"
-          maxlength="20"
-        />
-        <view class="route-action-confirm" bindtap="onConfirmEditName">确认</view>
-      </view>
-    </view>
-  </view>
+  <bottom-action-sheet
+    visible="{{editNameSheetVisible}}"
+    title="编辑名称"
+    bind:close="onCloseEditNameSheet"
+  >
+    <input
+      class="route-edit-name-input"
+      value="{{editNameValue}}"
+      bindinput="onEditNameInput"
+      placeholder="请输入采集名称"
+      maxlength="20"
+    />
+    <view class="route-action-confirm" bindtap="onConfirmEditName">确认</view>
+  </bottom-action-sheet>
 
-  <!-- 删除确认：统一改回自定义底部确认层。 -->
-  <view class="route-action-mask {{deleteConfirmVisible ? 'show' : ''}}" bindtap="onCloseDeleteConfirm">
-    <view class="route-action-sheet route-delete-confirm-sheet" catchtap="preventBubble">
-      <view class="route-action-header">
-        <text class="route-action-title">删除采集</text>
-        <i class="mgc_close_line route-action-close" bindtap="onCloseDeleteConfirm"></i>
-      </view>
-      <view class="route-action-body">
-        <text class="route-delete-confirm-desc">删除后这张邮票会从我的采集中移除</text>
-        <view class="route-delete-confirm-actions">
-          <view class="route-delete-confirm-btn cancel" bindtap="onCloseDeleteConfirm">取消</view>
-          <view class="route-delete-confirm-btn danger" bindtap="onConfirmDeleteCheckin">确认删除</view>
-        </view>
-      </view>
+  <bottom-action-sheet
+    visible="{{deleteConfirmVisible}}"
+    title="删除采集"
+    custom-panel-class="route-delete-confirm-sheet"
+    custom-body-class="route-delete-confirm-body"
+    bind:close="onCloseDeleteConfirm"
+  >
+    <text class="route-delete-confirm-desc">删除后这张邮票会从我的采集中移除</text>
+    <view class="route-delete-confirm-actions">
+      <view class="route-delete-confirm-btn cancel" bindtap="onCloseDeleteConfirm">取消</view>
+      <view class="route-delete-confirm-btn danger" bindtap="onConfirmDeleteCheckin">确认删除</view>
     </view>
-  </view>
+  </bottom-action-sheet>
 
   <!-- 详情编辑底部弹窗：作为采集编辑的统一样式基准 -->
   <view class="edit-sheet-mask" wx:if="{{editSheetVisible}}" bindtap="onCloseEditSheet"></view>

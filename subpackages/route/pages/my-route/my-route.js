@@ -1,5 +1,6 @@
 const app = getApp();
 const util = require("../../../../utils/util");
+const checkinUtil = require("../../../../utils/checkinUtil");
 const {
   buildDayLabel,
   buildTabs,
@@ -7,6 +8,9 @@ const {
   getDayIndexByPreview,
   buildSummaryText,
   getCityInfo,
+  buildPreviewTitle,
+  buildPreviewRouteData,
+  buildPreviewDaySections,
   stripEditState,
   flattenDaySections,
 } = require("../../../../utils/routeHelper");
@@ -34,6 +38,14 @@ const myRouteEditBehavior = require("../../utils/my-route-edit-behavior");
 const CURRENT_LOCATION_ICON_PATH =
   "/images/markers/marker_current_location.png";
 const CURRENT_LOCATION_FOCUS_SCALE = 15;
+
+// 把"当前所在位置"和真实定位地址拼成统一显示文案。
+// 有地址时显示：当前所在位置（深圳市南山区xxx）
+// 没地址时只显示：当前所在位置
+function buildCurrentLocationDisplayName(address = "") {
+  const safeAddress = String(address || "").trim();
+  return safeAddress ? `当前所在位置（${safeAddress}）` : "当前所在位置";
+}
 
 // 城市预设：根据路线标题或城市文案，尽量反推路线所在城市和中心坐标。
 const CITY_PRESETS = [
@@ -304,6 +316,7 @@ Page({
   behaviors: [routeMapBehavior, myRouteEditBehavior],
   data: {
     route: null,
+    generatingRoute: false,
     routeId: "",
     returnTo: "",
     menuTop: 0,
@@ -314,11 +327,11 @@ Page({
     viewMode: "list",
     currentTab: 0,
     currentMapDay: -1,
+    detailScrollTop: 0,
     sheetScrollTarget: "",
     cityText: "深圳市",
     summaryText: "",
     hasRoutePlaces: false,
-    currentLocation: null,
     daySections: [],
     originalDaySections: [],
     tabs: [],
@@ -339,6 +352,15 @@ Page({
     previewDisablePrev: true,
     previewDisableNext: true,
     mapScale: 12,
+    // 当前定位和当前起点统一分开存：
+    // currentLocation 负责地图定位，currentStart 负责起点文案和当天起点计算。
+    currentLocation: null,
+    currentStart: {
+      name: "当前所在位置",
+      lat: 22.5431,
+      lng: 114.0579,
+      type: "current",
+    },
     isEditing: false,
     dragging: false,
     dragDay: -1,
@@ -352,6 +374,15 @@ Page({
     swipeIndex: -1,
     swipeStartOffset: 0,
     cityInfo: { name: "深圳市", lat: 22.5431, lng: 114.0579 },
+    // 每天起点：dayStartPoints[dayIndex] = { lat, lng, name }
+    dayStartPoints: [],
+    // 每天起点的显示文本
+    dayStartPointTexts: [],
+    // 设置起点弹窗
+    showDayStartSheet: false,
+    dayStartSheetDayIndex: -1,
+    dayStartOptions: [],
+    reorderSheetVisible: false,
     placePickerVisible: false,
     placePickerTab: "all",
     placePickerItems: [],
@@ -371,6 +402,11 @@ Page({
     placeIntroVisible: false,
     placeIntroData: null,
     exitConfirmVisible: false,
+    exitConfirmMode: "",
+    exitConfirmTitle: "是否保存当前修改？",
+    exitConfirmDesc: "",
+    exitConfirmCancelText: "不保存",
+    exitConfirmConfirmText: "保存",
   },
 
   // 页面初始化：
@@ -390,28 +426,48 @@ Page({
     const tabStickyTop = menuTop + menuHeight + 24;
     const editTabStickyTop = menuTop + menuHeight + 20;
 
-    if (!options.route) {
-      wx.showToast({ title: "路线不存在", icon: "none" });
-      setTimeout(() => wx.navigateBack({ delta: 1 }), 1200);
-      return;
-    }
-
-    const route = JSON.parse(decodeURIComponent(options.route));
     this.setData({
       menuTop,
       menuHeight,
       modeSwitchTop,
       tabStickyTop,
       editTabStickyTop,
-      routeId: String(route.id),
       returnTo: options.returnTo || "",
       autoEnterEdit: options.edit === "1",
-      isNewRouteDraft: options.create === "1" || Boolean(route.isDraft),
-      fromPreview: options.fromPreview === "1",
     });
     this.refreshPlacePickerItems();
-    this.applyRoute(route);
-    this.syncCurrentLocation();
+
+    // 统一支持两种进入方式：
+    // 1. 传完整 route 对象：直接展示已有“我的路线”
+    // 2. 只传 ids + dayCount：在当前页生成、自动保存、再展示
+    if (options.route) {
+      const route = JSON.parse(decodeURIComponent(options.route));
+      this.setData({
+        routeId: String(route.id),
+        isNewRouteDraft: options.create === "1" || Boolean(route.isDraft),
+        fromPreview: options.fromPreview === "1",
+      });
+      this.applyRoute(route);
+      this.syncCurrentLocation();
+      return;
+    }
+
+    if (options.ids) {
+      this.setData({
+        generatingRoute: false,
+        routeId: "",
+        isNewRouteDraft: false,
+        fromPreview: false,
+      });
+      // 恢复成之前的体验：先直接生成并进入详情，不阻塞在定位上。
+      this.loadGeneratedRoute(options);
+      // 定位和地址回填放到后面异步做，避免路线规划入口出现明显等待。
+      this.syncCurrentLocation(false);
+      return;
+    }
+
+    wx.showToast({ title: "路线不存在", icon: "none" });
+    setTimeout(() => wx.navigateBack({ delta: 1 }), 1200);
   },
 
   // 页面重新显示时，如果路线已经被别的页面改过，就重新同步最新数据。
@@ -437,9 +493,68 @@ Page({
       });
     }, 300);
   },
+
+  // 把当前位置补成"当前所在位置（真实地址）"：
+  // 这里只在仍然使用当前定位作为默认起点时更新，避免覆盖用户手动选择的起点。
+  syncCurrentStartAddress(location) {
+    if (!location || typeof location.lat !== "number" || typeof location.lng !== "number") {
+      return;
+    }
+
+    const applyDisplayName = (displayName) => {
+      const currentLocationWithAddress = {
+        ...location,
+        name: displayName,
+      };
+      const nextData = {
+        currentStart: {
+          ...this.data.currentStart,
+          ...currentLocationWithAddress,
+          name: displayName,
+          type: "current",
+        },
+      };
+
+      app.globalData.location = {
+        ...(app.globalData.location || {}),
+        ...currentLocationWithAddress,
+      };
+
+      const dayStartPointTexts = [...(this.data.dayStartPointTexts || [])];
+      // 只有“还没写入文案”或“当前仍是默认当前位置文案”时，才自动回填地址。
+      // 如果用户主动清空成空字符串，这里不要再覆盖回去。
+      if (
+        typeof dayStartPointTexts[0] !== "string" ||
+        /^当前所在位置/.test(dayStartPointTexts[0])
+      ) {
+        dayStartPointTexts[0] = displayName;
+        nextData.dayStartPointTexts = dayStartPointTexts;
+      }
+
+      this.setData(nextData, () => {
+        if (this.data.daySections && this.data.daySections.length) {
+          this._updateDayStartPointTexts();
+        }
+      });
+    };
+
+    checkinUtil
+      .reverseGeocode(location.lat, location.lng)
+      .then((geo) => {
+        const resolvedAddress = geo.address || geo.spotName || geo.district || "";
+        applyDisplayName(buildCurrentLocationDisplayName(resolvedAddress));
+      })
+      .catch(() => {
+        applyDisplayName(buildCurrentLocationDisplayName(""));
+      });
+  },
+
   // 把路线每天的地点整理成统一结构，并补全坐标、标签、图片、交通信息。
-  syncDaySections(daySections, cityInfo) {
+  syncDaySections(daySections, cityInfo, options = {}) {
     const fallbackCity = cityInfo || { lat: 22.5431, lng: 114.0579 };
+    const currentStart = options.currentStart || this.data.currentStart;
+    const dayStartPoints = options.dayStartPoints || this.data.dayStartPoints || [];
+    const dayStartPointTexts = options.dayStartPointTexts || this.data.dayStartPointTexts || [];
     return stripEditState(daySections).map((day, dayIndex) => {
       const rawItems = (day.items || []).map((item, itemIndex) => {
         const matched = findMatchedPlace(item.name);
@@ -485,16 +600,48 @@ Page({
         };
       });
 
+      let dayStartPoint = null;
+      if (dayIndex === 0) {
+        dayStartPoint =
+          currentStart && currentStart.type === "current"
+            ? currentStart || app.globalData.location || app.globalData.centerLocation
+            : currentStart;
+      } else {
+        const customStart = dayStartPoints[dayIndex] || day.startPoint || null;
+        if (customStart) {
+          dayStartPoint = customStart;
+        } else {
+          const prevDay = stripEditState(daySections)[dayIndex - 1] || {};
+          const prevDayItems = prevDay.items || [];
+          const prevDayLastItem = prevDayItems[prevDayItems.length - 1];
+          dayStartPoint = prevDayLastItem
+            ? {
+                lat: prevDayLastItem.lat || prevDayLastItem.latitude,
+                lng: prevDayLastItem.lng || prevDayLastItem.longitude,
+                name: prevDayLastItem.name,
+              }
+            : currentStart || app.globalData.location || app.globalData.centerLocation;
+        }
+      }
+
       const plannedItems = util.planRoute(
         rawItems.map((item) => ({ ...item })),
-        { lat: fallbackCity.lat, lng: fallbackCity.lng },
+        dayStartPoint || { lat: fallbackCity.lat, lng: fallbackCity.lng },
         true
       );
 
+      // 空字符串也算一种明确状态：
+      // 用户点了“清空起点位置”后，需要保留“不显示地点”的结果。
+      const resolvedStartPointText =
+        typeof dayStartPointTexts[dayIndex] === "string"
+          ? dayStartPointTexts[dayIndex]
+          : (day.startPointText || "");
       return {
         id: day.id || `day-${dayIndex}`,
         title: buildDayLabel(dayIndex + 1),
         countText: `${plannedItems.length} 个地点`,
+        startPoint: dayStartPoint,
+        startPointText: resolvedStartPointText,
         items: plannedItems.map((item) =>
           decorateRoutePlaceItem({
             ...applyTravelMeta(item, item.travelMode),
@@ -510,9 +657,17 @@ Page({
     const cityText =
       route.city || route.cityText || getCityInfo(route.title).name;
     const cityInfo = getCityInfo(cityText);
+    const currentStart = route.currentStart || this.data.currentStart;
+    const dayStartPoints = (route.dayStartPoints || []).slice();
+    const dayStartPointTexts = (route.dayStartPointTexts || []).slice();
     const daySections = this.syncDaySections(
       buildDaySectionsFromLegacy(route),
-      cityInfo
+      cityInfo,
+      {
+        currentStart,
+        dayStartPoints,
+        dayStartPointTexts,
+      }
     );
     const summaryText = normalizeTripSummaryText(
       route.subtitle,
@@ -527,6 +682,14 @@ Page({
         routeId: String(route.id),
         cityInfo,
         cityText,
+        currentStart,
+        dayStartPoints,
+        dayStartPointTexts:
+          dayStartPointTexts.length
+            ? dayStartPointTexts
+            : daySections.map((day, dayIndex) =>
+                day.startPointText || (dayIndex === 0 ? (currentStart && currentStart.name) || "当前所在位置" : "")
+              ),
         daySections,
         originalDaySections: JSON.parse(
           JSON.stringify(stripEditState(daySections))
@@ -537,6 +700,7 @@ Page({
         currentTab: 0,
         currentMapDay: -1,
         sheetScrollTarget: "",
+        generatingRoute: false,
         isEditing: false,
         dragging: false,
         dragDay: -1,
@@ -563,6 +727,89 @@ Page({
         }
       }
     );
+  },
+
+  // 当页面只收到地点 ids + 天数时，直接在“我的路线详情页”里完成生成和自动保存。
+  loadGeneratedRoute(options = {}) {
+    const ids = String(options.ids || "")
+      .split(",")
+      .map((item) => String(item || "").trim())
+      .filter(Boolean);
+    const preferredDayCount = Math.max(1, parseInt(options.dayCount, 10) || 1);
+
+    const userAddedShops = util.loadData("userAddedShops", []);
+    const allPlaces = [...placesData.getAllPlaces(), ...userAddedShops];
+    const rawItems = ids
+      .map((id) => allPlaces.find((item) => String(item.id) === String(id)))
+      .filter(Boolean);
+
+    if (!rawItems.length) {
+      this.setData({ generatingRoute: false });
+      wx.showToast({ title: "暂未识别到可规划地点", icon: "none" });
+      setTimeout(() => {
+        wx.navigateBack({
+          delta: 1,
+          fail: () => {
+            wx.switchTab({ url: "/pages/wantgo/wantgo" });
+          },
+        });
+      }, 300);
+      return;
+    }
+
+    const currentStart = this.data.currentStart || {
+      name: "当前所在位置",
+      lat: 22.5431,
+      lng: 114.0579,
+      type: "current",
+    };
+    const daySections = this.syncDaySections(
+      buildPreviewDaySections(rawItems, preferredDayCount),
+      getCityInfo(
+        [
+          currentStart && currentStart.name,
+          ...rawItems.map((item) => item.city || item.address || item.name),
+        ]
+          .filter(Boolean)
+          .join(" ")
+      ),
+      {
+        currentStart,
+        dayStartPoints: [],
+        dayStartPointTexts: [currentStart.name || "当前所在位置"],
+      }
+    );
+    const cityText = getCityInfo(
+      [
+        currentStart && currentStart.name,
+        ...rawItems.map((item) => item.city || item.address || item.name),
+      ]
+        .filter(Boolean)
+        .join(" ")
+    ).name;
+    const summaryText = buildSummaryText(daySections);
+    const routeTitle = buildPreviewTitle(cityText, daySections.length, daySections);
+    const newRoute = {
+      ...buildPreviewRouteData(
+        {
+          daySections,
+          cityText,
+          summaryText,
+          routeTitle,
+        },
+        {
+          routeId: `ai-${Date.now()}`,
+        }
+      ),
+      currentStart,
+      dayStartPoints: [],
+      dayStartPointTexts: [currentStart.name || "当前所在位置"],
+      isDraft: false,
+    };
+
+    // 这里直接落到“我的路线”，这样返回时也不会再提示是否保存。
+    this.saveRouteToStorage(newRoute);
+    this.applyRoute(newRoute);
   },
 
   // 写回本地存储并同步云端：这是"保存路线"的真正落盘入口。
@@ -617,7 +864,7 @@ Page({
 
   // 按当前编辑结果组装出一份最新路线对象，方便保存或跳去编辑基础信息。
   buildUpdatedRoute(daySections) {
-    const { route, cityText, summaryText } = this.data;
+    const { route, cityText, summaryText, currentStart, dayStartPoints, dayStartPointTexts } = this.data;
     const cleanSections = stripEditState(daySections);
     return {
       ...route,
@@ -625,6 +872,9 @@ Page({
       subtitle: summaryText,
       dayCount: cleanSections.length,
       daySections: cleanSections,
+      currentStart,
+      dayStartPoints: (dayStartPoints || []).slice(),
+      dayStartPointTexts: (dayStartPointTexts || []).slice(),
       coverImage: route.coverImage || "/images/app-logo.jpg",
       isDraft: Boolean(route.isDraft),
       updatedAt: Date.now(),
@@ -769,15 +1019,29 @@ Page({
         const currentLocation = {
           lat: res.latitude,
           lng: res.longitude,
-          name: "我的位置",
+          name: "当前所在位置",
         };
         app.globalData.location = currentLocation;
         this.setData(
           {
             currentLocation,
+            currentStart:
+              this.data.currentStart && this.data.currentStart.type !== "current"
+                ? this.data.currentStart
+                : {
+                    ...this.data.currentStart,
+                    ...currentLocation,
+                    type: "current",
+                  },
             mapCenter: { lat: currentLocation.lat, lng: currentLocation.lng },
           },
           () => {
+            if (
+              typeof this.data.dayStartPointTexts[0] !== "string" ||
+              /^当前所在位置/.test(this.data.dayStartPointTexts[0])
+            ) {
+              this.syncCurrentStartAddress(currentLocation);
+            }
             if (this.data.viewMode === "map" && this.data.daySections.length) {
               this.updateMapData(
                 this.data.daySections,
@@ -1013,26 +1277,57 @@ Page({
         this.goBackBySource();
         return;
       }
-      this.setData({ exitConfirmVisible: true });
+      this.openExitConfirm("back");
       return;
     }
     this.goBackBySource();
   },
 
-  // 关闭编辑返回确认弹窗
-  onCloseExitConfirm() {
-    this.setData({ exitConfirmVisible: false });
+  // 统一打开“保存当前修改”弹窗：
+  // back = 返回当前页前确认
+  // cancel = 取消编辑前确认
+  openExitConfirm(mode = "back") {
+    const isBackMode = mode === "back";
+    this.setData({
+      exitConfirmVisible: true,
+      exitConfirmMode: mode,
+      exitConfirmTitle: "是否保存当前修改？",
+      exitConfirmDesc: isBackMode
+        ? "保存后会更新当前路线并退出当前页面，不保存将丢弃本次编辑"
+        : "保存后会更新当前路线，不保存将丢弃本次编辑",
+      exitConfirmCancelText: isBackMode ? "直接退出" : "不保存",
+      exitConfirmConfirmText: isBackMode ? "保存并退出" : "保存",
+    });
   },
 
-  // 编辑态下直接退出，不保留这次修改
+  // 关闭编辑返回确认弹窗
+  onCloseExitConfirm() {
+    this.setData({ exitConfirmVisible: false, exitConfirmMode: "" });
+  },
+
+  // 确认弹窗左侧按钮：
+  // back 模式 = 直接退出页面
+  // cancel 模式 = 丢弃修改，退出编辑态
   onConfirmDirectExit() {
-    this.setData({ exitConfirmVisible: false });
+    const { exitConfirmMode } = this.data;
+    this.setData({ exitConfirmVisible: false, exitConfirmMode: "" });
+    if (exitConfirmMode === "cancel") {
+      this.discardRouteEdits();
+      return;
+    }
     this.goBackBySource();
   },
 
-  // 编辑态下保持并退出：先保存，再离开当前页面
+  // 确认弹窗右侧按钮：
+  // back 模式 = 保存并退出
+  // cancel 模式 = 保存但停留当前页
   onConfirmSaveExit() {
-    this.setData({ exitConfirmVisible: false });
+    const { exitConfirmMode } = this.data;
+    this.setData({ exitConfirmVisible: false, exitConfirmMode: "" });
+    if (exitConfirmMode === "cancel") {
+      this.onSave();
+      return;
+    }
     this.onSaveAndExit();
   },
 
@@ -1126,14 +1421,373 @@ Page({
   // 列表模式顶部 Tab 切换：行程总览 / 第一天 / 第二天...
   onTabTap(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10);
-    const sheetScrollTarget =
-      index === 0 ? "route-overview-anchor" : `route-day-anchor-${index - 1}`;
-    this.setData({ currentTab: index, sheetScrollTarget });
+    this.setData(
+      {
+        currentTab: index,
+        sheetScrollTarget: "",
+      },
+      () => {
+        wx.nextTick(() => {
+          this.scrollListToTab(index);
+        });
+      }
+    );
+  },
+
+  // 把 rpx 换算成当前设备下的 px，用来保持“标题距离吸顶 Tab 48rpx”的视觉留白。
+  rpxToPx(rpx) {
+    const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : {};
+    const windowWidth = windowInfo.windowWidth || 375;
+    return (Number(rpx) * windowWidth) / 750;
+  },
+
+  // 点击“行程总览 / 第几天”时，不再依赖固定负锚点。
+  // 这里直接测量目标标题的真实位置，再减去吸顶 Tab 高度和预留留白。
+  scrollListToTab(index) {
+    const safeIndex = Number(index) || 0;
+    const fallbackTarget =
+      safeIndex === 0
+        ? "route-overview-anchor"
+        : `route-day-anchor-${safeIndex - 1}`;
+    const targetSelector =
+      safeIndex === 0
+        ? "#route-overview-title"
+        : `#route-day-header-${safeIndex - 1}`;
+    const query = wx.createSelectorQuery().in(this);
+    query.select(".detail-scroll").boundingClientRect();
+    query.select(".detail-scroll").scrollOffset();
+    query.select(".tab-sticky-wrap").boundingClientRect();
+    query.select(targetSelector).boundingClientRect();
+    query.exec((result) => {
+      const [scrollRect, scrollOffset, stickyRect, targetRect] = result || [];
+      if (!scrollRect || !scrollOffset || !stickyRect || !targetRect) {
+        this.setData({ sheetScrollTarget: fallbackTarget });
+        return;
+      }
+      const gapPx = this.rpxToPx(48);
+      const nextScrollTop = Math.max(
+        0,
+        Math.round(
+          (scrollOffset.scrollTop || 0) +
+            (targetRect.top - scrollRect.top) -
+            (stickyRect.height || 0) -
+            gapPx
+        )
+      );
+      this.setData({
+        detailScrollTop: nextScrollTop,
+      });
+    });
   },
 
   // 兼容旧入口：点击"路线"时进入地图模式
   onViewRoute() {
     this.onOpenMapMode();
+  },
+
+  // 点击某一天的起点卡片，打开统一的起点选择底部弹窗。
+  onSetDayStart(e) {
+    const dayIndex = e.currentTarget.dataset.dayIndex;
+    if (dayIndex === undefined || dayIndex < 0) return;
+
+    const options = [
+      {
+        type: "current",
+        icon: "mgc_aiming_2_line",
+        label: "使用当前所在位置",
+      },
+    ];
+
+    const day = (this.data.daySections || [])[dayIndex];
+    const dayHasItems = day && day.items && day.items.length > 0;
+    if (dayHasItems) {
+      options.push({
+        type: "firstPlace",
+        icon: "mgc_map_pin_line",
+        label: "使用第一个地点",
+      });
+    }
+    if (dayIndex > 0) {
+      options.push({
+        type: "prev",
+        icon: "mgc_route_line",
+        label: "使用前一天终点",
+      });
+    }
+    options.push({
+      type: "search",
+      icon: "mgc_search_2_line",
+      label: "搜索地点",
+    });
+    options.push({
+      type: "clear",
+      icon: "mgc_delete_2_line",
+      label: "清空起点位置",
+    });
+
+    this.setData({
+      showDayStartSheet: true,
+      dayStartSheetDayIndex: dayIndex,
+      dayStartOptions: options,
+    });
+  },
+
+  // 关闭起点选择弹窗，同时清掉临时数据，避免下一次沿用旧状态。
+  onCloseDayStartSheet() {
+    this.setData({
+      showDayStartSheet: false,
+      dayStartSheetDayIndex: -1,
+      dayStartOptions: [],
+    });
+  },
+
+  // 点击起点弹窗中的某个选项后立即执行，保持和其他底部弹窗一致。
+  onSelectDayStartOption(e) {
+    const type = e.currentTarget.dataset.type;
+    const dayIndex = this.data.dayStartSheetDayIndex;
+    if (!type || dayIndex < 0) return;
+
+    this.onCloseDayStartSheet();
+
+    if (type === "current") {
+      this._setDayStartToCurrent(dayIndex);
+      return;
+    }
+    if (type === "prev") {
+      this._setDayStartToPrevDayEnd(dayIndex);
+      return;
+    }
+    if (type === "firstPlace") {
+      this._setDayStartToFirstPlace(dayIndex);
+      return;
+    }
+    if (type === "search") {
+      this._searchDayStartPoint(dayIndex);
+      return;
+    }
+    if (type === "clear") {
+      this._clearDayStartPoint(dayIndex);
+    }
+  },
+
+  // 设置起点为当前位置。
+  _setDayStartToCurrent(dayIndex) {
+    const currentStart = this.data.currentStart;
+    const startPoint =
+      currentStart && currentStart.type === "current"
+        ? currentStart || app.globalData.location || app.globalData.centerLocation
+        : currentStart;
+    if (!startPoint) return;
+
+    const dayStartPoints = [...(this.data.dayStartPoints || [])];
+    dayStartPoints[dayIndex] = {
+      lat: startPoint.lat,
+      lng: startPoint.lng,
+      name: startPoint.name || "当前所在位置",
+    };
+
+    const dayStartPointTexts = [...(this.data.dayStartPointTexts || [])];
+    dayStartPointTexts[dayIndex] = startPoint.name || "当前所在位置";
+
+    this.setData(
+      {
+        dayStartPoints,
+        dayStartPointTexts,
+      },
+      () => {
+        this._updateDayStartPointTexts();
+        this._replanRouteWithDayStarts();
+      }
+    );
+  },
+
+  // 设置起点为前一天最后一个地点。
+  _setDayStartToPrevDayEnd(dayIndex) {
+    const daySections = this.data.daySections || [];
+    if (dayIndex <= 0 || dayIndex >= daySections.length) return;
+
+    const prevDay = daySections[dayIndex - 1];
+    const prevDayLastItem = ((prevDay || {}).items || []).slice(-1)[0];
+    if (!prevDayLastItem) return;
+
+    const startPoint = {
+      lat: prevDayLastItem.lat || prevDayLastItem.latitude,
+      lng: prevDayLastItem.lng || prevDayLastItem.longitude,
+      name: prevDayLastItem.name,
+    };
+
+    const dayStartPoints = [...(this.data.dayStartPoints || [])];
+    dayStartPoints[dayIndex] = startPoint;
+
+    const dayStartPointTexts = [...(this.data.dayStartPointTexts || [])];
+    dayStartPointTexts[dayIndex] = prevDayLastItem.name;
+
+    this.setData(
+      {
+        dayStartPoints,
+        dayStartPointTexts,
+      },
+      () => {
+        this._updateDayStartPointTexts();
+        this._replanRouteWithDayStarts();
+      }
+    );
+  },
+
+  // 设置起点为当天第一个地点。
+  _setDayStartToFirstPlace(dayIndex) {
+    const daySections = this.data.daySections || [];
+    const day = daySections[dayIndex];
+    const firstItem = day && day.items && day.items[0];
+    if (!firstItem) return;
+
+    const startPoint = {
+      lat: firstItem.lat || firstItem.latitude,
+      lng: firstItem.lng || firstItem.longitude,
+      name: firstItem.name,
+    };
+
+    const dayStartPoints = [...(this.data.dayStartPoints || [])];
+    dayStartPoints[dayIndex] = startPoint;
+
+    const dayStartPointTexts = [...(this.data.dayStartPointTexts || [])];
+    dayStartPointTexts[dayIndex] = firstItem.name;
+
+    this.setData(
+      {
+        dayStartPoints,
+        dayStartPointTexts,
+      },
+      () => {
+        this._updateDayStartPointTexts();
+        this._replanRouteWithDayStarts();
+      }
+    );
+  },
+
+  // 通过地图选点搜索起点。
+  _searchDayStartPoint(dayIndex) {
+    wx.chooseLocation({
+      success: (res) => {
+        const startPoint = {
+          lat: res.latitude,
+          lng: res.longitude,
+          name: res.name || "选中的地点",
+        };
+
+        const dayStartPoints = [...(this.data.dayStartPoints || [])];
+        dayStartPoints[dayIndex] = startPoint;
+
+        const dayStartPointTexts = [...(this.data.dayStartPointTexts || [])];
+        dayStartPointTexts[dayIndex] = res.name || "选中的地点";
+
+        this.setData(
+          {
+            dayStartPoints,
+            dayStartPointTexts,
+          },
+          () => {
+            this._updateDayStartPointTexts();
+            this._replanRouteWithDayStarts();
+          }
+        );
+      },
+      fail: () => {
+        wx.showToast({ title: "已取消", icon: "none" });
+      },
+    });
+  },
+
+  // 清空当前这一天的起点设置，恢复成默认规划逻辑，同时不再显示地点文案。
+  _clearDayStartPoint(dayIndex) {
+    const dayStartPoints = [...(this.data.dayStartPoints || [])];
+    const dayStartPointTexts = [...(this.data.dayStartPointTexts || [])];
+
+    dayStartPoints[dayIndex] = null
+    dayStartPointTexts[dayIndex] = ""
+
+    this.setData(
+      {
+        dayStartPoints,
+        dayStartPointTexts,
+      },
+      () => {
+        this._updateDayStartPointTexts();
+        this._replanRouteWithDayStarts();
+      }
+    );
+  },
+
+  // 只更新 daySections 里的起点显示文本，不改地点本体。
+  _updateDayStartPointTexts() {
+    const { daySections, dayStartPointTexts, currentStart } = this.data;
+    if (!daySections || !daySections.length) return;
+
+    const updatedSections = daySections.map((section, dayIndex) => ({
+      ...section,
+      startPointText:
+        typeof dayStartPointTexts[dayIndex] === "string"
+          ? dayStartPointTexts[dayIndex]
+          : (section.startPointText || ""),
+    }));
+
+    this.setData({
+      daySections: updatedSections,
+    });
+  },
+
+  // 按当前 dayStartPoints 重新规划每一天的地点顺序和交通信息。
+  _replanRouteWithDayStarts() {
+    const route = this.data.route || {};
+    const cityText = route.city || route.cityText || getCityInfo(route.title).name;
+    const cityInfo = getCityInfo(cityText);
+    const nextSections = this.syncDaySections(
+      buildDaySectionsFromLegacy(route),
+      cityInfo,
+      {
+        currentStart: this.data.currentStart,
+        dayStartPoints: this.data.dayStartPoints,
+        dayStartPointTexts: this.data.dayStartPointTexts,
+      }
+    );
+    const summaryText = buildSummaryText(nextSections);
+    const flattenedPlaces = flattenDaySections(nextSections);
+    const nextMapDay =
+      this.data.currentMapDay >= nextSections.length ? -1 : this.data.currentMapDay;
+
+    this.setData(
+      {
+        daySections: nextSections,
+        summaryText,
+        tabs: buildTabs(nextSections.length),
+        hasRoutePlaces: flattenedPlaces.length > 0,
+        mapPreviewPlaces: flattenedPlaces,
+        mapPreviewPlace: flattenedPlaces[this.data.mapPreviewIndex] || flattenedPlaces[0] || null,
+        mapPreviewIndex:
+          flattenedPlaces.length === 0
+            ? 0
+            : Math.min(this.data.mapPreviewIndex, flattenedPlaces.length - 1),
+        currentMapDay: nextMapDay,
+        route: {
+          ...route,
+          subtitle: summaryText,
+          daySections: stripEditState(nextSections),
+          currentStart: this.data.currentStart,
+          dayStartPoints: [...(this.data.dayStartPoints || [])],
+          dayStartPointTexts: [...(this.data.dayStartPointTexts || [])],
+        },
+      },
+      () => {
+        if (this.data.viewMode === "map") {
+          this.updateMapData(nextSections, cityInfo, nextMapDay);
+        }
+        this.refreshMapPreview(
+          nextSections,
+          this.data.mapPreviewIndex,
+          nextMapDay
+        );
+      }
+    );
   },
 
   // 点击预览卡片或箭头时切换当前预览地点
@@ -1243,19 +1897,7 @@ Page({
       this.discardRouteEdits();
       return;
     }
-    wx.showModal({
-      title: "是否保存当前修改？",
-      content: "保存后会更新当前路线，不保存将丢弃本次编辑",
-      confirmText: "保存",
-      cancelText: "不保存",
-      success: (res) => {
-        if (res.confirm) {
-          this.onSave();
-          return;
-        }
-        this.discardRouteEdits();
-      },
-    });
+    this.openExitConfirm("cancel");
   },
 
   // 保存编辑结果，并退出编辑态
@@ -1660,6 +2302,14 @@ Page({
   onOpenReorderSheet() {
     this.setData({
       reorderSheetVisible: true,
+    });
+  },
+
+  // 关闭"编辑路线规划"弹窗：
+  // 统一给遮罩点击和右上角关闭按钮复用。
+  onCloseReorderSheet() {
+    this.setData({
+      reorderSheetVisible: false,
     });
   },
 

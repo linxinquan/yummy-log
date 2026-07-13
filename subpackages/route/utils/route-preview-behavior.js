@@ -54,6 +54,12 @@ methods: {
       hasUnsavedPreview: updatedSections.length > 0 ? shouldMarkDirty : false,
       mapPreviewShop: routeShops && routeShops.length ? routeShops[0] : null,
       mapPreviewIndex: 0
+    }, () => {
+      // 路线预览刷新后，自动把当前规划结果落到“我的路线”。
+      // 编辑态先不自动写，等用户点“保存”后再统一落盘。
+      if (updatedSections.length > 0 && !this.data.isEditing && typeof this.ensureAutoSavedPreviewRoute === 'function') {
+        this.ensureAutoSavedPreviewRoute()
+      }
     })
   },
   // 根据预览下标聚焦当前地点，并刷新顶部预览卡片

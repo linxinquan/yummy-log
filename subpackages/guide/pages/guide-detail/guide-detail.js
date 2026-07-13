@@ -355,6 +355,7 @@ Page({
     viewMode: 'list',
     currentTab: 0,
     currentMapDay: -1,
+    detailScrollTop: 0,
     sheetScrollTarget: '',
     cityText: '深圳市',
     summaryText: '',
@@ -845,8 +846,17 @@ Page({
   // 列表模式顶部 Tab 切换
   onTabTap(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10)
-    const sheetScrollTarget = index === 0 ? 'guide-overview-anchor' : `day-anchor-${index - 1}`
-    this.setData({ currentTab: index, sheetScrollTarget })
+    this.setData(
+      {
+        currentTab: index,
+        sheetScrollTarget: '',
+      },
+      () => {
+        wx.nextTick(() => {
+          this.scrollListToTab(index)
+        })
+      }
+    )
 
     if (this.data.viewMode === 'map') {
       const nextMapDay = index > 0 ? index - 1 : (this.data.daySections.length ? 0 : -1)
@@ -858,6 +868,47 @@ Page({
       )
       this.updateMapData(this.data.daySections, this.data.cityInfo, nextMapDay)
     }
+  },
+
+  // 把 rpx 换算成当前设备下的 px，用来保持标题距离吸顶 Tab 固定 48rpx 的留白。
+  rpxToPx(rpx) {
+    const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : {}
+    const windowWidth = windowInfo.windowWidth || 375
+    return (Number(rpx) * windowWidth) / 750
+  },
+
+  // 点击“行程总览 / 第几天”时，直接按真实渲染位置滚动，不再依赖固定负锚点。
+  scrollListToTab(index) {
+    const safeIndex = Number(index) || 0
+    const fallbackTarget = safeIndex === 0 ? 'guide-overview-anchor' : `day-anchor-${safeIndex - 1}`
+    const targetSelector = safeIndex === 0 ? '#guide-overview-title' : `#guide-day-header-${safeIndex - 1}`
+    const query = wx.createSelectorQuery().in(this)
+    query.select('.detail-scroll').boundingClientRect()
+    query.select('.detail-scroll').scrollOffset()
+    query.select('.tab-sticky-wrap').boundingClientRect()
+    query.select(targetSelector).boundingClientRect()
+    query.exec((result) => {
+      const [scrollRect, scrollOffset, stickyRect, targetRect] = result || []
+      if (!scrollRect || !scrollOffset || !stickyRect || !targetRect) {
+        this.setData({ sheetScrollTarget: fallbackTarget })
+        return
+      }
+
+      const gapPx = this.rpxToPx(48)
+      const nextScrollTop = Math.max(
+        0,
+        Math.round(
+          (scrollOffset.scrollTop || 0) +
+          (targetRect.top - scrollRect.top) -
+          (stickyRect.height || 0) -
+          gapPx
+        )
+      )
+
+      this.setData({
+        detailScrollTop: nextScrollTop,
+      })
+    })
   },
 
   // 切换地图预览中的当前地点

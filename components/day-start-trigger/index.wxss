@@ -1,0 +1,66 @@
+.day-start-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24rpx;
+  min-height: 112rpx;
+  margin: 0 48rpx 48rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: #F6F8FA;
+  box-sizing: border-box;
+}
+
+.day-start-trigger-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10rpx;
+}
+
+.day-start-trigger-label {
+  flex-shrink: 0;
+  color: #1A2739;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  font-weight: 500;
+}
+
+.day-start-trigger-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-shrink: 0;
+  min-height: 64rpx;
+  padding: 16rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  box-sizing: border-box;
+}
+
+.day-start-trigger-action i {
+  flex-shrink: 0;
+  color: #1A2739;
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+.day-start-trigger-action text {
+  color: #1A2739;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.day-start-trigger-address {
+  width: 100%;
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

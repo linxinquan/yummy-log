@@ -560,7 +560,7 @@ checkinUtil.saveCheckin({
 | 页面 | 参数格式 | 示例 |
 |------|----------|------|
 | spot-detail | `?id=数字` | `subpackages/extra/pages/spot-detail/spot-detail?id=101` |
-| route | `?type=food\|spot\|plan&ids=1,2,3` | `subpackages/route/pages/route/route?type=food&ids=1,2,3` |
+| my-route | `?route=URL编码JSON` 或 `?ids=1,2,3&dayCount=2` | `subpackages/route/pages/my-route/my-route?ids=1,2,3&dayCount=2` |
 | guide-detail | `?guide=URL编码JSON` | `subpackages/guide/pages/guide-detail/guide-detail?guide=...` |
 | district-guide | `?district=id&name=名称` | `subpackages/guide/pages/district-guide/district-guide?district=nanshan&name=南山区` |
 

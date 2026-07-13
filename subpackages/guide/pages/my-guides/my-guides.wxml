@@ -55,42 +55,36 @@
     <view class="empty-btn" bindtap="onGoGuidePage">去我的路线</view>
   </view>
 
-  <view class="route-action-mask {{routeActionSheetVisible ? 'show' : ''}}" bindtap="onCloseRouteActionSheet">
-    <view class="route-action-sheet" catchtap="preventBubble">
-      <view class="route-action-header">
-        <text class="route-action-title">发布路线编辑</text>
-        <i class="mgc_close_line route-action-close" bindtap="onCloseRouteActionSheet"></i>
-      </view>
-      <view class="route-action-body">
-        <view class="route-action-grid">
-          <view
-            wx:for="{{routeActionOptions}}"
-            wx:key="key"
-            class="route-action-card {{item.danger ? 'danger' : ''}}"
-            bindtap="onSelectRouteAction"
-            data-action="{{item.key}}"
-          >
-            <i class="route-action-icon {{item.icon}}"></i>
-            <text class="route-action-label">{{item.label}}</text>
-          </view>
-        </view>
+  <bottom-action-sheet
+    visible="{{routeActionSheetVisible}}"
+    title="发布路线编辑"
+    bind:close="onCloseRouteActionSheet"
+  >
+    <view class="route-action-grid">
+      <view
+        wx:for="{{routeActionOptions}}"
+        wx:key="key"
+        class="route-action-card {{item.danger ? 'danger' : ''}}"
+        bindtap="onSelectRouteAction"
+        data-action="{{item.key}}"
+      >
+        <i class="route-action-icon {{item.icon}}"></i>
+        <text class="route-action-label">{{item.label}}</text>
       </view>
     </view>
-  </view>
+  </bottom-action-sheet>
 
-  <view class="route-action-mask {{deleteRouteConfirmVisible ? 'show' : ''}}" bindtap="onCloseDeleteRouteConfirm">
-    <view class="route-action-sheet route-delete-confirm-sheet" catchtap="preventBubble">
-      <view class="route-action-header">
-        <text class="route-action-title">删除路线</text>
-        <i class="mgc_close_line route-action-close" bindtap="onCloseDeleteRouteConfirm"></i>
-      </view>
-      <view class="route-action-body">
-        <text class="route-delete-confirm-desc">删除后无法恢复，确认删除这条路线吗？</text>
-        <view class="route-delete-confirm-actions">
-          <view class="route-delete-confirm-btn cancel" bindtap="onCloseDeleteRouteConfirm">取消</view>
-          <view class="route-delete-confirm-btn danger" bindtap="onConfirmDeleteRoute">确认删除</view>
-        </view>
-      </view>
+  <bottom-action-sheet
+    visible="{{deleteRouteConfirmVisible}}"
+    title="删除路线"
+    custom-panel-class="route-delete-confirm-sheet"
+    custom-body-class="route-delete-confirm-body"
+    bind:close="onCloseDeleteRouteConfirm"
+  >
+    <text class="route-delete-confirm-desc">删除后无法恢复，确认删除这条路线吗？</text>
+    <view class="route-delete-confirm-actions">
+      <view class="route-delete-confirm-btn cancel" bindtap="onCloseDeleteRouteConfirm">取消</view>
+      <view class="route-delete-confirm-btn danger" bindtap="onConfirmDeleteRoute">确认删除</view>
     </view>
-  </view>
+  </bottom-action-sheet>
 </view>
