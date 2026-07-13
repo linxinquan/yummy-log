@@ -193,8 +193,8 @@
     <!-- 底部主按钮：保存路线 / 查看路线 -->
     <view class="bottom-bar">
       <view class="bottom-btn secondary" bindtap="onSaveRoute">
-        <i class="mgc_finger_love_line"></i>
-        <text>保存路线</text>
+        <i class="mgc_archive_line"></i>
+        <text>{{isRouteSaved ? '已保存路线' : '保存路线'}}</text>
       </view>
       <view class="bottom-btn primary" bindtap="onViewRoute">
         <i class="mgc_route_line"></i>

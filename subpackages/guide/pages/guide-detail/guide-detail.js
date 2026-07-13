@@ -391,7 +391,8 @@ Page({
     navMapSheetVisible: false,
     navMapTarget: null,
     placeIntroVisible: false,
-    placeIntroData: null
+    placeIntroData: null,
+    isRouteSaved: false
   },
 
   // 页面初始化：解析攻略数据，并同步列表、地图和预览卡片。
@@ -427,9 +428,37 @@ Page({
       summaryText: buildSummaryText(guide, daySections)
     })
 
+    // 进入攻略路线详情时，先同步一次“是否已经保存到我的路线”。
+    this.syncSavedRouteState(guide)
+
     // this.updateMapData(daySections, cityInfo, 0)
     this.refreshMapPreview(daySections, 0)
     this.syncCurrentLocation()
+  },
+
+  // 页面再次显示时，重新读取本地 savedRoutes，
+  // 避免用户从别处返回后，底部按钮状态还是旧的。
+  onShow() {
+    this.syncSavedRouteState()
+  },
+
+  // 根据当前攻略 id，判断这条攻略路线是否已经保存到“我的路线”。
+  syncSavedRouteState(guideData) {
+    const guide = guideData || this.data.guide
+    if (!guide || !guide.id) {
+      this.setData({ isRouteSaved: false })
+      return
+    }
+
+    const savedRoutes = util.loadData('savedRoutes', [])
+    const isRouteSaved = savedRoutes.some((item) => {
+      return (
+        String(item.id) === String(guide.id) ||
+        String(item.guideId || '') === String(guide.id)
+      )
+    })
+
+    this.setData({ isRouteSaved })
   },
 
   // 刷新详情页地图：包括标记点、折线和当前选中的天数。
@@ -781,7 +810,12 @@ Page({
 
   // 把这篇攻略保存成"我的路线"（本地优先 + 后台同步）
   onSaveRoute() {
-    const { guide, daySections, summaryText } = this.data
+    const { guide, daySections, summaryText, isRouteSaved } = this.data
+    if (isRouteSaved) {
+      wx.showToast({ title: '路线已保存，请去我的路线查看', icon: 'none' })
+      return
+    }
+
     const routeCard = {
       id: guide.id,
       title: guide.title,
@@ -797,13 +831,16 @@ Page({
     const savedRoutes = util.loadData('savedRoutes', [])
     const exists = savedRoutes.find(item => String(item.id) === String(routeCard.id))
     if (exists) {
-      wx.showToast({ title: '已保存过', icon: 'none' })
+      this.setData({ isRouteSaved: true })
+      wx.showToast({ title: '路线已保存，请去我的路线查看', icon: 'none' })
       return
     }
 
     // saveRouteAsync 内部会立即写本地 + 后台推云端
     util.saveRouteAsync(routeCard)
 
+    // 本地已立即写入，直接把按钮切到“已保存路线”状态。
+    this.setData({ isRouteSaved: true })
     wx.showToast({ title: '已保存到路线', icon: 'success' })
   },
 
