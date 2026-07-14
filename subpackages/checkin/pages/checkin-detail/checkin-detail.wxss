@@ -53,9 +53,11 @@ page {
   font-weight: 500;
   line-height: 64rpx;
   text-align: center;
-  white-space: nowrap;
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .detail-info-list {
@@ -216,169 +218,6 @@ page {
 }
 
 .action-btn-dark .action-btn-inline-icon {
-  color: #FFFFFF;
-}
-
-.edit-sheet-mask {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-  z-index: 49;
-}
-
-.edit-sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 50;
-}
-
-.edit-sheet-panel {
-  background: #FFFFFF;
-  border-radius: 32rpx 32rpx 0 0;
-  padding: 0;
-  box-sizing: border-box;
-  max-height: min(84vh, 1080rpx);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.sheet-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 128rpx;
-  padding: 0 48rpx;
-  box-sizing: border-box;
-  flex-shrink: 0;
-}
-
-.sheet-title {
-  color: #1A2739;
-  font-size: 40rpx;
-  font-weight: 500;
-  line-height: 100%;
-}
-
-.sheet-close {
-  width: 48rpx;
-  height: 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #1A2739;
-  font-size: 48rpx;
-}
-
-.edit-sheet-content {
-  padding: 0 48rpx;
-  box-sizing: border-box;
-  flex: 1;
-  min-height: 0;
-}
-
-.edit-field {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-}
-
-.edit-field-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24rpx;
-}
-
-.edit-sheet-content .edit-field + .edit-field {
-  margin-top: 48rpx;
-}
-
-.edit-field-label {
-  color: #1A2739;
-  font-size: 28rpx;
-  font-weight: 500;
-  line-height: 28rpx;
-}
-
-.edit-field-action {
-  color: #25BBE7;
-  font-size: 28rpx;
-  font-weight: 400;
-  line-height: 28rpx;
-  flex-shrink: 0;
-}
-
-.edit-field-input,
-.edit-field-textarea {
-  width: 100%;
-  padding: 0 32rpx 0;
-  border-radius: 24rpx;
-  border: 2rpx solid #F6F8FA;
-  background: #FFFFFF;
-  box-sizing: border-box;
-  color: #1A2739;
-  font-size: 32rpx;
-  font-weight: 400;
-}
-
-.edit-field-input {
-  height: 104rpx;
-  padding-right: 32rpx;
-}
-
-.edit-field-textarea-desc {
-  height: 240rpx;
-  padding: 24rpx 32rpx 24rpx;
-  line-height: 40rpx;
-  display: block;
-}
-
-.edit-field-action.disabled {
-  opacity: 0.45;
-}
-
-
-.edit-sheet-actions {
-  display: flex;
-  gap: 24rpx;
-  padding: 40rpx 48rpx calc(40rpx + env(safe-area-inset-bottom));
-  background: #FFFFFF;
-  box-sizing: border-box;
-  flex-shrink: 0;
-}
-
-.edit-sheet-btn {
-  height: 96rpx;
-  border-radius: 999rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.edit-sheet-btn text {
-  font-size: 32rpx;
-  font-weight: 500;
-  line-height: 32rpx;
-}
-
-.edit-sheet-btn-light {
-  width: 160rpx;
-  background: #F2F4F7;
-}
-
-.edit-sheet-btn-light text {
-  color: #1A2739;
-}
-
-.edit-sheet-btn-dark {
-  flex: 1;
-  background: #25BBE7;
-}
-
-.edit-sheet-btn-dark text {
   color: #FFFFFF;
 }
 

@@ -61,13 +61,6 @@
   >
     <view class="route-action-grid">
       <view
-        class="route-action-card"
-        bindtap="onEditCheckin"
-      >
-        <i class="route-action-icon mgc_pencil_3_line"></i>
-        <text class="route-action-label">编辑名称</text>
-      </view>
-      <view
         class="route-action-card danger"
         bindtap="onDeleteCheckin"
       >
@@ -75,21 +68,6 @@
         <text class="route-action-label">删除采集</text>
       </view>
     </view>
-  </bottom-action-sheet>
-
-  <bottom-action-sheet
-    visible="{{editNameSheetVisible}}"
-    title="编辑名称"
-    bind:close="onCloseEditNameSheet"
-  >
-    <input
-      class="route-edit-name-input"
-      value="{{editNameValue}}"
-      bindinput="onEditNameInput"
-      placeholder="请输入采集名称"
-      maxlength="20"
-    />
-    <view class="route-action-confirm" bindtap="onConfirmEditName">确认</view>
   </bottom-action-sheet>
 
   <bottom-action-sheet
@@ -106,58 +84,18 @@
     </view>
   </bottom-action-sheet>
 
-  <!-- 详情编辑底部弹窗：作为采集编辑的统一样式基准 -->
-  <view class="edit-sheet-mask" wx:if="{{editSheetVisible}}" bindtap="onCloseEditSheet"></view>
-  <view class="edit-sheet" wx:if="{{editSheetVisible}}">
-    <view class="edit-sheet-panel" catchtap="preventBubble">
-      <view class="sheet-header">
-        <text class="sheet-title">编辑采集</text>
-        <i class="mgc_close_line sheet-close" bindtap="onCloseEditSheet"></i>
-      </view>
-      <scroll-view class="edit-sheet-content" scroll-y>
-        <view class="edit-field">
-          <view class="edit-field-head">
-            <text class="edit-field-label">地址</text>
-            <text class="edit-field-action" bindtap="onPickEditLocation">地址选点</text>
-          </view>
-          <input
-            class="edit-field-input"
-            value="{{editAddress}}"
-            bindinput="onEditAddressInput"
-            placeholder="请输入地址"
-            maxlength="20"
-          />
-        </view>
-
-        <view class="edit-field">
-          <view class="edit-field-head">
-            <text class="edit-field-label">打卡内容</text>
-            <text
-              class="edit-field-action {{editGeneratingDescription ? 'disabled' : ''}}"
-              bindtap="onGenerateEditDescription"
-            >{{editGeneratingDescription ? '生成中...' : 'AI生成'}}</text>
-          </view>
-          <textarea
-            class="edit-field-textarea edit-field-textarea-desc"
-            value="{{editDescription}}"
-            bindinput="onEditDescriptionInput"
-            placeholder="请输入打卡内容"
-            maxlength="200"
-            disable-default-padding
-            show-confirm-bar="{{false}}"
-            cursor-spacing="180"
-          />
-        </view>
-      </scroll-view>
-
-      <view class="edit-sheet-actions">
-        <view class="edit-sheet-btn edit-sheet-btn-light" bindtap="onCloseEditSheet">
-          <text>取消</text>
-        </view>
-        <view class="edit-sheet-btn edit-sheet-btn-dark" bindtap="onConfirmEditSheet">
-          <text>保存编辑</text>
-        </view>
-      </view>
-    </view>
-  </view>
+  <!-- 编辑采集弹窗组件 -->
+  <edit-sheet
+    id="editSheet"
+    visible="{{editSheetVisible}}"
+    spotName="{{editSheetData.spotName}}"
+    address="{{editSheetData.address}}"
+    description="{{editSheetData.description}}"
+    latitude="{{editSheetData.latitude}}"
+    longitude="{{editSheetData.longitude}}"
+    bind:close="onCloseEditSheet"
+    bind:confirm="onConfirmEditSheet"
+    bind:generateSpotName="onEditGenerateSpotName"
+    bind:generateDescription="onEditGenerateDescription"
+  />
 </view>

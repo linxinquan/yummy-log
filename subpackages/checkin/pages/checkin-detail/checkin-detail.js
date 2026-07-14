@@ -26,16 +26,16 @@ Page({
     detail: null,
     currentId: '',
     editSheetVisible: false,
-    editAddress: '',
-    editDescription: '',
-    editLatitude: null,
-    editLongitude: null,
-    editGeneratingDescription: false,
+    editSheetData: {
+      spotName: '',
+      address: '',
+      description: '',
+      latitude: null,
+      longitude: null
+    },
     actionSheetVisible: false,
-    editNameSheetVisible: false,
     // 删除确认也统一走自定义底部弹窗。
     deleteConfirmVisible: false,
-    editNameValue: ''
   },
 
   onLoad(options) {
@@ -93,26 +93,26 @@ Page({
     })
   },
 
-  // 详情页编辑也统一改为底部弹窗编辑。
+  // 详情页编辑：打开底部弹窗组件
   onOpenEditSheet() {
     const { detail } = this.data
     if (!detail) return
     this.setData({
       editSheetVisible: true,
-      editAddress: detail.address || '',
-      editDescription: detail.description || '',
-      editLatitude: detail.latitude || null,
-      editLongitude: detail.longitude || null,
-      editGeneratingDescription: false,
-      actionSheetVisible: false,
-      editNameSheetVisible: false
+      editSheetData: {
+        spotName: detail.spotName || '',
+        address: detail.address || '',
+        description: detail.description || '',
+        latitude: detail.latitude || null,
+        longitude: detail.longitude || null
+      },
+      actionSheetVisible: false
     })
   },
 
   onOpenActionSheet() {
     this.setData({
       actionSheetVisible: true,
-      editNameSheetVisible: false,
       editSheetVisible: false
     })
   },
@@ -127,61 +127,6 @@ Page({
   onCloseDeleteConfirm() {
     this.setData({
       deleteConfirmVisible: false
-    })
-  },
-
-  onEditCheckin() {
-    const detail = this.data.detail || {}
-    this.setData({
-      actionSheetVisible: false,
-      editNameSheetVisible: true,
-      editNameValue: detail.spotName || ''
-    })
-  },
-
-  onCloseEditNameSheet() {
-    this.setData({
-      editNameSheetVisible: false
-    })
-  },
-
-  onEditNameInput(e) {
-    this.setData({
-      editNameValue: e.detail.value
-    })
-  },
-
-  async onConfirmEditName() {
-    const { currentId, editNameValue, detail } = this.data
-    if (!checkinUtil || !currentId || !detail) return
-
-    const nextName = String(editNameValue || '').trim()
-    if (!nextName) {
-      wx.showToast({
-        title: '名称不能为空',
-        icon: 'none'
-      })
-      return
-    }
-
-    const updated = await checkinUtil.updateCheckinAsync(currentId, {
-      spotName: nextName
-    })
-
-    if (!updated) {
-      wx.showToast({
-        title: '保存失败，请重试',
-        icon: 'none'
-      })
-      return
-    }
-
-    this.setData({
-      editNameSheetVisible: false,
-      detail: {
-        ...updated,
-        recordTimeLabel: detail.recordTimeLabel
-      }
     })
   },
 
@@ -210,86 +155,57 @@ Page({
   },
 
   onCloseEditSheet() {
-    this.setData({
-      editSheetVisible: false
-    })
+    this.setData({ editSheetVisible: false })
   },
 
   preventBubble() {},
 
-  onEditAddressInput(e) {
-    this.setData({
-      editAddress: e.detail.value
-    })
-  },
-
-  onEditDescriptionInput(e) {
-    this.setData({
-      editDescription: e.detail.value
-    })
-  },
-
-  // 详情编辑弹窗也支持一键重新生成打卡内容。
-  async onGenerateEditDescription() {
-    if (this.data.editGeneratingDescription) return
-
-    const detail = this.data.detail || {}
-    const spotName = detail.spotName || '当前位置'
-    const address = this.data.editAddress || detail.address || ''
-    this.setData({
-      editGeneratingDescription: true
-    })
-
-    const aiResult = await this._generateAIContent(detail.photoPath, detail.type || 'food')
-    const fallback = checkinUtil
-      ? checkinUtil.generateDescription(spotName, address, detail.type || 'food')
-      : '记录下这一刻，下次再看仍然会想起当时的心情'
-
-    this.setData({
-      editDescription: aiResult.success ? (aiResult.description || fallback) : fallback,
-      editGeneratingDescription: false
-    })
-  },
-
-  onPickEditLocation() {
-    wx.chooseLocation({
-      success: (res) => {
-        const nextAddress = res.address || res.name || ''
-        this.setData({
-          editAddress: nextAddress,
-          editLatitude: res.latitude || null,
-          editLongitude: res.longitude || null
-        })
-      }
-    })
-  },
-
-  async onConfirmEditSheet() {
-    const { currentId, detail, editAddress, editDescription, editLatitude, editLongitude } = this.data
+  // 组件确认事件：保存编辑到数据库
+  async onConfirmEditSheet(e) {
+    const { currentId, detail } = this.data
     if (!checkinUtil || !detail || !currentId) return
+    const { spotName, address, description, latitude, longitude } = e.detail
 
     const updated = await checkinUtil.updateCheckinAsync(currentId, {
-      address: editAddress,
-      description: editDescription,
-      latitude: editLatitude,
-      longitude: editLongitude
+      spotName,
+      address,
+      description,
+      latitude,
+      longitude
     })
 
     if (!updated) {
-      wx.showToast({
-        title: '保存失败，请重试',
-        icon: 'none'
-      })
+      wx.showToast({ title: '保存失败，请重试', icon: 'none' })
       return
     }
 
     this.setData({
       editSheetVisible: false,
-      detail: {
-        ...updated,
-        recordTimeLabel: detail.recordTimeLabel
-      }
+      detail: { ...updated, recordTimeLabel: detail.recordTimeLabel }
     })
+  },
+
+  // 组件触发 AI 生成打卡名称
+  async onEditGenerateSpotName() {
+    const detail = this.data.detail || {}
+    const aiResult = await this._generateAIContent(detail.photoPath, detail.type || 'food')
+    const name = aiResult.success ? (aiResult.title || detail.spotName || '当前位置') : (detail.spotName || '当前位置')
+    const sheet = this.selectComponent('#editSheet')
+    if (sheet) sheet.onAISpotNameResult(name)
+  },
+
+  // 组件触发 AI 生成打卡内容
+  async onEditGenerateDescription() {
+    const detail = this.data.detail || {}
+    const spotName = detail.spotName || '当前位置'
+    const address = detail.address || ''
+    const aiResult = await this._generateAIContent(detail.photoPath, detail.type || 'food')
+    const fallback = checkinUtil
+      ? checkinUtil.generateDescription(spotName, address, detail.type || 'food')
+      : '记录下这一刻，下次再看仍然会想起当时的心情'
+    const desc = aiResult.success ? (aiResult.description || fallback) : fallback
+    const sheet = this.selectComponent('#editSheet')
+    if (sheet) sheet.onAIDescriptionResult(desc)
   },
 
   // 详情页的 AI 生成使用公共函数 generateAIContent

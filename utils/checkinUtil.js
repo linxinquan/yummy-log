@@ -118,7 +118,17 @@ function reverseGeocode(latitude, longitude) {
               address: result.address || '',
               district: result.ad_info ? result.ad_info.district : '',
               city: city,
-              candidates: candidatePOIs.map(p => (p.title || p.name))
+              addressComponent: result.address_component ? {
+                province: result.address_component.province || '',
+                city: result.address_component.city || '',
+                district: result.address_component.district || '',
+                street: result.address_component.street || '',
+                street_number: result.address_component.street_number || ''
+              } : null,
+              candidates: candidatePOIs.map(p => ({
+                name: p.title || p.name,
+                address: p.address || ''
+              }))
             })
           } else {
             console.error('[checkinUtil] 逆地理状态码错误:', data.status, data.message)

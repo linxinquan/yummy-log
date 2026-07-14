@@ -15,13 +15,13 @@ const ITEM_H = 60 // px，每项高度用于计算排序
 const DEFAULT_COVER = '/images/app-logo.jpg'
 const DAY_OPTIONS = Array.from({ length: 10 }, (_, index) => index + 1)
 // picker-view 在快速滑动后，最后一次 bindchange 可能会晚一点到。
-// 点击“确定”时固定等待这一小段时间，再读取最终天数，避免拿到旧值。
+// 点击"确定"时固定等待这一小段时间，再读取最终天数，避免拿到旧值。
 const PLAN_DAY_CONFIRM_DELAY_MS = 220
 // 删除按钮本身是 120rpx，这里额外多滑出 48rpx，统一所有页面的删除间距。
 const DELETE_ACTION_WIDTH_RPX = 168
 const DEFAULT_ROUTE_AVATAR = '/images/app-logo.jpg'
 const DEFAULT_VISITED_MAP_CENTER = { latitude: 22.543099, longitude: 114.057868 }
-// 足迹页地图统一使用这张脚印标记图，只影响“足迹”页，不改其他页面地图图标。
+// 足迹页地图统一使用这张脚印标记图，只影响"足迹"页，不改其他页面地图图标。
 const VISITED_MARKER_ICON_PATH = '/images/markers/visited_footprint_marker.png'
 // 切图原始尺寸是 72x72，这里按 24 x 24 展示，避免脚印标记压住周边点位。
 const VISITED_MARKER_SIZE = 24
@@ -194,7 +194,7 @@ function buildRouteCards(items) {
   })
 }
 
-// 想去卡片右侧点击“添加到路线”后，需要把地点塞进目标路线。
+// 想去卡片右侧点击"添加到路线"后，需要把地点塞进目标路线。
 // 这里统一把地点整理成路线 daySections 可直接接收的结构，避免各页面字段不一致。
 function buildRoutePlaceFromWantItem(item = {}) {
   const lat = item.lat || item.latitude || 0
@@ -315,7 +315,7 @@ function getEmptyStateMeta(tab) {
 // 这样未登录、无数据、切换 Tab 时都能保持页面结构稳定。
 function buildDefaultVisitedStats() {
   return [
-    // 足迹统计图标和“我的”页保持同一套语义更明确的线性图标。
+    // 足迹统计图标和"我的"页保持同一套语义更明确的线性图标。
     { key: 'province', value: 0, label: '地区', icon: 'mgc_earth_3_line' },
     { key: 'city', value: 0, label: '城市', icon: 'mgc_building_2_line' },
     { key: 'place', value: 0, label: '地点', icon: 'mgc_location_line' },
@@ -492,7 +492,7 @@ function buildVisitedOverview() {
       { key: 'province', value: provinceSet.size, label: '地区', icon: 'mgc_earth_3_line' },
       { key: 'city', value: citySet.size, label: '城市', icon: 'mgc_building_2_line' },
       { key: 'place', value: footprintItems.length, label: '地点', icon: 'mgc_location_line' },
-      // “采集”只统计拍照采集记录，不把手动足迹算进去。
+      // "采集"只统计拍照采集记录，不把手动足迹算进去。
       { key: 'checkin', value: checkinRecords.length, label: '采集', icon: 'mgc_flower_4_line' }
     ],
     visitedMapMarkers: mapMarkers,
@@ -559,12 +559,12 @@ Page({
     // 路线编辑弹窗默认不选中任何操作，需用户手动选择
     selectedRouteAction: '',
     routeActionTarget: null,
-    // 想去地点右侧加号：弹出“添加到路线”底部卡片列表。
+    // 想去地点右侧加号：弹出"添加到路线"底部卡片列表。
     routePickerVisible: false,
     routePickerRoutes: [],
     routePickerTargetPlace: null,
     // 地点范围筛选：
-    // “全部 / 未规划地点 / 已规划地点 / 城市” 都统一放到左上角底部弹窗里。
+    // "全部 / 未规划地点 / 已规划地点 / 城市" 都统一放到左上角底部弹窗里。
     cityFilter: '',
     cityFilterLabel: '全部',
     cityFilterVisible: false,
@@ -574,7 +574,7 @@ Page({
     visitedMapMarkers: [],
     visitedMapCenter: DEFAULT_VISITED_MAP_CENTER,
     visitedMapScale: 11,
-    // 想去页右下角悬浮入口：承接原来 tabbar 中间“添加”的三张入口卡片。
+    // 想去页右下角悬浮入口：承接原来 tabbar 中间"添加"的三张入口卡片。
     addEntryVisible: false,
     // 解析路线输入弹窗：从悬浮入口继续下钻。
     importEntryVisible: false,
@@ -692,7 +692,7 @@ Page({
   },
 
   // 足迹地图右下角：添加足迹。
-  // 这是独立于“采集”的一套记录，只存地点，不存照片。
+  // 这是独立于"采集"的一套记录，只存地点，不存照片。
   onOpenVisitedCheckin() {
     // 足迹属于用户自己的记录，先走统一登录校验。
     if (!util.requireLogin({ toastText: '请先登录后添加足迹' })) return
@@ -715,7 +715,7 @@ Page({
 
         wx.showLoading({ title: '添加中...' })
 
-        // 手动足迹单独存储，避免“我的采集”页面误把它当成采集记录。
+        // 手动足迹单独存储，避免"我的采集"页面误把它当成采集记录。
         util.saveManualFootprintAsync({
           type: 'spot',
           spotName,
@@ -746,30 +746,49 @@ Page({
   // 页面重新显示时，检查登录状态并加载数据。
   onShow() {
     const pendingTab = wx.getStorageSync('pendingWantgoTab')
-    const effectiveTab = pendingTab || this.data.tab
+
     // 从 localStorage 恢复上次的 cityFilter（防页面重建丢失）
     const savedFilter = wx.getStorageSync('wantgoCityFilter') || ''
-    if (savedFilter !== this.data.cityFilter) {
-      this.setData({
-        cityFilter: savedFilter,
-        cityFilterLabel: getWantFilterLabel(savedFilter)
-      })
-    }
-    if (pendingTab) {
-      wx.removeStorageSync('pendingWantgoTab')
-      this.setData({
-        tab: pendingTab,
-        ...getEmptyStateMeta(pendingTab),
-        items: [],
-        // 足迹页固定展示，不再显示空状态页。
-        empty: shouldKeepVisitedLayout(pendingTab) ? false : true
-      })
-    }
-    this._checkLogin()
-    this.setData({
+
+    // 关闭悬浮入口弹层（始终需要）
+    const baseUpdate = {
       addEntryVisible: false,
       importEntryVisible: false
+    }
+
+    // 是否需要重新加载数据：有 pendingTab 切换 或 首次进入/页面重建时
+    const needsDataLoad = !!pendingTab || this.data.items.length === 0
+
+    if (!needsDataLoad) {
+      // 已在当前页且有数据：只做轻量更新，不重新加载，避免闪烁。
+      this._checkLogin()
+      if (savedFilter !== this.data.cityFilter) {
+        baseUpdate.cityFilter = savedFilter
+        baseUpdate.cityFilterLabel = getWantFilterLabel(savedFilter)
+      }
+      this.setData(baseUpdate)
+      return
+    }
+
+    // 需要加载数据：有 pendingTab 切 tab，没有则沿用当前 tab。
+    const effectiveTab = pendingTab || this.data.tab
+    if (pendingTab) {
+      wx.removeStorageSync('pendingWantgoTab')
+    }
+    if (savedFilter !== this.data.cityFilter) {
+      baseUpdate.cityFilter = savedFilter
+      baseUpdate.cityFilterLabel = getWantFilterLabel(savedFilter)
+    }
+    this.setData({
+      ...baseUpdate,
+      tab: effectiveTab,
+      ...getEmptyStateMeta(effectiveTab),
+      items: [],
+      loading: true,
+      // 足迹页固定展示，不再显示空状态页。
+      empty: shouldKeepVisitedLayout(effectiveTab) ? false : true
     })
+    this._checkLogin()
     this._loadData(effectiveTab)
   },
 
@@ -781,6 +800,7 @@ Page({
       tab,
       ...getEmptyStateMeta(tab),
       items: [],
+      loading: true,
       // 切到足迹时直接保留页面骨架，避免先闪一下空状态。
       empty: shouldKeepVisitedLayout(tab) ? false : true,
       addEntryVisible: false,
@@ -824,8 +844,8 @@ Page({
       })
       return
     }
-    this.setData({ loading: true })
-    let items = []
+    // 所有数据都是同步读取，先构建完整数据对象，再一次性 setData，避免 loading → 内容之间的闪烁。
+    const nextState = { loading: false }
 
     if (tab === 'want') {
       // 新格式：userWantList 存储所有想去的 ID（美食+景点）
@@ -868,16 +888,12 @@ Page({
       const unplannedWantItems = wantItems.filter(item => !item.isPlannedRoute)
       const cities = [...new Set(wantItems.map(item => item.city || '其他').filter(Boolean))].sort()
 
-      // 如果当前筛选已失效，就自动重置为“全部”。
+      // 如果当前筛选已失效，就自动重置为"全部"。
       const cityFilter = this.data.cityFilter
       const effectiveFilter = cityFilter === PLANNED_WANT_FILTER || cityFilter === UNPLANNED_WANT_FILTER
         ? cityFilter
         : (cityFilter && cities.includes(cityFilter) ? cityFilter : '')
       
-      // 全部：显示所有地点
-      // 未规划地点：显示还没进入路线规划的地点
-      // 城市：显示该城市对应地点
-      // 已规划地点：显示已经进入路线规划的地点
       const filteredItems = effectiveFilter === PLANNED_WANT_FILTER
         ? plannedWantItems
         : (
@@ -890,13 +906,9 @@ Page({
             )
         )
       
-      items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(filteredItems)))
-      this.setData({
-        items,
-        // 想去页只有在“全部想去地点本身就为空”时才切到整页空状态。
-        // 如果只是某个筛选结果为空，要保留当前页面骨架，避免一点击筛选就跳成空状态页。
+      Object.assign(nextState, {
+        items: withSwipeState(normalizePlaceCardItems(buildPreviewItems(filteredItems))),
         empty: wantItems.length === 0,
-        loading: false,
         cityOptions: cities,
         cityFilter: effectiveFilter,
         cityFilterLabel: getWantFilterLabel(effectiveFilter)
@@ -912,7 +924,6 @@ Page({
         return {
           ...item,
           subtitle: normalizeTripSummaryText(item.subtitle, fallbackDayCount, fallbackPlaceCount),
-          // TODO: 看看非image不可？
           image: item.image || routeCover,
           coverImage: routeCover
         }
@@ -922,23 +933,21 @@ Page({
       }
       const visibleRoutes = normalizedRoutes.filter(item => !item.isDraft)
       const routeCards = buildRouteCards(visibleRoutes)
-      this.setData({ items: routeCards, empty: routeCards.length === 0, loading: false })
+      Object.assign(nextState, { items: routeCards, empty: routeCards.length === 0 })
     } else {
       // tab === 'visited'
-      // 足迹页先只做展示：顶部地图 + 3 张统计卡片。
-      // 地图点位和统计数据都从打卡记录统一派生，避免和列表逻辑互相干扰。
       const visitedOverview = buildVisitedOverview()
-      this.setData({
+      Object.assign(nextState, {
         items: visitedOverview.items,
-        // 足迹页固定展示地图和卡片，没有数据时只显示 0。
         empty: false,
-        loading: false,
         visitedStats: visitedOverview.visitedStats,
         visitedMapMarkers: visitedOverview.visitedMapMarkers,
         visitedMapCenter: visitedOverview.visitedMapCenter,
         visitedMapScale: visitedOverview.visitedMapScale
       })
     }
+
+    this.setData(nextState)
   },
 
   // ─── 点击路线卡片：进入我的路线详情 ─────────────────────────────
@@ -1101,7 +1110,7 @@ Page({
     openPlaceDetail(item)
   },
 
-  // 想去卡片右侧“+”按钮：打开路线卡片弹窗，把当前地点添加到指定路线。
+  // 想去卡片右侧"+"按钮：打开路线卡片弹窗，把当前地点添加到指定路线。
   onOpenRoutePicker(e) {
     const item = e.currentTarget.dataset.item
     if (!item) return
@@ -1119,7 +1128,7 @@ Page({
     })
   },
 
-  // 关闭“添加到路线”弹窗。
+  // 关闭"添加到路线"弹窗。
   onCloseRoutePicker() {
     this.setData({
       routePickerVisible: false,
@@ -1317,7 +1326,7 @@ Page({
     })
   },
 
-  // 打开“解析路线”输入弹窗，同时收起三张入口卡片。
+  // 打开"解析路线"输入弹窗，同时收起三张入口卡片。
   onOpenLinkImport() {
     this.setData({
       addEntryVisible: false,
@@ -1325,7 +1334,7 @@ Page({
     })
   },
 
-  // 关闭“解析路线”输入弹窗。
+  // 关闭"解析路线"输入弹窗。
   onCloseLinkImport() {
     this.setData({
       importEntryVisible: false
@@ -1398,7 +1407,7 @@ Page({
       })
       setTimeout(() => {
         wx.navigateTo({
-          // 从“想去”页进入路线规划时，返回后应直接落回“我的路线”Tab，
+          // 从"想去"页进入路线规划时，返回后应直接落回"我的路线"Tab，
           // 这样用户能第一时间看到刚刚自动保存的路线。
           url: `/subpackages/route/pages/my-route/my-route?ids=${parseResult.routeIds.join(',')}&dayCount=${parseResult.dayCount}&returnTo=plan`
         })
@@ -1409,7 +1418,7 @@ Page({
     }
   },
 
-  // 从悬浮入口直接进入“创建路线”。
+  // 从悬浮入口直接进入"创建路线"。
   onCreateRouteFromFab() {
     this.setData({
       addEntryVisible: false
@@ -1419,7 +1428,7 @@ Page({
     })
   },
 
-  // 从悬浮入口直接进入“采集打卡”。
+  // 从悬浮入口直接进入"采集打卡"。
   onOpenCheckinFromFab() {
     this.setData({
       addEntryVisible: false
@@ -1448,7 +1457,7 @@ Page({
     const dayCount = this.data.dayOptions[pickerIndex]
     if (!dayCount) return
     // picker-view 切换后，先把最新值同步到实例字段。
-    // 这样用户刚滑到“1 天”就立刻点确定时，也不会因为 setData 还没完成而读到旧值 2。
+    // 这样用户刚滑到"1 天"就立刻点确定时，也不会因为 setData 还没完成而读到旧值 2。
     this._lastPlanDayChangeAt = Date.now()
     this._pendingPlanDayCount = dayCount
     this.setData({ selectedPlanDayCount: dayCount })
@@ -1569,7 +1578,7 @@ Page({
       this._planRouteConfirmTimer = null
       this._isConfirmingPlanRoute = false
       wx.navigateTo({
-        // 从“想去”页发起规划，给详情页带上返回来源，返回时自动切到“我的路线”Tab。
+        // 从"想去"页发起规划，给详情页带上返回来源，返回时自动切到"我的路线"Tab。
         url: `/subpackages/route/pages/my-route/my-route?ids=${ids}&dayCount=${dayCount}&returnTo=plan`
       })
     }, PLAN_DAY_CONFIRM_DELAY_MS)

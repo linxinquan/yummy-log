@@ -1058,7 +1058,7 @@
   position: relative;
   width: 480rpx;
   height: 164rpx;
-  border-radius: 48rpx;
+  border-radius: 40rpx;
   background: linear-gradient(180deg, #FFF 0%, #FFFFFF 100%);
   overflow: hidden;
   opacity: 0;
@@ -1105,11 +1105,11 @@
 
 .entry-action-card-icon {
   position: absolute;
-  /* 图标贴近卡片右上角，并向外溢出 24rpx。 */
-  right: -16rpx;
-  top: -16rpx;
-  font-size: 64rpx;
-  line-height: 64rpx;
+  /* 图标贴近卡片右上角，并向外溢出 12rpx。 */
+  right: 0rpx;
+  top: -12rpx;
+  font-size: 56rpx;
+  line-height: 56rpx;
   flex: 0 0 auto;
 }
 

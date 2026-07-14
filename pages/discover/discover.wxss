@@ -477,10 +477,10 @@ page {
 .entry-action-card-icon {
   position: absolute;
   /* 图标贴近卡片右上角，并向外溢出 24rpx。 */
-  right: -24rpx;
-  top: -24rpx;
-  font-size: 96rpx;
-  line-height: 96rpx;
+  right: 0rpx;
+  top: -12rpx;
+  font-size: 56rpx;
+  line-height: 56rpx;
   flex: 0 0 auto;
 }
 

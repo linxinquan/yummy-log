@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": "采集打卡"
+  "navigationBarTitleText": "采集打卡",
+  "usingComponents": {
+    "edit-sheet": "/components/edit-sheet/edit-sheet"
+  }
 }
