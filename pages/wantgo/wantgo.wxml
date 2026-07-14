@@ -83,6 +83,7 @@
         </view>
         <!-- 地图右下角：独立“添加足迹”入口，直接打开地图选点。 -->
         <view class="visited-map-action visited-map-action-bottom visited-map-action-text" bindtap="onOpenVisitedCheckin">
+          <i class="mgc_foot_line visited-map-action-icon"></i>
           <text class="visited-map-action-label">添加足迹</text>
         </view>
       </view>
@@ -128,7 +129,7 @@
             <text class="route-action-label">全部</text>
           </view>
           <view class="route-action-card city-filter-card {{cityFilter === '__planned__' ? 'active' : ''}}" bindtap="onSelectCityFilter" data-city="__planned__">
-            <text class="route-action-label">路线规划地点</text>
+            <text class="route-action-label">已规划地点</text>
           </view>
           <view
             wx:for="{{cityOptions}}"
@@ -196,8 +197,8 @@
 
   <!-- 公用右下角悬浮入口：后续改样式时，想去页和攻略页会自动同步。 -->
   <entry-fab-button
-    iconType="{{addEntryVisible || importEntryVisible ? 'close' : 'add'}}"
-    overlay="{{addEntryVisible || importEntryVisible}}"
+    iconType="{{addEntryVisible ? 'close' : 'add'}}"
+    overlay="{{addEntryVisible}}"
     bind:tapentry="onEntryFabTap"
   />
 
@@ -257,6 +258,7 @@
   >
     <view class="import-sheet-header">
       <text class="import-sheet-title">解析路线</text>
+      <i class="mgc_close_line import-sheet-close" bindtap="onCloseLinkImport"></i>
     </view>
 
     <view class="import-sheet-body">

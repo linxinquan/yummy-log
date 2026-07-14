@@ -46,6 +46,8 @@
   align-items: center;
   justify-content: space-between;
   padding-left: 48rpx;
+  /* 和“攻略”页保持一致，给一级导航补一段底部呼吸感。 */
+  padding-bottom: 24rpx;
   background: #FFFFFF;
   box-sizing: content-box;
 }
@@ -59,7 +61,8 @@
 .tab-item text {
   color: #9DA4AD;
   font-size: 48rpx;
-  line-height: 48rpx;
+  /* 一级导航标题使用更宽松的行高，视觉会更稳。 */
+  line-height: 64rpx;
   font-weight: 500;
 }
 
@@ -199,12 +202,19 @@
 .visited-map-action-text {
   width: auto;
   min-width: 168rpx;
+  gap: 8rpx;
   padding: 0 24rpx;
   box-sizing: border-box;
 }
 
+.visited-map-action-text .visited-map-action-icon {
+  color: #25BBE7;
+  font-size: 40rpx;
+  line-height: 40rpx;
+}
+
 .visited-map-action-label {
-  color: #1A2739;
+  color: #25BBE7;
   font-size: 28rpx;
   line-height: 28rpx;
   font-weight: 500;
@@ -263,9 +273,13 @@
 }
 
 .visited-stat-icon {
-  color: rgba(26, 39, 57, 0.08);
+  /* 统计图标跟“我的”页收藏/采集图标统一为浅蓝灰渐变。 */
+  display: inline-block;
   font-size: 80rpx;
   line-height: 80rpx;
+  background: linear-gradient(180deg, #C5D3E3 0%, #D8E1EC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .want-toolbar {
@@ -1120,7 +1134,8 @@
   right: 0;
   bottom: 0;
   z-index: 231;
-  padding: 0 0 calc(188rpx + env(safe-area-inset-bottom)); /* 让右下角关闭按钮和底部内容互不遮挡。 */
+  /* 已切回原生 tabbar，这里只保留项目统一的 48rpx 底部留白。 */
+  padding: 0 0 48rpx;
   border-radius: 32rpx 32rpx 0 0;
   background: #FFFFFF;
   transform: translateY(100%);
@@ -1134,7 +1149,7 @@
 .import-sheet-header {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   height: 128rpx;
   padding: 0 48rpx;
   box-sizing: border-box;
@@ -1145,6 +1160,18 @@
   font-size: 40rpx;
   font-weight: 500;
   line-height: 100%;
+}
+
+.import-sheet-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1A2739;
+  font-size: 40rpx;
+  line-height: 40rpx;
+  flex-shrink: 0;
 }
 
 .import-sheet-body {

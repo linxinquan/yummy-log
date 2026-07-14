@@ -42,10 +42,15 @@ const SECONDARY_TAB_ITEM_GAP_RPX = 24
 const SECONDARY_TAB_WRAP_HORIZONTAL_PADDING_RPX = 48
 // 首页天气拿不到数据时，统一显示这句更自然的提示文案，
 // 避免页面出现空白或误导性的默认温度。
-const WEATHER_FALLBACK_TEXT = '天气加载中，请稍候'
-// 首页天气缓存 10 分钟，避免短时间内重复请求把天气 key 打到限流。
-const WEATHER_CACHE_KEY = 'indexWeatherCache'
+const WEATHER_FALLBACK_TEXT = '天气获取失败，请稍后重试'
+// 首页天气缓存 10 分钟，避免短时间内重复请求。
+// 这里升级一个版本号，顺手让旧的失败缓存失效。
+const WEATHER_CACHE_KEY = 'indexWeatherCache_v2'
 const WEATHER_CACHE_TTL = 10 * 60 * 1000
+// 首页天气改成 Open-Meteo，无需单独申请 key，也不会被腾讯天气 key 限流影响。
+const OPEN_METEO_WEATHER_URL = 'https://api.open-meteo.com/v1/forecast'
+// 首页天气在定位和区划更新时都会触发，这里做一层轻量防抖，避免瞬时重复请求。
+const WEATHER_REQUEST_DEBOUNCE_MS = 300
 // 重新定位后，把地图拉近到当前位置附近，避免只更新中心点却看起来没变化。
 const MY_LOCATION_FOCUS_SCALE = 17
 // 首页城市列表本身只覆盖广东城市。
@@ -112,6 +117,33 @@ function buildWeatherState(weather = '', temperature = '') {
   }
 }
 
+// Open-Meteo 返回的是 WMO 天气码，这里统一转成首页展示用的中文文案。
+function getWeatherTextFromCode(weatherCode) {
+  const code = Number(weatherCode)
+  if (code === 0) return '晴'
+  if (code === 1) return '晴间多云'
+  if (code === 2) return '多云'
+  if (code === 3) return '阴'
+  if (code === 45 || code === 48) return '有雾'
+  if ([51, 53, 55, 56, 57].includes(code)) return '毛毛雨'
+  if (code === 61) return '小雨'
+  if (code === 63) return '中雨'
+  if (code === 65) return '大雨'
+  if (code === 66 || code === 67) return '冻雨'
+  if (code === 71) return '小雪'
+  if (code === 73) return '中雪'
+  if (code === 75) return '大雪'
+  if (code === 77) return '雪粒'
+  if (code === 80) return '阵雨'
+  if (code === 81) return '较强阵雨'
+  if (code === 82) return '强阵雨'
+  if (code === 85) return '阵雪'
+  if (code === 86) return '强阵雪'
+  if (code === 95) return '雷暴'
+  if (code === 96 || code === 99) return '雷暴伴冰雹'
+  return ''
+}
+
 // 读取本地天气缓存。
 // 只有在缓存没过期、并且带有基础天气字段时才复用。
 function getCachedWeatherState() {
@@ -119,6 +151,7 @@ function getCachedWeatherState() {
   if (!cache || !cache.timestamp) return null
   if (Date.now() - cache.timestamp > WEATHER_CACHE_TTL) return null
   if (!cache.weatherDesc) return null
+  if (cache.weatherDesc === WEATHER_FALLBACK_TEXT) return null
   return {
     weatherDesc: cache.weatherDesc,
     weatherTemp: cache.weatherTemp || ''
@@ -128,6 +161,7 @@ function getCachedWeatherState() {
 // 把最新天气写入本地缓存，给短时间内重复进入首页时直接复用。
 function saveWeatherStateToCache(weatherState = {}) {
   if (!weatherState.weatherDesc) return
+  if (weatherState.weatherDesc === WEATHER_FALLBACK_TEXT) return
   wx.setStorageSync(WEATHER_CACHE_KEY, {
     ...weatherState,
     timestamp: Date.now()
@@ -481,7 +515,7 @@ Page({
       // 使用统一调度，避免重复计算
       this._scheduleApplyFilters()
       // 定位完成后获取天气
-      this.loadWeather()
+      this.scheduleWeatherLoad()
     })
 
     app.whenDistrictReady((info, locationDesc) => {
@@ -498,7 +532,7 @@ Page({
         secondaryTabScrollLeft: 0
       })
       // 区划更新后重新获取天气
-      this.loadWeather()
+      this.scheduleWeatherLoad()
     })
     
     // 监听图标加载完成事件
@@ -649,10 +683,22 @@ Page({
     })
   },
 
+  // 首页天气会被多个初始化时机触发，这里统一做防抖调度，减少同一秒内的重复请求。
+  scheduleWeatherLoad(options = {}) {
+    if (this._weatherLoadTimer) {
+      clearTimeout(this._weatherLoadTimer)
+    }
+    this._weatherLoadTimer = setTimeout(() => {
+      this._weatherLoadTimer = null
+      this.loadWeather(options)
+    }, WEATHER_REQUEST_DEBOUNCE_MS)
+  },
+
   // 读取当前定位对应的天气信息。
-  loadWeather() {
+  loadWeather(options = {}) {
+    const { force = false } = options
     // 短时间内重复进入首页时，优先用缓存，避免再次打天气接口。
-    const cachedWeatherState = getCachedWeatherState()
+    const cachedWeatherState = force ? null : getCachedWeatherState()
     if (cachedWeatherState) {
       this.setData(cachedWeatherState)
       return
@@ -664,10 +710,9 @@ Page({
     }
 
     const location = app.globalData.location
-    const key = app.globalData.qqMapKey
-    // 没有定位或 key 时，直接回退到提示文案，
+    // 没有定位时，直接回退到提示文案，
     // 避免页面停留在空白天气状态。
-    if (!location || !key) {
+    if (!location) {
       this.setData({
         weatherDesc: WEATHER_FALLBACK_TEXT,
         weatherTemp: ''
@@ -675,30 +720,27 @@ Page({
       return
     }
 
-    // 使用腾讯地图天气API
+    // 使用 Open-Meteo 天气接口，避免继续依赖已限流的腾讯天气 key。
     this._weatherLoading = true
     wx.request({
-      url: 'https://apis.map.qq.com/ws/weather/v1/',
+      url: OPEN_METEO_WEATHER_URL,
       data: {
-        location: `${location.lat},${location.lng}`,
-        key: key,
-        type: 'now'
+        latitude: location.lat,
+        longitude: location.lng,
+        current: 'temperature_2m,weather_code',
+        timezone: 'auto'
       },
       success: (res) => {
-        if (res.data && res.data.status === 0) {
-          // 腾讯天气接口的实时结果通常在 result.realtime 下面，
-          // 这里同时兼容旧结构，避免接口字段层级变化后页面又只剩空白。
-          const realtime = Array.isArray(res.data.result && res.data.result.realtime)
-            ? res.data.result.realtime[0]
-            : (res.data.result && res.data.result.realtime)
-          const infos = (realtime && realtime.infos) || (res.data.result && res.data.result.infos) || {}
-          // 只有接口真的返回了天气或温度时，才覆盖默认提示；
-          // 如果接口成功但字段为空，仍然保留兜底提示。
-          const weatherState = buildWeatherState(infos.weather, infos.temperature)
+        if (res.statusCode === 200 && res.data && res.data.current) {
+          const current = res.data.current || {}
+          const weatherState = buildWeatherState(
+            getWeatherTextFromCode(current.weather_code),
+            current.temperature_2m
+          )
           this.setData(weatherState)
           saveWeatherStateToCache(weatherState)
         } else {
-          // 接口返回异常状态时，统一回退到提示文案。
+          // 接口返回异常结构时，统一回退到提示文案。
           this.setData({
             weatherDesc: WEATHER_FALLBACK_TEXT,
             weatherTemp: ''

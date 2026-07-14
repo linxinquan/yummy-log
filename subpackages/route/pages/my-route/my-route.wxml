@@ -73,7 +73,8 @@
                 >
                   <text>{{tab.label}}</text>
                 </view>
-                <view class="tab-item add-item" bindtap="onAddDay" wx:if="{{isEditing}}">
+                <!-- 编辑态顶部添加按钮：单独加类名，避免影响其他页面同类按钮。 -->
+                <view class="tab-item add-item editing-add-item" bindtap="onAddDay" wx:if="{{isEditing}}">
                   <i class="mgc_add_line"></i>
                 </view>
               </view>

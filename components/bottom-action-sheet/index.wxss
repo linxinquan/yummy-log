@@ -50,9 +50,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1A2739;
-  font-size: 48rpx;
-  line-height: 48rpx;
+  flex-shrink: 0;
+}
+
+.bottom-action-sheet-close-icon {
+  width: 40rpx;
+  height: 40rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40' fill='none'%3E%3Cpath d='M10 10L30 30' stroke='%231A2739' stroke-width='3.5' stroke-linecap='round'/%3E%3Cpath d='M30 10L10 30' stroke='%231A2739' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E");
 }
 
 .bottom-action-sheet-body {

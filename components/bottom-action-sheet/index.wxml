@@ -3,8 +3,10 @@
 <view class="bottom-action-sheet-panel {{visible ? 'show' : ''}} custom-panel-class" catchtap="preventBubble">
   <view class="bottom-action-sheet-header">
     <text class="bottom-action-sheet-title">{{title}}</text>
-    <!-- 关闭按钮改成组件内自带的“×”，不再依赖全局 iconfont。 -->
-    <text wx:if="{{showClose}}" class="bottom-action-sheet-close" bindtap="onClose">×</text>
+    <!-- 关闭按钮改成组件内自带 SVG，避免字体图标在组件中丢失。 -->
+    <view wx:if="{{showClose}}" class="bottom-action-sheet-close" bindtap="onClose">
+      <view class="bottom-action-sheet-close-icon"></view>
+    </view>
   </view>
 
   <view class="bottom-action-sheet-body custom-body-class">

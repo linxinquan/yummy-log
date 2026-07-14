@@ -7,7 +7,6 @@ const { resolveDisplayCategory } = require('../../utils/displayCategory')
 const { formatTripDuration, normalizeTripSummaryText } = require('../../utils/trip-duration')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 const { parseRouteTextToIds, resolveRouteImportText } = require('../../utils/route-import')
-const markerIcons = require('../../utils/markerIcons')
 
 
 const DEFAULT_DAY = 2; // 默认天数
@@ -22,6 +21,12 @@ const PLAN_DAY_CONFIRM_DELAY_MS = 220
 const DELETE_ACTION_WIDTH_RPX = 168
 const DEFAULT_ROUTE_AVATAR = '/images/app-logo.jpg'
 const DEFAULT_VISITED_MAP_CENTER = { latitude: 22.543099, longitude: 114.057868 }
+// 足迹页地图统一使用这张脚印标记图，只影响“足迹”页，不改其他页面地图图标。
+const VISITED_MARKER_ICON_PATH = '/images/markers/visited_footprint_marker.png'
+// 切图原始尺寸是 72x72，这里按 24 x 24 展示，避免脚印标记压住周边点位。
+const VISITED_MARKER_SIZE = 24
+// 同坐标足迹点在地图上容易完全叠住，这里给它们一个很轻的展开半径。
+const VISITED_MARKER_SPREAD_RADIUS_METERS = 36
 const PLANNED_WANT_FILTER = '__planned__'
 const ROUTE_ACTION_OPTIONS = [
   { key: 'publish', label: '发布攻略', icon: 'mgc_send_plane_line' },
@@ -309,10 +314,11 @@ function getEmptyStateMeta(tab) {
 // 这样未登录、无数据、切换 Tab 时都能保持页面结构稳定。
 function buildDefaultVisitedStats() {
   return [
-    { key: 'province', value: 0, label: '地区', icon: 'mgc_map_2_line' },
-    { key: 'city', value: 0, label: '城市', icon: 'mgc_map_pin_line' },
+    // 足迹统计图标和“我的”页保持同一套语义更明确的线性图标。
+    { key: 'province', value: 0, label: '地区', icon: 'mgc_earth_3_line' },
+    { key: 'city', value: 0, label: '城市', icon: 'mgc_building_2_line' },
     { key: 'place', value: 0, label: '地点', icon: 'mgc_location_line' },
-    { key: 'checkin', value: 0, label: '采集', icon: 'mgc_time_line' }
+    { key: 'checkin', value: 0, label: '采集', icon: 'mgc_flower_4_line' }
   ]
 }
 
@@ -364,14 +370,6 @@ function extractVisitedCity(record = {}, place = {}) {
   return ''
 }
 
-// 足迹地图上的点位颜色直接跟地点类型走，和探索页保持同一套 marker 资源。
-function resolveVisitedMarkerCategory(item = {}) {
-  if (item.type === 'spot' || item.category === '景点' || item.category === '公园') {
-    return '景点'
-  }
-  return '美食'
-}
-
 // 这里不用特别精细地算缩放级别，只要让全国 / 跨城 / 同城几种场景都能大致看全。
 function resolveVisitedMapScale(markers = []) {
   if (!markers.length) return 11
@@ -396,6 +394,42 @@ function resolveVisitedMapScale(markers = []) {
   return 13
 }
 
+// 把完全相同坐标的足迹 marker 稍微错开，避免用户视觉上只看到一个点。
+function spreadOverlappingVisitedMarkers(markers = []) {
+  const groupedMarkers = {}
+  const nextMarkers = (markers || []).map(item => ({ ...item }))
+
+  nextMarkers.forEach((item, index) => {
+    const coordinateKey = `${Number(item.latitude).toFixed(6)},${Number(item.longitude).toFixed(6)}`
+    if (!groupedMarkers[coordinateKey]) groupedMarkers[coordinateKey] = []
+    groupedMarkers[coordinateKey].push({ index, marker: item })
+  })
+
+  Object.keys(groupedMarkers).forEach((coordinateKey) => {
+    const group = groupedMarkers[coordinateKey]
+    if (!group || group.length <= 1) return
+
+    const baseMarker = group[0].marker
+    const baseLatitude = Number(baseMarker.latitude)
+    const baseLongitude = Number(baseMarker.longitude)
+    const angleStep = 360 / group.length
+    const safeCos = Math.max(Math.abs(Math.cos(baseLatitude * Math.PI / 180)), 0.2)
+    const latitudeOffsetUnit = VISITED_MARKER_SPREAD_RADIUS_METERS / 111320
+    const longitudeOffsetUnit = VISITED_MARKER_SPREAD_RADIUS_METERS / (111320 * safeCos)
+
+    group.forEach((entry, groupIndex) => {
+      const angle = (-90 + angleStep * groupIndex) * Math.PI / 180
+      nextMarkers[entry.index] = {
+        ...entry.marker,
+        latitude: baseLatitude + latitudeOffsetUnit * Math.cos(angle),
+        longitude: baseLongitude + longitudeOffsetUnit * Math.sin(angle)
+      }
+    })
+  })
+
+  return nextMarkers
+}
+
 // 足迹页顶部的地图和统计卡片都从这里统一组装。
 // 这样页面只负责展示，不需要在 WXML 里再拼复杂逻辑。
 function buildVisitedOverview() {
@@ -404,7 +438,7 @@ function buildVisitedOverview() {
   const checkinRecords = util.loadData('checkin_records', []) || []
   const provinceSet = new Set()
   const citySet = new Set()
-  const mapMarkers = []
+  const rawMapMarkers = []
 
   footprintSourceRecords.forEach(record => {
     const province = extractVisitedProvince(record)
@@ -419,20 +453,23 @@ function buildVisitedOverview() {
     const longitude = typeof item.lng === 'number' ? item.lng : Number(item.lng || item.longitude)
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return
 
-    mapMarkers.push({
+    rawMapMarkers.push({
       id: item.checkedInRecordId || item.id || `visited-marker-${index}`,
       latitude,
       longitude,
-      iconPath: markerIcons.getMapIconPath(resolveVisitedMarkerCategory(item)),
-      width: 32,
-      height: 32
+      // 足迹页改成设计给定的脚印切图，避免再跟通用分类 marker 混用。
+      iconPath: VISITED_MARKER_ICON_PATH,
+      width: VISITED_MARKER_SIZE,
+      height: VISITED_MARKER_SIZE,
+      anchor: { x: 0.5, y: 0.5 }
     })
   })
+  const mapMarkers = spreadOverlappingVisitedMarkers(rawMapMarkers)
 
   let mapCenter = DEFAULT_VISITED_MAP_CENTER
-  if (mapMarkers.length) {
-    const latitudes = mapMarkers.map(item => item.latitude)
-    const longitudes = mapMarkers.map(item => item.longitude)
+  if (rawMapMarkers.length) {
+    const latitudes = rawMapMarkers.map(item => item.latitude)
+    const longitudes = rawMapMarkers.map(item => item.longitude)
     mapCenter = {
       latitude: (Math.min(...latitudes) + Math.max(...latitudes)) / 2,
       longitude: (Math.min(...longitudes) + Math.max(...longitudes)) / 2
@@ -443,11 +480,12 @@ function buildVisitedOverview() {
     hasVisited: footprintItems.length > 0,
     items: footprintItems,
     visitedStats: [
-      { key: 'province', value: provinceSet.size, label: '地区', icon: 'mgc_map_2_line' },
-      { key: 'city', value: citySet.size, label: '城市', icon: 'mgc_map_pin_line' },
+      // 统计卡片图标和默认态保持一致，避免空态/有数据态图标不统一。
+      { key: 'province', value: provinceSet.size, label: '地区', icon: 'mgc_earth_3_line' },
+      { key: 'city', value: citySet.size, label: '城市', icon: 'mgc_building_2_line' },
       { key: 'place', value: footprintItems.length, label: '地点', icon: 'mgc_location_line' },
       // “采集”只统计拍照采集记录，不把手动足迹算进去。
-      { key: 'checkin', value: checkinRecords.length, label: '采集', icon: 'mgc_time_line' }
+      { key: 'checkin', value: checkinRecords.length, label: '采集', icon: 'mgc_flower_4_line' }
     ],
     visitedMapMarkers: mapMarkers,
     visitedMapCenter: mapCenter,
@@ -518,7 +556,7 @@ Page({
     routePickerRoutes: [],
     routePickerTargetPlace: null,
     // 城市筛选：
-    // “全部 / 城市 / 路线规划地点” 都统一放到左上角底部弹窗里。
+    // “全部 / 城市 / 已规划地点” 都统一放到左上角底部弹窗里。
     cityFilter: '',
     cityFilterLabel: '全部',
     cityFilterVisible: false,
@@ -706,7 +744,7 @@ Page({
     if (savedFilter !== this.data.cityFilter) {
       this.setData({
         cityFilter: savedFilter,
-        cityFilterLabel: savedFilter === PLANNED_WANT_FILTER ? '路线规划地点' : (savedFilter || '全部')
+        cityFilterLabel: savedFilter === PLANNED_WANT_FILTER ? '已规划地点' : (savedFilter || '全部')
       })
     }
     if (pendingTab) {
@@ -829,7 +867,7 @@ Page({
       
       // 全部：显示所有地点
       // 城市：显示该城市对应地点
-      // 路线规划地点：显示已经进入路线规划的地点
+      // 已规划地点：显示已经进入路线规划的地点
       const filteredItems = effectiveFilter === PLANNED_WANT_FILTER
         ? plannedWantItems
         : (
@@ -845,7 +883,7 @@ Page({
         loading: false,
         cityOptions: cities,
         cityFilter: effectiveFilter,
-        cityFilterLabel: effectiveFilter === PLANNED_WANT_FILTER ? '路线规划地点' : (effectiveFilter || '全部')
+        cityFilterLabel: effectiveFilter === PLANNED_WANT_FILTER ? '已规划地点' : (effectiveFilter || '全部')
       })
       // 把有效筛选同步到 localStorage，保持和显示一致
       wx.setStorageSync('wantgoCityFilter', effectiveFilter)
@@ -1488,7 +1526,7 @@ Page({
     wx.setStorageSync('wantgoCityFilter', city)
     this.setData({
       cityFilter: city,
-      cityFilterLabel: city === PLANNED_WANT_FILTER ? '路线规划地点' : (city || '全部'),
+      cityFilterLabel: city === PLANNED_WANT_FILTER ? '已规划地点' : (city || '全部'),
       cityFilterVisible: false
     })
     this._loadData('want')

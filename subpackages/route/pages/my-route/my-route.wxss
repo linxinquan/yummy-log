@@ -535,6 +535,29 @@
   align-items: center;
 }
 
+/* 编辑态顶部添加按钮单独改成圆形，图标保持 40rpx 并居中。 */
+.editing-add-item {
+  width: 64rpx;
+  min-width: 64rpx;
+  min-height: 64rpx;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editing-add-item i {
+  /* 字体图标默认按文字基线排版，这里改成固定尺寸的居中盒子，避免视觉偏心。 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40rpx;
+  height: 40rpx;
+  font-size: 40rpx;
+  line-height: 1;
+}
+
 .edit-header-title {
   display: flex;
   align-items: center;
@@ -922,35 +945,39 @@
   align-items: center;
   justify-content: space-between;
   gap: 24rpx;
-  padding: 0 48rpx 48rpx;
+  padding: 0 0 48rpx;
 }
 
 .picker-tabs {
   display: flex;
   align-items: center;
-  gap: 24rpx;
+  gap: 16rpx;
   flex: 1;
   min-width: 0;
 }
 
 .picker-tab {
-  min-width: 104rpx;        /* 标签最小宽度 */
-  height: 60rpx;            /* 标签固定高度 */
-  padding: 0 24rpx;         /* 左右内边距，上下无内边距 */
-  border-radius: 999rpx;    /* 超大圆角，做成胶囊样式 */
-  background: #F6F8FA;      /* 浅灰色背景色 */
-  color: #9DA4AD;           /* 默认文字浅灰色 */
-  font-size: 24rpx;         /* 文字字号大小 */
-  line-height: 60rpx;       /* 行高等同高度，文字垂直居中 */
-  text-align: center;       /* 文字水平居中 */
-  font-weight: 400;         /* 常规字体粗细，不加粗 */
-  box-sizing: border-box;   /* 内边距圆角不撑开元素尺寸 */
-  flex-shrink: 0;           /* 弹性布局禁止标签被压缩缩小 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 104rpx;
+  min-height: 64rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid #E6EBF0;
+  background: #FFFFFF;
+  box-sizing: border-box;
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  text-align: center;
+  font-weight: 400;
+  flex-shrink: 0;
 }
 
 .picker-tab.active {
-  background: #25BBE7;
-  color: #FFFFFF;
+  color: #25BBE7;
+  border-color: #25BBE7;
   font-weight: 400;
 }
 
@@ -990,7 +1017,6 @@
   display: flex;
   align-items: center;
   gap: 24rpx;
-  padding: 0 48rpx;
   margin-bottom: 48rpx;
   min-height: 160rpx;
   box-sizing: border-box;
