@@ -27,6 +27,7 @@ const VISITED_MARKER_ICON_PATH = '/images/markers/visited_footprint_marker.png'
 const VISITED_MARKER_SIZE = 24
 // 同坐标足迹点在地图上容易完全叠住，这里给它们一个很轻的展开半径。
 const VISITED_MARKER_SPREAD_RADIUS_METERS = 36
+const UNPLANNED_WANT_FILTER = '__unplanned__'
 const PLANNED_WANT_FILTER = '__planned__'
 const ROUTE_ACTION_OPTIONS = [
   { key: 'publish', label: '发布攻略', icon: 'mgc_send_plane_line' },
@@ -322,6 +323,13 @@ function buildDefaultVisitedStats() {
   ]
 }
 
+// 地点范围筛选统一在这里做文案映射，避免页面里散落多份判断。
+function getWantFilterLabel(filterValue = '') {
+  if (filterValue === UNPLANNED_WANT_FILTER) return '未规划地点'
+  if (filterValue === PLANNED_WANT_FILTER) return '已规划地点'
+  return filterValue || '全部'
+}
+
 // 省级地区目前没有单独字段，所以这里优先从地址里提取。
 // 直辖市 / 特别行政区直接按完整名称统计，避免被归错。
 function extractVisitedProvince(record = {}, place = {}) {
@@ -555,8 +563,8 @@ Page({
     routePickerVisible: false,
     routePickerRoutes: [],
     routePickerTargetPlace: null,
-    // 城市筛选：
-    // “全部 / 城市 / 已规划地点” 都统一放到左上角底部弹窗里。
+    // 地点范围筛选：
+    // “全部 / 未规划地点 / 已规划地点 / 城市” 都统一放到左上角底部弹窗里。
     cityFilter: '',
     cityFilterLabel: '全部',
     cityFilterVisible: false,
@@ -744,7 +752,7 @@ Page({
     if (savedFilter !== this.data.cityFilter) {
       this.setData({
         cityFilter: savedFilter,
-        cityFilterLabel: savedFilter === PLANNED_WANT_FILTER ? '已规划地点' : (savedFilter || '全部')
+        cityFilterLabel: getWantFilterLabel(savedFilter)
       })
     }
     if (pendingTab) {
@@ -857,33 +865,41 @@ Page({
         }))
       
       const plannedWantItems = wantItems.filter(item => item.isPlannedRoute)
+      const unplannedWantItems = wantItems.filter(item => !item.isPlannedRoute)
       const cities = [...new Set(wantItems.map(item => item.city || '其他').filter(Boolean))].sort()
 
       // 如果当前筛选已失效，就自动重置为“全部”。
       const cityFilter = this.data.cityFilter
-      const effectiveFilter = cityFilter === PLANNED_WANT_FILTER
-        ? PLANNED_WANT_FILTER
+      const effectiveFilter = cityFilter === PLANNED_WANT_FILTER || cityFilter === UNPLANNED_WANT_FILTER
+        ? cityFilter
         : (cityFilter && cities.includes(cityFilter) ? cityFilter : '')
       
       // 全部：显示所有地点
+      // 未规划地点：显示还没进入路线规划的地点
       // 城市：显示该城市对应地点
       // 已规划地点：显示已经进入路线规划的地点
       const filteredItems = effectiveFilter === PLANNED_WANT_FILTER
         ? plannedWantItems
         : (
-          effectiveFilter
-            ? wantItems.filter(item => (item.city || '其他') === effectiveFilter)
-            : wantItems
+          effectiveFilter === UNPLANNED_WANT_FILTER
+            ? unplannedWantItems
+            : (
+              effectiveFilter
+                ? wantItems.filter(item => (item.city || '其他') === effectiveFilter)
+                : wantItems
+            )
         )
       
       items = withSwipeState(normalizePlaceCardItems(buildPreviewItems(filteredItems)))
       this.setData({
         items,
-        empty: items.length === 0,
+        // 想去页只有在“全部想去地点本身就为空”时才切到整页空状态。
+        // 如果只是某个筛选结果为空，要保留当前页面骨架，避免一点击筛选就跳成空状态页。
+        empty: wantItems.length === 0,
         loading: false,
         cityOptions: cities,
         cityFilter: effectiveFilter,
-        cityFilterLabel: effectiveFilter === PLANNED_WANT_FILTER ? '已规划地点' : (effectiveFilter || '全部')
+        cityFilterLabel: getWantFilterLabel(effectiveFilter)
       })
       // 把有效筛选同步到 localStorage，保持和显示一致
       wx.setStorageSync('wantgoCityFilter', effectiveFilter)
@@ -1509,7 +1525,7 @@ Page({
 
   // ─── 城市筛选 ─────────────────────────────
   onCityFilterTap() {
-    // 顶部入口点击后，打开底部弹窗供用户选择地点城市。
+    // 顶部入口点击后，打开底部弹窗供用户选择地点范围。
     this.setData({ cityFilterVisible: !this.data.cityFilterVisible })
   },
 
@@ -1526,7 +1542,7 @@ Page({
     wx.setStorageSync('wantgoCityFilter', city)
     this.setData({
       cityFilter: city,
-      cityFilterLabel: city === PLANNED_WANT_FILTER ? '已规划地点' : (city || '全部'),
+      cityFilterLabel: getWantFilterLabel(city),
       cityFilterVisible: false
     })
     this._loadData('want')

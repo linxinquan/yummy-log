@@ -149,6 +149,39 @@
   padding-bottom: calc(132rpx + env(safe-area-inset-bottom));
 }
 
+/* 筛选结果为空时，在“想去”页内容区展示页内空状态，不切成整页空白。 */
+.inline-empty-wrap {
+  padding: 96rpx 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inline-empty-illustration {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 40rpx;
+}
+
+.inline-empty-title {
+  color: #1A2739;
+  font-size: 36rpx;
+  line-height: 36rpx;
+  font-weight: 500;
+}
+
+.inline-empty-hint {
+  margin-top: 24rpx;
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 40rpx;
+  text-align: center;
+}
+
+.inline-empty-btn {
+  margin-top: 48rpx;
+}
+
 .visited-layout {
   box-sizing: border-box;
   padding-right: 48rpx;
