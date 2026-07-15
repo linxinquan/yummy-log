@@ -25,11 +25,6 @@
   pointer-events: auto;
 }
 
-/* 导航地图弹窗要盖在地点简介上面，避免点击地址后看不到选择面板 */
-.nav-map-sheet-mask {
-  z-index: 1003;
-}
-
 /* 通用底部弹窗面板：默认在底部隐藏，显示时上滑出现 */
 .sheet-panel {
   position: fixed;
@@ -752,9 +747,14 @@
 }
 
 .day-start-sheet-close {
+  width: 40rpx;
+  height: 40rpx;
   color: #1A2739;
   font-size: 40rpx;
   line-height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .day-start-sheet-body {

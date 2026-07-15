@@ -1,0 +1,32 @@
+<!-- 地点简介底部弹窗 -->
+<view class="sheet-mask {{visible ? 'show' : ''}}" bindtap="onClose">
+  <view class="sheet-panel place-intro-sheet" catchtap="preventBubble">
+    <view class="sheet-modal-header">
+      <text class="sheet-modal-title">地点简介</text>
+      <view class="sheet-modal-close" bindtap="onClose"></view>
+    </view>
+    <scroll-view class="place-intro-scroll" scroll-y show-scrollbar="{{false}}" wx:if="{{data}}">
+      <view class="place-intro-body">
+        <image class="place-intro-cover" src="{{data.image}}" mode="aspectFill"></image>
+        <view class="place-intro-tags">
+          <view class="rating-star" wx:if="{{data.rating}}">
+            <text>{{data.rating}}</text>
+          </view>
+          <view class="tag-badge" wx:for="{{data.tags}}" wx:key="*this" wx:for-item="tag">
+            <text>{{tag}}</text>
+          </view>
+        </view>
+        <text class="place-intro-title">{{data.name}}</text>
+        <text class="place-intro-open-time">{{data.openTimeText}}</text>
+        <view class="place-intro-address-box" bindtap="onNav">
+          <view class="place-intro-address-content">
+            <text class="place-intro-address-label">地址</text>
+            <text class="place-intro-address-text">{{data.address}}</text>
+          </view>
+          <view class="place-intro-address-icon"></view>
+        </view>
+        <text class="place-intro-desc">{{data.desc}}</text>
+      </view>
+    </scroll-view>
+  </view>
+</view>

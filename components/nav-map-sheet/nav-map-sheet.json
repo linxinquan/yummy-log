@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "bottom-action-sheet": "/components/bottom-action-sheet/index"
+  }
+}

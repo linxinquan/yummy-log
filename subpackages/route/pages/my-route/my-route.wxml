@@ -479,73 +479,20 @@
     bindconfirm="onConfirmTransportMode"
   ></transport-info-sheet>
 
-  <!-- 导航地图选择弹窗也统一接入公用底部弹窗壳。 -->
-  <bottom-action-sheet
+  <!-- 导航地图选择弹窗（公共组件） -->
+  <nav-map-sheet
     visible="{{navMapSheetVisible}}"
-    title="请选择导航地图"
-    custom-mask-class="nav-map-sheet-mask"
-    custom-panel-class="nav-map-sheet-panel"
+    target="{{navMapTarget}}"
     bind:close="onCloseNavMapSheet"
-  >
-    <view class="route-sheet-option-list">
-      <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="gaode">
-        <view class="route-sheet-option-main">
-          <!-- 地图品牌图标：改用用户提供的 png -->
-          <image class="route-sheet-option-logo" src="/images/navigation/nav-map-amap.png" mode="aspectFit"></image>
-          <text>高德地图</text>
-        </view>
-        <i class="mgc_right_line route-sheet-option-arrow"></i>
-      </view>
-      <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="tencent">
-        <view class="route-sheet-option-main">
-          <!-- 地图品牌图标：改用用户提供的 png -->
-          <image class="route-sheet-option-logo" src="/images/navigation/nav-map-tencent.png" mode="aspectFit"></image>
-          <text>腾讯地图</text>
-        </view>
-        <i class="mgc_right_line route-sheet-option-arrow"></i>
-      </view>
-      <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="copy">
-        <view class="route-sheet-option-main">
-          <i class="mgc_copy_2_line"></i>
-          <text>复制地址</text>
-        </view>
-        <i class="mgc_right_line route-sheet-option-arrow"></i>
-      </view>
-    </view>
-  </bottom-action-sheet>
+  />
 
-  <!-- 地点简介底部弹窗：内容沿用探索详情，只保留封面和核心信息 -->
-  <view class="sheet-mask {{placeIntroVisible ? 'show' : ''}}" bindtap="onClosePlaceIntro">
-    <view class="sheet-panel place-intro-sheet" catchtap="preventBubble">
-      <view class="sheet-modal-header">
-        <text class="sheet-modal-title">地点简介</text>
-        <i class="mgc_close_line sheet-modal-close" bindtap="onClosePlaceIntro"></i>
-      </view>
-      <scroll-view class="place-intro-scroll" scroll-y show-scrollbar="{{false}}" wx:if="{{placeIntroData}}">
-        <view class="place-intro-body">
-          <image class="place-intro-cover" src="{{placeIntroData.image}}" mode="aspectFill"></image>
-          <view class="place-intro-tags">
-            <view class="rating-star" wx:if="{{placeIntroData.rating}}">
-              <text>{{placeIntroData.rating}}</text>
-            </view>
-            <view class="tag-badge" wx:for="{{placeIntroData.tags}}" wx:key="*this" wx:for-item="tag">
-              <text>{{tag}}</text>
-            </view>
-          </view>
-          <text class="place-intro-title">{{placeIntroData.name}}</text>
-          <text class="place-intro-open-time">{{placeIntroData.openTimeText}}</text>
-          <view class="place-intro-address-box" bindtap="onOpenPlaceIntroNavigation">
-            <view class="place-intro-address-content">
-              <text class="place-intro-address-label">地址</text>
-              <text class="place-intro-address-text">{{placeIntroData.address}}</text>
-            </view>
-            <i class="mgc_right_line place-intro-address-icon"></i>
-          </view>
-          <text class="place-intro-desc">{{placeIntroData.desc}}</text>
-        </view>
-      </scroll-view>
-    </view>
-  </view>
+  <!-- 地点简介底部弹窗（公共组件） -->
+  <place-intro
+    visible="{{placeIntroVisible}}"
+    data="{{placeIntroData}}"
+    bind:close="onClosePlaceIntro"
+    bind:nav="onOpenPlaceIntroNavigation"
+  />
 
   <!-- 编辑返回确认弹窗：
   这里不用系统弹窗，避免完整按钮文案被系统限制 -->

@@ -1,0 +1,31 @@
+<bottom-action-sheet
+  visible="{{visible}}"
+  title="请选择导航地图"
+  custom-mask-class="nav-map-sheet-mask"
+  custom-panel-class="nav-map-sheet-panel"
+  bind:close="onClose"
+>
+  <view class="nav-map-option-list">
+    <view class="nav-map-option" bindtap="onSelectMapOption" data-type="gaode">
+      <view class="nav-map-option-main">
+        <image class="nav-map-option-logo" src="/images/navigation/nav-map-amap.png" mode="aspectFit"></image>
+        <text>高德地图</text>
+      </view>
+      <view class="nav-map-option-arrow"></view>
+    </view>
+    <view class="nav-map-option" bindtap="onSelectMapOption" data-type="tencent">
+      <view class="nav-map-option-main">
+        <image class="nav-map-option-logo" src="/images/navigation/nav-map-tencent.png" mode="aspectFit"></image>
+        <text>腾讯地图</text>
+      </view>
+      <view class="nav-map-option-arrow"></view>
+    </view>
+    <view class="nav-map-option" bindtap="onSelectMapOption" data-type="copy">
+      <view class="nav-map-option-main">
+        <view class="nav-map-option-icon-copy"></view>
+        <text>复制地址</text>
+      </view>
+      <view class="nav-map-option-arrow"></view>
+    </view>
+  </view>
+</bottom-action-sheet>

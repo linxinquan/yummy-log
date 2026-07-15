@@ -428,7 +428,7 @@
 }
 
 .collect-action-icon {
-  font-size: 40rpx; /* 2px */
+  font-size: 48rpx; /* 2px */
   color: #1A2739;
   line-height: 1;
 }
@@ -456,7 +456,7 @@
 }
 
 .want-action-icon.wanted {
-  color: #FF5A5F;
+  color: #ffffff;
 }
 
 .want-btn text {
@@ -492,11 +492,6 @@
 .sheet-mask.show {
   background: rgba(0, 0, 0, 0.4);
   pointer-events: auto;
-}
-
-/* 导航地图弹窗需要压过其它底部弹窗，避免被后面的面板盖住 */
-.nav-map-sheet-mask {
-  z-index: 1003;
 }
 
 .sheet-panel {
@@ -537,13 +532,13 @@
 }
 
 .sheet-modal-close {
-  width: 48rpx;
-  height: 48rpx;
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #1A2739;
-  font-size: 48rpx;
+  font-size: 40rpx;
 }
 
 .route-sheet-option-list {

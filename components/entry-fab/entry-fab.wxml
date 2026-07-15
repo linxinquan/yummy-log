@@ -62,7 +62,7 @@
 >
   <view class="import-sheet-header">
     <text class="import-sheet-title">解析路线</text>
-    <i class="mgc_close_line import-sheet-close" bindtap="onCloseLinkImport"></i>
+    <view class="import-sheet-close" bindtap="onCloseLinkImport"></view>
   </view>
 
   <view class="import-sheet-body">

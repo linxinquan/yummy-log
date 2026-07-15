@@ -318,6 +318,14 @@ Page({
     const stats = getCheckinStatsAsync() || { totalCount: 0, cityCount: 0, visitedCount: 0 }
     const allCheckins = getCheckinsAsync() || []
 
+    // 城市数也要包含手动足迹（地图选点），和想去页的足迹 Tab 保持一致。
+    const allFootprintRecords = util.getFootprintSourceRecordsAsync() || []
+    const allCities = new Set()
+    allFootprintRecords.forEach(r => {
+      const city = String(r.city || '').trim()
+      if (city) allCities.add(city)
+    })
+
     // 最新邮票（第一条）
     let latestStamp = null
     if (allCheckins.length > 0) {
@@ -378,7 +386,7 @@ Page({
     this.setData({
       checkinStats: {
         totalCount: stats.totalCount || 0,
-        cityCount: stats.cityCount || 0,
+        cityCount: allCities.size || 0,
         visitedCount: stats.visitedCount || 0
       },
       latestStamp,

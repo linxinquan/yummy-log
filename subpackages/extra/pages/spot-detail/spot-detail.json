@@ -1,6 +1,7 @@
 {
   "navigationStyle": "custom",
   "usingComponents": {
-    "bottom-action-sheet": "/components/bottom-action-sheet/index"
+    "bottom-action-sheet": "/components/bottom-action-sheet/index",
+    "nav-map-sheet": "/components/nav-map-sheet/nav-map-sheet"
   }
 }

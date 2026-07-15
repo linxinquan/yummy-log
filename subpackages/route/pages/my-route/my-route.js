@@ -2183,6 +2183,7 @@ Page({
   onOpenPlaceIntroNavigation() {
     const target = this.data.placeIntroData;
     if (!target) return;
+    this.onClosePlaceIntro();
     this.setData({
       navMapSheetVisible: true,
       navMapTarget: {
@@ -2201,35 +2202,6 @@ Page({
       navMapSheetVisible: false,
       navMapTarget: null,
     });
-  },
-
-  // 在导航弹窗里选择地图应用或复制地址。
-  onSelectNavMapOption(e) {
-    const type = e.currentTarget.dataset.type;
-    const target = this.data.navMapTarget;
-    if (!type || !target) return;
-
-    if (type === "tencent") {
-      util.openWechatNavigation(target);
-      this.onCloseNavMapSheet();
-      return;
-    }
-
-    if (type === "gaode") {
-      util.openGaodeNavigation(target.lat, target.lng, target.name);
-      this.onCloseNavMapSheet();
-      return;
-    }
-
-    if (type === "copy") {
-      wx.setClipboardData({
-        data: target.address || target.name,
-        success: () => {
-          wx.showToast({ title: "地址已复制", icon: "success" });
-          this.onCloseNavMapSheet();
-        },
-      });
-    }
   },
 
   // 新增一天行程

@@ -103,12 +103,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* 功能已废弃，保留样式避免编译报错 */
 }
 
 .entry-sheet-close-icon {
   color: #FFFFFF;
   font-size: 64rpx;
   line-height: 64rpx;
+  /* 功能已废弃，保留样式避免编译报错 */
 }
 
 /* 三张卡片纵向排列，并统一居中显示。 */
