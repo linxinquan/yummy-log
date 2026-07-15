@@ -55,7 +55,6 @@ page {
   height: 100%;
   display: block;
 }
-}
 
 .empty-title {
   font-family: 'PingFang SC';
