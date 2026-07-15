@@ -176,7 +176,7 @@
 
       <view class="empty-state" wx:if="{{filteredItems.length === 0}}">
         <view class="empty-illustration">
-          <i class="mgc_leaf_line empty-icon"></i>
+          <image class="empty-image" src="/images/empty/筛选无结果.png" mode="aspectFit" />
         </view>
         <text class="empty-text body-sm">附近暂无{{currentCategory === '全部' ? '内容' : currentCategory}}，换个分类看看</text>
       </view>

@@ -43,7 +43,7 @@
   <!-- 列表模式：概览 + 每天行程 + 编辑入口 -->
   <block wx:if="{{viewMode === 'list'}}">
     <view class="detail-sheet">
-      <!-- 顶部单独补一层圆角遮罩，避免 sticky 区在切到“第几天”时把大卡片视觉顶成直角。 -->
+      <!-- 顶部单独补一层圆角遮罩，避免 sticky 区在切到"第几天"时把大卡片视觉顶成直角。 -->
       <view class="detail-sheet-corner-mask"></view>
       <!-- 这里不使用 scroll-with-animation，避免小程序在动画滚动时把 sticky Tab 闪没一下。 -->
       <scroll-view class="detail-scroll" scroll-y="{{!dragging}}" scroll-into-view="{{sheetScrollTarget}}" scroll-top="{{detailScrollTop}}" show-scrollbar="{{false}}">
@@ -114,7 +114,7 @@
               </view>
               <view class="overview-empty" wx:else>暂未添加行程地点</view>
             </view>
-            <!-- 恢复概览和分天内容之间的分隔带，切到“第几天”时也保留结构连续性。 -->
+            <!-- 恢复概览和分天内容之间的分隔带，切到"第几天"时也保留结构连续性。 -->
             <view class="day-separator overview-separator" wx:if="{{!isEditing}}"></view>
 
             <view
@@ -132,8 +132,8 @@
                 <text class="day-count">{{day.countText}}</text>
               </view>
 
-              <!-- 起点卡片恢复成页面内原始结构，不再走组件，避免样式边界被打乱。 -->
-              <view class="day-start-trigger" bindtap="onSetDayStart" data-day-index="{{dayIndex}}">
+              <!-- 起点卡片：仅查看模式下显示，编辑时隐藏避免误操作。 -->
+              <view class="day-start-trigger" wx:if="{{!isEditing}}" bindtap="onSetDayStart" data-day-index="{{dayIndex}}">
                 <view class="day-start-trigger-header">
                   <text class="day-start-trigger-label">起点位置</text>
                   <view class="day-start-trigger-action">
@@ -246,10 +246,10 @@
                 </view>
                 <view class="route-empty-card" wx:else>
                   <view class="route-empty-icon">
-                    <i class="mgc_route_line"></i>
+                    <image class="empty-image" src="/images/empty/还没有添加地点.png" mode="aspectFit" />
                   </view>
                   <text class="route-empty-title">还没有添加地点</text>
-                  <text class="route-empty-hint">点击下方“编辑”，进入编辑后添加地点</text>
+                  <text class="route-empty-hint">点击下方编辑按钮，可编辑路线添加地点</text>
                 </view>
               </view>
 
@@ -334,10 +334,10 @@
 
       <view class="map-card map-empty-card" wx:else>
         <view class="map-empty-icon">
-          <i class="mgc_route_line"></i>
+          <image class="empty-image" src="/images/empty/还没有添加地点.png" mode="aspectFit" />
         </view>
         <text class="map-empty-title">还没有添加地点</text>
-        <text class="map-empty-hint">当前是空路线，右侧地图工具仍可使用。点击左侧返回详情，再点底部“编辑”添加地点</text>
+        <text class="map-empty-hint">当前是空路线，右侧地图工具仍可使用。点击左侧返回详情，再点底部"编辑"添加地点</text>
       </view>
     </view>
   </block>
@@ -402,7 +402,7 @@
     </view>
   </view>
 
-  <!-- 添加地点弹窗只接回“外壳组件”，里面的内容结构和样式保持页面内这版不变。 -->
+  <!-- 添加地点弹窗只接回"外壳组件"，里面的内容结构和样式保持页面内这版不变。 -->
   <bottom-action-sheet
     visible="{{placePickerVisible}}"
     title="添加地点"
