@@ -934,13 +934,13 @@
 }
 
 .plan-day-close {
-  width: 48rpx;
-  height: rpx;
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #1A2739;
-  font-size: 48rpx;
+  font-size: 40rpx;
 }
 
 .plan-day-body {
@@ -997,4 +997,8 @@
   border-color: #F6F8FA;
   color: #1A2739;
 }
+
+
+
+
 

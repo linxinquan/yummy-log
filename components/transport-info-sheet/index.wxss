@@ -46,12 +46,13 @@
 }
 
 .transport-sheet-close {
-  width: 48rpx;
-  height: 48rpx;
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #1A2739;
+  font-size: 40rpx;
 }
 
 .transport-sheet-close i {

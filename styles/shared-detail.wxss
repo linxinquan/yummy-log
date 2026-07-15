@@ -579,11 +579,6 @@ page {
   pointer-events: auto;
 }
 
-/* 导航地图弹窗要压过地点简介，否则地址点击后会被后面的面板挡住 */
-.nav-map-sheet-mask {
-  z-index: 1003;
-}
-
 /* 通用底部弹窗面板：默认在底部隐藏，显示时上滑出现 */
 .sheet-panel {
   position: fixed;
@@ -624,13 +619,13 @@ page {
 }
 
 .sheet-modal-close {
-  width: 48rpx;
-  height: 48rpx;
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #1A2739;
-  font-size: 48rpx;
+  font-size: 40rpx;
 }
 
 .route-sheet-option-list {

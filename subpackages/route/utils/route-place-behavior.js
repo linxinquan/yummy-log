@@ -63,11 +63,10 @@ methods: {
       },
 
 
-       // 点击地点简介里的地址：
-  // 继续复用同一个"请选择导航地图"弹窗，避免两套导航逻辑不一致。
-  onOpenPlaceIntroNavigation() {
+       onOpenPlaceIntroNavigation() {
     const target = this.data.placeIntroData
     if (!target) return
+    this.onClosePlaceIntro()
     this.setData({
       navMapSheetVisible: true,
       navMapTarget: {

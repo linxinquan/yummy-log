@@ -22,8 +22,8 @@
 }
 
 .link-import-close {
-  width: 48rpx;
-  height: 48rpx;
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -31,7 +31,7 @@
 }
 
 .link-import-close i {
-  font-size: 48rpx;
+  font-size: 40rpx;
 }
 
 .link-import-body {

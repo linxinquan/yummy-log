@@ -4,6 +4,7 @@ const util = require('../../utils/util')
 const placesData = require('../../utils/placesData')
 const { applyTravelMeta, buildTravelOptions } = require('../../utils/travel')
 const { resolveDisplayCategory } = require('../../utils/displayCategory')
+const { buildPlaceIntroData } = require('../../utils/route-place-card')
 const { formatTripSummary, normalizeTripSummaryText } = require('../../utils/trip-duration')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 
@@ -511,18 +512,6 @@ function shouldKeepVisitedLayout(tab) {
   return tab === 'visited'
 }
 
-// 统一打开地点详情：
-// 足迹里如果是"系统未收录但用户采集过的地点"，就把完整对象直接带去详情页。
-function openPlaceDetail(item) {
-  if (!item) return
-  if (item.detailSource === 'record') {
-    const spotStr = encodeURIComponent(JSON.stringify(item))
-    wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?spotData=${spotStr}` })
-    return
-  }
-  wx.navigateTo({ url: `/subpackages/extra/pages/spot-detail/spot-detail?id=${item.id}` })
-}
-
 Page({
   data: {
     // 登录状态
@@ -563,6 +552,12 @@ Page({
     deleteRouteConfirmVisible: false,
     // 路线编辑弹窗默认不选中任何操作，需用户手动选择
     selectedRouteAction: '',
+    // 地点简介弹窗
+    placeIntroVisible: false,
+    placeIntroData: null,
+    // 导航地图选择弹窗
+    navMapSheetVisible: false,
+    navMapTarget: null,
     routeActionTarget: null,
     // 想去地点右侧加号：弹出"添加到路线"底部卡片列表。
     routePickerVisible: false,
@@ -1084,7 +1079,7 @@ Page({
     wx.showToast({ title: copy ? '已复制攻略' : '已发布为攻略', icon: 'success' })
   },
 
-  // ─── 点击地点卡片：进入详情页；如果有左滑打开，先帮用户收起 ─────────────────────────────
+  // ─── 点击地点卡片：打开地点简介弹窗；如果有左滑打开，先帮用户收起 ─────────────────────────────
   onItemTap(e) {
     if (this.data.tab === 'want') {
       const index = parseInt(e.currentTarget.dataset.index, 10)
@@ -1104,7 +1099,49 @@ Page({
     }
 
     const item = e.currentTarget.dataset.item
-    openPlaceDetail(item)
+    if (!item) return
+    this.onOpenPlaceIntro(item)
+  },
+
+  // 打开地点简介底部弹窗。
+  onOpenPlaceIntro(item) {
+    this.setData({
+      placeIntroVisible: true,
+      placeIntroData: buildPlaceIntroData(item, '')
+    })
+  },
+
+  // 关闭地点简介底部弹窗。
+  onClosePlaceIntro() {
+    this.setData({
+      placeIntroVisible: false,
+      placeIntroData: null
+    })
+  },
+
+  // 地址栏点击：弹出导航地图选择弹窗。
+  // 和路线详情、攻略详情保持一致。
+  onOpenPlaceIntroNavigation() {
+    const target = this.data.placeIntroData
+    if (!target) return
+    this.onClosePlaceIntro()
+    this.setData({
+      navMapSheetVisible: true,
+      navMapTarget: {
+        lat: target.lat,
+        lng: target.lng,
+        name: target.name,
+        address: target.address || target.name
+      }
+    })
+  },
+
+  // 关闭导航地图选择弹窗。
+  onCloseNavMapSheet() {
+    this.setData({
+      navMapSheetVisible: false,
+      navMapTarget: null
+    })
   },
 
   // 想去卡片右侧"+"按钮：打开路线卡片弹窗，把当前地点添加到指定路线。

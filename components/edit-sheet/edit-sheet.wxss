@@ -59,13 +59,13 @@
 }
 
 .sheet-close {
-  width: 48rpx;
-  height: 48rpx;
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #1A2739;
-  font-size: 48rpx;
+  font-size: 40rpx;
 }
 
 .edit-sheet-content {
@@ -134,7 +134,7 @@
   box-sizing: border-box;
   color: #1A2739;
   font-size: 32rpx;
-  line-height: 48rpx
+  line-height: 48rpx;
   font-weight: 500;
 }
 

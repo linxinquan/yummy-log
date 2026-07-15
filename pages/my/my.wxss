@@ -368,8 +368,8 @@
   position: absolute;
   top: 32rpx;
   right: 32rpx;
-  width: 64rpx;
-  height: 64rpx;
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;

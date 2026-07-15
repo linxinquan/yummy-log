@@ -314,4 +314,19 @@
       <view class="route-delete-confirm-btn danger" bindtap="onConfirmDeleteRoute">确认删除</view>
     </view>
   </bottom-action-sheet>
+
+  <!-- 导航地图选择弹窗（公共组件） -->
+  <nav-map-sheet
+    visible="{{navMapSheetVisible}}"
+    target="{{navMapTarget}}"
+    bind:close="onCloseNavMapSheet"
+  />
+
+  <!-- 地点简介底部弹窗（公共组件） -->
+  <place-intro
+    visible="{{placeIntroVisible}}"
+    data="{{placeIntroData}}"
+    bind:close="onClosePlaceIntro"
+    bind:nav="onOpenPlaceIntroNavigation"
+  />
 </view>

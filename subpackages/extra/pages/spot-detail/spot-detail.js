@@ -251,43 +251,6 @@ Page({
     wx.showToast({ title: '暂无坐标', icon: 'none' })
   },
 
-  onCloseNavMapSheet() {
-    this.setData({ navMapSheetVisible: false, navMapTarget: null })
-  },
-
-  onSelectNavMapOption(e) {
-    const type = e.currentTarget.dataset.type
-    const target = this.data.navMapTarget
-    if (!type || !target) return
-
-    if (type === 'copy') {
-      wx.setClipboardData({
-        data: target.address || target.name,
-        success: () => {
-          wx.showToast({ title: '地址已复制', icon: 'success' })
-          this.onCloseNavMapSheet()
-        }
-      })
-      return
-    }
-
-    if (!target.lat || !target.lng) {
-      wx.showToast({ title: '暂无坐标', icon: 'none' })
-      return
-    }
-
-    if (type === 'tencent') {
-      util.openWechatNavigation(target)
-      this.onCloseNavMapSheet()
-      return
-    }
-
-    if (type === 'gaode') {
-      util.openGaodeNavigation(target.lat, target.lng, target.name)
-      this.onCloseNavMapSheet()
-    }
-  },
-
   preventBubble() {},
 
   onCall() {
