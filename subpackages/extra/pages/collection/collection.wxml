@@ -41,7 +41,7 @@
     <block wx:if="{{viewMode === 'list'}}">
       <view class="empty-state" wx:if="{{checkins.length === 0}}">
         <view class="empty-illustration">
-          <image class="empty-image" src="/images/empty/暂无采集.webp" mode="aspectFit" />
+          <image class="empty-image" webp="{{true}}" src="/images/empty/暂无采集.webp" mode="aspectFit" />
         </view>
         <text class="empty-title">我的采集</text>
         <text class="empty-hint">去记录你的第一张采集卡吧</text>

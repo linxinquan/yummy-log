@@ -246,7 +246,7 @@
                 </view>
                 <view class="route-empty-card" wx:else>
                   <view class="route-empty-icon">
-                    <image class="empty-image" src="/images/empty/还没有添加地点.webp" mode="aspectFit" />
+                    <image class="empty-image" webp="{{true}}" src="/images/empty/还没有添加地点.webp" mode="aspectFit" />
                   </view>
                   <text class="route-empty-title">还没有添加地点</text>
                   <text class="route-empty-hint">点击下方编辑按钮，可编辑路线添加地点</text>
@@ -334,7 +334,7 @@
 
       <view class="map-card map-empty-card" wx:else>
         <view class="map-empty-icon">
-          <image class="empty-image" src="/images/empty/还没有添加地点.webp" mode="aspectFit" />
+          <image class="empty-image" webp="{{true}}" src="/images/empty/还没有添加地点.webp" mode="aspectFit" />
         </view>
         <text class="map-empty-title">还没有添加地点</text>
         <text class="map-empty-hint">当前是空路线，右侧地图工具仍可使用。点击左侧返回详情，再点底部"编辑"添加地点</text>
