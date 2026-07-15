@@ -35,7 +35,7 @@
   border-radius: 32rpx 32rpx 0 0;
   padding: 0;
   box-sizing: border-box;
-  max-height: min(84vh, 1080rpx);
+  max-height: 92vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -70,8 +70,7 @@
 
 .edit-sheet-content {
   flex: 1;
-  min-height: 0;
-  height: 1004rpx;
+  min-height: 200rpx;
   width: 100%;
   box-sizing: border-box;
 }
@@ -84,7 +83,7 @@
 .edit-field {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  gap: 32rpx;
 }
 
 .edit-field-head {
@@ -99,7 +98,7 @@
 }
 
 .edit-field-label {
-  color: #1A2739;
+  color: #808b9a;
   font-size: 28rpx;
   font-weight: 500;
   line-height: 28rpx;
@@ -127,19 +126,20 @@
 
 .edit-field-input {
   width: 100%;
-  height: 104rpx;
-  padding: 0 32rpx 0;
+  height: 96rpx;
+  padding: 0 32rpx;
   border-radius: 24rpx;
   border: 2rpx solid #F6F8FA;
   background: #FFFFFF;
   box-sizing: border-box;
-  color: #495664;
+  color: #1A2739;
   font-size: 32rpx;
-  font-weight: 400;
+  line-height: 48rpx
+  font-weight: 500;
 }
 
 .edit-field-placeholder {
-  color: #9DA4AD;
+  color: #BAC4CC;
 }
 
 .edit-field-textarea-addr {

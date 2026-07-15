@@ -32,7 +32,7 @@ page {
 }
 
 .tab-item text {
-  color: #9DA4AD;
+  color: #BAC4CC;
   font-size: 48rpx;
   line-height: 48rpx;
   font-weight: 500;
@@ -59,7 +59,7 @@ page {
 }
 
 .weekday-item {
-  color: #9DA4AD;
+  color: #BAC4CC;
   font-size: 28rpx;
   font-weight: 500;
   line-height: 28rpx;
@@ -373,7 +373,7 @@ page {
 
 .import-placeholder {
   /* 占位文字和真实输入文字保持同一套字号、行高，避免视觉上“漂高”。 */
-  color: #9DA4AD;
+  color: #BAC4CC;
   font-size: 32rpx;
   line-height: 48rpx;
 }

@@ -252,7 +252,7 @@
 }
 
 .import-placeholder {
-  color: #9DA4AD;
+  color: #BAC4CC;
   font-size: 32rpx;
   line-height: 48rpx;
 }

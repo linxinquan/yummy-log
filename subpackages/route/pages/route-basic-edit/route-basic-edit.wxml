@@ -17,7 +17,7 @@
     </view>
 
     <view class="setting-block">
-      <text class="setting-label">旅行城市</text>
+      <text class="setting-label">旅行城市<text class="required-mark">（必选）</text></text>
       <view class="setting-field picker-field" bindtap="onOpenCityPicker">
         <text class="setting-value {{city ? '' : 'placeholder'}}">{{city || '请选择城市'}}</text>
         <i class="mgc_right_line"></i>
@@ -32,6 +32,7 @@
       <input
         class="setting-field input-field"
         placeholder="请输入路线名称"
+        placeholder-class="input-placeholder"
         maxlength="{{maxTitleLength}}"
         value="{{title}}"
         bindinput="onTitleInput"

@@ -277,7 +277,7 @@
 
 .import-placeholder {
   /* 占位文字与输入文字共用同一组尺寸，避免视觉偏移。 */
-  color: #9DA4AD;
+  color: #BAC4CC;
   font-size: 32rpx;
   line-height: 48rpx;
 }

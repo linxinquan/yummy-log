@@ -271,11 +271,24 @@ function buildDayLabel(dayNumber) {
   return `第 ${safeDayNumber} 天`
 }
 
-// 生成路线顶部 Tab：行程总览 + 每一天。
+// 生成路线顶部 Tab：行程总览 + 每一天（含待计划虚拟天）。
+// daySections 包含正常天数和末尾的待计划虚拟天，每个 day.title 作为 Tab 标签。
 function buildTabs(dayCount) {
   const tabs = [{ key: 'overview', label: '行程总览' }]
   for (let i = 0; i < dayCount; i += 1) {
     tabs.push({ key: `day-${i}`, label: buildDayLabel(i + 1) })
+  }
+  return tabs
+}
+
+// 重载版：接受 daySections 数组，根据每个天的 title 生成 Tab 标签。
+function buildTabsFromSections(daySections) {
+  const tabs = [{ key: 'overview', label: '行程总览' }]
+  for (let i = 0; i < (daySections || []).length; i += 1) {
+    const day = daySections[i]
+    // 待计划天强制显示"待计划"，不管数据里 title 怎么写。
+    const label = day.id === '__pending__' ? '待计划' : (day.title || buildDayLabel(i + 1))
+    tabs.push({ key: `day-${i}`, label })
   }
   return tabs
 }
@@ -419,6 +432,7 @@ module.exports = {
   buildPreviewTitle,
   buildDayLabel,
   buildTabs,
+  buildTabsFromSections,
   buildSummaryText,
   getCityInfo,
   buildPreviewRouteData,
