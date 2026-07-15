@@ -1,0 +1,5 @@
+<view class="no-more" style="margin-top: {{marginTop}};">
+  <view class="no-more-line"></view>
+  <text class="no-more-text">{{text}}</text>
+  <view class="no-more-line"></view>
+</view>

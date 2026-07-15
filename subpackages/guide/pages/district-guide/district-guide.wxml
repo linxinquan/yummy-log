@@ -35,11 +35,7 @@
       </view>
 
       <!-- 底部结束提示 -->
-      <view class="no-more">
-        <view class="no-more-line"></view>
-        <text class="no-more-text">已经没有更多了</text>
-        <view class="no-more-line"></view>
-      </view>
+      <no-more margin-top="0" />
     </view>
   </block>
   <block wx:if="{{!hasGuides}}">

@@ -150,7 +150,7 @@
 }
 
 .edit-field-textarea-desc {
-  height: 432rpx;
+  height: 240rpx;
   padding: 24rpx 32rpx 24rpx;
   line-height: 48rpx;
   display: block;

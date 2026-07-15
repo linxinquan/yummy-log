@@ -237,11 +237,7 @@
           </view>
         </view>
         
-        <view class="no-more" wx:if="{{filteredItems.length > 0}}">
-          <view class="no-more-line"></view>
-          <text class="no-more-text">已经没有更多了</text>
-          <view class="no-more-line"></view>
-        </view>
+        <no-more wx:if="{{filteredItems.length > 0}}" />
         
         <view class="bottom-spacer"></view>
       </view>

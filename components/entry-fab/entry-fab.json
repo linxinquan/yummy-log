@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "entry-fab-button": "/components/entry-fab-button/index"
+  }
+}

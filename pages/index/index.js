@@ -47,8 +47,8 @@ const WEATHER_FALLBACK_TEXT = '天气获取失败，请稍后重试'
 // 这里升级一个版本号，顺手让旧的失败缓存失效。
 const WEATHER_CACHE_KEY = 'indexWeatherCache_v2'
 const WEATHER_CACHE_TTL = 10 * 60 * 1000
-// 首页天气改成 Open-Meteo，无需单独申请 key，也不会被腾讯天气 key 限流影响。
-const OPEN_METEO_WEATHER_URL = 'https://api.open-meteo.com/v1/forecast'
+// 首页天气使用腾讯地图天气 API（基于已有 qqMapKey）
+const WEATHER_API_URL = 'https://apis.map.qq.com/ws/weather/v1/'
 // 首页天气在定位和区划更新时都会触发，这里做一层轻量防抖，避免瞬时重复请求。
 const WEATHER_REQUEST_DEBOUNCE_MS = 300
 // 重新定位后，把地图拉近到当前位置附近，避免只更新中心点却看起来没变化。
@@ -115,33 +115,6 @@ function buildWeatherState(weather = '', temperature = '') {
     weatherDesc,
     weatherTemp
   }
-}
-
-// Open-Meteo 返回的是 WMO 天气码，这里统一转成首页展示用的中文文案。
-function getWeatherTextFromCode(weatherCode) {
-  const code = Number(weatherCode)
-  if (code === 0) return '晴'
-  if (code === 1) return '晴间多云'
-  if (code === 2) return '多云'
-  if (code === 3) return '阴'
-  if (code === 45 || code === 48) return '有雾'
-  if ([51, 53, 55, 56, 57].includes(code)) return '毛毛雨'
-  if (code === 61) return '小雨'
-  if (code === 63) return '中雨'
-  if (code === 65) return '大雨'
-  if (code === 66 || code === 67) return '冻雨'
-  if (code === 71) return '小雪'
-  if (code === 73) return '中雪'
-  if (code === 75) return '大雪'
-  if (code === 77) return '雪粒'
-  if (code === 80) return '阵雨'
-  if (code === 81) return '较强阵雨'
-  if (code === 82) return '强阵雨'
-  if (code === 85) return '阵雪'
-  if (code === 86) return '强阵雪'
-  if (code === 95) return '雷暴'
-  if (code === 96 || code === 99) return '雷暴伴冰雹'
-  return ''
 }
 
 // 读取本地天气缓存。
@@ -710,9 +683,10 @@ Page({
     }
 
     const location = app.globalData.location
-    // 没有定位时，直接回退到提示文案，
+    const key = app.globalData.qqMapKey
+    // 没有定位或 key 时，直接回退到提示文案，
     // 避免页面停留在空白天气状态。
-    if (!location) {
+    if (!location || !key) {
       this.setData({
         weatherDesc: WEATHER_FALLBACK_TEXT,
         weatherTemp: ''
@@ -720,27 +694,26 @@ Page({
       return
     }
 
-    // 使用 Open-Meteo 天气接口，避免继续依赖已限流的腾讯天气 key。
+    // 使用腾讯地图天气 API
     this._weatherLoading = true
     wx.request({
-      url: OPEN_METEO_WEATHER_URL,
+      url: WEATHER_API_URL,
       data: {
-        latitude: location.lat,
-        longitude: location.lng,
-        current: 'temperature_2m,weather_code',
-        timezone: 'auto'
+        location: `${location.lat},${location.lng}`,
+        key: key,
+        type: 'now'
       },
       success: (res) => {
-        if (res.statusCode === 200 && res.data && res.data.current) {
-          const current = res.data.current || {}
-          const weatherState = buildWeatherState(
-            getWeatherTextFromCode(current.weather_code),
-            current.temperature_2m
-          )
+        if (res.data && res.data.status === 0) {
+          const realtime = Array.isArray(res.data.result && res.data.result.realtime)
+            ? res.data.result.realtime[0]
+            : (res.data.result && res.data.result.realtime)
+          const infos = (realtime && realtime.infos) || (res.data.result && res.data.result.infos) || {}
+          const weatherState = buildWeatherState(infos.weather, infos.temperature)
           this.setData(weatherState)
           saveWeatherStateToCache(weatherState)
         } else {
-          // 接口返回异常结构时，统一回退到提示文案。
+          // 接口返回异常状态时，统一回退到提示文案。
           this.setData({
             weatherDesc: WEATHER_FALLBACK_TEXT,
             weatherTemp: ''

@@ -217,14 +217,13 @@ page {
   flex-direction: column;
   gap: 32rpx;
   padding: 32rpx 32rpx;
-  border: 1rpx solid #F6F8FA;
+  border: 1rpx solid var(--border);
   border-radius: 24rpx;
-  background: #FFFFFF;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.03);
+  background: var(--surface);
 }
 
 .overview-card-day {
-  color: #808B9A;
+  color: var(--text-secondary);
   font-size: 28rpx;
   line-height: 100%;
 }
@@ -809,7 +808,7 @@ page {
 .day-separator {
   width: 100%;
   height: 16rpx;
-  background: #f2f6f7;
+  background: #F6F8FA;
 }
 
 .overview-separator {

@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": ""
+  "navigationBarTitleText": "",
+  "usingComponents": {
+    "no-more": "/components/no-more/no-more"
+  }
 }

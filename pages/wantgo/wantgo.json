@@ -1,6 +1,6 @@
 {
   "usingComponents": {
-    "entry-fab-button": "/components/entry-fab-button/index",
+    "entry-fab": "/components/entry-fab/entry-fab",
     "bottom-action-sheet": "/components/bottom-action-sheet/index",
     "travel-meta-line": "/components/travel-meta-line/index",
     "transport-info-sheet": "/components/transport-info-sheet/index"

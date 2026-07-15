@@ -3,10 +3,6 @@ const app = getApp();
 const { normalizeTripDurationText } = require("../../utils/trip-duration");
 const { backfillStoredGuides } = require("../../utils/guide-backfill");
 const { DEFAULT_COVER_POOL } = require("../../config/cover-pool");
-const {
- parseRouteTextToIds,
- resolveRouteImportText,
-} = require("../../utils/route-import");
 const placesData = require("../../utils/placesData");
 const util = require("../../utils/util");
 // 读取首页当前选中的城市时，和首页共用同一个缓存 key。
@@ -204,12 +200,8 @@ Page({
   allGuides: [],
   currentGuides: [],
 
-  // 右下角悬浮入口状态：攻略页沿用想去页同一套三卡片菜单。
-  addEntryVisible: false,
-  importEntryVisible: false,
-  guideLink: "",
-  parsingRoute: false,
- },
+},
+
 
  // 页面初始化：计算顶部安全区，并首次加载攻略数据。
  onLoad() {
@@ -250,25 +242,7 @@ Page({
   this.loadGuides(this.data.currentCategory || "全部");
  },
 
- // 页面切走时收起悬浮菜单，避免回到页面时状态残留。
- onHide() {
-  this.setData({
-   addEntryVisible: false,
-   importEntryVisible: false,
-  });
- },
-
- // 页面卸载前也收起悬浮菜单，避免输入内容残留到下一次进入。
- onUnload() {
-  this.setData({
-   addEntryVisible: false,
-   importEntryVisible: false,
-   guideLink: "",
-   parsingRoute: false,
-  });
- },
-
- // 让攻略页顶部地区 Tab 跟首页当前城市保持一致。
+// 让攻略页顶部地区 Tab 跟首页当前城市保持一致。
  syncDistrictTabsWithSelectedCity() {
   const currentCity = getSelectedExploreCity();
   this.setData({
@@ -608,7 +582,7 @@ const allGuides = [
   });
  },
 
- // 点击顶部分类，切换“全部 / 推荐”。
+ // 点击顶部分类，切换"全部 / 推荐"。
  onCategoryChange(e) {
   const categoryName = e.currentTarget.dataset.name;
   this.refreshGuideList(categoryName);
@@ -624,155 +598,16 @@ const allGuides = [
   });
  },
 
- // 阻止点击弹窗内容时冒泡到遮罩层，避免误关闭。
- preventBubble() {
- },
-
- // 打开右下角悬浮入口菜单。
- openAddEntrySheet() {
-  this.setData({
-   addEntryVisible: true,
-   importEntryVisible: false,
-  });
- },
-
- // 关闭右下角悬浮入口菜单。
- closeAddEntrySheet() {
-  this.setData({
-   addEntryVisible: false,
-  });
- },
-
- // 悬浮按钮统一入口：关闭态时收起弹层，普通态时打开菜单。
- onEntryFabTap() {
-  if (this.data.addEntryVisible || this.data.importEntryVisible) {
-   this.closeActiveEntryOverlay();
-   return;
-  }
-  this.openAddEntrySheet();
- },
-
- // 统一关闭当前悬浮入口相关弹层，供右下角关闭按钮复用。
- closeActiveEntryOverlay() {
-  this.setData({
-   addEntryVisible: false,
-   importEntryVisible: false,
-  });
- },
-
- // 打开“解析路线”输入弹窗，同时收起三张入口卡片。
- onOpenLinkImport() {
-  this.setData({
-   addEntryVisible: false,
-   importEntryVisible: true,
-  });
- },
-
- // 关闭“解析路线”输入弹窗。
- onCloseLinkImport() {
-  this.setData({
-   importEntryVisible: false,
-  });
- },
-
- // 同步输入框内容。
- onLinkInput(e) {
-  this.setData({
-   guideLink: (e.detail && e.detail.value) || "",
-  });
- },
-
- // 一键读取剪贴板内容。
- onPasteLink() {
-  wx.getClipboardData({
-   success: ({ data }) => {
-    this.setData({ guideLink: data || "" });
-   },
-   fail: () => {
-    wx.showToast({ title: "未获取到剪贴板内容", icon: "none" });
-   },
-  });
- },
-
- // 确认解析内容，并直接跳去路线规划页。
- async onConfirmLink() {
-  const guideLink = (this.data.guideLink || "").trim();
-  if (!guideLink) {
-   wx.showToast({ title: "请先粘贴链接或正文", icon: "none" });
-   return;
-  }
-
-  if (this.data.parsingRoute) return;
-  this.setData({ parsingRoute: true });
-  wx.showLoading({ title: "解析中..." });
-
-  try {
-   const resolvedInput = await resolveRouteImportText(guideLink);
-   if (!resolvedInput.success || !resolvedInput.text) {
-    wx.showToast({
-     title: resolvedInput.message || "解析失败",
-     icon: "none",
-    });
-    return;
-   }
-
-   const parseResult = await parseRouteTextToIds(resolvedInput.text);
-   if (!parseResult.totalCount) {
-    wx.showToast({ title: "暂未识别到可规划地点", icon: "none" });
-    return;
-   }
-
-   if (parseResult.warning) {
-    console.warn("[discover-entry]", parseResult.warning);
-   }
-
-   let successMsg = `已识别 ${parseResult.totalCount} 个地点`;
-   if (parseResult.geoStats && parseResult.geoStats.total > 0) {
-    const unresolved =
-     parseResult.geoStats.total - parseResult.geoStats.resolved;
-    if (unresolved > 0) {
-     successMsg += `（${unresolved}个使用估算坐标）`;
-    }
-   }
-
-   this.setData({
-    guideLink: "",
-    importEntryVisible: false,
-   });
-
-   wx.showToast({
-    title: successMsg,
-    icon: "success",
-   });
-
-   setTimeout(() => {
-    wx.navigateTo({
-     url: `/subpackages/route/pages/my-route/my-route?ids=${parseResult.routeIds.join(",")}&dayCount=${parseResult.dayCount}`,
-    });
-   }, 300);
-  } finally {
-   wx.hideLoading();
-   this.setData({ parsingRoute: false });
-  }
- },
-
- // 从悬浮入口直接进入“创建路线”。
- onCreateRouteFromFab() {
-  this.setData({
-   addEntryVisible: false,
-  });
+ // 创建路线：由组件 emit 事件触发
+ onEntryCreateRoute() {
   wx.navigateTo({
    url: "/subpackages/route/pages/route-basic-edit/route-basic-edit?create=1",
   });
  },
 
- // 从悬浮入口直接进入“采集打卡”。
- onOpenCheckinFromFab() {
-  this.setData({
-   addEntryVisible: false,
-  });
-  wx.navigateTo({
-   url: "/subpackages/checkin/pages/checkin-camera/checkin-camera?type=food&source=discoverFab",
-  });
+ // 解析确认后跳转：由组件 emit confirmlink 事件触发
+ onEntryConfirmLink(e) {
+  const { url } = e.detail
+  wx.navigateTo({ url })
  },
 });

@@ -35,7 +35,7 @@
           <view class="edit-field-head">
             <text class="edit-field-label">地址</text>
             <view class="edit-field-action" bindtap="onPickLocation">
-              <i class="mgc_location_line edit-field-action-icon"></i>
+              <i class="mgc_location_fill edit-field-action-icon"></i>
               <text>地址选点</text>
             </view>
           </view>

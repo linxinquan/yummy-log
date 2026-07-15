@@ -831,26 +831,4 @@
   text-overflow: ellipsis;
 }
 
-.no-more {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  padding: 32rpx 32rpx 64rpx;
-  gap: 16rpx;
-  margin-top: 48rpx;
-}
 
-.no-more-line {
-  width: 160rpx;
-  height: 1rpx;
-  background: #E7E7E7;
-}
-
-.no-more-text {
-  font-family: 'PingFang SC';
-  font-weight: 400;
-  font-size: 24rpx;
-  line-height: 100%;
-  color: #9DA4AD;
-}
