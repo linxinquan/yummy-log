@@ -7,7 +7,7 @@
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{showEmpty}}">
     <view class="empty-illustration">
-      <i class="mgc_star_line empty-icon"></i>
+      <image class="empty-image" src="/images/empty/暂无收藏.png" mode="aspectFit" />
     </view>
     <text class="empty-title">我的收藏</text>
     <text class="empty-hint">{{emptyText}}</text>
