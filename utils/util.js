@@ -944,11 +944,11 @@ function getCityFullName(shortName) {
 
 // 觅食图城市列表
 const GUANGDONG_CITIES = [
-  { id: 1, name: '香港', fullName: '香港特别行政区', lat: 22.3193, lng: 114.1694, bgColor: '#E8D5D5' },
-  { id: 2, name: '上海', fullName: '上海市', lat: 31.2304, lng: 121.4737, bgColor: '#DAE5E8' },
-  { id: 3, name: '北京', fullName: '北京市', lat: 39.9042, lng: 116.4074, bgColor: '#E4D8DC' },
-  { id: 4, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 8970 },
-  { id: 5, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 8270 },
+  { id: 1, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 8270 },
+  { id: 2, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 8970 },
+  { id: 3, name: '香港', fullName: '香港特别行政区', lat: 22.3193, lng: 114.1694, bgColor: '#E8D5D5' },
+  { id: 4, name: '北京', fullName: '北京市', lat: 39.9042, lng: 116.4074, bgColor: '#E4D8DC' },
+  { id: 5, name: '上海', fullName: '上海市', lat: 31.2304, lng: 121.4737, bgColor: '#DAE5E8' },
   { id: 6, name: '杭州', fullName: '杭州市', lat: 30.2741, lng: 120.1551, bgColor: '#DCE5DE' },
   { id: 7, name: '台北', fullName: '台北市', lat: 25.0330, lng: 121.5654, bgColor: '#D8E3E8' },
   { id: 8, name: '澳门', fullName: '澳门特别行政区', lat: 22.1987, lng: 113.5439, bgColor: '#E3DBE6' },
