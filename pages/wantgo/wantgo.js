@@ -1373,7 +1373,11 @@ Page({
 
   // ─── 打开路线规划天数弹窗 ─────────────────────────────
   onPlanRoute() {
-    const { items } = this.data
+    const { items, cityFilter } = this.data
+    console.log('[路线规划] cityFilter:', cityFilter)
+    console.log('[路线规划] items 数量:', items.length)
+    console.log('[路线规划] items IDs:', items.map(i => i._id))
+    console.log('[路线规划] items 城市:', items.map(i => i.city || i.城市 || '无'))
     if (items.length === 0) {
       wx.showToast({ title: '清单为空', icon: 'none' })
       return
@@ -1415,7 +1419,11 @@ Page({
 
   // 确认天数后，带着地点 id 去路线规划页
   onConfirmPlanRoute() {
-    const { items, selectedPlanDayCount } = this.data
+    const { items, selectedPlanDayCount, cityFilter } = this.data
+    console.log('[路线规划-确认] cityFilter:', cityFilter)
+    console.log('[路线规划-确认] items 数量:', items.length)
+    console.log('[路线规划-确认] items IDs:', items.map(i => i._id))
+    console.log('[路线规划-确认] items 城市:', items.map(i => i.city || i.城市 || '无'))
     if (items.length === 0) {
       wx.showToast({ title: '清单为空', icon: 'none' })
       return

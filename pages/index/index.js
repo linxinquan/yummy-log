@@ -476,6 +476,7 @@ Page({
     })
     
     app.whenLocationReady((loc) => {
+      console.log('[index] whenLocationReady 触发, currentCity:', this.data.currentCity)
       this.setData({
         mapCenter: { lat: loc.lat, lng: loc.lng },
         // 页面首次拿到定位后，同时保存当前位置，
@@ -504,6 +505,8 @@ Page({
         currentSecondaryTab: '',
         secondaryTabScrollLeft: 0
       })
+      // 城市切换后重新筛选数据并刷新地图
+      this._scheduleApplyFilters()
       // 区划更新后重新获取天气
       this.scheduleWeatherLoad()
     })
@@ -587,6 +590,8 @@ Page({
         tags: filteredTags,
       };
     })
+    // 将 cloud:// 封面转为临时 URL，避免网络波动时解析失败
+    await util.resolveCloudUrls(allPlaces, 'coverImage')
     // 直接设置为总列表，不再需要合并演示数据
     this.setData({ allItems: allPlaces })
     this._scheduleApplyFilters()

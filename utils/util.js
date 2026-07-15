@@ -911,49 +911,66 @@ function getSpotCategoryColor(category) {
  */
 function getCityShortName(fullCityName) {
   const cityMap = {
-    '北京市': '北京', '上海市': '上海', '广州市': '广州', '深圳市': '深圳',
-    '天津市': '天津', '重庆市': '重庆', '成都市': '成都', '杭州市': '杭州',
-    '南京市': '南京', '武汉市': '武汉', '西安市': '西安', '长沙市': '长沙',
-    '青岛市': '青岛', '大连市': '大连', '厦门市': '厦门', '苏州市': '苏州',
-    '宁波市': '宁波', '无锡市': '无锡', '佛山市': '佛山', '东莞市': '东莞',
-    '汕头市': '汕头', '湛江市': '湛江', '汕尾市': '汕尾', '清远市': '清远',
-    '珠海市': '珠海', '中山市': '中山', '江门市': '江门', '惠州市': '惠州',
-    '肇庆市': '肇庆', '茂名市': '茂名', '阳江市': '阳江', '梅州市': '梅州',
-    '河源市': '河源', '韶关市': '韶关', '揭阳市': '揭阳', '潮州市': '潮州',
-    '云浮市': '云浮'
+    '香港特别行政区': '香港', '上海市': '上海', '北京市': '北京', '广州市': '广州',
+    '杭州市': '杭州', '台北市': '台北', '澳门特别行政区': '澳门', '成都市': '成都',
+    '厦门市': '厦门', '南京市': '南京', '苏州市': '苏州', '福州市': '福州',
+    '台州市': '台州', '台南市': '台南', '台中市': '台中', '高雄市': '高雄',
+    '温州市': '温州', '泉州市': '泉州', '扬州市': '扬州', '常州市': '常州',
+    '新北市': '新北', '新竹县': '新竹县', '新竹市': '新竹', '宁德市': '宁德',
+    '惠州市': '惠州', '乌兰察布市': '乌兰察布', '深圳市': '深圳'
   }
-  return cityMap[fullCityName] || fullCityName.replace('市', '')
+  return cityMap[fullCityName] || fullCityName.replace(/[市县特别行政区]$/, '')
+}
+
+/**
+ * 根据城市短名（如'深圳'）反查完整名称（如'深圳市'）
+ * @param {string} shortName - 城市短名
+ * @returns {string} 城市完整名称
+ */
+function getCityFullName(shortName) {
+  if (!shortName) return '广州市'
+  // 如果已经是完整名称，直接返回
+  if (/[市县特别行政区]$/.test(shortName)) return shortName
+  // 在 GUANGDONG_CITIES 中查找匹配
+  const found = GUANGDONG_CITIES.find(c => c.name === shortName)
+  return found ? found.fullName : shortName + '市'
 }
 
 
 /**
  * 城市数据工具函数
- * 包含广东省城市列表和生成城市选项的函数
+ * 包含觅食图城市列表和生成城市选项的函数
  */
 
-// 广东省城市列表
+// 觅食图城市列表
 const GUANGDONG_CITIES = [
-  { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 8970 },
-  { id: 2, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 8270 },
-  { id: 3, name: '汕头', fullName: '汕头市', lat: 23.3541, lng: 116.6819, bgColor: '#E4D8DC' },
-  { id: 4, name: '湛江', fullName: '湛江市', lat: 21.2707, lng: 110.3594, bgColor: '#E6DBD8' },
-  { id: 5, name: '汕尾', fullName: '汕尾市', lat: 22.7862, lng: 115.3751, bgColor: '#DAE5E8' },
-  { id: 6, name: '清远', fullName: '清远市', lat: 23.6817, lng: 113.056, bgColor: '#E0E0E0' },
-  { id: 7, name: '佛山', fullName: '佛山市', lat: 23.0215, lng: 113.1214, bgColor: '#DCE5DE' },
-  { id: 8, name: '东莞', fullName: '东莞市', lat: 23.0207, lng: 113.7518, bgColor: '#D8E3E8' },
-  { id: 9, name: '珠海', fullName: '珠海市', lat: 22.271, lng: 113.5767, bgColor: '#E3DBE6' },
-  { id: 10, name: '中山', fullName: '中山市', lat: 22.5176, lng: 113.3928, bgColor: '#E5DFDA' },
-  { id: 11, name: '江门', fullName: '江门市', lat: 22.5787, lng: 113.0819, bgColor: '#DCE5E3' },
-  { id: 12, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168, bgColor: '#DCE3E8' },
-  { id: 13, name: '肇庆', fullName: '肇庆市', lat: 23.0472, lng: 112.4651, bgColor: '#E6DDE2' },
-  { id: 14, name: '茂名', fullName: '茂名市', lat: 21.6633, lng: 110.9255, bgColor: '#E6E0DA' },
-  { id: 15, name: '阳江', fullName: '阳江市', lat: 21.8579, lng: 111.9822, bgColor: '#DCE7E0' },
-  { id: 16, name: '梅州', fullName: '梅州市', lat: 24.2886, lng: 116.1176, bgColor: '#D9E3E8' },
-  { id: 17, name: '河源', fullName: '河源市', lat: 23.7437, lng: 114.7004, bgColor: '#E4DCE3' },
-  { id: 18, name: '韶关', fullName: '韶关市', lat: 24.8104, lng: 113.5972, bgColor: '#E3DFDB' },
-  { id: 19, name: '揭阳', fullName: '揭阳市', lat: 23.5498, lng: 116.3728, bgColor: '#DCE5E1' },
-  { id: 20, name: '潮州', fullName: '潮州市', lat: 23.6567, lng: 116.6226, bgColor: '#D7E2E6' },
-  { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445, bgColor: '#E2DEE0' }
+  { id: 1, name: '香港', fullName: '香港特别行政区', lat: 22.3193, lng: 114.1694, bgColor: '#E8D5D5' },
+  { id: 2, name: '上海', fullName: '上海市', lat: 31.2304, lng: 121.4737, bgColor: '#DAE5E8' },
+  { id: 3, name: '北京', fullName: '北京市', lat: 39.9042, lng: 116.4074, bgColor: '#E4D8DC' },
+  { id: 4, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 8970 },
+  { id: 5, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 8270 },
+  { id: 6, name: '杭州', fullName: '杭州市', lat: 30.2741, lng: 120.1551, bgColor: '#DCE5DE' },
+  { id: 7, name: '台北', fullName: '台北市', lat: 25.0330, lng: 121.5654, bgColor: '#D8E3E8' },
+  { id: 8, name: '澳门', fullName: '澳门特别行政区', lat: 22.1987, lng: 113.5439, bgColor: '#E3DBE6' },
+  { id: 9, name: '成都', fullName: '成都市', lat: 30.5728, lng: 104.0668, bgColor: '#E6DBD8' },
+  { id: 10, name: '厦门', fullName: '厦门市', lat: 24.4798, lng: 118.0894, bgColor: '#DAE5E8' },
+  { id: 11, name: '南京', fullName: '南京市', lat: 32.0603, lng: 118.7969, bgColor: '#E5DFDA' },
+  { id: 12, name: '苏州', fullName: '苏州市', lat: 31.2990, lng: 120.5853, bgColor: '#DCE5E3' },
+  { id: 13, name: '福州', fullName: '福州市', lat: 26.0745, lng: 119.2965, bgColor: '#DCE3E8' },
+  { id: 14, name: '台州', fullName: '台州市', lat: 28.6564, lng: 121.4208, bgColor: '#E6DDE2' },
+  { id: 15, name: '台南', fullName: '台南市', lat: 22.9999, lng: 120.2270, bgColor: '#E6E0DA' },
+  { id: 16, name: '台中', fullName: '台中市', lat: 24.1477, lng: 120.6736, bgColor: '#DCE7E0' },
+  { id: 17, name: '高雄', fullName: '高雄市', lat: 22.6273, lng: 120.3014, bgColor: '#D9E3E8' },
+  { id: 18, name: '温州', fullName: '温州市', lat: 27.9939, lng: 120.6994, bgColor: '#E4DCE3' },
+  { id: 19, name: '泉州', fullName: '泉州市', lat: 24.8746, lng: 118.6759, bgColor: '#E3DFDB' },
+  { id: 20, name: '扬州', fullName: '扬州市', lat: 32.3936, lng: 119.4213, bgColor: '#DCE5E1' },
+  { id: 21, name: '常州', fullName: '常州市', lat: 31.8101, lng: 119.9736, bgColor: '#D7E2E6' },
+  { id: 22, name: '新北', fullName: '新北市', lat: 25.0620, lng: 121.4570, bgColor: '#E2DEE0' },
+  { id: 23, name: '新竹县', fullName: '新竹县', lat: 24.8393, lng: 121.0020, bgColor: '#E0E0E0' },
+  { id: 24, name: '新竹', fullName: '新竹市', lat: 24.8036, lng: 120.9686, bgColor: '#DCE5DE' },
+  { id: 25, name: '宁德', fullName: '宁德市', lat: 26.6657, lng: 119.5482, bgColor: '#E6DBD8' },
+  { id: 26, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168, bgColor: '#DCE3E8' },
+  { id: 27, name: '乌兰察布', fullName: '乌兰察布市', lat: 41.0006, lng: 113.1336, bgColor: '#E0E6DC' }
 ]
 
 /**
@@ -1251,6 +1268,64 @@ function getFootprintItemsAsync() {
   return getFootprintItems()
 }
 
+// ─── 云存储 fileID → 临时 URL ──────────────────
+
+/**
+ * 批量将 cloud:// 文件 ID 转为可访问的临时 HTTPS URL
+ * 使用 wx.cloud.getTempFileURL 转换
+ * 非 cloud:// 的 URL 原样保留
+ * 
+ * @param {string[]} fileIDs - 云文件 ID 数组
+ * @returns {Promise<Object<string, string>>} fileID → tempURL 映射
+ */
+async function resolveCloudFileIDs(fileIDs) {
+  if (!fileIDs || fileIDs.length === 0) return {}
+  const cloudIDs = fileIDs.filter(id => id && typeof id === 'string' && id.startsWith('cloud://'))
+  if (cloudIDs.length === 0) return {}
+  try {
+    const res = await wx.cloud.getTempFileURL({ fileList: cloudIDs })
+    const map = {}
+    if (res && res.fileList) {
+      res.fileList.forEach(item => { map[item.fileID] = item.tempFileURL || item.fileID })
+    }
+    return map
+  } catch (err) {
+    console.warn('[util] getTempFileURL 失败:', err)
+    return {}
+  }
+}
+
+/**
+ * 将对象数组中指定字段的 cloud:// 地址批量转为临时 URL
+ * 原地修改（mutable）传入的数组对象
+ * 
+ * @param {Object[]} items - 数据对象数组
+ * @param {string|string[]} urlFields - 要转换的字段名，如 'coverImage' 或 ['coverImage', 'avatarUrl']
+ * @returns {Promise<void>}
+ */
+async function resolveCloudUrls(items, urlFields) {
+  if (!items || items.length === 0) return
+  const fields = Array.isArray(urlFields) ? urlFields : [urlFields]
+  const allFileIDs = []
+  items.forEach(item => {
+    fields.forEach(field => {
+      const val = item[field]
+      if (val && typeof val === 'string' && val.startsWith('cloud://')) {
+        allFileIDs.push(val)
+      }
+    })
+  })
+  if (allFileIDs.length === 0) return
+  const urlMap = await resolveCloudFileIDs(allFileIDs)
+  items.forEach(item => {
+    fields.forEach(field => {
+      if (item[field] && urlMap[item[field]]) {
+        item[field] = urlMap[item[field]]
+      }
+    })
+  })
+}
+
 /**
  * 获取足迹原始记录（纯本地）
  * @returns {Array}
@@ -1305,6 +1380,7 @@ module.exports = {
   getSpotCategoryColor,
   SPOT_CATEGORY_COLORS,
   getCityShortName,
+  getCityFullName,
   getWantList,
   toggleWant,
   isWant,
@@ -1327,4 +1403,7 @@ module.exports = {
   saveManualFootprintAsync,
   // 登录状态判断
   isCloudMode,
+  // 云存储 fileID 转换
+  resolveCloudFileIDs,
+  resolveCloudUrls,
 }
