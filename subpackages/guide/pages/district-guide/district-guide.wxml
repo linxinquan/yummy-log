@@ -42,7 +42,7 @@
     <!-- 某个城市某个区暂时没有攻略时，显示明确提示，避免看起来像白页异常。 -->
     <view class="empty-wrap">
       <view class="empty-illustration">
-        <image class="empty-image" webp="{{true}}" src="/images/empty/暂无攻略.webp" mode="aspectFit" />
+        <image class="empty-image" src="/images/empty/暂无攻略.png" mode="aspectFit" />
       </view>
       <text class="empty-title">{{districtName}} 暂无攻略</text>
       <text class="empty-desc">这个地区的攻略还在整理中，晚点再来看看</text>

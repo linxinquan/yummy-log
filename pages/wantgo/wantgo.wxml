@@ -22,7 +22,7 @@
 
   <view wx:elif="{{empty}}" class="empty-wrap">
     <view class="empty-illustration">
-      <image class="empty-image" webp="{{true}}" src="{{emptyImage}}" mode="aspectFit" />
+      <image class="empty-image" src="{{emptyImage}}" mode="aspectFit" />
     </view>
     <text class="empty-title">{{titles[tab]}}</text>
     <text class="empty-hint">{{emptyHint}}</text>
@@ -148,7 +148,7 @@
       <!-- 想去页筛选结果为空时，只在列表区域显示内嵌空状态，不切整页空白。 -->
       <view wx:if="{{tab === 'want' && items.length === 0}}" class="inline-empty-wrap">
         <view class="empty-illustration inline-empty-illustration">
-          <image class="empty-image" webp="{{true}}" src="/images/empty/筛选无结果.webp" mode="aspectFit" />
+          <image class="empty-image" src="/images/empty/筛选无结果.png" mode="aspectFit" />
         </view>
         <text class="inline-empty-title">暂无地点</text>
         <text class="inline-empty-hint">{{cityFilterLabel}}下还没有地点</text>

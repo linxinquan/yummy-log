@@ -296,20 +296,20 @@ function getEmptyStateMeta(tab) {
     return {
       emptyIcon: 'mgc_route_line',
       emptyHint: '去攻略页导入或复制路线吧',
-      emptyImage: '/images/empty/暂无数据.webp'
+      emptyImage: '/images/empty/暂无数据.png'
     }
   }
   if (tab === 'visited') {
     return {
       emptyIcon: 'mgc_foot_line',
       emptyHint: '去探索页记录你的足迹吧',
-      emptyImage: '/images/empty/暂无采集.webp'
+      emptyImage: '/images/empty/暂无采集.png'
     }
   }
   return {
     emptyIcon: 'mgc_heart_line',
     emptyHint: '去探索页添加想去地点吧',
-    emptyImage: '/images/empty/暂无数据.webp'
+    emptyImage: '/images/empty/暂无数据.png'
   }
 }
 
