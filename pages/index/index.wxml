@@ -174,11 +174,11 @@
         </view>
       </view>
 
-      <view class="empty-state" wx:if="{{filteredItems.length === 0}}">
-        <view class="empty-illustration">
-          <image class="empty-image" src="/images/empty/筛选无结果.png" mode="aspectFit" />
+      <view class="inline-empty" wx:if="{{filteredItems.length === 0}}">
+        <view class="inline-empty-illustration">
+          <image class="inline-empty-image" src="/images/empty/筛选无结果.png" mode="aspectFit" />
         </view>
-        <text class="empty-text body-sm">附近暂无{{currentCategory === '全部' ? '内容' : currentCategory}}，换个分类看看</text>
+        <text class="inline-empty-hint">附近暂无{{currentCategory === '全部' ? '内容' : currentCategory}}，换个分类看看</text>
       </view>
 
       <!-- 卡片列表 (合并美食与景点的统一排版) -->

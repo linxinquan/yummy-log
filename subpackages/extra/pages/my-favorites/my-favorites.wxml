@@ -9,9 +9,9 @@
     <view class="empty-illustration">
       <image class="empty-image" src="/images/empty/暂无收藏.png" mode="aspectFit" />
     </view>
-    <text class="empty-title">我的收藏</text>
+    <text class="empty-title">还没有收藏的地点~</text>
     <text class="empty-hint">{{emptyText}}</text>
-    <view class="empty-btn" bindtap="onGoExplore">去探索</view>
+    <view class="empty-btn" bindtap="onGoExplore">探索地点</view>
   </view>
 
   <!-- 收藏列表 -->

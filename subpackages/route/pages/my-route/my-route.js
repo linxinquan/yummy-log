@@ -393,6 +393,7 @@ Page({
     autoEnterEdit: false,
     isNewRouteDraft: false,
     fromPreview: false,
+    _loadedFromUrl: false,
     transportSheetVisible: false,
     transportOptions: [],
     pendingTransportMode: "walk",
@@ -446,6 +447,7 @@ Page({
         routeId: String(route.id),
         isNewRouteDraft: options.create === "1" || Boolean(route.isDraft),
         fromPreview: options.fromPreview === "1",
+        _loadedFromUrl: true,
       });
       this.applyRoute(route);
       this.syncCurrentLocation();
@@ -472,7 +474,12 @@ Page({
 
   // 页面重新显示时，如果路线已经被别的页面改过，就重新同步最新数据。
   onShow() {
-    const { routeId, isEditing, isNewRouteDraft } = this.data;
+    const { routeId, isEditing, isNewRouteDraft, _loadedFromUrl } = this.data;
+    // 首次加载来自 URL 参数，路线尚未落库，跳过查询。
+    if (_loadedFromUrl) {
+      this.setData({ _loadedFromUrl: false });
+      return;
+    }
     if (isNewRouteDraft) return;
     if (!routeId || isEditing) return;
     const savedRoutes = util.loadData("savedRoutes", []);
