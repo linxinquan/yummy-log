@@ -1,52 +1,59 @@
-// utils/photoStorage.js - 主包可复用的图片持久化服务
+// utils/photoStorage.js - 图片持久化服务（本地 + 云端混合策略）
 const util = require('./util')
 const fs = wx.getFileSystemManager()
 
-// 统一判断当前是否处于云端登录模式。
-// 已登录时才尝试上传云存储，未登录只做本地持久化。
-function isCloudMode() {
+// 判断当前是否处于云端登录模式。已登录才尝试上传云存储，未登录只做本地持久化。
+function _isCloudMode() {
   return util.isCloudMode()
 }
 
 /**
- * 持久化保存图片：先保存到本地沙盒，再按需上传到云端。
- * 这样“我的”页这类主包页面也能安全复用，不再依赖分包工具文件。
- * @param {string} tempPath 微信临时文件路径
+ * 持久化保存照片：本地 wx.getFileSystemManager().saveFile + 云端 wx.cloud.uploadFile（可选）
+ *
+ * 策略说明：
+ * 1. 先用 saveFile 将临时文件转为小程序沙盒内的持久化文件
+ * 2. 如果已登录（云端模式），再异步上传到云存储获取 fileID
+ * 3. 任意一步失败都不影响整体流程，返回已成功的部分
+ *
+ * @param {string} tempPath - 微信临时文件路径
  * @returns {Promise<{localPath: string, cloudFileID: string}>}
  */
 async function persistPhoto(tempPath) {
   if (!tempPath) {
+    console.warn('[PhotoStorage] tempPath 为空')
     return { localPath: '', cloudFileID: '' }
   }
 
-  let localPath = tempPath
+  let localPath = tempPath   // 保底：原始临时路径
   let cloudFileID = ''
 
-  // 先把临时图片保存到小程序沙盒，避免临时路径失效。
+  // Step 1: 本地持久化
   try {
     const savedFilePath = await new Promise((resolve, reject) => {
       fs.saveFile({
         tempFilePath: tempPath,
         success: (res) => resolve(res.savedFilePath),
-        fail: reject
+        fail: reject,
       })
     })
     localPath = savedFilePath
-  } catch (error) {
-    console.warn('[photoStorage] 本地持久化失败，继续使用临时路径:', error)
+    console.log('[PhotoStorage] 本地持久化成功:', localPath)
+  } catch (err) {
+    console.warn('[PhotoStorage] 本地持久化失败，使用原临时路径:', err)
   }
 
-  // 只有登录态才上传云端，避免未登录场景下无意义调用云能力。
-  if (isCloudMode()) {
+  // Step 2: 云端上传（仅登录用户）
+  if (_isCloudMode()) {
     try {
       const cloudPath = `checkin/${Date.now()}_${Math.random().toString(36).slice(2, 10)}.jpg`
-      const uploadResult = await wx.cloud.uploadFile({
+      const uploadRes = await wx.cloud.uploadFile({
         cloudPath,
-        filePath: localPath
+        filePath: localPath,
       })
-      cloudFileID = uploadResult.fileID || ''
-    } catch (error) {
-      console.warn('[photoStorage] 云端上传失败，保留本地图片:', error)
+      cloudFileID = uploadRes.fileID
+      console.log('[PhotoStorage] 云存储上传成功:', cloudFileID)
+    } catch (err) {
+      console.warn('[PhotoStorage] 云存储上传失败（不影响本地保存）:', err)
     }
   }
 
@@ -54,9 +61,16 @@ async function persistPhoto(tempPath) {
 }
 
 /**
- * 统一返回页面可直接展示的图片路径。
- * 优先用本地持久化路径，其次用云端 fileID。
- * @param {Object} record 图片记录对象
+ * 获取可展示的图片路径（含降级策略）
+ *
+ * 降级顺序：
+ * 1. photoPath（本地持久路径，最快）
+ * 2. cloudFileID（云端 fileID，跨设备）
+ * 3. 空字符串（兜底）
+ *
+ * @param {Object} record - 打卡记录对象
+ * @param {string} [record.photoPath]
+ * @param {string} [record.cloudFileID]
  * @returns {string}
  */
 function getDisplayPath(record) {
@@ -66,7 +80,4 @@ function getDisplayPath(record) {
   return ''
 }
 
-module.exports = {
-  persistPhoto,
-  getDisplayPath
-}
+module.exports = { persistPhoto, getDisplayPath }
