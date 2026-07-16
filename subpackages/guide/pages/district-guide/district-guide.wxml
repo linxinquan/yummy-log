@@ -44,8 +44,8 @@
       <view class="empty-illustration">
         <image class="empty-image" src="/images/empty/暂无攻略.png" mode="aspectFit" />
       </view>
-      <text class="empty-title">{{districtName}} 暂无攻略</text>
-      <text class="empty-desc">这个地区的攻略还在整理中，晚点再来看看</text>
+      <text class="empty-title">还没有地点攻略~</text>
+      <text class="empty-hint">攻略还在整理中，晚点再来看看吧</text>
     </view>
   </block>
 </view>

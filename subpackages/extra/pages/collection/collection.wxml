@@ -43,7 +43,7 @@
         <view class="empty-illustration">
           <image class="empty-image" src="/images/empty/暂无采集.png" mode="aspectFit" />
         </view>
-        <text class="empty-title">我的采集</text>
+        <text class="empty-title">还没有采集打卡~</text>
         <text class="empty-hint">去记录你的第一张采集卡吧</text>
         <view class="empty-actions">
           <!-- 空状态按钮改成 view，避免被原生 button 默认宽度 184px 干扰 -->

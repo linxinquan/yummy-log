@@ -299,7 +299,7 @@ function getEmptyStateMeta(tab) {
   if (tab === 'plan') {
     return {
       emptyIcon: 'mgc_route_line',
-      emptyHint: '去攻略页导入或复制路线吧',
+      emptyHint: '去探索地点或者发现攻略路线吧',
       emptyImage: '/images/empty/暂无数据.png'
     }
   }
@@ -313,7 +313,7 @@ function getEmptyStateMeta(tab) {
   return {
     emptyIcon: 'mgc_heart_line',
     emptyHint: '去探索页添加想去地点吧',
-    emptyImage: '/images/empty/暂无数据.png'
+    emptyImage: '/images/empty/还没有添加地点.png'
   }
 }
 
@@ -521,8 +521,8 @@ Page({
     // 当前Tab
     tab: 'want',
     titles: {
-      want: '想去',
-      plan: '路线',
+      want: '还没有想去的地方~',
+      plan: '还没有规划路线~',
       visited: '足迹'
     },
     emptyIcon: 'mgc_heart_line',
@@ -643,6 +643,11 @@ Page({
   // ─── 跳转首页 ─────────────────────────────
   onGoHome() {
     wx.switchTab({ url: '/pages/index/index' })
+  },
+
+  // ─── 跳转攻略页面 ─────────────────────────────
+  onGoDiscoverGuide() {
+    wx.switchTab({ url: '/pages/discover/discover' })
   },
 
   // ─── 跳转个人页登录 ─────────────────────────────
