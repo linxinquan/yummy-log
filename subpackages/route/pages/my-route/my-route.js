@@ -3,7 +3,7 @@ const util = require("../../../../utils/util");
 const checkinUtil = require("../../../../utils/checkinUtil");
 const {
   buildDayLabel,
-  buildTabs,
+  buildTabsFromSections,
   getPreviewIndexByDay,
   getDayIndexByPreview,
   buildSummaryText,
@@ -172,10 +172,10 @@ function decorateRoutePlaceItem(item = {}) {
   };
 }
 
-// 保存时去掉完全空白的天数，但至少保留 1 天。
+// 保存时保留原始天数结构，但空待计划天不保存。
 function removeEmptyDaysOnSave(daySections) {
   const sections = (daySections || []).filter(
-    (day) => (day.items || []).length > 0
+    d => d.id !== '__pending__' || (d.items || []).length > 0
   );
   if (sections.length) return sections;
   return (daySections || []).slice(0, 1);
@@ -458,7 +458,7 @@ Page({
     this.refreshPlacePickerItems();
 
     // 统一支持两种进入方式：
-    // 1. 传完整 route 对象：直接展示已有“我的路线”
+    // 1. 传完整 route 对象：直接展示已有"我的路线"
     // 2. 只传 ids + dayCount：在当前页生成、自动保存、再展示
     if (options.route) {
       const route = JSON.parse(decodeURIComponent(options.route));
@@ -541,7 +541,7 @@ Page({
       };
 
       const dayStartPointTexts = [...(this.data.dayStartPointTexts || [])];
-      // 只有“还没写入文案”或“当前仍是默认当前位置文案”时，才自动回填地址。
+      // 只有"还没写入文案"或"当前仍是默认当前位置文案"时，才自动回填地址。
       // 如果用户主动清空成空字符串，这里不要再覆盖回去。
       if (
         typeof dayStartPointTexts[0] !== "string" ||
@@ -651,14 +651,15 @@ Page({
       );
 
       // 空字符串也算一种明确状态：
-      // 用户点了“清空起点位置”后，需要保留“不显示地点”的结果。
+      // 用户点了"清空起点位置"后，需要保留"不显示地点"的结果。
       const resolvedStartPointText =
         typeof dayStartPointTexts[dayIndex] === "string"
           ? dayStartPointTexts[dayIndex]
           : (day.startPointText || "");
       return {
         id: day.id || `day-${dayIndex}`,
-        title: buildDayLabel(dayIndex + 1),
+        // 待计划天固定显示"待计划"，其他天按规则显示"第 N 天"。
+        title: day.id === '__pending__' ? '待计划' : buildDayLabel(dayIndex + 1),
         countText: `${plannedItems.length} 个地点`,
         startPoint: dayStartPoint,
         startPointText: resolvedStartPointText,
@@ -680,7 +681,7 @@ Page({
     const currentStart = route.currentStart || this.data.currentStart;
     const dayStartPoints = (route.dayStartPoints || []).slice();
     const dayStartPointTexts = (route.dayStartPointTexts || []).slice();
-    const daySections = this.syncDaySections(
+    let daySections = this.syncDaySections(
       buildDaySectionsFromLegacy(route),
       cityInfo,
       {
@@ -689,11 +690,23 @@ Page({
         dayStartPointTexts,
       }
     );
-    const summaryText = normalizeTripSummaryText(
-      route.subtitle,
-      daySections.length,
-      daySections.reduce((sum, day) => sum + (day.items || []).length, 0)
-    );
+    // 兼容旧数据：之前待计划存在 pendingItems 字段，迁移到 daySections 中的 __pending__ 天。
+    const oldPendingItems = route.pendingItems || [];
+    if (oldPendingItems.length > 0 && !daySections.some(d => d.id === '__pending__')) {
+      daySections = daySections.concat([{
+        id: '__pending__',
+        title: '待计划',
+        countText: `${oldPendingItems.length} 个地点`,
+        items: oldPendingItems,
+        startPointText: ''
+      }])
+    }
+    // 确保 __pending__ 天的标题永远是"待计划"。
+    daySections = daySections.map(d => d.id === '__pending__' ? { ...d, title: '待计划' } : d)
+    // 待计划天没有地点时不显示。
+    daySections = daySections.filter(d => d.id !== '__pending__' || (d.items || []).length > 0)
+    // 用 buildSummaryText 重新计算天数地点数，避免被旧文案误导。
+    const summaryText = buildSummaryText(daySections);
     const flattenedPlaces = flattenDaySections(daySections);
 
     this.setData(
@@ -714,7 +727,7 @@ Page({
         originalDaySections: JSON.parse(
           JSON.stringify(stripEditState(daySections))
         ),
-        tabs: buildTabs(daySections.length),
+        tabs: buildTabsFromSections(daySections),
         summaryText,
         hasRoutePlaces: flattenedPlaces.length > 0,
         currentTab: 0,
@@ -749,7 +762,7 @@ Page({
     );
   },
 
-  // 当页面只收到地点 ids + 天数时，直接在“我的路线详情页”里完成生成和自动保存。
+  // 当页面只收到地点 ids + 天数时，直接在"我的路线详情页"里完成生成和自动保存。
   loadGeneratedRoute(options = {}) {
     const ids = String(options.ids || "")
       .split(",")
@@ -827,7 +840,7 @@ Page({
       isDraft: false,
     };
 
-    // 这里直接落到“我的路线”，这样返回时也不会再提示是否保存。
+    // 这里直接落到"我的路线"，这样返回时也不会再提示是否保存。
     this.saveRouteToStorage(newRoute);
     this.applyRoute(newRoute);
   },
@@ -1303,7 +1316,7 @@ Page({
     this.goBackBySource();
   },
 
-  // 统一打开“保存当前修改”弹窗：
+  // 统一打开"保存当前修改"弹窗：
   // back = 返回当前页前确认
   // cancel = 取消编辑前确认
   openExitConfirm(mode = "back") {
@@ -1454,14 +1467,14 @@ Page({
     );
   },
 
-  // 把 rpx 换算成当前设备下的 px，用来保持“标题距离吸顶 Tab 48rpx”的视觉留白。
+  // 把 rpx 换算成当前设备下的 px，用来保持"标题距离吸顶 Tab 48rpx"的视觉留白。
   rpxToPx(rpx) {
     const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : {};
     const windowWidth = windowInfo.windowWidth || 375;
     return (Number(rpx) * windowWidth) / 750;
   },
 
-  // 点击“行程总览 / 第几天”时，不再依赖固定负锚点。
+  // 点击"行程总览 / 第几天"时，不再依赖固定负锚点。
   // 这里直接测量目标标题的真实位置，再减去吸顶 Tab 高度和预留留白。
   scrollListToTab(index) {
     const safeIndex = Number(index) || 0;
@@ -1779,7 +1792,7 @@ Page({
       {
         daySections: nextSections,
         summaryText,
-        tabs: buildTabs(nextSections.length),
+        tabs: buildTabsFromSections(nextSections),
         hasRoutePlaces: flattenedPlaces.length > 0,
         mapPreviewPlaces: flattenedPlaces,
         mapPreviewPlace: flattenedPlaces[this.data.mapPreviewIndex] || flattenedPlaces[0] || null,
@@ -1967,7 +1980,7 @@ Page({
       dragging: false,
       daySections: savedSections,
       summaryText,
-      tabs: buildTabs(savedSections.length),
+      tabs: buildTabsFromSections(savedSections),
       sheetScrollTarget: "",
       currentTab: Math.min(this.data.currentTab, savedSections.length),
       originalDaySections: JSON.parse(
@@ -2015,7 +2028,7 @@ Page({
       dragging: false,
       daySections: savedSections,
       summaryText,
-      tabs: buildTabs(savedSections.length),
+      tabs: buildTabsFromSections(savedSections),
       sheetScrollTarget: "",
       currentTab: Math.min(this.data.currentTab, savedSections.length),
       originalDaySections: JSON.parse(
@@ -2224,13 +2237,20 @@ Page({
     if (!this.data.isEditing) return;
 
     const nextSections = this.data.daySections.slice();
-    nextSections.push({ id: `day-${Date.now()}`, items: [] });
+    const newDay = { id: `day-${Date.now()}`, items: [] };
+    // 待计划天应始终排在最后，新天插入在它前面。
+    const pendingIndex = nextSections.findIndex(d => d.id === '__pending__');
+    if (pendingIndex >= 0) {
+      nextSections.splice(pendingIndex, 0, newDay);
+    } else {
+      nextSections.push(newDay);
+    }
     const syncedSections = this.syncDaySections(nextSections, this.data.cityInfo);
     const nextTabIndex = syncedSections.length;
 
     this.setData({
       daySections: syncedSections,
-      tabs: buildTabs(syncedSections.length),
+      tabs: buildTabsFromSections(syncedSections),
       summaryText: buildSummaryText(syncedSections),
       currentTab: nextTabIndex,
       sheetScrollTarget: `route-day-anchor-${syncedSections.length - 1}`,
@@ -2246,8 +2266,8 @@ Page({
     this.setData({ handleTouchStartY: touch.clientY || 0 });
   },
 
-  // 路线规划弹窗改成“点选项即确认”：
-  // 直接点“智能规划”或“手动编辑”就执行，不再需要底部确认按钮。
+  // 路线规划弹窗改成"点选项即确认"：
+  // 直接点"智能规划"或"手动编辑"就执行，不再需要底部确认按钮。
   onConfirmReorderOption(e) {
     const mode = e.currentTarget.dataset.mode;
     if (!mode) return;
@@ -2286,7 +2306,7 @@ Page({
         route: updatedRoute,
         daySections: optimizedSections,
         summaryText,
-        tabs: buildTabs(optimizedSections.length),
+        tabs: buildTabsFromSections(optimizedSections),
         originalDaySections: JSON.parse(
           JSON.stringify(stripEditState(optimizedSections))
         ),
@@ -2306,7 +2326,7 @@ Page({
       route: updatedRoute,
       daySections: optimizedSections,
       summaryText,
-      tabs: buildTabs(optimizedSections.length),
+      tabs: buildTabsFromSections(optimizedSections),
       originalDaySections: JSON.parse(
         JSON.stringify(stripEditState(optimizedSections))
       ),
@@ -2704,7 +2724,7 @@ Page({
         );
         this.setData({
           daySections: syncedSections,
-          tabs: buildTabs(syncedSections.length),
+          tabs: buildTabsFromSections(syncedSections),
           summaryText: buildSummaryText(syncedSections),
           currentTab: dayIndex + 1,
           sheetScrollTarget: `route-day-anchor-${dayIndex}`,
@@ -2741,7 +2761,7 @@ Page({
     const syncedSections = this.syncDaySections(nextSections, this.data.cityInfo);
     this.setData({
       daySections: syncedSections,
-      tabs: buildTabs(syncedSections.length),
+      tabs: buildTabsFromSections(syncedSections),
       summaryText: buildSummaryText(syncedSections),
       currentTab: dayIndex + 1,
       sheetScrollTarget: `route-day-anchor-${dayIndex}`,

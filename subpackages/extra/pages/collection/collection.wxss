@@ -213,14 +213,15 @@ page {
 
 .stamp-bottom-shadow {
   position: absolute;
-  left: 35%;
-  bottom: -16rpx;
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 16rpx;
-  background: rgba(0, 0, 0, 0.3);
-  filter: blur(64rpx);
-  opacity: 0.85;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -24rpx;
+  width: 156rpx;
+  height: 400rpx;
+  border-radius: 12rpx;
+  background: rgba(0, 0, 0, 0.4);
+  filter: blur(88rpx);
+  opacity: 0.75;
   z-index: 0;
 }
 

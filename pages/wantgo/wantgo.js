@@ -4,7 +4,7 @@ const util = require('../../utils/util')
 const placesData = require('../../utils/placesData')
 const { applyTravelMeta, buildTravelOptions } = require('../../utils/travel')
 const { resolveDisplayCategory } = require('../../utils/displayCategory')
-const { formatTripDuration, normalizeTripSummaryText } = require('../../utils/trip-duration')
+const { formatTripSummary, normalizeTripSummaryText } = require('../../utils/trip-duration')
 const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
 
 
@@ -216,7 +216,10 @@ function buildRoutePlaceFromWantItem(item = {}) {
     lat,
     lng,
     latitude: lat,
-    longitude: lng
+    longitude: lng,
+    travelModeIcon: '',
+    travelModeLabel: '',
+    travelSummaryText: ''
   }
 }
 
@@ -1145,38 +1148,39 @@ Page({
     }
 
     const targetRoute = savedRoutes[routeIndex]
-    const nextSections = (targetRoute.daySections || []).map(day => ({
-      ...day,
-      items: Array.isArray(day.items) ? day.items.slice() : []
-    }))
-
-    // 没有天数时自动补第一天；已有天数时默认加到最后一天，避免打乱前面行程。
-    if (!nextSections.length) {
-      nextSections.push({
-        id: `day-0`,
-        title: '第1天',
-        items: []
-      })
-    }
 
     const routePlace = buildRoutePlaceFromWantItem(place)
-    const hasExistingPlace = nextSections.some(day =>
-      (day.items || []).some(item => String(item.id) === String(routePlace.id))
+    // 检查是否已在路线中。
+    const allItems = (targetRoute.daySections || []).reduce(
+      (items, day) => items.concat(day.items || []), []
     )
+    const hasExistingPlace = allItems.some(item => String(item.id) === String(routePlace.id))
     if (hasExistingPlace) {
       wx.showToast({ title: '该地点已在路线中', icon: 'none' })
       return
     }
 
-    const lastDayIndex = Math.max(nextSections.length - 1, 0)
-    nextSections[lastDayIndex].items.push(routePlace)
+    // 加到"待计划"天（找到已有待计划天或新建一个）。
+    const nextSections = (targetRoute.daySections || []).map(day => ({ ...day, items: (day.items || []).slice() }))
+    const pendingDay = nextSections.find(day => day.id === '__pending__')
+    if (pendingDay) {
+      pendingDay.items.push(routePlace)
+      pendingDay.countText = `${pendingDay.items.length} 个地点`
+    } else {
+      nextSections.push({
+        id: '__pending__',
+        title: '待计划',
+        countText: '1 个地点',
+        items: [routePlace]
+      })
+    }
 
     const totalPlaceCount = nextSections.reduce((sum, day) => sum + ((day.items || []).length), 0)
     const updatedRoute = {
       ...targetRoute,
       daySections: nextSections,
-      dayCount: Math.max(nextSections.length, 1),
-      subtitle: normalizeTripSummaryText(targetRoute.subtitle, nextSections.length, totalPlaceCount),
+      dayCount: nextSections.length,
+      subtitle: formatTripSummary(nextSections.length, totalPlaceCount),
       updatedAt: Date.now()
     }
 

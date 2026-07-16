@@ -9,7 +9,7 @@ page {
 }
 
 .page-content {
-  padding-top: 40rpx;
+  padding-top: 64rpx;
   padding-left: 48rpx;
   padding-right: 48rpx;
 }
@@ -34,7 +34,7 @@ page {
   top: 0;
   width: 255px;
   height: 324px;
-  filter: drop-shadow(0 64px 48px rgba(0, 0, 0, 0.15));
+  filter: drop-shadow(0 80px 64px rgba(0, 0, 0, 0.15));
 }
 
 .detail-stamp-photo {

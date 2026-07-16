@@ -48,6 +48,11 @@
   line-height: 28rpx;
 }
 
+/* 必选/必填标记使用红色突出显示。 */
+.required-mark {
+  color: #FF5A5F;
+}
+
 .field-count {
   color: #808B9A;
   font-size: 24rpx;
@@ -81,12 +86,17 @@ border: 2rpx solid #F6F8FA;
 }
 
 .setting-value.placeholder {
-  color: #9DA4AD;
+  color: #BAC4CC;
+}
+
+.input-placeholder,
+.setting-value.placeholder {
+  color: #BAC4CC;
 }
 
 .picker-field i {
   font-size: 40rpx;
-  color: #808B9A;
+  color: #BAC4CC;
 }
 
 .cover-row {

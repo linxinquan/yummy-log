@@ -67,6 +67,7 @@
                   wx:for-item="tab"
                   wx:for-index="tabIndex"
                   wx:if="{{!(isEditing && tabIndex === 0)}}"
+                  id="tab-{{tabIndex}}"
                   class="tab-item {{currentTab === tabIndex ? 'active' : ''}}"
                   bindtap="onTabTap"
                   data-index="{{tabIndex}}"
@@ -74,7 +75,7 @@
                   <text>{{tab.label}}</text>
                 </view>
                 <!-- 编辑态顶部添加按钮：单独加类名，避免影响其他页面同类按钮。 -->
-                <view class="tab-item add-item editing-add-item" bindtap="onAddDay" wx:if="{{isEditing}}">
+                <view class="tab-item add-item editing-add-item" id="tab-add" bindtap="onAddDay" wx:if="{{isEditing}}">
                   <i class="mgc_add_line"></i>
                 </view>
               </view>
@@ -132,8 +133,8 @@
                 <text class="day-count">{{day.countText}}</text>
               </view>
 
-              <!-- 起点卡片：仅查看模式下显示，编辑时隐藏避免误操作。 -->
-              <view class="day-start-trigger" wx:if="{{!isEditing}}" bindtap="onSetDayStart" data-day-index="{{dayIndex}}">
+              <!-- 起点卡片：仅查看模式显示，编辑时隐藏；待计划天不需要起点。 -->
+              <view class="day-start-trigger" wx:if="{{!isEditing && day.id !== '__pending__'}}" bindtap="onSetDayStart" data-day-index="{{dayIndex}}">
                 <view class="day-start-trigger-header">
                   <text class="day-start-trigger-label">起点位置</text>
                   <view class="day-start-trigger-action">
@@ -195,6 +196,7 @@
                             </view>
                           </view>
                           <view
+                            wx:if="{{day.id !== '__pending__'}}"
                             class="route-place-travel-row"
                             catchtap="onOpenPlaceTransportSheet"
                             data-day-index="{{dayIndex}}"
@@ -205,9 +207,12 @@
                               <text>{{place.travelModeLabel}}</text>
                             </view>
                             <view class="route-place-travel-summary">
-                              <text>{{place.travelSummaryText}}</text>
+                              <text wx:if="{{place.travelSummaryText}}">{{place.travelSummaryText}}</text>
                               <i class="mgc_right_line"></i>
                             </view>
+                          </view>
+                          <view wx:elif="{{!isEditing}}" class="route-place-travel-row">
+                            <text class="pending-travel-hint">计划后显示交通方式</text>
                           </view>
                         </view>
                       </view>
@@ -255,6 +260,8 @@
 
               <view class="day-separator" wx:if="{{dayIndex < daySections.length - 1}}"></view>
             </view>
+
+
           </view>
         </view>
       </scroll-view>

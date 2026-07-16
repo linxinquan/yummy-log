@@ -280,6 +280,8 @@ page {
   align-items: center;
   gap: 16rpx;
   padding: 0 48rpx;
+  /* 给第一项留出左侧呼吸空间，避免贴边。 */
+  padding-left: 48rpx;
 }
 
 /* 顶部 Tab 改成常规白底按钮，并补一圈浅描边。 */
@@ -963,21 +965,31 @@ page {
 .preview-tab-row {
   display: flex;
   align-items: center;
-  gap: 32rpx;
+  gap: 16rpx;
   width: 100%;
   min-width: 0;
 }
 
 .preview-tab-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid #E6EBF0;
+  background: #FFFFFF;
+  box-sizing: border-box;
+  color: #808B9A;
+  font-size: 28rpx;
+  font-weight: 400;
+  line-height: 28rpx;
   flex-shrink: 0;
-  color: #9DA4AD;
-  font-size: 32rpx;
-  line-height: 32rpx;
-  font-weight: 500;
 }
 
 .preview-tab-item.active {
-  color: #1A2739;
+  color: #25BBE7;
+  border-color: #25BBE7;
 }
 
 .preview-tab-divider {
