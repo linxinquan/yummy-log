@@ -1156,13 +1156,29 @@
 }
 
 .picker-empty {
+  padding: 96rpx 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 240rpx;
+}
+
+.picker-empty-illustration {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 32rpx;
+}
+
+.picker-empty-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.picker-empty-hint {
   color: #808B9A;
-  font-size: 26rpx;
-  padding-bottom: 24rpx;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  text-align: center;
 }
 
 .map-panel {

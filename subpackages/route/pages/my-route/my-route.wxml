@@ -463,7 +463,10 @@
         </view>
       </block>
       <view class="picker-empty" wx:else>
-        <text>还没有可添加的地点</text>
+        <view class="picker-empty-illustration">
+          <image class="picker-empty-image" src="/images/empty/暂无数据.png" mode="aspectFit" />
+        </view>
+        <text class="picker-empty-hint">还没有可添加的地点</text>
       </view>
     </scroll-view>
   </bottom-action-sheet>
