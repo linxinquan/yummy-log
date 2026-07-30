@@ -168,7 +168,6 @@ function buildExploreCategories() {
     { name: '美食' },
     { name: '景点' },
     { name: '酒店' },
-    { name: '饮品' },
     { name: '购物' },
     { name: '自然户外' },
     { name: '文化展馆' }
@@ -240,11 +239,26 @@ const FOOD_SECONDARY_TAB_CONFIG = {
 // 先按用户确认的 4 个方向接入。
 // keywords 用来匹配地点名称、标签、展示分类等字段。
 const SPOT_SECONDARY_TAB_CONFIG = [
-  { label: '自然景色', keywords: ['自然景色', '自然风光', '山', '海', '湖', '岛', '海滩', '海岸', '瀑布', '溪谷', '溶洞'] },
-  { label: '历史人文', keywords: ['历史人文', '历史', '人文', '古镇', '古村', '古城', '故居', '祠堂', '遗址', '寺', '庙', '书院', '博物馆', '纪念馆'] },
+  { label: '自然景色', keywords: ['自然景色', '自然户外', '自然风光', '山', '海', '湖', '岛', '海滩', '海岸', '瀑布', '溪谷', '溶洞'] },
+  { label: '历史人文', keywords: ['历史人文', '文化展馆', '历史', '人文', '古镇', '古村', '古城', '故居', '祠堂', '遗址', '寺', '庙', '书院', '博物馆', '纪念馆'] },
   { label: '风景名胜', keywords: ['风景名胜', '名胜', '景区', '地标', '观景', '塔', '楼阁', '广场', '步行街', '旅游区'] },
-  { label: '城市公园', keywords: ['城市公园', '公园', '植物园', '儿童公园', '森林公园', '湿地公园', '郊野公园'] }
+  { label: '城市公园', keywords: ['城市公园', '主题公园', '公园', '植物园', '儿童公园', '森林公园', '湿地公园', '郊野公园'] }
 ]
+
+// 一级分类（除“美食”“景点”外）按 subCategory 过滤的配置。
+const CATEGORY_SUBFILTER_CONFIG = {
+  '购物':     { type: 'spot',  subCategories: ['购物', '商场'] },
+  '酒店':     { type: 'spot',  subCategories: ['酒店', '住宿', '民宿'] },
+  '自然户外': { type: 'spot',  subCategories: ['自然户外', '自然景色', '城市公园', '主题乐园'] },
+  '文化展馆': { type: 'spot',  subCategories: ['文化展馆', '历史人文'] },
+}
+
+// 按 subCategory 直接一对一匹配（subCategory 已处理过，基本是 1:1）。
+function matchCategoryBySub(item, cfg) {
+  if (!cfg) return false
+  const sub = item.subCategory
+  return !!(cfg.subCategories && sub && cfg.subCategories.indexOf(sub) !== -1)
+}
 
 // 判断当前一级分类是否需要显示二级卡片。
 // 目前首页只保留“景点”二级 Tab，“美食”二级 Tab 暂时关闭。
@@ -797,16 +811,18 @@ Page({
           filtered = filtered.filter(item => matchSecondaryTab(item, activeSecondaryTab))
         }
       }
-    } else if (currentCategory === '饮品') {
-      filtered = filtered.filter(i => i.type === 'food' && (i.category === '饮品' || i.category === '咖啡' || i.tags?.includes('糖水')))
-    } else if (currentCategory === '购物') {
-      filtered = filtered.filter(i => i.type === 'shopping')
-    } else if (currentCategory === '酒店') {
-      filtered = filtered.filter(i => i.type === 'hotel')
-    } else if (currentCategory === '自然户外') {
-      filtered = filtered.filter(i => i.type === 'outdoor')
-    } else if (currentCategory === '文化展馆') {
-      filtered = filtered.filter(i => i.type === 'culture')
+    } else if (currentCategory && currentCategory !== '全部') {
+      // 其余一级分类：按 subCategory / keywords 过滤，不做 type 匹配。
+      // 这样自然景色/历史人文/城市公园/主题公园/购物/酒店/饮品等都不会因为
+      // 数据里没有对应的 type 而变成空结果。
+      const cfg = CATEGORY_SUBFILTER_CONFIG[currentCategory]
+      if (cfg) {
+        // 先按大类 type 过滤，再按 subCategory / keywords 细分。
+        filtered = filtered.filter(item => item.type === cfg.type && matchCategoryBySub(item, cfg))
+      } else {
+        // 未配置的分类不展示任何数据
+        filtered = []
+      }
     }
     // '全部' 时不筛选，显示所有数据
     
