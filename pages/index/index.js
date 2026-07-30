@@ -45,12 +45,14 @@ const SECONDARY_TAB_WRAP_HORIZONTAL_PADDING_RPX = 48
 const WEATHER_FALLBACK_TEXT = '天气获取失败，请稍后重试'
 // 首页天气缓存 10 分钟，避免短时间内重复请求。
 // 这里升级一个版本号，顺手让旧的失败缓存失效。
-const WEATHER_CACHE_KEY = 'indexWeatherCache_v2'
+const WEATHER_CACHE_KEY = 'indexWeatherCache_v3'
 const WEATHER_CACHE_TTL = 10 * 60 * 1000
-// 首页天气使用腾讯地图天气 API（基于已有 qqMapKey）
-const WEATHER_API_URL = 'https://apis.map.qq.com/ws/weather/v1/'
+// 使用腾讯免费天气接口（wis.qq.com），不依赖腾讯位置服务 Key，避免 QPS 限流。
+// 参考：https://wis.qq.com/weather/common?source=pc&weather_type=observe&province=广东&city=深圳
+const WEATHER_API_URL = 'https://wis.qq.com/weather/common'
 // 首页天气在定位和区划更新时都会触发，这里做一层轻量防抖，避免瞬时重复请求。
-const WEATHER_REQUEST_DEBOUNCE_MS = 300
+// 定位和区划更新会在 1 秒内连续触发两次，防抖加大到 2 秒避免 QPS 限流。
+const WEATHER_REQUEST_DEBOUNCE_MS = 2000
 // 重新定位后，把地图拉近到当前位置附近，避免只更新中心点却看起来没变化。
 const MY_LOCATION_FOCUS_SCALE = 17
 // 首页城市列表本身只覆盖广东城市。
@@ -687,11 +689,12 @@ Page({
       return
     }
 
-    const location = app.globalData.location
-    const key = app.globalData.qqMapKey
-    // 没有定位或 key 时，直接回退到提示文案，
-    // 避免页面停留在空白天气状态。
-    if (!location || !key) {
+    // 从当前选中的城市获取省份和城市名
+    const currentCity = this.data.currentCity || '深圳市'
+    const cityShort = util.getCityShortName(currentCity)
+    // 根据城市名获取省份（使用已有的城市配置）
+    const province = this._getProvinceByCity(cityShort) || '广东'
+    if (!cityShort) {
       this.setData({
         weatherDesc: WEATHER_FALLBACK_TEXT,
         weatherTemp: ''
@@ -699,26 +702,23 @@ Page({
       return
     }
 
-    // 使用腾讯地图天气 API
+    // 使用腾讯免费天气接口（wis.qq.com），不依赖腾讯位置服务 Key
     this._weatherLoading = true
     wx.request({
       url: WEATHER_API_URL,
       data: {
-        location: `${location.lat},${location.lng}`,
-        key: key,
-        type: 'now'
+        source: 'pc',
+        weather_type: 'observe',
+        province: province,
+        city: cityShort
       },
       success: (res) => {
-        if (res.data && res.data.status === 0) {
-          const realtime = Array.isArray(res.data.result && res.data.result.realtime)
-            ? res.data.result.realtime[0]
-            : (res.data.result && res.data.result.realtime)
-          const infos = (realtime && realtime.infos) || (res.data.result && res.data.result.infos) || {}
-          const weatherState = buildWeatherState(infos.weather, infos.temperature)
+        if (res.data && res.data.status === 200 && res.data.data && res.data.data.observe) {
+          const observe = res.data.data.observe
+          const weatherState = buildWeatherState(observe.weather, observe.degree)
           this.setData(weatherState)
           saveWeatherStateToCache(weatherState)
         } else {
-          // 接口返回异常状态时，统一回退到提示文案。
           this.setData({
             weatherDesc: WEATHER_FALLBACK_TEXT,
             weatherTemp: ''
@@ -727,14 +727,27 @@ Page({
         this._weatherLoading = false
       },
       fail: () => {
-        // 请求失败时显示提示文案，不再保留旧的假数据。
+        this._weatherLoading = false
         this.setData({
           weatherDesc: WEATHER_FALLBACK_TEXT,
           weatherTemp: ''
         })
-        this._weatherLoading = false
       }
     })
+  },
+
+  // 根据城市短名称获取所属省份（覆盖 GUANGDONG_CITIES 全部 27 个城市）
+  _getProvinceByCity(cityShort) {
+    const provinceMap = {
+      '深圳': '广东', '广州': '广东', '惠州': '广东', '香港': '香港',
+      '北京': '北京', '上海': '上海', '杭州': '浙江', '台北': '台湾',
+      '澳门': '澳门', '成都': '四川', '厦门': '福建', '南京': '江苏',
+      '苏州': '江苏', '福州': '福建', '台州': '浙江', '台南': '台湾',
+      '台中': '台湾', '高雄': '台湾', '温州': '浙江', '泉州': '福建',
+      '扬州': '江苏', '常州': '江苏', '新北': '台湾', '新竹县': '台湾',
+      '新竹': '台湾', '宁德': '福建', '乌兰察布': '内蒙古'
+    }
+    return provinceMap[cityShort] || '广东'
   },
 
   // 按当前分类、排序和地图中心点，重新生成当前可见列表。
@@ -1270,6 +1283,9 @@ Page({
       showLocationPicker: false
     })
     this._scheduleApplyFilters()
+    // 切换城市后重新获取该城市天气
+    wx.removeStorageSync(WEATHER_CACHE_KEY)
+    this.scheduleWeatherLoad({ force: true })
   },
 
   // 底部按钮：跳去"想去"页

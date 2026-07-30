@@ -14,9 +14,6 @@ const DEFAULT_DAY = 2; // 默认天数
 const ITEM_H = 60 // px，每项高度用于计算排序
 const DEFAULT_COVER = '/images/app-logo.jpg'
 const DAY_OPTIONS = Array.from({ length: 10 }, (_, index) => index + 1)
-// picker-view 在快速滑动后，最后一次 bindchange 可能会晚一点到。
-// 点击"确定"时固定等待这一小段时间，再读取最终天数，避免拿到旧值。
-const PLAN_DAY_CONFIRM_DELAY_MS = 220
 // 删除按钮本身是 120rpx，这里额外多滑出 48rpx，统一所有页面的删除间距。
 const DELETE_ACTION_WIDTH_RPX = 168
 const DEFAULT_ROUTE_AVATAR = '/images/app-logo.jpg'
@@ -1361,6 +1358,8 @@ Page({
     if (Number.isNaN(pickerIndex)) return
     const dayCount = this.data.dayOptions[pickerIndex]
     if (!dayCount) return
+    // ── 调试 ──
+    console.log('[onSelectPlanDay] 触发, pickerIndex:', pickerIndex, 'dayCount:', dayCount)
     // picker-view 切换后，先把最新值同步到实例字段。
     // 这样用户刚滑到"1 天"就立刻点确定时，也不会因为 setData 还没完成而读到旧值 2。
     this._lastPlanDayChangeAt = Date.now()
@@ -1468,33 +1467,22 @@ Page({
 
   // 确认天数后，带着地点 id 去路线规划页
   onConfirmPlanRoute() {
-    const { items, selectedPlanDayCount, cityFilter } = this.data
-    console.log('[路线规划-确认] cityFilter:', cityFilter)
-    console.log('[路线规划-确认] items 数量:', items.length)
-    console.log('[路线规划-确认] items IDs:', items.map(i => i._id))
-    console.log('[路线规划-确认] items 城市:', items.map(i => i.city || i.城市 || '无'))
+    const { items } = this.data
     if (items.length === 0) {
       wx.showToast({ title: '清单为空', icon: 'none' })
       return
     }
     if (this._isConfirmingPlanRoute) return
     this._isConfirmingPlanRoute = true
+
     const ids = items.map(i => i.id).join(',')
+    const dayCount = Math.max(1, parseInt(this._pendingPlanDayCount || this.data.selectedPlanDayCount || 2, 10) || 1)
     this.setData({ planDaySheetVisible: false })
-    if (this._planRouteConfirmTimer) {
-      clearTimeout(this._planRouteConfirmTimer)
-    }
-    // 给 picker-view 一个固定收敛窗口，让最后一次变更事件先落地。
-    this._planRouteConfirmTimer = setTimeout(() => {
-      const latestSelectedPlanDayCount = this._pendingPlanDayCount || this.data.selectedPlanDayCount || selectedPlanDayCount
-      const dayCount = Math.max(1, parseInt(latestSelectedPlanDayCount, 10) || 1)
-      this._planRouteConfirmTimer = null
-      this._isConfirmingPlanRoute = false
-      wx.navigateTo({
-        // 从"想去"页发起规划，给详情页带上返回来源，返回时自动切到"我的路线"Tab。
-        url: `/subpackages/route/pages/my-route/my-route?ids=${ids}&dayCount=${dayCount}&returnTo=plan`
-      })
-    }, PLAN_DAY_CONFIRM_DELAY_MS)
+    this._isConfirmingPlanRoute = false
+
+    wx.navigateTo({
+      url: `/subpackages/route/pages/my-route/my-route?ids=${ids}&dayCount=${dayCount}&returnTo=plan`
+    })
   },
 
 })
