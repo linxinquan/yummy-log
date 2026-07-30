@@ -19,23 +19,6 @@ function _unwrap(result) {
 }
 
 /**
- * 获取所有景点（type === 'spot'）
- * @returns {Promise<Array>}
- */
-function getSpots() {
-  return placesDal.getSpots().then(_unwrap)
-}
-
-/**
- * 获取餐厅列表（type === 'food'）
- * @param {Object} [options] - { category?, city? }
- * @returns {Promise<Array>}
- */
-function getRestaurants(options = {}) {
-  return placesDal.getRestaurants(options).then(_unwrap)
-}
-
-/**
  * 按城市查询地点（支持限制条数）
  * @param {string} city     - 城市名
  * @param {number} [limit]  - 最多返回条数
@@ -55,45 +38,7 @@ function getAllPlaces() {
   return placesDal.getList().then(_unwrap)
 }
 
-/**
- * 根据业务 ID 获取单个地点
- * @param {number|string} id
- * @returns {Promise<Object|null>}
- */
-function getPlaceById(id) {
-  return placesDal.getById(id).then(result =>
-    result.success ? result.data : null
-  )
-}
-
-/**
- * 附近景点查询
- * @param {number} latitude
- * @param {number} longitude
- * @param {number} [maxDistance=5000]
- * @returns {Promise<Array>}
- */
-function getNearbySpots(latitude, longitude, maxDistance) {
-  return placesDal.searchNearby(latitude, longitude, 'spot', maxDistance).then(_unwrap)
-}
-
-/**
- * 附近餐厅查询
- * @param {number} latitude
- * @param {number} longitude
- * @param {number} [maxDistance=3000]
- * @returns {Promise<Array>}
- */
-function getNearbyRestaurants(latitude, longitude, maxDistance) {
-  return placesDal.searchNearby(latitude, longitude, 'food', maxDistance).then(_unwrap)
-}
-
 module.exports = {
-  getSpots,
-  getRestaurants,
   getPlacesByCity,
   getAllPlaces,
-  getPlaceById,
-  getNearbySpots,
-  getNearbyRestaurants,
 }
