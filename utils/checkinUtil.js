@@ -44,13 +44,11 @@ function reverseGeocode(latitude, longitude) {
         'Referer': 'https://meitour.app'   // 腾讯地图 WebService API 要求
       },
       success: (res) => {
-        console.log('[checkinUtil] 逆地理响应 statusCode:', res.statusCode)
         if (res.statusCode === 200) {
           const data = res.data
           if (data.status === 0) {
             const result = data.result || {}
             const pois = result.pois || []
-            console.log('pois-5', pois)
 
             // ── 多级筛选 ──
 
@@ -111,7 +109,7 @@ function reverseGeocode(latitude, longitude) {
 
             const city = result.ad_info ? result.ad_info.city : extractCity(result.address || '')
 
-            console.log('[checkinUtil] 解析结果 - spotName:', spotName, '| address:', result.address, ' | candidatePOIs:', candidatePOIs)
+            console.log('[checkinUtil] 解析结果 - spotName:', spotName, '| address:', result.address)
 
             resolve({
               spotName: spotName,

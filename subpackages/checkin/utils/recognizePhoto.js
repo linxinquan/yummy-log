@@ -13,12 +13,12 @@ const forceBase64 = false;
  * @returns {Promise<{name: string, desc: string, type: string, matchedName: string}>}
  */
 async function recognizePhoto(photoPath, options = {}) {
-  const { spots, forceBase64 = false } = options
+  const { spots, forceBase64 = true } = options
   if (!photoPath) throw new Error('photoPath 不能为空')
 
   // 递增请求版本号，后续判断是否过期
   const currentRequestId = ++_requestId
-  console.log('[Recognize] 请求版本:', currentRequestId, forceBase64 ? '(强制 base64)' : '')
+  console.log('[Recognize] 请求版本:', currentRequestId, forceBase64 ? '(base64 模式)' : '(云存储临时短链接)')
 
   // Step 0: 压缩图片（避免 API 请求超限，目标 < 200KB）
   console.log('[Recognize] 原图路径:', photoPath)
@@ -52,7 +52,8 @@ async function recognizePhoto(photoPath, options = {}) {
   let tempURL = null
   
   if (forceBase64) {
-    console.log('[Recognize] 强制使用 base64 模式...')
+    // 先压缩再转 base64：compressedPath 已在 Step 0 完成压缩，这里直接基于压缩后图片转码
+    console.log('[Recognize] 走 base64 直传（跳过云存储上传），基于压缩后图片转码...')
     const base64 = await new Promise((resolve, reject) => {
       wx.getFileSystemManager().readFile({
         filePath: compressedPath,
