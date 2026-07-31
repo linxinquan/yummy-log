@@ -68,6 +68,20 @@ function add(placeId) {
 }
 
 /**
+ * 移除收藏（供 SyncManager 同步时删除云端多余记录）
+ * @param {string} placeId
+ * @returns {Promise<{success, data: number, error}>} data = 删除条数
+ */
+function remove(placeId) {
+  return safeCall(async () => {
+    const res = await collection(COLLECTIONS.COLLECTED_LIST)
+      .where({ placeId: String(placeId) })
+      .remove()
+    return res.stats.removed
+  })
+}
+
+/**
  * 切换收藏状态（核心方法）
  * @param {string} placeId
  * @returns {Promise<{success, data: boolean, error}>} data = true 表示已收藏
@@ -101,5 +115,6 @@ module.exports = {
   getList,
   check,
   add,
+  remove,
   toggle,
 }
