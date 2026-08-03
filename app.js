@@ -57,6 +57,14 @@ App({
       placesData.init().catch(err => {
         console.warn('[App] placesData 初始化失败', err)
       })
+
+      // 补传历史上传失败的打卡图片（后台异步，成功后回写 cloudFileID）
+      const photoStorage = require('./utils/photoStorage')
+      setTimeout(() => {
+        photoStorage.flushPendingUploads().catch(err => {
+          console.warn('[App] 补传打卡图片失败:', err)
+        })
+      }, 3000)
     }
     // ──────────────────────────────────
 

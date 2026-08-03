@@ -173,7 +173,7 @@ function saveCheckin(data) {
     type: data.type
   }, data.type)
   const checkin = {
-    id: 'CK' + Date.now().toString(36).toUpperCase(),
+    id: data.id || ('CK' + Date.now().toString(36).toUpperCase()),
     type: data.type || 'food',       // 'food' 美食 | 'spot' 景点
     photoPath: data.photoPath,
     cloudFileID: data.cloudFileID || '',    // 云端 fileID，用于跨设备降级

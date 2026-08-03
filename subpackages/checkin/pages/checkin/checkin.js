@@ -626,17 +626,21 @@ Page({
     try {
       if (!checkinUtil) throw new Error('checkinUtil not loaded')
 
+      // 预生成记录 id，用于上传失败时绑定补传队列，补传成功后回写 cloudFileID
+      const recordId = 'CK' + Date.now().toString(36).toUpperCase()
+
       // 1. 持久化图片（本地 + 云端）
       let photoPath = this.data.photoPath
       let cloudFileID = ''
       if (photoStorage) {
-        const result = await photoStorage.persistPhoto(this.data.photoPath)
+        const result = await photoStorage.persistPhoto(this.data.photoPath, { recordId })
         photoPath = result.localPath
         cloudFileID = result.cloudFileID
       }
 
       // 2. 保存打卡记录
-      await checkinUtil.saveCheckinAsync({
+      const saved = await checkinUtil.saveCheckinAsync({
+        id: recordId,
         photoPath,
         cloudFileID,
         spotName: this.data.spotName || '当前位置',

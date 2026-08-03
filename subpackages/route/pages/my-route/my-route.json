@@ -1,11 +1,3 @@
 {
-  "navigationStyle": "custom",
-  "usingComponents": {
-    "place-intro": "/components/place-intro/place-intro",
-    "bottom-action-sheet": "/components/bottom-action-sheet/index",
-    "nav-map-sheet": "/components/nav-map-sheet/nav-map-sheet",
-    "travel-meta-line": "/components/travel-meta-line/index",
-    "transport-info-sheet": "/components/transport-info-sheet/index",
-    "route-map-preview-card": "/components/route-map-preview-card/index"
-  }
+  "navigationStyle": "custom"
 }
