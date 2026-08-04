@@ -195,9 +195,15 @@ Page({
           wx.showToast({ title: '登录成功', icon: 'success' })
         }
 
-        // 异步从云端恢复数据
+        // 先从云端恢复数据，再刷新列表与统计。
+        // 若不 await，onLoad/onShow 里已执行过的 loadData / loadCheckinStats
+        // 用的是登录前的空数据，统计会一直停留在 0。
         const restore = require('../../utils/db/restore')
-        restore.restoreFromCloud()
+        await restore.restoreFromCloud()
+
+        // 恢复后重新拉取列表与打卡统计，避免统计停留在 0
+        this.loadData()
+        this.loadCheckinStats()
 
         // 如果是新用户，询问是否同步本地数据
         if (res.result.isNew) {
@@ -396,34 +402,17 @@ Page({
     })
   },
 
-  // 从本地缓存 + 云端拉取最新用户信息。
+  // 读取当前用户信息展示。
+  // 说明：登录（onWechatLogin）和修改资料（改昵称/头像）时，均已通过 login
+  // 云函数把最新用户数据写回本地缓存 userInfo，因此这里直接读本地缓存即可，
+  // 不再每次进入 my 页额外调用 users.doc.get()（既多余，又会受 users 集合
+  // 安全规则限制导致 Permission denied）。
   async loadUserInfo() {
     const isCloudLogin = util.isCloudMode()
     if (isCloudLogin) {
       let userInfo = util.loadData('userInfo', null)
 
-      // 从云端拉取最新用户数据，确保头像/昵称是最新的
-      try {
-        const usersDal = require('../../utils/db/users')
-        const { success, data } = await usersDal.getById(userInfo._id)
-        if (success && data) {
-          // 用云端数据覆盖本地缓存，但保留本地持久化头像路径（更快，可离线）
-          const localAvatar = userInfo.avatarUrl
-          userInfo = {
-            ...userInfo,
-            ...data,
-          }
-          // 本地有持久化路径则优先使用，否则用云端 cloudFileID
-          if (localAvatar && !localAvatar.startsWith('http://tmp')) {
-            userInfo.avatarUrl = localAvatar
-          }
-          util.saveData('userInfo', userInfo)
-        }
-      } catch (err) {
-        console.warn('[my] 从云端拉取用户信息失败，使用本地缓存:', err)
-      }
-
-      // 兼容：如果云端/本地都没有头像，补一张随机封面
+      // 兼容：如果本地没有头像，补一张随机封面
       const fallbackAvatar = userInfo.avatarUrl || getRandomProfileImage()
       const nextUserInfo = userInfo.avatarUrl
         ? userInfo

@@ -17,7 +17,7 @@ function makePlaces(n, overrides = {}) {
       id: i,
       name: `地点${i}`,
       type: i % 2 === 0 ? 'spot' : 'food',
-      city: '深圳市',
+      city: '深圳',
       ...overrides,
     })
   }
@@ -56,11 +56,11 @@ describe('getList', () => {
 
   test('支持 conditions 等值过滤', async () => {
     reset([
-      { id: 1, type: 'food', city: '深圳市' },
-      { id: 2, type: 'spot', city: '深圳市' },
-      { id: 3, type: 'food', city: '广州市' },
+      { id: 1, type: 'food', city: '深圳' },
+      { id: 2, type: 'spot', city: '深圳' },
+      { id: 3, type: 'food', city: '广州' },
     ])
-    const res = await getList({ city: '深圳市', type: 'food' })
+    const res = await getList({ city: '深圳', type: 'food' })
     expect(res.success).toBe(true)
     expect(res.data.length).toBe(1)
     expect(res.data[0].id).toBe(1)
@@ -93,22 +93,22 @@ describe('getList', () => {
 
 describe('getByCity', () => {
   test('无 limit 时翻页拉全量', async () => {
-    reset(makePlaces(25, { city: '深圳市' }))
-    const res = await getByCity('深圳市')
+    reset(makePlaces(25, { city: '深圳' }))
+    const res = await getByCity('深圳')
     expect(res.success).toBe(true)
     expect(res.data.length).toBe(25)
   })
 
   test('有 limit 时只返回 limit 条', async () => {
-    reset(makePlaces(30, { city: '深圳市' }))
-    const res = await getByCity('深圳市', 10)
+    reset(makePlaces(30, { city: '深圳' }))
+    const res = await getByCity('深圳', 10)
     expect(res.success).toBe(true)
     expect(res.data.length).toBe(10)
   })
 
   test('城市不匹配返回空数组', async () => {
-    reset([{ id: 1, city: '深圳市' }])
-    const res = await getByCity('北京市')
+    reset([{ id: 1, city: '深圳' }])
+    const res = await getByCity('北京')
     expect(res.success).toBe(true)
     expect(res.data).toEqual([])
   })

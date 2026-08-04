@@ -362,7 +362,7 @@ Page({
       lat: 22.5322,
       lng: 113.9558
     },
-    mapScale: 15,
+    mapScale: 20,
     allMarkers: [],
     // 探索地图单独维护一份当前位置，
     // 用来生成自定义的当前位置 PNG marker。
@@ -384,7 +384,6 @@ Page({
     sortType: 'distance', // distance | rating
     
     // 数据
-    allItems: [],
     filteredItems: [],
     pageSize: 10,
     currentPage: 1,
@@ -608,8 +607,9 @@ Page({
     })
     // 将 cloud:// 封面转为临时 URL，避免网络波动时解析失败
     await util.resolveCloudUrls(allPlaces, 'coverImage')
-    // 直接设置为总列表，不再需要合并演示数据
-    this.setData({ allItems: allPlaces })
+    // 全量列表只在 JS 侧使用（筛选/打点），无需传给视图层。
+    // 用实例属性替代 data，避免 setData 一次性传输上千 KB 造成性能问题。
+    this._allItems = allPlaces
     this._scheduleApplyFilters()
     // 页面读取完本地数据后，后台再给缺少 city 的旧自定义地点补城市。
     // 补完会回写本地缓存，后续深圳/广州这类城市筛选就不会再串城。
@@ -768,7 +768,6 @@ Page({
   // 全量数据存入 _fullFilteredList，UI 只展示第一页
   applyFilters(fitMap = true) {
     let {
-      allItems,
       currentCategory,
       sortType,
       currentDistance,
@@ -778,6 +777,8 @@ Page({
       currentSecondaryTab,
       secondaryTabs
     } = this.data
+    // 全量列表来自 JS 侧实例属性，不放在 data 里，避免 setData 大体积传输
+    const allItems = this._allItems || []
     console.log('[applyFilters] currentCity:', currentCity, 'allItems:', allItems.length, '条')
     
     let filtered = allItems
@@ -1089,7 +1090,7 @@ Page({
   // 点击地图上的标记点，等同于点击对应的列表卡片
   onMarkerTap(e) {
     const markerId = e.detail.markerId
-    const item = this.data.allItems.find(s => s.id === markerId)
+    const item = (this._allItems || []).find(s => s.id === markerId)
     if (item) {
       this.onItemTap({ currentTarget: { dataset: { item } } })
     }

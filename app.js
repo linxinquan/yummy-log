@@ -58,6 +58,17 @@ App({
         console.warn('[App] placesData 初始化失败', err)
       })
 
+      // 等定位完成拿到真实当前城市后，加载该城市的首屏 20 条
+      // （用 this 而非 getApp()，规避 onLaunch 早期 getApp() 不可用的问题）
+      this.whenDistrictReady((info) => {
+        const city = info && info.city
+        if (city) {
+          placesData.loadCityFirstScreen(city).catch(err => {
+            console.warn('[App] 首屏城市数据加载失败', err)
+          })
+        }
+      })
+
       // 补传历史上传失败的打卡图片（后台异步，成功后回写 cloudFileID）
       const photoStorage = require('./utils/photoStorage')
       setTimeout(() => {
