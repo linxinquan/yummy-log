@@ -36,7 +36,7 @@
   display: block;
 }
 
-.nav-map-option-main text {
+.nav-map-option-main-text {
   font-size: 32rpx;
   line-height: 32rpx;
   color: #1A2739;

@@ -9,6 +9,10 @@
   gap: 8rpx;
   height: 32rpx;
   min-height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-self: center;
+  max-width: 100%;
 }
 
 .travel-meta-icon {

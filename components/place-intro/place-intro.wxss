@@ -108,7 +108,7 @@
   background: #F6F8FA;
 }
 
-.tag-badge text {
+.tag-badge-text {
   color: #9DA4AD;
   font-size: 24rpx;
   line-height: 24rpx;

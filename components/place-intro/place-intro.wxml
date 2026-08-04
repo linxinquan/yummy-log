@@ -13,7 +13,7 @@
             <text>{{data.rating}}</text>
           </view>
           <view class="tag-badge" wx:for="{{data.tags}}" wx:key="*this" wx:for-item="tag">
-            <text>{{tag}}</text>
+            <text class="tag-badge-text">{{tag}}</text>
           </view>
         </view>
         <text class="place-intro-title">{{data.name}}</text>

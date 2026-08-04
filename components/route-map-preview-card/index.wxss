@@ -193,7 +193,7 @@
   justify-content: center;
 }
 
-.preview-btn text {
+.preview-btn-text {
   color: #1A2739;
   font-size: 28rpx;
   line-height: 28rpx;
@@ -203,7 +203,7 @@
   background: #F6F8FA;
 }
 
-.preview-btn.disabled text {
+.preview-btn.disabled .preview-btn-text {
   color: #BAC4CC;
 }
 
@@ -228,15 +228,6 @@
   align-items: center;
   justify-self: start;
   text-align: left;
-}
-
-.preview-footer travel-meta-line {
-  height: 32rpx;
-  display: flex;
-  align-items: center;
-  justify-self: center;
-  min-width: 0;
-  max-width: 100%;
 }
 
 .preview-footer-side.right {

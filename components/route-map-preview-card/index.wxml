@@ -53,14 +53,14 @@
           bindtap="onStep"
           data-index="{{previewPrevIndex}}"
         >
-          <text>上一站</text>
+          <text class="preview-btn-text">上一站</text>
         </view>
         <view
           class="preview-btn {{previewDisableNext ? 'disabled' : ''}}"
           bindtap="onStep"
           data-index="{{previewNextIndex}}"
         >
-          <text>下一站</text>
+          <text class="preview-btn-text">下一站</text>
         </view>
       </view>
     </view>

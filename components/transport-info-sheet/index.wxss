@@ -55,7 +55,7 @@
   font-size: 40rpx;
 }
 
-.transport-sheet-close i {
+.transport-sheet-close-icon {
   font-size: 48rpx;
 }
 
@@ -150,7 +150,7 @@
   justify-content: center;
 }
 
-.transport-confirm-btn text {
+.transport-confirm-btn-text {
   font-size: 32rpx;
   font-weight: 500;
   line-height: 32rpx;

@@ -3,7 +3,7 @@
   <view class="transport-sheet-header">
     <text class="transport-sheet-title">交通信息</text>
     <view class="transport-sheet-close" bindtap="onClose">
-      <i class="mgc_close_line"></i>
+      <i class="transport-sheet-close-icon mgc_close_line"></i>
     </view>
   </view>
 
@@ -30,7 +30,7 @@
 
   <view class="transport-sheet-footer">
     <view class="transport-confirm-btn" bindtap="onConfirm">
-      <text>确认</text>
+      <text class="transport-confirm-btn-text">确认</text>
     </view>
   </view>
 </view>
