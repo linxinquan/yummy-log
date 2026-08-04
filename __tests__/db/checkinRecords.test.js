@@ -80,7 +80,9 @@ describe('add', () => {
     expect(res.success).toBe(true)
     const data = mockDB.__getCollectionData(COLLECTIONS.CHECKIN_RECORDS)
     const record = data[0]
-    expect(record.photoPath).toBe('')
+    // 云端不写 photoPath（设备私有路径），仅存 cloudFileID
+    expect(record.photoPath).toBeUndefined()
+    expect(record.cloudFileID).toBe('')
     expect(record.address).toBe('')
     expect(record.description).toBe('')
     expect(record.city).toBe('')

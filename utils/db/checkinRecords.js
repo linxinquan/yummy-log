@@ -4,12 +4,16 @@
  * 集合字段设计：
  *   _id, _openid（自动）,
  *   type: 'food'|'spot',
- *   photoPath: string, spotName: string, address: string,
+ *   cloudFileID: string, spotName: string, address: string,
  *   latitude: number, longitude: number,
  *   description: string, date: string（ISO）,
  *   customRecordTimeLabel: string, city: string,
  *   relatedPlaceId: string,
  *   createdAt: serverDate
+ *
+ * 注意：云端不存 photoPath（本地沙盒路径 wxfile:// 是设备私有的，
+ * 跨设备无效）。图片展示靠 cloudFileID；photoPath 仅保留在本地数据库，
+ * 用于当前设备本地快速加载。
  *
  * 所有方法返回 { success, data, error }
  */
@@ -54,7 +58,6 @@ function getById(id) {
  * 添加打卡记录
  * @param {Object} data - 记录数据（与 checkinUtil.saveCheckin 的输入格式一致）
  * @param {string} data.type          - 'food' | 'spot'
- * @param {string} [data.photoPath]
  * @param {string} [data.spotName]
  * @param {string} [data.address]
  * @param {number} [data.latitude]
@@ -71,7 +74,7 @@ function add(data) {
   return safeCall(async () => {
     const doc = {
       type:                  data.type || 'food',
-      photoPath:             data.photoPath || '',
+      // 云端不写 photoPath（设备私有路径，跨设备无效），仅存 cloudFileID
       cloudFileID:           data.cloudFileID || '',
       spotName:              data.spotName || '',
       address:               data.address || '',

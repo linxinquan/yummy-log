@@ -30,6 +30,8 @@ function setCheckinRecords(records) {
 beforeEach(() => {
   mockStorage.__resetStorage()
   mockDB.__resetAll()
+  // 重置 fs 文件存在性到默认状态（persisted://mock 存在）
+  global.__mockFS.__resetFileExistence()
   // 清理跨测试累积的 mock 调用记录与实现
   jest.clearAllMocks()
 })
@@ -252,9 +254,45 @@ describe('_uploadWithRetry 重试', () => {
 // ─── getDisplayPath：降级策略 ─────────────────────
 
 describe('getDisplayPath 降级策略', () => {
-  test('优先本地 photoPath，其次 cloudFileID，最后空串', () => {
-    expect(photoStorage.getDisplayPath({ photoPath: 'local://1', cloudFileID: 'cloud://1' })).toBe('local://1')
+  test('本地路径有效时优先本地 photoPath', () => {
+    // persisted://mock 默认存在
+    expect(photoStorage.getDisplayPath({ photoPath: 'persisted://mock', cloudFileID: 'cloud://1' })).toBe('persisted://mock')
+  })
+
+  test('非 wxfile 路径（http/https 等）直接视为有效', () => {
+    expect(photoStorage.getDisplayPath({ photoPath: 'https://cdn.example.com/a.jpg', cloudFileID: 'cloud://1' })).toBe('https://cdn.example.com/a.jpg')
+    expect(photoStorage.getDisplayPath({ photoPath: 'http://x/b.jpg' })).toBe('http://x/b.jpg')
+  })
+
+  test('清理缓存后本地 wxfile 失效 → 降级到 cloudFileID（关键回归）', () => {
+    // 模拟：本地沙盒文件已被清理缓存删除
+    global.__mockFS.__setFileExistence('wxfile://store_old.jpg', false)
+    const result = photoStorage.getDisplayPath({
+      photoPath: 'wxfile://store_old.jpg',
+      cloudFileID: 'cloud://still-alive',
+    })
+    expect(result).toBe('cloud://still-alive')
+  })
+
+  test('本地 wxfile 仍存在 → 用本地路径', () => {
+    global.__mockFS.__setFileExistence('wxfile://store_new.jpg', true)
+    const result = photoStorage.getDisplayPath({
+      photoPath: 'wxfile://store_new.jpg',
+      cloudFileID: 'cloud://1',
+    })
+    expect(result).toBe('wxfile://store_new.jpg')
+  })
+
+  test('无 cloudFileID 时，即使本地可能失效也返回本地路径兜底', () => {
+    global.__mockFS.__setFileExistence('wxfile://only_local.jpg', false)
+    expect(photoStorage.getDisplayPath({ photoPath: 'wxfile://only_local.jpg' })).toBe('wxfile://only_local.jpg')
+  })
+
+  test('有 cloudFileID 无 photoPath → 返回 cloudFileID', () => {
     expect(photoStorage.getDisplayPath({ photoPath: '', cloudFileID: 'cloud://1' })).toBe('cloud://1')
+  })
+
+  test('空记录 / null 返回空串', () => {
     expect(photoStorage.getDisplayPath({})).toBe('')
     expect(photoStorage.getDisplayPath(null)).toBe('')
   })

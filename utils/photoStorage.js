@@ -198,11 +198,32 @@ async function persistPhoto(tempPath, options = {}) {
 }
 
 /**
+ * 判断本地文件路径当前是否仍可用。
+ * wxfile:// 是本地沙盒路径，用户清理缓存后会被删除导致失效；
+ * 其他形式（http/https/tmp 等）视为有效。
+ * @param {string} path
+ * @returns {boolean}
+ */
+function _isLocalPathValid(path) {
+  if (!path) return false
+  if (String(path).startsWith('wxfile://')) {
+    try {
+      fs.accessSync(path)
+      return true
+    } catch (e) {
+      // 文件不存在（可能已被清理缓存），视为失效
+      return false
+    }
+  }
+  return true
+}
+
+/**
  * 获取可展示的图片路径（含降级策略）
  *
  * 降级顺序：
- * 1. photoPath（本地持久路径，最快）
- * 2. cloudFileID（云端 fileID，跨设备）
+ * 1. photoPath（本地持久路径，最快）；但若是 wxfile:// 本地路径且文件已失效（清理缓存后），跳过
+ * 2. cloudFileID（云端 fileID，跨设备，清除缓存后仍可显示）
  * 3. 空字符串（兜底）
  *
  * @param {Object} record - 打卡记录对象
@@ -212,8 +233,10 @@ async function persistPhoto(tempPath, options = {}) {
  */
 function getDisplayPath(record) {
   if (!record) return ''
-  if (record.photoPath) return record.photoPath
+  if (record.photoPath && _isLocalPathValid(record.photoPath)) return record.photoPath
   if (record.cloudFileID) return record.cloudFileID
+  // 兜底：本地路径虽可能失效但仍是当前唯一线索，尽力展示
+  if (record.photoPath) return record.photoPath
   return ''
 }
 

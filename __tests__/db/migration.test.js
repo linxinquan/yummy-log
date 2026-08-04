@@ -115,7 +115,8 @@ describe('migrateAll', () => {
     const res = await migrateAll()
     expect(res.success).toBe(true)
     const data = mockDB.__getCollectionData(COLLECTIONS.CHECKIN_RECORDS)
-    expect(data[0].photoPath).toBe('persisted://mock')
+    // 云端不写 photoPath（设备私有路径），仅存 cloudFileID
+    expect(data[0].photoPath).toBeUndefined()
     expect(data[0].cloudFileID).toBe('cloud://mock-file')
   })
 
@@ -145,7 +146,9 @@ describe('migrateAll', () => {
     const res = await migrateAll()
     expect(res.success).toBe(true)
     const data = mockDB.__getCollectionData(COLLECTIONS.CHECKIN_RECORDS)
-    expect(data[0].photoPath).toBe('tmp://broken.jpg')
+    // 云端不写 photoPath；saveFile 失败保留原路径，但仍会上传获取 cloudFileID
+    expect(data[0].photoPath).toBeUndefined()
+    expect(data[0].cloudFileID).toBe('cloud://mock-file')
     // 恢复默认实现，避免影响后续用例
     mockFS.saveFile.mockImplementation(({ success }) => {
       if (typeof success === 'function') success({ savedFilePath: 'persisted://mock' })

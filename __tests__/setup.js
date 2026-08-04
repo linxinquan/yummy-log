@@ -34,10 +34,26 @@ const mockStorage = {
 
 // ─── fs mock ────────────────────────────────────────
 // saveFile 回调式，返回持久化路径
+// accessSync 同步判断文件是否存在：默认 persist 过的路径视为存在，
+// 用 mockFS.__setFileExistence(path, bool) 可控制，用于模拟"清理缓存后文件被删"。
+const fsExistSet = new Set(['persisted://mock'])
 const mockFS = {
   saveFile: jest.fn(({ success }) => {
     if (typeof success === 'function') success({ savedFilePath: 'persisted://mock' })
   }),
+  accessSync: jest.fn((path) => {
+    if (fsExistSet.has(path)) return true
+    throw new Error('no such file')
+  }),
+  // 测试辅助：控制某个文件是否存在
+  __setFileExistence(path, exists) {
+    if (exists) fsExistSet.add(path)
+    else fsExistSet.delete(path)
+  },
+  __resetFileExistence() {
+    fsExistSet.clear()
+    fsExistSet.add('persisted://mock')
+  },
 }
 
 global.wx = {

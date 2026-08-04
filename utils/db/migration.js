@@ -114,7 +114,7 @@ async function migrateAll(options = {}) {
     async (r) => {
       await checkinRecordsDal.add({
         type:                  r.type || 'food',
-        photoPath:             r.photoPath || '',
+        // 云端不写 photoPath，仅存 cloudFileID
         cloudFileID:           r.cloudFileID || '',
         spotName:              r.spotName || '',
         address:               r.address || '',
