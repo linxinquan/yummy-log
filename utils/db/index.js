@@ -7,6 +7,9 @@
 const { getDB } = require('./client')
 
 // ─── 集合名称常量 ───────────────────────────────
+// ⚠️ 注意 users 集合：文档由 login 云函数创建，用【手写 openid 字段】（不带
+//    下划线），没有 _openid。前端不要直接 doc.get() 读 users（会受安全规则
+//    限制），统一走 login/getUserInfo 云函数。详见 utils/db/users.js。
 const COLLECTIONS = {
   WANT_LIST:        'want_list',
   COLLECTED_LIST:   'collected_list',

@@ -1282,17 +1282,21 @@ async function resolveCloudFileIDs(fileIDs) {
   if (!fileIDs || fileIDs.length === 0) return {}
   const cloudIDs = fileIDs.filter(id => id && typeof id === 'string' && id.startsWith('cloud://'))
   if (cloudIDs.length === 0) return {}
-  try {
-    const res = await wx.cloud.getTempFileURL({ fileList: cloudIDs })
-    const map = {}
-    if (res && res.fileList) {
-      res.fileList.forEach(item => { map[item.fileID] = item.tempFileURL || item.fileID })
+  const map = {}
+  // 微信云 API 限制单次 fileList 最多 50 个，分批转换
+  const MAX_BATCH = 50
+  for (let i = 0; i < cloudIDs.length; i += MAX_BATCH) {
+    const batch = cloudIDs.slice(i, i + MAX_BATCH)
+    try {
+      const res = await wx.cloud.getTempFileURL({ fileList: batch })
+      if (res && res.fileList) {
+        res.fileList.forEach(item => { map[item.fileID] = item.tempFileURL || item.fileID })
+      }
+    } catch (err) {
+      console.warn('[util] getTempFileURL 失败:', err)
     }
-    return map
-  } catch (err) {
-    console.warn('[util] getTempFileURL 失败:', err)
-    return {}
   }
+  return map
 }
 
 /**
