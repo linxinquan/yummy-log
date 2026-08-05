@@ -1,0 +1,10 @@
+<!-- 公用悬浮按钮：可复用为“添加”或“关闭”。 -->
+<view class="entry-fab-button {{overlay ? 'entry-fab-button-overlay' : ''}}" bindtap="onTap">
+  <view class="entry-fab-button-icon {{iconType === 'close' ? 'entry-fab-button-icon-close' : ''}}">
+    <!-- 两套图形同时保留，通过透明度和缩放做切换动画。 -->
+    <view class="entry-fab-button-glyph-wrap {{iconType === 'close' ? 'is-close' : 'is-add'}}">
+      <view class="entry-fab-button-plus"></view>
+      <view class="entry-fab-button-close"></view>
+    </view>
+  </view>
+</view>

@@ -1,3 +1,5 @@
+<wxs src="../../utils/likedCheck.wxs" module="like" />
+
 <!-- 觅食图 · 探索页 (合并景点与美食) -->
 <view class="container">
 
@@ -10,6 +12,7 @@
     scale="{{mapScale}}"
     markers="{{allMarkers}}"
     bindmarkertap="onMarkerTap"
+    bindregionchange="onMainMapRegionChange"
     enable-rotate
     enable-overlooking
     show-location="{{false}}"
@@ -17,47 +20,86 @@
 
   <!-- ── Top Floating Area ── -->
   <view class="top-panel">
-    <!-- 头部信息 (适配胶囊按钮高度与宽度避让) -->
-    <view class="header-row" style="padding-top: {{menuTop}}px; height: {{menuHeight}}px; padding-right: {{menuRightInset}}px;">
-      <!-- 左侧：地址 -->
-      <view class="address-box" bindtap="onOpenLocationPicker">
-        <text class="city-name">{{currentCity}}</text>
-        <i class="mgc_down_small_fill arrow"></i>
-      </view>
-      
-      <!-- 右侧：地图按钮与搜索按钮 -->
-      <view class="header-right">
-        <!-- 地图图标：列表只要处于展开状态（半屏或全屏）就显示 -->
-        <view class="header-map-btn" bindtap="onToggleMap" wx:if="{{isSheetExpanded}}">
-          <i class="mgc_map_2_line"></i>
+    <!-- 顶部白色渐变单独拆成一层，避免二级卡片出现时把渐变一起拉长。 -->
+    <view class="top-panel-gradient" style="height: {{topGradientHeight}}px;"></view>
+    <view class="top-panel-content">
+      <!-- 头部信息 (适配胶囊按钮高度与宽度避让) -->
+      <view class="header-row" style="padding-top: {{menuTop}}px; height: {{menuHeight}}px; padding-right: {{menuRightInset}}px;">
+        <!-- 左侧：地址 -->
+        <view class="address-box" bindtap="onOpenLocationPicker">
+          <text class="city-name">{{currentCity}}</text>
+          <i class="mgc_down_small_fill arrow"></i>
+        </view>
+        
+        <!-- 右侧：地图按钮与搜索按钮 -->
+        <view class="header-right">
+          <!-- 地图图标：列表只要处于展开状态（半屏或全屏）就显示 -->
+          <view class="header-map-btn" bindtap="onToggleMap" wx:if="{{isSheetExpanded}}">
+            <i class="mgc_map_2_line"></i>
+          </view>
         </view>
       </view>
-    </view>
 
-    <!-- 天气单独一行 -->
-    <view class="weather-row">
-      <view class="weather-box">
-        <text class="weather-text">多云 23~28°C</text>
+      <!-- 天气单独一行 -->
+      <view class="weather-row">
+        <view class="weather-box">
+          <text class="weather-text">{{weatherDesc}} {{weatherTemp}}</text>
+        </view>
       </view>
-    </view>
 
-    <!-- 分类标签 (胶囊样式) -->
-    <view class="category-scroll">
-      <view
-        wx:for="{{exploreCategories}}"
-        wx:key="name"
-        id="cat-{{item.name}}"
-        class="cat-pill {{currentCategory === item.name ? 'active' : ''}}"
-        bindtap="onCategoryChange"
-        data-category="{{item.name}}"
-      >
-        <!-- 分类图标统一改用 marker PNG，和地图点位保持同一套资源 -->
-        <image
-          class="cat-icon-image {{currentCategory === item.name ? 'active' : ''}}"
-          src="{{item.iconPath}}"
-          mode="aspectFit"
-        />
-        <text class="cat-name {{currentCategory === item.name ? 'active' : ''}}">{{item.name}}</text>
+      <!-- 分类标签 (胶囊样式) -->
+      <view class="category-scroll">
+        <view
+          wx:for="{{exploreCategories}}"
+          wx:key="name"
+          id="cat-{{item.name}}"
+          class="cat-pill {{currentCategory === item.name ? 'active' : ''}}"
+          bindtap="onCategoryChange"
+          data-category="{{item.name}}"
+        >
+          <!-- 分类图标统一改用 marker PNG，和地图点位保持同一套资源 -->
+          <image
+            class="cat-icon-image {{currentCategory === item.name ? 'active' : ''}}"
+            src="{{item.iconPath}}"
+            mode="aspectFit"
+          />
+          <text class="cat-name {{currentCategory === item.name ? 'active' : ''}}">{{item.name}}</text>
+        </view>
+      </view>
+
+      <!-- 二级分类卡片：
+           美食和景点共用同一套 UI 结构与样式。
+           只有当前一级分类支持二级分类且处于展开状态时，才显示这张大卡片。 -->
+      <view class="secondary-category-wrap" wx:if="{{showSecondaryCategoryPanel && secondaryTabs.length > 0}}">
+        <view class="secondary-category-panel">
+          <scroll-view
+            class="secondary-category-scroll"
+            scroll-x
+            enable-flex
+            scroll-with-animation
+            scroll-left="{{secondaryTabScrollLeft}}"
+            show-scrollbar="{{false}}"
+          >
+            <view class="secondary-category-list">
+              <view
+                wx:for="{{secondaryTabs}}"
+                wx:key="label"
+                class="secondary-cat-item {{currentSecondaryTab === item.label ? 'active' : ''}}"
+                bindtap="onSecondaryTabChange"
+                data-tab="{{item.label}}"
+                data-index="{{index}}"
+              >
+                <!-- 每个二级项内部都保持“上图下字”，只复用同一张大卡片容器。 -->
+                <image
+                  class="secondary-cat-image {{currentSecondaryTab === item.label ? 'active' : ''}}"
+                  src="{{item.iconPath}}"
+                  mode="aspectFit"
+                />
+                <text class="secondary-cat-name {{currentSecondaryTab === item.label ? 'active' : ''}}">{{item.label}}</text>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
       </view>
     </view>
   </view>
@@ -66,7 +108,7 @@
   <view class="float-btns-group" style="bottom: {{sheetHeight + 16 + sheetBottom}}px" wx:if="{{!isDragging && sheetHeight < sysMaxHeight - 10}}">
     <!-- 左侧：列表展开按钮 -->
     <view class="float-btn explore-float-btn" bindtap="onListBtnTap">
-      <i class="mgc_list_check_3_line"></i>
+      <i class="mgc_menu_line"></i>
     </view>
     
     <!-- 右侧：放大缩小按钮组 + 定位按钮 -->
@@ -94,17 +136,26 @@
     style="height: {{sheetHeight}}px; bottom: {{sheetBottom}}px;"
   >
     <!-- 拖拽手柄区域 -->
-    <view 
-      class="sheet-handle-area-inner" 
-      bindtouchstart="onSheetTouchStart" 
-      bindtouchmove="onSheetTouchMove" 
-      bindtouchend="onSheetTouchEnd"
-    >
+    <view class="sheet-handle-area-inner">
       <view class="sheet-handle"></view>
+      <view
+        class="sheet-handle-touch-area"
+        bindtouchstart="onSheetTouchStart"
+        bindtouchmove="onSheetTouchMove"
+        bindtouchend="onSheetTouchEnd"
+      ></view>
     </view>
 
-    <!-- 列表内容 -->
-    <scroll-view class="sheet-content" scroll-y enable-back-to-top bindscrolltolower="onLoadMore">
+    <!-- 列表内容：
+         收起态继续保留结构，只通过更低的收起高度把下面内容收进去。 -->
+    <scroll-view
+      class="sheet-content"
+      scroll-y="{{isSheetExpanded}}"
+      enhanced="{{true}}"
+      show-scrollbar="{{false}}"
+      enable-back-to-top
+      bindscrolltolower="onLoadMore"
+    >
       
       <!-- 列表头 -->
       <view class="list-header">
@@ -123,11 +174,11 @@
         </view>
       </view>
 
-      <view class="empty-state" wx:if="{{filteredItems.length === 0}}">
-        <view class="empty-illustration">
-          <i class="mgc_leaf_line empty-icon"></i>
+      <view class="inline-empty" wx:if="{{filteredItems.length === 0}}">
+        <view class="inline-empty-illustration">
+          <image class="inline-empty-image" src="/images/empty/筛选无结果.png" mode="aspectFit" />
         </view>
-        <text class="empty-text body-sm">附近暂无{{currentCategory === '全部' ? '内容' : currentCategory}}，换个分类看看</text>
+        <text class="inline-empty-hint">附近暂无{{currentCategory === '全部' ? '内容' : currentCategory}}，换个分类看看</text>
       </view>
 
       <!-- 卡片列表 (合并美食与景点的统一排版) -->
@@ -142,14 +193,14 @@
               <!-- 左侧封面区：图片、兜底占位、封面角标都放这里 -->
               <view class="card-img-wrap">
                 <image
-                  wx:if="{{item.displayImage}}"
+                  wx:if="{{item.coverImage}}"
                   class="card-img"
-                  src="{{item.displayImage}}"
+                  src="{{item.coverImage}}"
                   mode="aspectFill"
                   binderror="onImageError"
                   data-index="{{index}}"
                 />
-                <view wx:if="{{!item.displayImage}}" class="shop-emoji-placeholder">
+                <view wx:if="{{!item.coverImage}}" class="shop-emoji-placeholder">
                   <i class="mgc_sparkles_line shop-emoji"></i>
                 </view>
                 <view class="card-cat-badge" wx:if="{{item.displayCategory}}">{{item.displayCategory}}</view>
@@ -165,7 +216,7 @@
                   <text class="spot-tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
                 </view>
                 <view class="card-footer">
-                  <text class="card-desc">{{item.displayWantCount}} 人想去</text>
+                  <text class="card-desc">{{like.formatWantCount(item.wantCount, like.isLiked(likedShops, item.id))}} 人想去</text>
                   <text class="card-separator">·</text>
                   <text class="card-desc">{{item.distance}}</text>
                 </view>
@@ -175,22 +226,18 @@
             <!-- 右侧操作区：这里只保留想去图标 -->
             <view class="shop-action-icons">
               <view
-                class="want-icon {{item.isLiked ? 'liked' : ''}}"
+                class="want-icon {{like.isLiked(likedShops, item.id) ? 'liked' : ''}}"
                 catchtap="onToggleLike"
                 data-shopid="{{item.id}}"
                 data-type="{{item.type}}"
               >
-                <i class="{{item.isLiked ? 'mgc_heart_fill' : 'mgc_heart_line'}} icon-btn-text"></i>
+                <i class="{{like.isLiked(likedShops, item.id) ? 'mgc_heart_fill' : 'mgc_heart_line'}} icon-btn-text"></i>
               </view>
             </view>
           </view>
         </view>
         
-        <view class="no-more" wx:if="{{filteredItems.length > 0}}">
-          <view class="no-more-line"></view>
-          <text class="no-more-text">已经没有更多了</text>
-          <view class="no-more-line"></view>
-        </view>
+        <no-more wx:if="{{filteredItems.length > 0}}" />
         
         <view class="bottom-spacer"></view>
       </view>
@@ -227,6 +274,4 @@
     </view>
   </view>
 
-  <!-- 自定义TabBar -->
-  <custom-tabbar></custom-tabbar>
 </view>

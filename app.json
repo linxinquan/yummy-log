@@ -29,7 +29,6 @@
       "root": "subpackages/route",
       "name": "route",
       "pages": [
-        "pages/route/route",
         "pages/route-basic-edit/route-basic-edit",
         "pages/my-route/my-route"
       ]
@@ -38,7 +37,6 @@
       "root": "subpackages/extra",
       "name": "extra",
       "pages": [
-        "pages/shop-detail/shop-detail",
         "pages/spot-detail/spot-detail",
         "pages/collection/collection",
         "pages/link-import/link-import",
@@ -66,6 +64,14 @@
     }
   },
   "lazyCodeLoading": "requiredComponents",
+  "usingComponents": {
+    "bottom-action-sheet": "/components/bottom-action-sheet/index",
+    "nav-map-sheet": "/components/nav-map-sheet/nav-map-sheet",
+    "place-intro": "/components/place-intro/place-intro",
+    "travel-meta-line": "/components/travel-meta-line/index",
+    "transport-info-sheet": "/components/transport-info-sheet/index",
+    "route-map-preview-card": "/components/route-map-preview-card/index"
+  },
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#ffffff",
@@ -73,27 +79,34 @@
     "navigationBarTextStyle": "black"
   },
   "tabBar": {
-    "custom": true,
+    "color": "#BAC4CC",
+    "selectedColor": "#1A2739",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "探索"
+        "text": "探索",
+        "iconPath": "assets/icons/tabbar-home.png",
+        "selectedIconPath": "assets/icons/tabbar-home-active.png"
       },
       {
         "pagePath": "pages/wantgo/wantgo",
-        "text": "想去"
-      },
-      {
-        "pagePath": "pages/route-entry/route-entry",
-        "text": ""
+        "text": "想去",
+        "iconPath": "assets/icons/tabbar-spots.png",
+        "selectedIconPath": "assets/icons/tabbar-spots-active.png"
       },
       {
         "pagePath": "pages/discover/discover",
-        "text": "攻略"
+        "text": "攻略",
+        "iconPath": "assets/icons/tabbar-discover.png",
+        "selectedIconPath": "assets/icons/tabbar-discover-active.png"
       },
       {
         "pagePath": "pages/my/my",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "assets/icons/tabbar-my.png",
+        "selectedIconPath": "assets/icons/tabbar-my-active.png"
       }
     ]
   },

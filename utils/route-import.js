@@ -135,7 +135,6 @@ async function buildImportedFoodItems(items = []) {
     return {
       id: `imported-route-${timestamp}-${index}`,
       name: item.name || `导入地点${index + 1}`,
-      emoji: '🍜',
       rating: 0,
       price: 0,
       category: '其他',

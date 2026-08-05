@@ -1,6 +1,8 @@
 {
+  "navigationStyle": "custom",
   "usingComponents": {
-    "custom-tabbar": "/custom-tabbar/index"
-  },
-  "navigationStyle": "custom"
+    "entry-fab-button": "/components/entry-fab-button/index",
+    "entry-fab": "/components/entry-fab/entry-fab",
+    "no-more": "/components/no-more/no-more"
+  }
 }

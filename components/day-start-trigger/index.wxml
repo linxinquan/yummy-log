@@ -1,0 +1,11 @@
+<view class="day-start-trigger" bindtap="onTap">
+  <view class="day-start-trigger-header">
+    <text class="day-start-trigger-label">起点位置</text>
+    <view class="day-start-trigger-action">
+      <!-- 这里改成项目里真实存在的刷新图标，避免“重选起点”图标丢失。 -->
+      <i class="mgc_refresh_2_line"></i>
+      <text>{{text ? '重选起点' : '选择起点'}}</text>
+    </view>
+  </view>
+  <text class="day-start-trigger-address" wx:if="{{text}}">{{text}}</text>
+</view>

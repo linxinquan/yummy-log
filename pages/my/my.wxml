@@ -6,45 +6,47 @@
     <view class="user-section">
       <view class="user-info">
         <block wx:if="{{isLoggedIn}}">
-          <text class="user-nickname">{{userInfo.nickName || '觅食者'}}</text>
+          <!-- 已登录：点击昵称可修改；点击资料区（头像或描述文字）可编辑资料或退出登录 -->
+          <input class="user-nickname-input" type="nickname" placeholder="点击设置昵称" value="{{userInfo.nickName}}" bindblur="onUpdateNickname" />
           <text class="user-desc">与你相遇的第 {{userInfo.days || 1}} 天</text>
         </block>
         <block wx:else>
-          <!-- 未登录：昵称输入框（type="nickname" 可获取微信昵称） -->
-          <input class="user-nickname-input" type="nickname" placeholder="点击获取微信昵称" value="{{loginNickname}}" bindinput="onInputNickname" bindblur="onNicknameBlur" />
-          <text class="user-desc">设置头像和昵称，开始记录美食足迹</text>
+          <!-- 未登录：显示请登录按钮 -->
+          <view class="login-prompt" bindtap="showLoginModal">
+            <text class="login-prompt-text">点击登录</text>
+            <text class="user-desc">登录后记录你的美食足迹</text>
+          </view>
         </block>
       </view>
 
       <!-- 头像区域 -->
       <block wx:if="{{isLoggedIn}}">
-        <image class="user-avatar" src="{{avatarUrl}}" mode="aspectFill" bindtap="onTapUserProfile" />
+        <!-- 已登录：点击头像可修改 -->
+        <button class="user-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onUpdateAvatar">
+          <image class="user-avatar-img" src="{{avatarUrl}}" mode="aspectFill" />
+        </button>
       </block>
       <block wx:else>
-        <!-- 未登录：头像选择按钮（open-type="chooseAvatar"） -->
-        <button class="user-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-          <image wx:if="{{loginAvatarUrl}}" class="user-avatar-img" src="{{loginAvatarUrl}}" mode="aspectFill" />
-          <view wx:else class="user-avatar-placeholder">
-            <i class="mgc_ghost_fill"></i>
-            <text class="avatar-btn-text">点我</text>
-          </view>
-        </button>
+        <!-- 未登录：显示默认头像，点击弹出登录弹窗 -->
+        <view class="user-avatar-default" bindtap="showLoginModal">
+          <i class="mgc_user_3_fill avatar-icon"></i>
+        </view>
       </block>
     </view>
 
     <!-- 统计一行：点击整行进入我的采集 -->
     <view class="stats-row" bindtap="onGoCollection">
       <view class="stat-item">
-        <text class="stat-label">采集</text>
-        <text class="stat-value">{{checkinStats.totalCount || 0}}</text>
-      </view>
-      <view class="stat-item">
         <text class="stat-label">城市</text>
         <text class="stat-value">{{checkinStats.cityCount || 0}}</text>
       </view>
       <view class="stat-item">
         <text class="stat-label">足迹</text>
-        <text class="stat-value">{{stats.visitedCount || 0}}</text>
+        <text class="stat-value">{{checkinStats.visitedCount || 0}}</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-label">采集</text>
+        <text class="stat-value">{{checkinStats.totalCount || 0}}</text>
       </view>
     </view>
 
@@ -67,16 +69,118 @@
       <text class="list-item-text">我的发布</text>
       <i class="mgc_right_line arrow-icon"></i>
     </view>
-    <view class="list-item" bindtap="onMenuTap" data-type="settings">
+    <view class="list-item" bindtap="showSettingsModal">
       <text class="list-item-text">设置</text>
       <i class="mgc_right_line arrow-icon"></i>
     </view>
-    <view class="list-item" bindtap="onMenuTap" data-type="share">
-      <text class="list-item-text">分享我们</text>
-      <i class="mgc_right_line arrow-icon"></i>
+    <!-- “分享我们”外层继续保持普通列表结构，内部把点击区拆成文字 / 中间 / 箭头三段分享按钮。 -->
+    <view class="list-item share-list-item">
+      <view class="share-list-content">
+        <!-- 左侧文字区域只负责显示，不直接承接点击。 -->
+        <view class="share-label-wrap">
+          <text class="list-item-text">分享我们</text>
+        </view>
+        <!-- 中间空白区占满剩余宽度，视觉上仍和“设置”保持一致。 -->
+        <view class="share-spacer"></view>
+        <!-- 右侧箭头区域单独包一层，方便和点击区一一对应。 -->
+        <view class="share-arrow-wrap">
+          <i class="mgc_right_line arrow-icon"></i>
+        </view>
+      </view>
+      <button class="share-hit-btn share-hit-left" open-type="share"></button>
+      <button class="share-hit-btn share-hit-middle" open-type="share"></button>
+      <button class="share-hit-btn share-hit-right" open-type="share"></button>
+    </view>
+
+  </view>
+
+  <!-- 登录弹窗 -->
+  <view class="login-modal {{showLoginModal ? 'show' : ''}}" bindtap="onModalMaskTap">
+    <view class="login-modal-content" catchtap="onModalContentTap">
+      <!-- 关闭按钮 -->
+      <view class="modal-close" bindtap="hideLoginModal">
+        <i class="mgc_close_line"></i>
+      </view>
+      
+      <!-- 标题 -->
+      <view class="modal-title">
+        <text>登录</text>
+      </view>
+      <view class="modal-subtitle">
+        <text>记录你的美食足迹</text>
+      </view>
+      
+      <!-- 登录按钮 -->
+      <button class="login-btn" bindtap="onWechatLogin">
+        <i class="mgc_wechat_fill wechat-icon"></i>
+        <text>一键登录</text>
+      </button>
+      
+      <!-- 隐私说明 -->
+      <view class="privacy-note">
+        <text>登录即表示同意</text>
+        <text class="agreement-link" bindtap="onTapPrivacyPolicy">《隐私协议》</text>
+        <text>和</text>
+        <text class="agreement-link" bindtap="onTapUserAgreement">《用户协议》</text>
+      </view>
+      
+      <!-- 暂不登录 -->
+      <view class="cancel-login" bindtap="hideLoginModal">
+        <text>暂不登录</text>
+      </view>
     </view>
   </view>
 
-  <!-- 自定义 TabBar -->
-  <custom-tabbar></custom-tabbar>
+  <!-- 资料完善弹窗 -->
+  <view class="profile-modal {{showProfileDialog ? 'show' : ''}}" bindtap="hideProfileDialog">
+    <view class="profile-modal-content" catchtap="onModalContentTap">
+      <!-- 关闭按钮 -->
+      <view class="modal-close" bindtap="hideProfileDialog">
+        <i class="mgc_close_line"></i>
+      </view>
+
+      <!-- 标题 -->
+      <view class="modal-title">完善资料</view>
+      <view class="modal-subtitle">选个头像和昵称，让大家认识你</view>
+
+      <!-- 头像选择 -->
+      <view class="profile-avatar-section">
+        <button class="profile-avatar-btn" open-type="chooseAvatar" bindchooseavatar="onProfileChooseAvatar">
+          <image class="profile-avatar-img" src="{{profileAvatarUrl}}" mode="aspectFill" />
+        </button>
+        <text class="profile-avatar-hint">点击更换头像</text>
+      </view>
+
+      <!-- 昵称输入 -->
+      <view class="profile-nickname-section">
+        <input class="profile-nickname-input" type="nickname" placeholder="请输入昵称" bindblur="onProfileNicknameBlur" />
+      </view>
+
+      <!-- 保存按钮 -->
+      <button class="profile-save-btn" bindtap="onSaveProfile">保存</button>
+
+      <!-- 跳过 -->
+      <view class="profile-skip" bindtap="hideProfileDialog">
+        <text>稍后再说</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 设置弹窗也统一走公用底部弹窗壳，方便后面全局同步维护。 -->
+  <bottom-action-sheet
+    visible="{{showSettingsModal}}"
+    title="设置"
+    bind:close="hideSettingsModal"
+  >
+    <view class="route-action-grid">
+      <view class="route-action-card" bindtap="showEditNickname">
+        <i class="route-action-icon mgc_user_edit_line"></i>
+        <text class="route-action-label">修改昵称</text>
+      </view>
+      <view class="route-action-card danger" bindtap="onLogout">
+        <i class="route-action-icon mgc_exit_line"></i>
+        <text class="route-action-label">退出登录</text>
+      </view>
+    </view>
+  </bottom-action-sheet>
 </view>

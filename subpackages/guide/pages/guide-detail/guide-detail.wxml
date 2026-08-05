@@ -9,6 +9,7 @@
       scale="{{mapScale}}"
       markers="{{mapMarkers}}"
       polyline="{{polyline}}"
+      bindregionchange="onMapRegionChange"
       enable-zoom="{{viewMode === 'map'}}"
       enable-scroll="{{viewMode === 'map'}}"
       enable-rotate="{{false}}"
@@ -27,19 +28,22 @@
   <!-- 列表 / 地图 模式切换按钮 -->
   <view class="mode-switch" style="top: {{modeSwitchTop}}px;" wx:if="{{guide}}">
     <view class="mode-chip {{viewMode === 'list' ? 'active' : ''}}" bindtap="onSwitchMode" data-mode="list">
-      <i class="mgc_list_check_line"></i>
-      <text>列表</text>
+      <i class="mgc_layout_4_line"></i>
+      <text>详情</text>
     </view>
     <view class="mode-chip {{viewMode === 'map' ? 'active' : ''}}" bindtap="onSwitchMode" data-mode="map">
-      <i class="mgc_world_2_line"></i>
-      <text>地图</text>
+      <i class="mgc_route_line"></i>
+      <text>路线</text>
     </view>
   </view>
 
   <!-- 列表模式：显示攻略标题、概览和每天行程 -->
   <block wx:if="{{viewMode === 'list'}}">
     <view class="detail-sheet">
-      <scroll-view class="detail-scroll" scroll-y scroll-into-view="{{sheetScrollTarget}}" show-scrollbar="{{false}}">
+      <!-- 顶部单独补一层圆角遮罩，避免 sticky 区在切到“第几天”时把大卡片视觉顶成直角。 -->
+      <view class="detail-sheet-corner-mask"></view>
+      <!-- 这里改成 scrollTop 定位，避免继续依赖固定负锚点。 -->
+      <scroll-view class="detail-scroll" scroll-y scroll-into-view="{{sheetScrollTarget}}" scroll-top="{{detailScrollTop}}" show-scrollbar="{{false}}">
         <view class="detail-scroll-inner">
           <!-- 攻略标题和摘要 -->
           <view class="detail-header" id="guide-scroll-top">
@@ -75,7 +79,7 @@
           <view class="sheet-content">
             <view class="overview-anchor" id="guide-overview-anchor"></view>
             <view class="overview-section">
-              <text class="overview-title">概览</text>
+              <text class="overview-title" id="guide-overview-title">概览</text>
               <view class="overview-list">
                 <view
                   class="overview-card"
@@ -101,6 +105,7 @@
                 </view>
               </view>
             </view>
+            <!-- 恢复概览和分天内容之间的分隔带，切到“第几天”时也保留结构连续性。 -->
             <view class="day-separator overview-separator"></view>
 
             <view
@@ -112,7 +117,7 @@
               id="day-section-{{dayIndex}}"
             >
               <view class="day-anchor" id="day-anchor-{{dayIndex}}"></view>
-              <view class="day-header">
+              <view class="day-header" id="guide-day-header-{{dayIndex}}">
                 <text class="day-title">{{day.title}}</text>
                 <text class="day-count">{{day.countText}}</text>
               </view>
@@ -188,8 +193,8 @@
     <!-- 底部主按钮：保存路线 / 查看路线 -->
     <view class="bottom-bar">
       <view class="bottom-btn secondary" bindtap="onSaveRoute">
-        <i class="mgc_finger_love_line"></i>
-        <text>保存路线</text>
+        <i class="mgc_archive_line"></i>
+        <text>{{isRouteSaved ? '已保存路线' : '保存路线'}}</text>
       </view>
       <view class="bottom-btn primary" bindtap="onViewRoute">
         <i class="mgc_route_line"></i>
@@ -203,12 +208,20 @@
     <view class="map-panel">
       <view class="map-panel-actions" wx:if="{{mapPreviewPlace}}">
         <view class="map-floating-icon" bindtap="onSwitchMode" data-mode="list">
-          <i class="mgc_left_line"></i>
+          <i class="mgc_layout_4_line"></i>
         </view>
-        <view style="display: flex; flex-direction: column; gap: 24rpx; pointer-events: auto;">
-          <!-- 地图模式浮动操作：全屏图标下方新增“定位到我”按钮 -->
+        <view class="map-side-action-group">
+          <!-- 攻略路线地图模式右侧按钮顺序统一为：全览 / 放大缩小 / 定位。 -->
           <view class="map-floating-icon" bindtap="onFitRoute">
             <i class="mgc_fullscreen_line"></i>
+          </view>
+          <view class="map-zoom-controls">
+            <view class="map-zoom-btn" bindtap="onMapZoomIn">
+              <i class="mgc_add_line map-zoom-icon"></i>
+            </view>
+            <view class="map-zoom-btn" bindtap="onMapZoomOut">
+              <i class="mgc_minimize_line map-zoom-icon"></i>
+            </view>
           </view>
           <view class="map-floating-icon" bindtap="onLocateMe">
             <i class="mgc_aiming_2_line"></i>
@@ -246,71 +259,18 @@
     bindconfirm="onConfirmTransportMode"
   ></transport-info-sheet>
 
-  <!-- 请选择导航地图：这里提供腾讯地图、高德地图和复制地址 -->
-  <view class="sheet-mask nav-map-sheet-mask {{navMapSheetVisible ? 'show' : ''}}" bindtap="onCloseNavMapSheet">
-    <view class="sheet-panel route-action-sheet nav-map-sheet-panel" catchtap="preventBubble">
-      <view class="sheet-modal-header">
-        <text class="sheet-modal-title">请选择导航地图</text>
-        <i class="mgc_close_line sheet-modal-close" bindtap="onCloseNavMapSheet"></i>
-      </view>
-      <view class="route-sheet-option-list">
-        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="gaode">
-          <view class="route-sheet-option-main">
-            <!-- 地图品牌图标：改用用户提供的 png -->
-            <image class="route-sheet-option-logo" src="/images/navigation/nav-map-amap.png" mode="aspectFit"></image>
-            <text>高德地图</text>
-          </view>
-          <i class="mgc_right_line route-sheet-option-arrow"></i>
-        </view>
-        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="tencent">
-          <view class="route-sheet-option-main">
-            <!-- 地图品牌图标：改用用户提供的 png -->
-            <image class="route-sheet-option-logo" src="/images/navigation/nav-map-tencent.png" mode="aspectFit"></image>
-            <text>腾讯地图</text>
-          </view>
-          <i class="mgc_right_line route-sheet-option-arrow"></i>
-        </view>
-        <view class="route-sheet-option" bindtap="onSelectNavMapOption" data-type="copy">
-          <view class="route-sheet-option-main">
-            <i class="mgc_copy_2_line"></i>
-            <text>复制地址</text>
-          </view>
-          <i class="mgc_right_line route-sheet-option-arrow"></i>
-        </view>
-      </view>
-    </view>
-  </view>
+  <!-- 导航地图选择弹窗（公共组件） -->
+  <nav-map-sheet
+    visible="{{navMapSheetVisible}}"
+    target="{{navMapTarget}}"
+    bind:close="onCloseNavMapSheet"
+  />
 
-  <!-- 地点简介底部弹窗：内容沿用我的路线详情版本 -->
-  <view class="sheet-mask {{placeIntroVisible ? 'show' : ''}}" bindtap="onClosePlaceIntro">
-    <view class="sheet-panel place-intro-sheet" catchtap="preventBubble">
-      <view class="sheet-modal-header">
-        <text class="sheet-modal-title">地点简介</text>
-        <i class="mgc_close_line sheet-modal-close" bindtap="onClosePlaceIntro"></i>
-      </view>
-      <scroll-view class="place-intro-scroll" scroll-y show-scrollbar="{{false}}" wx:if="{{placeIntroData}}">
-        <view class="place-intro-body">
-          <image class="place-intro-cover" src="{{placeIntroData.image}}" mode="aspectFill"></image>
-          <view class="place-intro-tags">
-            <view class="rating-star" wx:if="{{placeIntroData.rating}}">
-              <text>{{placeIntroData.rating}}</text>
-            </view>
-            <view class="tag-badge" wx:for="{{placeIntroData.tags}}" wx:key="*this" wx:for-item="tag">
-              <text>{{tag}}</text>
-            </view>
-          </view>
-          <text class="place-intro-title">{{placeIntroData.name}}</text>
-          <text class="place-intro-open-time">{{placeIntroData.openTimeText}}</text>
-          <view class="place-intro-address-box" bindtap="onOpenPlaceIntroNavigation">
-            <view class="place-intro-address-content">
-              <text class="place-intro-address-label">地址</text>
-              <text class="place-intro-address-text">{{placeIntroData.address}}</text>
-            </view>
-            <i class="mgc_right_line place-intro-address-icon"></i>
-          </view>
-          <text class="place-intro-desc">{{placeIntroData.desc}}</text>
-        </view>
-      </scroll-view>
-    </view>
-  </view>
+  <!-- 地点简介底部弹窗（公共组件） -->
+  <place-intro
+    visible="{{placeIntroVisible}}"
+    data="{{placeIntroData}}"
+    bind:close="onClosePlaceIntro"
+    bind:nav="onOpenPlaceIntroNavigation"
+  />
 </view>

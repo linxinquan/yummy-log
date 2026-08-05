@@ -1,4 +1,4 @@
-﻿// 一周展示文案：用于首页问候下面那一排日期标签。
+// 一周展示文案：用于首页问候下面那一排日期标签。
 const WEEKDAY_LABELS = ['一', '二', '三', '四', '五', '六', '日']
 const { parseRouteTextToIds, resolveRouteImportText } = require('../../utils/route-import')
 
@@ -153,7 +153,7 @@ Page({
       })
       setTimeout(() => {
         wx.navigateTo({
-          url: `/subpackages/route/pages/route/route?ids=${parseResult.routeIds.join(',')}&dayCount=${parseResult.dayCount}`
+          url: `/subpackages/route/pages/my-route/my-route?ids=${parseResult.routeIds.join(',')}&dayCount=${parseResult.dayCount}`
         })
       }, 300)
     } finally {

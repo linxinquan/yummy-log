@@ -1,7 +1,8 @@
-﻿const app = getApp()
+const app = getApp()
 const { normalizeTripDurationText } = require('../../../../utils/trip-duration')
 const { backfillStoredGuides } = require('../../../../utils/guide-backfill')
-const { DEFAULT_COVER_POOL } = require('../../config/cover-pool')
+// 区攻略页位于分包里，这里要回到项目根目录读取封面池配置。
+const { DEFAULT_COVER_POOL } = require('../../../../config/cover-pool')
 
 // 根据攻略已有文案，尽量推断出城市名称。
 function inferGuideCity(guide = {}) {
@@ -12,11 +13,32 @@ function inferGuideCity(guide = {}) {
     guide.desc
   ].join(' ')
 
-  if (/西安|长安/.test(sourceText)) return '西安市'
+  if (/香港/.test(sourceText)) return '香港特别行政区'
+  if (/上海/.test(sourceText)) return '上海市'
+  if (/北京/.test(sourceText)) return '北京市'
   if (/广州/.test(sourceText)) return '广州市'
-  if (/汕头/.test(sourceText)) return '汕头市'
-  if (/佛山/.test(sourceText)) return '佛山市'
-  if (/珠海/.test(sourceText)) return '珠海市'
+  if (/杭州/.test(sourceText)) return '杭州市'
+  if (/台北/.test(sourceText)) return '台北市'
+  if (/澳门/.test(sourceText)) return '澳门特别行政区'
+  if (/成都/.test(sourceText)) return '成都市'
+  if (/厦门/.test(sourceText)) return '厦门市'
+  if (/南京/.test(sourceText)) return '南京市'
+  if (/苏州/.test(sourceText)) return '苏州市'
+  if (/福州/.test(sourceText)) return '福州市'
+  if (/台州/.test(sourceText)) return '台州市'
+  if (/台南/.test(sourceText)) return '台南市'
+  if (/台中/.test(sourceText)) return '台中市'
+  if (/高雄/.test(sourceText)) return '高雄市'
+  if (/温州/.test(sourceText)) return '温州市'
+  if (/泉州/.test(sourceText)) return '泉州市'
+  if (/扬州/.test(sourceText)) return '扬州市'
+  if (/常州/.test(sourceText)) return '常州市'
+  if (/新北/.test(sourceText)) return '新北市'
+  if (/新竹县/.test(sourceText)) return '新竹县'
+  if (/新竹/.test(sourceText)) return '新竹市'
+  if (/宁德/.test(sourceText)) return '宁德市'
+  if (/惠州/.test(sourceText)) return '惠州市'
+  if (/乌兰察布/.test(sourceText)) return '乌兰察布市'
   return '深圳市'
 }
 
@@ -76,7 +98,10 @@ Page({
     districtName: '',
     districtId: '',
     guideSource: [],
-    guides: []
+    guides: [],
+    // 用一个明确布尔值控制“列表 / 空状态”显示，
+    // 避免直接在 WXML 里用数组长度判断时出现渲染不稳定。
+    hasGuides: false
   },
 
   // 页面初始化：接收区县参数，然后加载该区的攻略列表。
@@ -94,11 +119,11 @@ Page({
 
   // 回到页面时，重新把卡片做一遍展示字段补齐。
   onShow() {
-    if (this.data.guideSource.length) {
-      this.setData({
-        guides: decorateGuideCards(this.data.guideSource)
-      })
-    }
+    const nextGuides = decorateGuideCards(this.data.guideSource || [])
+    this.setData({
+      guides: nextGuides,
+      hasGuides: nextGuides.length > 0
+    })
   },
 
   // 读取当前区县下的攻略数据，并合并用户已发布攻略。
@@ -590,10 +615,12 @@ Page({
     const filteredGuides = this.data.districtId
       ? mergedGuides.filter(g => g.district === this.data.districtId)
       : mergedGuides
+    const decoratedGuides = decorateGuideCards(filteredGuides)
 
     this.setData({
       guideSource: filteredGuides,
-      guides: decorateGuideCards(filteredGuides)
+      guides: decoratedGuides,
+      hasGuides: decoratedGuides.length > 0
     })
   },
 

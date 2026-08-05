@@ -1,4 +1,5 @@
-﻿const { getCityOptions, loadData } = require('../../../../utils/util')
+const util = require('../../../../utils/util')
+const { getCityOptions } = util
 const placesData = require('../../../../utils/placesData')
 const {
   applyTravelMeta,
@@ -34,22 +35,14 @@ function resolveRouteCoverImage(route, daySections) {
   if (route && route.coverImage) return route.coverImage
 
   const routeItemCovers = (daySections || []).reduce((result, day) => {
-    ;(day.items || []).forEach(item => {
-      const cover = item.image || item.coverImage || item.logo || item.thumb
+    (day.items || []).forEach(item => {
+      const cover = item.coverImage
       if (cover) result.push(cover)
     })
     return result
   }, [])
 
-  const summaryCovers = ((route && route.daySummaries) || [])
-    .map(item => item && item.image)
-    .filter(Boolean)
-
-  const routeImage = route && route.image && route.image !== '/images/app-logo.jpg'
-    ? [route.image]
-    : []
-
-  const coverPool = [...routeItemCovers, ...summaryCovers, ...routeImage, ...DEFAULT_SPOT_COVERS]
+  const coverPool = [...routeItemCovers, ...DEFAULT_SPOT_COVERS]
   return pickRandomItem(coverPool) || '/images/app-logo.jpg'
 }
 
@@ -77,30 +70,7 @@ function alignDaySections(daySections, targetCount) {
   return sections
 }
 
-// 兼容旧结构：重新生成 daySummaries / dayDetails。
-function buildLegacyRouteData(daySections) {
-  const cleanSections = stripEditState(daySections)
-  const daySummaries = cleanSections.map((day, index) => ({
-    location: '',
-    route: (day.items || []).map(item => item.name).join(' --- '),
-    image: (day.items && day.items[0] && day.items[0].image) || '/images/app-logo.jpg'
-  }))
-
-  const dayDetails = cleanSections.map(day => (day.items || []).map(item => ({
-    name: item.name,
-    desc: item.travelText || item.desc || '',
-    travelText: item.travelText || item.desc || '',
-    tag: item.tag,
-    image: item.image,
-    type: item.type,
-    lat: item.lat,
-    lng: item.lng
-  })))
-
-  return { daySummaries, dayDetails }
-}
-
-// 顶部摘要文案，例如“3 天 2 晚 · 0 个地点”。
+// 顶部摘要文案，例如"3 天 2 晚 · 0 个地点"。
 function buildSummaryText(daySections) {
   const dayCount = daySections.length
   const placeCount = daySections.reduce((sum, day) => sum + (day.items || []).length, 0)
@@ -141,8 +111,6 @@ function buildEmptyRoute() {
       countText: '0 个地点',
       items: []
     })),
-    daySummaries: [],
-    dayDetails: [],
     sourceType: 'custom',
     createdAt: Date.now(),
     updatedAt: Date.now()
@@ -174,6 +142,8 @@ Page({
     showCityPicker: false,
     showDayPicker: false,
     showTransportPicker: false,
+    // 删除路线确认统一改为自定义弹层。
+    showDeleteConfirm: false,
     cityOptions: [],
     dayOptions: DAY_OPTIONS,
     dayPickerIndex: 2,
@@ -346,30 +316,50 @@ Page({
     wx.navigateBack({ delta: 1 })
   },
 
-  // 删除当前路线
+  // 删除当前路线（同步云端）
   onDeleteRoute() {
-    const routeId = this.data.route && this.data.route.id
-    wx.showModal({
-      title: '删除路线',
-      content: '删除后无法恢复，确认删除吗？',
-      success: (res) => {
-        if (!res.confirm) return
-        if (routeId !== undefined && routeId !== null) {
-          const savedRoutes = loadData('savedRoutes', [])
-          const nextRoutes = savedRoutes.filter(item => String(item.id) !== String(routeId))
-          wx.setStorageSync('savedRoutes', nextRoutes)
-        }
-        wx.showToast({ title: '已删除', icon: 'success' })
-        setTimeout(() => {
-          wx.navigateBack({
-            delta: 2,
-            fail: () => {
-              wx.switchTab({ url: '/pages/wantgo/wantgo' })
-            }
-          })
-        }, 300)
-      }
+    // 点击删除图标时先展示自定义确认层，不再走原生确认框。
+    this.setData({
+      showDeleteConfirm: true
     })
+  },
+
+  // 关闭删除确认层。
+  onCloseDeleteConfirm() {
+    this.setData({
+      showDeleteConfirm: false
+    })
+  },
+
+  // 用户确认后，真正执行路线删除。
+  async onConfirmDeleteRoute() {
+    const routeId = this.data.route && this.data.route.id
+    const routeCloudId = this.data.route && this.data.route._id
+    this.setData({
+      showDeleteConfirm: false
+    })
+
+    // 本地删除
+    const savedRoutes = util.loadData('savedRoutes', [])
+    const nextRoutes = savedRoutes.filter(item => String(item.id) !== String(routeId))
+    wx.setStorageSync('savedRoutes', nextRoutes)
+    // 云端删除
+    if (routeCloudId) {
+      try {
+        await util.deleteRouteAsync(routeCloudId)
+      } catch (err) {
+        console.warn('[route-basic-edit] 云端删除失败:', err)
+      }
+    }
+    wx.showToast({ title: '已删除', icon: 'success' })
+    setTimeout(() => {
+      wx.navigateBack({
+        delta: 2,
+        fail: () => {
+          wx.switchTab({ url: '/pages/wantgo/wantgo' })
+        }
+      })
+    }, 300)
   },
 
   // 阻止弹窗内容点击冒泡
@@ -377,7 +367,7 @@ Page({
   },
 
   // 保存基础信息：
-  // 新建路线时会先写入“我的路线”，然后进入详情页。
+  // 新建路线时会先写入"我的路线"，然后进入详情页。
   onSave() {
     const inputTitle = (this.data.title || '').trim()
     const title = inputTitle || (this.data.isNewRoute ? '未命名路线' : '')
@@ -397,18 +387,15 @@ Page({
     const transportPreferences = saveGlobalTransportPreferences(this.data.transportPreferences)
     const alignedSections = alignDaySections(baseRoute.daySections || [], this.data.dayCount)
     const nextSections = applyTransportPreferences(alignedSections, transportPreferences)
-    const { daySummaries, dayDetails } = buildLegacyRouteData(nextSections)
     const updatedRoute = {
       ...baseRoute,
       title,
       city,
       dayCount: nextSections.length,
       daySections: nextSections,
-      daySummaries,
-      dayDetails,
       subtitle: buildSummaryText(nextSections),
-      image: this.data.coverImage || baseRoute.coverImage || baseRoute.image || daySummaries[0]?.image || '/images/app-logo.jpg',
-      coverImage: this.data.coverImage || baseRoute.coverImage || baseRoute.image || daySummaries[0]?.image || '/images/app-logo.jpg',
+      image: this.data.coverImage || baseRoute.coverImage || '/images/app-logo.jpg',
+      coverImage: this.data.coverImage || baseRoute.coverImage || '/images/app-logo.jpg',
       transportPreferences: { ...transportPreferences },
       transportPreferenceText: buildTransportPreferenceSummary(transportPreferences),
       isDraft: this.data.isTempPreview,
@@ -423,7 +410,7 @@ Page({
       return
     }
 
-    const savedRoutes = loadData('savedRoutes', [])
+    const savedRoutes = util.loadData('savedRoutes', [])
     const index = savedRoutes.findIndex(item => String(item.id) === String(updatedRoute.id))
     if (index > -1) {
       savedRoutes[index] = updatedRoute
@@ -431,6 +418,9 @@ Page({
       savedRoutes.push(updatedRoute)
     }
     wx.setStorageSync('savedRoutes', savedRoutes)
+
+    // 同步云端
+    this._syncRouteToCloud(updatedRoute, index > -1)
 
     if (this.data.isNewRoute) {
       wx.redirectTo({
@@ -441,5 +431,21 @@ Page({
 
     wx.showToast({ title: '已保存', icon: 'success' })
     setTimeout(() => wx.navigateBack({ delta: 1 }), 300)
+  },
+
+  // 保存路线到云端：新增或更新
+  async _syncRouteToCloud(routeData, isUpdate) {
+    try {
+      if (isUpdate) {
+        const cloudId = routeData._id
+        if (cloudId) {
+          await util.updateRouteAsync(cloudId, routeData)
+        }
+      } else {
+        await util.saveRouteAsync(routeData)
+      }
+    } catch (err) {
+      console.warn('[route-basic-edit] 云端同步失败（已保留本地数据）:', err)
+    }
   }
 })

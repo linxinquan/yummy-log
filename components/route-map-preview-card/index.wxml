@@ -3,11 +3,12 @@
 <view class="route-map-preview-card" wx:if="{{currentItem}}">
   <!-- 顶部 Tab：行程总览 / 每一天 -->
   <view class="preview-tabs-panel">
-    <scroll-view class="preview-tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}">
+    <scroll-view class="preview-tab-scroll" scroll-x enable-flex="{{true}}" show-scrollbar="{{false}}" scroll-into-view="{{'ptab-' + (currentMapDay < 0 ? 0 : currentMapDay)}}">
       <view class="preview-tab-row">
         <view
           wx:for="{{previewTabs}}"
           wx:key="index"
+          id="ptab-{{item.index}}"
           class="preview-tab-item {{((currentMapDay < 0 && item.index === 0) || currentMapDay === item.index) ? 'active' : ''}}"
           bindtap="onSelectDay"
           data-index="{{item.index}}"
@@ -52,14 +53,14 @@
           bindtap="onStep"
           data-index="{{previewPrevIndex}}"
         >
-          <text>上一站</text>
+          <text class="preview-btn-text">上一站</text>
         </view>
         <view
           class="preview-btn {{previewDisableNext ? 'disabled' : ''}}"
           bindtap="onStep"
           data-index="{{previewNextIndex}}"
         >
-          <text>下一站</text>
+          <text class="preview-btn-text">下一站</text>
         </view>
       </view>
     </view>

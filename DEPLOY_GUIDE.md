@@ -9,6 +9,7 @@
 ### request合法域名（必须）
 ```
 https://apis.map.qq.com
+https://wis.qq.com
 ```
 
 > **注意**：地图Key使用的是腾讯位置服务，调用逆地址解析API需要在request域名中添加 `apis.map.qq.com`

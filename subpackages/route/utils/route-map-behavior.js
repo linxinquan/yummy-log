@@ -23,7 +23,7 @@ module.exports = Behavior({
       
       // 根据 currentMapDay 决定显示哪一天的路线
       const effectiveDayIndex = this.data.currentMapDay >= 0 ? this.data.currentMapDay : 0
-      const currentDaySection = (this.data.routeDaySections || [])[effectiveDayIndex] || {}
+      const currentDaySection = (this.data.daySections || [])[effectiveDayIndex] || {}
       const routeShops = (currentDaySection.items || []).length ? currentDaySection.items : (this.data.routeShops || [])
       
       if (routeShops.length === 0) {
@@ -71,10 +71,23 @@ module.exports = Behavior({
       }
 
     const markers = routeShops.map((shop, index) => {
+      // 防御性代码：确保经纬度不是 NaN
+      let lat = 0, lng = 0
+      if (typeof shop.lat === 'number' && !isNaN(shop.lat)) {
+        lat = shop.lat
+      } else if (typeof shop.latitude === 'number' && !isNaN(shop.latitude)) {
+        lat = shop.latitude
+      }
+      if (typeof shop.lng === 'number' && !isNaN(shop.lng)) {
+        lng = shop.lng
+      } else if (typeof shop.longitude === 'number' && !isNaN(shop.longitude)) {
+        lng = shop.longitude
+      }
+      
       return {
         id: shop.id,
-        latitude: shop.lat || shop.latitude,
-        longitude: shop.lng || shop.longitude,
+        latitude: lat,
+        longitude: lng,
         // 地图模式只保留数字顺序，不再显示分类图片底图，
         // 避免分类图标和数字标签叠在一起发生冲突。
         label: {
@@ -91,7 +104,7 @@ module.exports = Behavior({
           height: 14,
           textAlign: 'center',
           borderRadius: 15,
-          bgColor: '#47BFFE',
+          bgColor: '#25BBE7',
           padding: 8,
           borderWidth: 2,
           borderColor: '#FFFFFF',
@@ -101,7 +114,7 @@ module.exports = Behavior({
         },
         callout: {
           content: shop.name,
-          color: '#1A1A2E',
+          color: '#1A2739',
           fontSize: 12,
           borderRadius: 6,
           padding: 6,
@@ -146,7 +159,13 @@ module.exports = Behavior({
       // 构建所有途经点（起点 + 各店铺，不返回起点）
       const allPoints = [
         { latitude: startPoint.lat, longitude: startPoint.lng },
-        ...routeShops.map(shop => ({ latitude: shop.lat || shop.latitude, longitude: shop.lng || shop.longitude }))
+        ...routeShops.map(shop => { 
+          let lat = typeof shop.lat === 'number' && !isNaN(shop.lat) ? shop.lat : 
+                   typeof shop.latitude === 'number' && !isNaN(shop.latitude) ? shop.latitude : 0
+          let lng = typeof shop.lng === 'number' && !isNaN(shop.lng) ? shop.lng : 
+                   typeof shop.longitude === 'number' && !isNaN(shop.longitude) ? shop.longitude : 0
+          return { latitude: lat, longitude: lng }
+        })
       ]
       
       // 调试：打印 allPoints 数据
@@ -185,14 +204,37 @@ module.exports = Behavior({
     // 让地图自动缩放到能看见当前路线的全部点位。
     onFitRoute() {
       const effectiveDayIndex = this.data.currentMapDay >= 0 ? this.data.currentMapDay : 0
-      const currentDaySection = (this.data.routeDaySections || [])[effectiveDayIndex] || {}
+      const currentDaySection = (this.data.daySections || [])[effectiveDayIndex] || {}
       const currentItems = (currentDaySection.items || []).length ? currentDaySection.items : (this.data.routeShops || [])
       if (currentItems.length === 0) return
-      const points = currentItems
-        .map(item => ({
-          latitude: item.lat || item.latitude,
-          longitude: item.lng || item.longitude
-        }))
+      const { currentStart, dayStartPoints } = this.data
+
+      // “全览”需要把当前这一天真正的起点一起纳入范围，
+      // 否则地图只会框住中间地点，看起来像只轻微移动了一点点。
+      let startPoint = null
+      if (dayStartPoints && dayStartPoints[effectiveDayIndex]) {
+        startPoint = dayStartPoints[effectiveDayIndex]
+      } else if (currentStart) {
+        startPoint = currentStart
+        if (currentStart.type === 'current') {
+          startPoint = app.globalData.location || mapConfig.DEFAULT_CENTER
+        }
+      }
+
+      const points = [
+        ...(startPoint && typeof startPoint.lat === 'number' && typeof startPoint.lng === 'number'
+          ? [{ latitude: startPoint.lat, longitude: startPoint.lng }]
+          : []),
+        ...currentItems
+          .map(item => {
+            let lat = typeof item.lat === 'number' && !isNaN(item.lat) ? item.lat : 
+                     typeof item.latitude === 'number' && !isNaN(item.latitude) ? item.latitude : 0
+            let lng = typeof item.lng === 'number' && !isNaN(item.lng) ? item.lng : 
+                     typeof item.longitude === 'number' && !isNaN(item.longitude) ? item.longitude : 0
+            return { latitude: lat, longitude: lng }
+          })
+      ]
+        // 去掉无效点位，避免 includePoints 被脏数据影响。
         .filter(item => typeof item.latitude === 'number' && typeof item.longitude === 'number')
       if (!points.length) return
 
@@ -212,9 +254,63 @@ module.exports = Behavior({
       })
     },
 
-    // 地图区域变化的预留入口，当前暂时不处理。
-    onMapRegionChange() {
-      // 可扩展：地图区域变化时的处理
+    // 地图放大一级：
+    // 这里只改缩放级别，不主动改中心点，手感更接近双指缩放。
+    onMapZoomIn() {
+      const currentScale = Number(this.data.mapScale) || 14
+      if (currentScale >= 20) return
+      this.setData({
+        mapScale: Math.min(currentScale + 1, 20)
+      })
+    },
+
+    // 地图缩小一级：
+    // 这里只改缩放级别，不主动改中心点，手感更接近双指缩放。
+    onMapZoomOut() {
+      const currentScale = Number(this.data.mapScale) || 14
+      if (currentScale <= 3) return
+      this.setData({
+        mapScale: Math.max(currentScale - 1, 3)
+      })
+    },
+
+    // 地图区域变化结束后，同步真实中心点。
+    // 这样后续继续缩放时，就会围绕当前屏幕中心，而不是旧中心点。
+    onMapRegionChange(e) {
+      if (!e || e.type !== 'end') return
+
+      if (!this._routeMapCtx) {
+        this._routeMapCtx = wx.createMapContext('routeMap', this)
+      }
+
+      this._routeMapCtx.getCenterLocation({
+        success: (res) => {
+          if (
+            typeof res.latitude !== 'number' ||
+            Number.isNaN(res.latitude) ||
+            typeof res.longitude !== 'number' ||
+            Number.isNaN(res.longitude)
+          ) {
+            return
+          }
+
+          const nextCenter = {
+            lat: res.latitude,
+            lng: res.longitude
+          }
+          const currentCenter = this.data.mapCenter || {}
+          if (
+            Math.abs((currentCenter.lat || 0) - nextCenter.lat) < 0.000001 &&
+            Math.abs((currentCenter.lng || 0) - nextCenter.lng) < 0.000001
+          ) {
+            return
+          }
+
+          this.setData({
+            mapCenter: nextCenter
+          })
+        }
+      })
     },
 
     // ─── 设置地图数据 ─────────────────────────────
@@ -242,9 +338,13 @@ module.exports = Behavior({
         polyline
       }
       if (focusShop) {
+        let lat = typeof focusShop.lat === 'number' && !isNaN(focusShop.lat) ? focusShop.lat : 
+                 typeof focusShop.latitude === 'number' && !isNaN(focusShop.latitude) ? focusShop.latitude : 0
+        let lng = typeof focusShop.lng === 'number' && !isNaN(focusShop.lng) ? focusShop.lng : 
+                 typeof focusShop.longitude === 'number' && !isNaN(focusShop.longitude) ? focusShop.longitude : 0
         setDataPayload.mapCenter = {
-          lat: focusShop.lat || focusShop.latitude,
-          lng: focusShop.lng || focusShop.longitude
+          lat: lat,
+          lng: lng
         }
       }
 

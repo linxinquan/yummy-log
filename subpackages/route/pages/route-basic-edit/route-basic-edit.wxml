@@ -17,7 +17,7 @@
     </view>
 
     <view class="setting-block">
-      <text class="setting-label">旅行城市</text>
+      <text class="setting-label">旅行城市<text class="required-mark">（必选）</text></text>
       <view class="setting-field picker-field" bindtap="onOpenCityPicker">
         <text class="setting-value {{city ? '' : 'placeholder'}}">{{city || '请选择城市'}}</text>
         <i class="mgc_right_line"></i>
@@ -32,6 +32,7 @@
       <input
         class="setting-field input-field"
         placeholder="请输入路线名称"
+        placeholder-class="input-placeholder"
         maxlength="{{maxTitleLength}}"
         value="{{title}}"
         bindinput="onTitleInput"
@@ -158,4 +159,19 @@
       </view>
     </view>
   </view>
+
+  <!-- 删除确认弹窗统一接入公用底部弹窗壳。 -->
+  <bottom-action-sheet
+    visible="{{showDeleteConfirm}}"
+    title="删除路线"
+    custom-panel-class="delete-confirm-sheet"
+    custom-body-class="delete-confirm-body"
+    bind:close="onCloseDeleteConfirm"
+  >
+    <text class="delete-confirm-desc">删除后无法恢复，确认删除吗？</text>
+    <view class="delete-confirm-actions">
+      <view class="delete-confirm-btn cancel" bindtap="onCloseDeleteConfirm">取消</view>
+      <view class="delete-confirm-btn danger" bindtap="onConfirmDeleteRoute">确认删除</view>
+    </view>
+  </bottom-action-sheet>
 </view>

@@ -53,7 +53,9 @@ function buildPlaceIntroData(item = {}, cityText = '', defaultImage = '') {
   }
   return {
     id: item.id,
-    image: item.image || item.coverImage || defaultImage,
+    // TODO: 删掉image
+    image: item.coverImage || defaultImage,
+    coverImage: item.coverImage,
     name: item.name || '未命名地点',
     rating: item.rating || '',
     tags: detailTags,

@@ -1,35 +1,14 @@
-﻿// 觅食图 - 我的攻略页面
+// 觅食图 - 我的攻略页面
 const util = require('../../../../utils/util')
 const placesData = require('../../../../utils/placesData')
 const { normalizeTripDurationText } = require('../../../../utils/trip-duration')
 const { backfillStoredGuides } = require('../../../../utils/guide-backfill')
 
-// 左滑删除区域的宽度，单位是 rpx。
-const DELETE_ACTION_WIDTH_RPX = 176
-
-// 给每条攻略补一个左滑偏移量，方便做删除交互。
-function withSwipeState(items) {
-  return (items || []).map(item => ({
-    ...item,
-    swipeOffset: 0
-  }))
-}
-
-// 关闭其他已经打开的左滑项，只保留当前这一项。
-function closeSwipeItems(items, keepIndex = -1) {
-  let changed = false
-  const nextItems = (items || []).map((item, index) => {
-    if (index !== keepIndex && item && item.swipeOffset) {
-      changed = true
-      return {
-        ...item,
-        swipeOffset: 0
-      }
-    }
-    return item
-  })
-  return { nextItems, changed }
-}
+const GUIDE_ROUTE_ACTION_OPTIONS = [
+  { key: 'copy', label: '复制到想去路线', icon: 'mgc_copy_2_line' },
+  { key: 'edit', label: '编辑信息', icon: 'mgc_pencil_3_line' },
+  { key: 'delete', label: '删除路线', icon: 'mgc_delete_2_line', danger: true }
+]
 
 // 从攻略的标题、城市等字段里尽量推断出城市名称。
 function inferGuideCity(guide = {}) {
@@ -42,7 +21,6 @@ function inferGuideCity(guide = {}) {
     ...(guide.tags || [])
   ].join(' ')
 
-  if (/西安|长安/.test(sourceText)) return '西安市'
   if (/广州/.test(sourceText)) return '广州市'
   if (/汕头/.test(sourceText)) return '汕头市'
   if (/佛山/.test(sourceText)) return '佛山市'
@@ -68,6 +46,37 @@ function formatPublishedAt(timestamp) {
   return `${date.getFullYear()}/${padNumber(date.getMonth() + 1)}/${padNumber(date.getDate())} ${padNumber(date.getHours())}:${padNumber(date.getMinutes())}`
 }
 
+// 深拷贝 daySections，避免不同页面共用同一份引用导致联动修改。
+function cloneDaySections(daySections = []) {
+  return JSON.parse(JSON.stringify(daySections || []))
+}
+
+// 从已发布攻略里还原出一条可继续编辑 / 复制的路线数据。
+function buildRouteFromGuide(guide = {}, overrides = {}) {
+  const nextDaySections = cloneDaySections(guide.daySections || [])
+  const placeCount = nextDaySections.reduce((sum, day) => sum + ((day.items || []).length), 0)
+  const safeDayCount = Math.max(nextDaySections.length || guide.dayCount || 1, 1)
+  const cityText = guide.cityText || inferGuideCity(guide)
+  const routeId = overrides.id || `guide-route-${Date.now()}`
+
+  return {
+    id: routeId,
+    title: overrides.title || guide.title || '未命名路线',
+    city: overrides.city || cityText,
+    cityText,
+    subtitle: `${normalizeTripDurationText(guide.duration, safeDayCount)} · ${placeCount} 个地点`,
+    image: overrides.coverImage || guide.coverImage || '/images/app-logo.jpg',
+    coverImage: overrides.coverImage || guide.coverImage || '/images/app-logo.jpg',
+    dayCount: safeDayCount,
+    daySections: nextDaySections,
+    routeId: guide.routeId || guide.id,
+    guideId: guide.id,
+    sourceType: 'guide',
+    createdAt: overrides.createdAt || Date.now(),
+    updatedAt: Date.now()
+  }
+}
+
 Page({
   data: {
     // 攻略列表
@@ -76,7 +85,12 @@ Page({
 
     // 导航栏
     statusBarHeight: 44,
-    deleteActionWidthPx: 84
+
+    // 路线长按操作弹窗
+    routeActionSheetVisible: false,
+    routeActionOptions: GUIDE_ROUTE_ACTION_OPTIONS,
+    routeActionTarget: null,
+    deleteRouteConfirmVisible: false
   },
 
   // 页面初始化：计算顶部高度，并加载我的攻略。
@@ -90,12 +104,11 @@ Page({
     this.loadMyGuides()
   },
 
-  // 初始化导航栏高度和左滑删除宽度。
+  // 初始化导航栏高度。
   initNavigationBar() {
     const windowInfo = wx.getWindowInfo()
     this.setData({
-      statusBarHeight: windowInfo.statusBarHeight || 44,
-      deleteActionWidthPx: windowInfo.windowWidth * DELETE_ACTION_WIDTH_RPX / 750
+      statusBarHeight: windowInfo.statusBarHeight || 44
     })
   },
 
@@ -107,42 +120,40 @@ Page({
       util.saveData('myGuides', fixedGuides)
     }
 
-    const nextGuides = withSwipeState(
-      fixedGuides
-        .slice()
-        .sort((a, b) => (b.date || 0) - (a.date || 0))
-        .map(guide => {
-          const nextGuide = { ...guide }
+    const nextGuides = fixedGuides
+      .slice()
+      .sort((a, b) => (b.date || 0) - (a.date || 0))
+      .map(guide => {
+        const nextGuide = { ...guide }
 
-          if (!nextGuide.coverImage && nextGuide.content && nextGuide.content.length > 0) {
-            const firstItem = nextGuide.content[0]
-            const allShops = placesData.getFoods()
-            const allSpots = placesData.getSpots()
+        if (!nextGuide.coverImage && nextGuide.content && nextGuide.content.length > 0) {
+          const firstItem = nextGuide.content[0]
+          const allShops = placesData.getFoods()
+          const allSpots = placesData.getSpots()
 
-            const shop = allShops.find(s => String(s.id) === String(firstItem.id))
-            if (shop) {
-              nextGuide.coverImage = shop.logo || shop.image || shop.thumb
-            } else {
-              const spot = allSpots.find(s => String(s.id) === String(firstItem.id))
-              if (spot) {
-                nextGuide.coverImage = spot.image || spot.logo || spot.thumb
-              }
+          const shop = allShops.find(s => String(s.id) === String(firstItem.id))
+          if (shop) {
+            nextGuide.coverImage = shop.coverImage
+          } else {
+            const spot = allSpots.find(s => String(s.id) === String(firstItem.id))
+            if (spot) {
+              nextGuide.coverImage = spot.coverImage
             }
           }
+        }
 
-          if (!nextGuide.coverImage) {
-            nextGuide.coverImage = '/images/app-logo.jpg'
-          }
+        if (!nextGuide.coverImage) {
+          nextGuide.coverImage = '/images/app-logo.jpg'
+        }
 
-          nextGuide.shopCount = nextGuide.shopCount || ((nextGuide.content || []).length || 0)
-          nextGuide.duration = normalizeTripDurationText(nextGuide.duration, Math.max((nextGuide.daySections || []).length, 1))
-          nextGuide.cityText = nextGuide.cityText || inferGuideCity(nextGuide)
-          nextGuide.useRouteCount = (nextGuide.baseUseCount || 0) + getSavedGuideCount(nextGuide.id)
-          nextGuide.publishedAtText = formatPublishedAt(nextGuide.date)
+        nextGuide.shopCount = nextGuide.shopCount || ((nextGuide.content || []).length || 0)
+        nextGuide.duration = normalizeTripDurationText(nextGuide.duration, Math.max((nextGuide.daySections || []).length, 1))
+        nextGuide.cityText = nextGuide.cityText || inferGuideCity(nextGuide)
+        nextGuide.useRouteCount = (nextGuide.baseUseCount || 0) + getSavedGuideCount(nextGuide.id)
+        nextGuide.publishedAtText = formatPublishedAt(nextGuide.date)
 
-          return nextGuide
-        })
-    )
+        return nextGuide
+      })
 
     this.setData({
       myGuides: nextGuides,
@@ -150,122 +161,26 @@ Page({
     })
   },
 
-  // 点击攻略卡片：如果当前有左滑打开，先关闭；否则进入详情页。
+  // 点击攻略卡片：长按刚触发后短时间内不重复进入详情。
   onGuideTap(e) {
-    if (Date.now() - (this._lastSwipeTime || 0) < 250) return
-
+    if (Date.now() - (this._lastGuideLongPressTime || 0) < 350) return
     const guide = e.currentTarget.dataset.guide
-    const index = parseInt(e.currentTarget.dataset.index, 10)
-    const guides = this.data.myGuides || []
-    const tappedGuide = guides[index]
-    const hasOpenItem = guides.some(item => item && item.swipeOffset)
-
-    if (hasOpenItem) {
-      const { nextItems, changed } = closeSwipeItems(guides)
-      if (changed) {
-        this.setData({ myGuides: nextItems })
-      }
-      if (tappedGuide && tappedGuide.swipeOffset) {
-        return
-      }
-    }
-
     if (!guide) return
     wx.navigateTo({
       url: `/subpackages/guide/pages/guide-detail/guide-detail?guide=${encodeURIComponent(JSON.stringify(guide))}`
     })
   },
 
-  // 左滑开始：记录起点和当前偏移量。
-  onCardTouchStart(e) {
-    const index = parseInt(e.currentTarget.dataset.index, 10)
-    const touch = e.touches && e.touches[0]
-    if (Number.isNaN(index) || !touch) return
-
-    const guides = this.data.myGuides || []
-    const currentItem = guides[index]
-    const { nextItems, changed } = closeSwipeItems(guides, index)
-    if (changed) {
-      this.setData({ myGuides: nextItems })
-    }
-
-    this._swipeGesture = {
-      index,
-      startX: touch.clientX,
-      startY: touch.clientY,
-      startOffset: (currentItem && currentItem.swipeOffset) || 0,
-      isHorizontal: false,
-      locked: false,
-      moved: false
-    }
-  },
-
-  // 左滑过程：跟着手指移动更新偏移量。
-  onCardTouchMove(e) {
-    if (!this._swipeGesture) return
-    const touch = e.touches && e.touches[0]
-    if (!touch) return
-
-    const gesture = this._swipeGesture
-    const deltaX = touch.clientX - gesture.startX
-    const deltaY = touch.clientY - gesture.startY
-
-    if (!gesture.isHorizontal && !gesture.locked) {
-      if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return
-      if (Math.abs(deltaY) > Math.abs(deltaX)) {
-        gesture.locked = true
-        return
-      }
-      gesture.isHorizontal = true
-    }
-
-    if (!gesture.isHorizontal) return
-
-    const guides = [...(this.data.myGuides || [])]
-    const currentItem = guides[gesture.index]
-    if (!currentItem) return
-
-    let nextOffset = gesture.startOffset + deltaX
-    const minOffset = -this.data.deleteActionWidthPx
-    nextOffset = Math.max(minOffset, Math.min(0, nextOffset))
-
-    if (currentItem.swipeOffset === nextOffset) return
-    guides[gesture.index] = {
-      ...currentItem,
-      swipeOffset: nextOffset
-    }
-    gesture.moved = true
-    this.setData({ myGuides: guides })
-  },
-
-  // 左滑结束：决定停在打开状态，还是回弹关闭。
-  onCardTouchEnd() {
-    if (!this._swipeGesture) return
-
-    const gesture = this._swipeGesture
-    const guides = [...(this.data.myGuides || [])]
-    const currentItem = guides[gesture.index]
-    if (!currentItem) {
-      this._swipeGesture = null
-      return
-    }
-
-    const minOffset = -this.data.deleteActionWidthPx
-    const shouldOpen = Math.abs(currentItem.swipeOffset || 0) > this.data.deleteActionWidthPx / 2
-    const finalOffset = shouldOpen ? minOffset : 0
-
-    if (currentItem.swipeOffset !== finalOffset) {
-      guides[gesture.index] = {
-        ...currentItem,
-        swipeOffset: finalOffset
-      }
-      this.setData({ myGuides: guides })
-    }
-
-    if (gesture.moved) {
-      this._lastSwipeTime = Date.now()
-    }
-    this._swipeGesture = null
+  // 长按路线卡片：打开“发布路线编辑”弹窗。
+  onGuideLongPress(e) {
+    const guide = e.currentTarget.dataset.guide
+    if (!guide) return
+    this._lastGuideLongPressTime = Date.now()
+    wx.vibrateShort({ type: 'light' })
+    this.setData({
+      routeActionSheetVisible: true,
+      routeActionTarget: guide
+    })
   },
 
   // 空状态按钮：去路线页导入或创建内容。
@@ -275,11 +190,113 @@ Page({
     })
   },
 
-  // 删除一篇已发布攻略。
-  onDeleteGuide(e) {
-    const guideId = e.currentTarget.dataset.id
+  // 关闭路线编辑弹窗。
+  onCloseRouteActionSheet() {
+    this.setData({
+      routeActionSheetVisible: false,
+      routeActionTarget: null
+    })
+  },
+
+  // 阻止弹层内容点击冒泡。
+  preventBubble() {
+  },
+
+  // 点击弹窗操作项。
+  onSelectRouteAction(e) {
+    const action = e.currentTarget.dataset.action
+    const guide = this.data.routeActionTarget
+    if (!action || !guide) return
+
+    switch (action) {
+      case 'copy':
+        this.copyGuideRoute(guide)
+        this.onCloseRouteActionSheet()
+        break
+      case 'edit':
+        this.editGuideRouteInfo(guide)
+        this.onCloseRouteActionSheet()
+        break
+      case 'delete':
+        this.setData({
+          routeActionSheetVisible: false,
+          deleteRouteConfirmVisible: true
+        })
+        break
+      default:
+        break
+    }
+  },
+
+  // 把已发布攻略复制成一条新的“我的路线”。
+  copyGuideRoute(guide) {
+    const copiedRoute = buildRouteFromGuide(guide, {
+      id: `guide-copy-${Date.now()}`,
+      title: `${guide.title || '未命名路线'} (复制)`,
+      createdAt: Date.now()
+    })
+    util.saveRouteAsync(copiedRoute)
+    wx.showToast({ title: '已复制路线', icon: 'success' })
+  },
+
+  // 用“临时编辑”方式修改路线基础信息，保存后同步回这条已发布攻略。
+  editGuideRouteInfo(guide) {
+    const routeForEdit = buildRouteFromGuide(guide)
+    wx.navigateTo({
+      url: `/subpackages/route/pages/route-basic-edit/route-basic-edit?route=${encodeURIComponent(JSON.stringify(routeForEdit))}&temp=1`,
+      success: (res) => {
+        res.eventChannel.on('routeBasicSaved', (updatedRoute) => {
+          if (!updatedRoute) return
+          this.applyEditedGuideRoute(guide, updatedRoute)
+        })
+      }
+    })
+  },
+
+  // 把基础信息页保存回来的路线资料同步写回“我的发布”。
+  applyEditedGuideRoute(guide, updatedRoute) {
+    const guides = util.loadData('myGuides', [])
+    const nextGuides = guides.map(item => {
+      if (String(item.id) !== String(guide.id)) return item
+      const nextDaySections = cloneDaySections(updatedRoute.daySections || item.daySections || [])
+      const nextShopCount = nextDaySections.reduce((sum, day) => sum + ((day.items || []).length), 0)
+      const nextDayCount = Math.max(nextDaySections.length || updatedRoute.dayCount || 1, 1)
+      return {
+        ...item,
+        title: updatedRoute.title || item.title,
+        city: updatedRoute.city || item.city,
+        cityText: updatedRoute.city || item.cityText,
+        coverImage: updatedRoute.coverImage || updatedRoute.image || item.coverImage,
+        duration: normalizeTripDurationText(item.duration, nextDayCount),
+        daySections: nextDaySections,
+        dayCount: nextDayCount,
+        shopCount: nextShopCount || item.shopCount
+      }
+    })
+    util.saveData('myGuides', nextGuides)
+    this.loadMyGuides()
+    wx.showToast({ title: '已更新信息', icon: 'success' })
+  },
+
+  // 关闭删除确认层。
+  onCloseDeleteRouteConfirm() {
+    this.setData({
+      deleteRouteConfirmVisible: false,
+      routeActionTarget: null
+    })
+  },
+
+  // 确认删除当前发布路线。
+  onConfirmDeleteRoute() {
+    const guide = this.data.routeActionTarget
+    if (!guide) return
+    const guideId = guide.id
     const guides = util.loadData('myGuides', []).filter(g => String(g.id) !== String(guideId))
     util.saveData('myGuides', guides)
+    this.setData({
+      deleteRouteConfirmVisible: false,
+      routeActionTarget: null
+    })
     this.loadMyGuides()
     wx.showToast({ title: '已删除', icon: 'success' })
   },

@@ -9,11 +9,15 @@
   gap: 8rpx;
   height: 32rpx;
   min-height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-self: center;
+  max-width: 100%;
 }
 
 .travel-meta-icon {
   flex-shrink: 0;
-  color: #6E727A;
+  color: #808B9A;
   font-size: 32rpx;
   line-height: 32rpx;
 }
@@ -22,12 +26,12 @@
   flex-shrink: 0;
   font-size: 32rpx;
   line-height: 32rpx;
-  color: #C7CAD1;
+  color: #BAC4CC;
 }
 
 .travel-meta-text {
   min-width: 0;
-  color: #6E727A;
+  color: #808B9A;
   font-size: 24rpx;
   line-height: 24rpx;
   white-space: nowrap;

@@ -4,13 +4,13 @@ page {
 
 .container {
   min-height: 100vh;
-  background-color: #F7F8FA;
+  background-color: #ffffff;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 .header {
   padding: 48rpx;
-  background: linear-gradient(#ffffff, #F7F8FA);
+  background: #ffffff;
 }
 
 .header-row {
@@ -20,7 +20,7 @@ page {
 }
 
 .district-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 48rpx;
   font-weight: 500;
   line-height: 48rpx;
@@ -38,7 +38,7 @@ page {
   height: 64rpx;
   padding: 0 24rpx;
   border-radius: 999rpx;
-  background: #242529;
+  background: #25BBE7;
   color: #FFFFFF;
   flex-shrink: 0;
 }
@@ -70,19 +70,19 @@ page {
   height: 136rpx;
   padding-left: 24rpx;
   border-radius: 24rpx;
-  background: #ffffff;
+  background: #F6F8FA;
   box-sizing: border-box;
 }
 
 .stat-label {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx;
   font-weight: 600;
   line-height: 24rpx;
 }
 
 .stat-value {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   font-weight: 700;
   line-height: 40rpx;
@@ -99,11 +99,11 @@ page {
 .vt-item {
   display: flex;
   align-items: center;
-  color: #C1C1C1;
+  color: #BAC4CC;
 }
 
 .vt-item.active {
-  color: #242529;
+  color: #1A2739;
 }
 
 .vt-item text {
@@ -123,34 +123,31 @@ page {
 }
 
 .empty-illustration {
-  width: 200rpx;
-  height: 200rpx;
-  border-radius: 999rpx;
-  background: #F7F8FA;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 40rpx;
+  width: 320rpx;
+  height: 320rpx;
+  margin-bottom: 32rpx;
 }
 
-.empty-icon {
-  font-size: 100rpx;
-  color: #A0A4AE;
+.empty-image {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .empty-title {
-  color: #242529;
-  font-size: 36rpx;
+  color: #1A2739;
+  font-size: 32rpx;
   font-weight: 500;
-  line-height: 36rpx;
+  line-height: 32rpx;
+  margin-bottom: 24rpx;
 }
 
 .empty-hint {
-  margin-top: 24rpx;
-  color: #6E727A;
+  color: #808B9A;
   font-size: 28rpx;
-  line-height: 40rpx;
+  line-height: 28rpx;
   text-align: center;
+  margin-bottom: 32rpx;
 }
 
 .empty-actions {
@@ -164,7 +161,7 @@ page {
   height: 80rpx;
   padding: 0 32rpx;
   border-radius: 999rpx;
-  background: #242529;
+  background: #25BBE7;
   color: #FFFFFF;
   font-size: 28rpx;
   display: flex;
@@ -177,7 +174,7 @@ page {
 }
 
 .empty-btn-primary {
-  background: #242529;
+  background: #25BBE7;
   color: #FFFFFF;
 }
 
@@ -217,14 +214,15 @@ page {
 
 .stamp-bottom-shadow {
   position: absolute;
-  left: 35%;
-  bottom: -16rpx;
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 16rpx;
-  background: rgba(0, 0, 0, 0.3);
-  filter: blur(64rpx);
-  opacity: 0.85;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -24rpx;
+  width: 156rpx;
+  height: 400rpx;
+  border-radius: 12rpx;
+  background: rgba(0, 0, 0, 0.4);
+  filter: blur(88rpx);
+  opacity: 0.75;
   z-index: 0;
 }
 
@@ -250,7 +248,7 @@ page {
 
 .stamp-title {
   width: 276rpx;
-  color: #000000;
+  color: #1A2739;
   font-size: 32rpx;
   font-weight: 500;
   line-height: 32rpx;
@@ -300,7 +298,7 @@ page {
   padding: 20rpx;
   border-radius: 24rpx;
   background: #FFFFFF;
-  border: 2rpx solid #F0F1F3;
+  border: 2rpx solid #F6F8FA;
   box-sizing: border-box;
 }
 
@@ -353,7 +351,7 @@ page {
 }
 
 .mc-name {
-  color: #242529;
+  color: #1A2739;
   font-size: 28rpx;
   font-weight: 500;
   line-height: 36rpx;
@@ -363,74 +361,18 @@ page {
 }
 
 .mc-date {
-  color: #8F949C;
+  color: #9DA4AD;
   font-size: 22rpx;
   line-height: 22rpx;
 }
 
 .mc-addr {
-  color: #6E727A;
+  color: #808B9A;
   font-size: 24rpx;
   line-height: 32rpx;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.route-action-mask {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0);
-  z-index: 1004;
-  pointer-events: none;
-  transition: background 0.3s;
-}
-
-.route-action-mask.show {
-  background: rgba(0, 0, 0, 0.4);
-  pointer-events: auto;
-}
-
-.route-action-sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #FFFFFF;
-  border-radius: 32rpx 32rpx 0 0;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.route-action-mask.show .route-action-sheet {
-  transform: translateY(0);
-}
-
-.route-action-header {
-  height: 128rpx;
-  padding: 0 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-sizing: border-box;
-}
-
-.route-action-title {
-  color: #242529;
-  font-size: 40rpx;
-  line-height: 100%;
-  font-weight: 500;
-}
-
-.route-action-close {
-  color: #242529;
-  font-size: 40rpx;
-  line-height: 40rpx;
-}
-
-.route-action-body {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
-  box-sizing: border-box;
 }
 
 .route-action-grid {
@@ -443,7 +385,7 @@ page {
   width: 100%;
   min-height: 104rpx;
   border-radius: 24rpx;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   background: #FFFFFF;
   display: flex;
   flex-direction: row;
@@ -455,7 +397,7 @@ page {
 }
 
 .route-action-card.active {
-  border-color: #242529;
+  border-color: #1A2739;
 }
 
 .route-action-card.danger .route-action-icon,
@@ -469,14 +411,14 @@ page {
 }
 
 .route-action-icon {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   line-height: 40rpx;
   flex-shrink: 0;
 }
 
 .route-action-label {
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   line-height: 32rpx;
   font-weight: 400;
@@ -489,7 +431,7 @@ page {
   width: 100%;
   height: 96rpx;
   border-radius: 999rpx;
-  background: #242529;
+  background: #25BBE7;
   color: #FFFFFF;
   font-size: 32rpx;
   line-height: 32rpx;
@@ -499,19 +441,56 @@ page {
   justify-content: center;
 }
 
-.route-edit-name-sheet .route-action-body {
-  padding-top: 0rpx;
-}
-
 .route-edit-name-input {
   width: 100%;
   height: 104rpx;
   padding: 0 32rpx;
   border-radius: 24rpx;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   background: #FFFFFF;
   box-sizing: border-box;
-  color: #242529;
+  color: #1A2739;
   font-size: 28rpx;
   font-weight: 400;
+}
+
+.route-delete-confirm-body {
+  padding-top: 0;
+}
+
+.route-delete-confirm-desc {
+  display: block;
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 44rpx;
+}
+
+.route-delete-confirm-actions {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 48rpx;
+}
+
+.route-delete-confirm-btn {
+  height: 96rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 32rpx;
+}
+
+.route-delete-confirm-btn.cancel {
+  width: 160rpx;
+  background: #F2F4F7;
+  color: #1A2739;
+  flex-shrink: 0;
+}
+
+.route-delete-confirm-btn.danger {
+  flex: 1;
+  background: #FF5A5F;
+  color: #FFFFFF;
 }

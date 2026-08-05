@@ -1,6 +1,12 @@
-﻿// pages/collection/collection.js
+// pages/collection/collection.js
 let checkinUtil = null
 const util = require('../../../../utils/util')
+let photoStorage = null
+try {
+  photoStorage = require('../../utils/photoStorage')
+} catch (e) {
+  console.warn('photoStorage load fail', e)
+}
 try {
   checkinUtil = require('../../../../utils/checkinUtil')
 } catch (e) {
@@ -17,10 +23,11 @@ Page({
     mapScale: 12,
     actionSheetVisible: false,
     editNameSheetVisible: false,
+    // 删除确认也改成自定义底部弹窗，避免再走原生确认框。
+    deleteConfirmVisible: false,
     activeCheckinId: '',
     activeCheckinName: '',
-    editNameValue: '',
-    selectedAction: ''
+    editNameValue: ''
   },
 
   onLoad() {
@@ -34,6 +41,10 @@ Page({
     this._baseMarkerMetaMap = {}
     this._expandedClusterMarkerId = null
     this._loadToken = 0
+
+  },
+
+  onUnload() {
   },
 
   onShow() {
@@ -44,10 +55,10 @@ Page({
     if (!checkinUtil) return
     const loadToken = ++this._loadToken
 
+    // 只读本地缓存，不同步。同步由 onShow 里的 enqueue 统一负责，
+    // 避免在 await buildMapMarkers 期间同步覆盖本地数据造成竞争条件。
     const raw = checkinUtil.getCheckins()
     const stats = checkinUtil.getCheckinStats()
-    const footprintItems = util.getFootprintItems()
-
     // 预处理日期和地址，避免在 WXML 里调用函数
     const checkins = raw.map((c) => {
       const d = new Date(c.date)
@@ -59,6 +70,7 @@ Page({
       // 短地址：取地址前16个字
       const shortAddr = c.address ? c.address.substring(0, 20) : ''
       return Object.assign({}, c, {
+        displayPath: photoStorage ? photoStorage.getDisplayPath(c) : (c.photoPath || ''),
         dateStr: mm + '/' + dd + '/' + yyyy,
         monthDay: mm + '.' + dd,
         yearText: String(yyyy),
@@ -75,33 +87,35 @@ Page({
 
     // 统计
     const spotCount = raw.filter(c => c.type === 'spot').length
+    // “我的采集”页只统计采集本身，不把手动足迹混进来。
+    const collectedFootprintKeys = new Set(
+      raw.map(item => `${item.type || 'food'}:${item.spotName || ''}:${item.address || ''}`)
+    )
 
-    // 地图模式：直接在地图上叠邮票和定位点，不再使用默认 marker 图标
-    const mapCheckins = checkins.filter(c => c.latitude && c.longitude)
-    const mapMarkers = await this.buildMapMarkers(mapCheckins)
+    // ── 第一步：列表数据先 setData，用户立刻能看到邮票 ──
     if (loadToken !== this._loadToken) return
-
-    // 地图中心：取最新一条，否则用深圳
-    let mapCenter = { lat: 22.543, lng: 114.057 }
-    if (mapCheckins.length > 0) {
-      const centerLat = mapCheckins.reduce((sum, item) => sum + parseFloat(item.latitude), 0) / mapCheckins.length
-      const centerLng = mapCheckins.reduce((sum, item) => sum + parseFloat(item.longitude), 0) / mapCheckins.length
-      mapCenter = {
-        lat: centerLat,
-        lng: centerLng
-      }
-    }
-
     this.setData({
       checkins,
       stats: {
         totalCount: checkins.length,
         cityCount: stats.cityCount,
-        footprintCount: footprintItems.length || spotCount
+        footprintCount: collectedFootprintKeys.size || spotCount
       },
-      mapMarkers,
-      mapCenter
     })
+
+    // ── 第二步：异步生成地图标记，不阻塞列表渲染 ──
+    const mapCheckins = checkins.filter(c => c.latitude && c.longitude)
+    const mapMarkers = await this.buildMapMarkers(mapCheckins)
+    if (loadToken !== this._loadToken) return
+
+    // 地图中心：取所有标记平均坐标，无数据则用深圳
+    let mapCenter = { lat: 22.543, lng: 114.057 }
+    if (mapCheckins.length > 0) {
+      const centerLat = mapCheckins.reduce((sum, item) => sum + parseFloat(item.latitude), 0) / mapCheckins.length
+      const centerLng = mapCheckins.reduce((sum, item) => sum + parseFloat(item.longitude), 0) / mapCheckins.length
+      mapCenter = { lat: centerLat, lng: centerLng }
+    }
+    this.setData({ mapMarkers, mapCenter })
   },
 
   // 地图改成真实 marker：
@@ -290,14 +304,32 @@ Page({
   // 底部白点里的数字表示这个位置聚合了多少张采集。
   generateMapMarkerIcon(item, markerCount, showCount) {
     return new Promise((resolve) => {
-      const cacheKey = `${item.id}_${item.photoPath || ''}_${markerCount || ''}_${showCount ? 'count' : 'plain'}`
+      const photoSrc = item.displayPath || item.photoPath || ''
+      const cacheKey = `${item.id}_${photoSrc}_${markerCount || ''}_${showCount ? 'count' : 'plain'}`
       if (this._markerIconCache[cacheKey]) {
         resolve(this._markerIconCache[cacheKey])
         return
       }
 
       const shellPath = '/images/collection/stamp-ticket.png'
-      const photoPath = item.photoPath
+
+      // 安全超时：防止 canvas 绘制失败时 Promise 永不 resolve
+      let settled = false
+      const timer = setTimeout(() => {
+        if (settled) return
+        settled = true
+        console.warn('[generateMapMarkerIcon] canvas 绘制超时，回退到壳图')
+        resolve(shellPath)
+      }, 3000)
+
+      const finish = (path) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timer)
+        if (path) this._markerIconCache[cacheKey] = path
+        resolve(path || shellPath)
+      }
+
       const ctx = wx.createCanvasContext('mapMarkerCanvas', this)
 
       ctx.clearRect(0, 0, 170, 318)
@@ -305,8 +337,8 @@ Page({
       ctx.drawImage(shellPath, 0, 0, 170, 221)
       ctx.setShadow(0, 0, 0, 'rgba(0, 0, 0, 0)')
 
-      if (photoPath) {
-        ctx.drawImage(photoPath, 16, 16, 138, 184)
+      if (photoSrc) {
+        ctx.drawImage(photoSrc, 16, 16, 138, 184)
       }
 
       ctx.draw(false, () => {
@@ -319,13 +351,8 @@ Page({
           destWidth: 170,
           destHeight: 221,
           fileType: 'png',
-          success: (res) => {
-            this._markerIconCache[cacheKey] = res.tempFilePath
-            resolve(res.tempFilePath)
-          },
-          fail: () => {
-            resolve(shellPath)
-          }
+          success: (res) => finish(res.tempFilePath),
+          fail: () => finish(shellPath),
         }, this)
       })
     })
@@ -454,40 +481,24 @@ Page({
       editNameSheetVisible: false,
       activeCheckinId: id,
       activeCheckinName: name || '',
-      editNameValue: name || '',
-      selectedAction: ''
+      editNameValue: name || ''
     })
   },
 
   onCloseActionSheet() {
     this.setData({
-      actionSheetVisible: false,
-      selectedAction: ''
+      actionSheetVisible: false
     })
   },
 
-  onSelectAction(e) {
-    const action = e.currentTarget.dataset.action
-    if (!action) return
+  // 关闭自定义删除确认弹窗。
+  onCloseDeleteConfirm() {
     this.setData({
-      selectedAction: action
+      deleteConfirmVisible: false
     })
   },
 
-  onConfirmSelectedAction() {
-    if (!this.data.selectedAction) {
-      wx.showToast({
-        title: '请选择操作',
-        icon: 'none'
-      })
-      return
-    }
-
-    if (this.data.selectedAction === 'delete') {
-      this.onDeleteCheckin()
-      return
-    }
-
+  onEditCheckin() {
     this.setData({
       actionSheetVisible: false,
       editNameSheetVisible: true,
@@ -509,7 +520,7 @@ Page({
     })
   },
 
-  // 编辑名称只更新邮票标题，保存后立即刷新列表。
+  // 编辑名称只更新邮票标题（本地优先 + 后台同步）。
   onConfirmEditName() {
     const { activeCheckinId, editNameValue } = this.data
     if (!activeCheckinId || !checkinUtil) return
@@ -523,7 +534,7 @@ Page({
       return
     }
 
-    const updated = checkinUtil.updateCheckin(activeCheckinId, {
+    const updated = checkinUtil.updateCheckinAsync(activeCheckinId, {
       spotName: nextName
     })
 
@@ -539,6 +550,7 @@ Page({
       editNameSheetVisible: false,
       activeCheckinName: nextName
     })
+    // 立即刷新列表（读本地，零等待）
     this.loadData()
   },
 
@@ -547,26 +559,27 @@ Page({
     const { activeCheckinId } = this.data
     if (!activeCheckinId || !checkinUtil) return
 
-    wx.showModal({
-      title: '删除采集',
-      content: '删除后这张邮票会从我的采集中移除',
-      confirmText: '删除',
-      confirmColor: '#E05252',
-      success: (res) => {
-        if (!res.confirm) return
-
-        checkinUtil.deleteCheckin(activeCheckinId)
-        this.setData({
-          actionSheetVisible: false,
-          editNameSheetVisible: false,
-          activeCheckinId: '',
-          activeCheckinName: '',
-          editNameValue: '',
-          selectedAction: ''
-        })
-        this.loadData()
-      }
+    // 先关闭编辑操作面板，再打开删除确认面板。
+    this.setData({
+      actionSheetVisible: false,
+      editNameSheetVisible: false,
+      deleteConfirmVisible: true
     })
+  },
+
+  // 真正执行删除动作，只在用户点了自定义确认按钮后触发。
+  onConfirmDeleteCheckin() {
+    const { activeCheckinId } = this.data
+    if (!activeCheckinId || !checkinUtil) return
+
+    checkinUtil.deleteCheckinAsync(activeCheckinId)
+    this.setData({
+      deleteConfirmVisible: false,
+      activeCheckinId: '',
+      activeCheckinName: '',
+      editNameValue: ''
+    })
+    this.loadData()
   },
 
   onGoCheckin() {

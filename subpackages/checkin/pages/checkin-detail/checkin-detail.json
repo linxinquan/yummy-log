@@ -1,3 +1,7 @@
 {
-  "navigationBarTitleText": "查看详情"
+  "navigationBarTitleText": "查看详情",
+  "usingComponents": {
+    "bottom-action-sheet": "/components/bottom-action-sheet/index",
+    "edit-sheet": "/components/edit-sheet/edit-sheet"
+  }
 }

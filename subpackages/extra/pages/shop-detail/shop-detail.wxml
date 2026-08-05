@@ -1,3 +1,0 @@
-<!-- 美食详情页直接复用景点详情页模板 -->
-<!-- 这样两边的 UI 和交互能始终保持一致 -->
-<include src="../spot-detail/spot-detail.wxml" />

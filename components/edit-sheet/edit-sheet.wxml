@@ -1,0 +1,90 @@
+<!-- 编辑采集底部弹窗组件 -->
+<view class="edit-sheet-mask {{visible ? 'show' : ''}}" bindtap="onClose"></view>
+<view class="edit-sheet {{visible ? 'show' : ''}}">
+  <view class="edit-sheet-panel" catchtap="preventBubble">
+    <view class="sheet-header">
+      <text class="sheet-title">编辑采集</text>
+      <i class="mgc_close_line sheet-close" bindtap="onClose"></i>
+    </view>
+    <scroll-view class="edit-sheet-content" scroll-y>
+      <view class="edit-sheet-content-inner">
+        <!-- 打卡名称 + AI生成 -->
+        <view class="edit-field">
+          <view class="edit-field-head">
+            <text class="edit-field-label">打卡名称</text>
+            <view
+              class="edit-field-action {{editGeneratingSpotName ? 'disabled' : ''}}"
+              bindtap="onGenerateSpotName"
+            >
+              <i class="mgc_ai_fill edit-field-action-icon"></i>
+              <text>{{editGeneratingSpotName ? '生成中...' : 'AI生成'}}</text>
+            </view>
+          </view>
+          <input
+            class="edit-field-input"
+            value="{{editSpotName}}"
+            bindinput="onSpotNameInput"
+            placeholder="请输入打卡名称"
+            placeholder-class="edit-field-placeholder"
+            maxlength="20"
+          />
+        </view>
+
+        <!-- 地址 + 地图选点 -->
+        <view class="edit-field">
+          <view class="edit-field-head">
+            <text class="edit-field-label">地址</text>
+            <view class="edit-field-action" bindtap="onPickLocation">
+              <i class="mgc_location_fill edit-field-action-icon"></i>
+              <text>地址选点</text>
+            </view>
+          </view>
+          <textarea
+            class="edit-field-input edit-field-textarea-addr"
+            value="{{editAddress}}"
+            bindinput="onAddressInput"
+            placeholder="请输入地址"
+            placeholder-class="edit-field-placeholder"
+            maxlength="40"
+            disable-default-padding
+            show-confirm-bar="{{false}}"
+          />
+        </view>
+
+        <!-- 打卡内容 + AI生成 -->
+        <view class="edit-field">
+          <view class="edit-field-head">
+            <text class="edit-field-label">打卡内容</text>
+            <view
+              class="edit-field-action {{editGeneratingDescription ? 'disabled' : ''}}"
+              bindtap="onGenerateDescription"
+            >
+              <i class="mgc_ai_fill edit-field-action-icon"></i>
+              <text>{{editGeneratingDescription ? '生成中...' : 'AI生成'}}</text>
+            </view>
+          </view>
+          <textarea
+            class="edit-field-input edit-field-textarea-desc"
+            value="{{editDescription}}"
+            bindinput="onDescriptionInput"
+            placeholder="请输入打卡内容"
+            placeholder-class="edit-field-placeholder"
+            maxlength="160"
+            disable-default-padding
+            show-confirm-bar="{{false}}"
+            cursor-spacing="180"
+          />
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="edit-sheet-actions">
+      <view class="edit-sheet-btn edit-sheet-btn-light" bindtap="onClose">
+        <text>取消</text>
+      </view>
+      <view class="edit-sheet-btn edit-sheet-btn-dark" bindtap="onConfirm">
+        <text>保存编辑</text>
+      </view>
+    </view>
+  </view>
+</view>

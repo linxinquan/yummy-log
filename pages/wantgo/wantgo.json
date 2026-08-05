@@ -1,6 +1,9 @@
 {
   "usingComponents": {
-    "custom-tabbar": "/custom-tabbar/index",
+    "place-intro": "/components/place-intro/place-intro",
+    "entry-fab": "/components/entry-fab/entry-fab",
+    "bottom-action-sheet": "/components/bottom-action-sheet/index",
+    "nav-map-sheet": "/components/nav-map-sheet/nav-map-sheet",
     "travel-meta-line": "/components/travel-meta-line/index",
     "transport-info-sheet": "/components/transport-info-sheet/index"
   },

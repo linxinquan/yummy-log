@@ -14,6 +14,13 @@ try {
   console.error('[Checkin] recognizePhotoUtil 加载失败:', e)
 }
 
+let photoStorage = null
+try {
+  photoStorage = require('../../utils/photoStorage')
+} catch (e) {
+  console.error('[Checkin] photoStorage 加载失败:', e)
+}
+
 Page({
   data: {
     type: 'food',
@@ -39,11 +46,13 @@ Page({
     confirmLoading: false,
     saving: false,
     editSheetVisible: false,
-    editAddress: '',
-    editDescription: '',
-    editLatitude: null,
-    editLongitude: null,
-    editGeneratingDescription: false,
+    editSheetData: {
+      spotName: '',
+      address: '',
+      description: '',
+      latitude: null,
+      longitude: null
+    },
     autoCamera: false,
     navTitle: '采集打卡',
     locationCandidates: []
@@ -171,102 +180,94 @@ Page({
     })
   },
 
-  // 编辑按钮改为打开底部弹窗，在弹窗里统一修改三项内容。
+  // 编辑按钮：打开底部弹窗组件
   onOpenEditSheet() {
     if (this.data.confirmLoading) {
-      wx.showToast({
-        title: '内容生成中，请稍候',
-        icon: 'none'
-      })
+      wx.showToast({ title: '内容生成中，请稍候', icon: 'none' })
       return
     }
-
     this.setData({
       editSheetVisible: true,
-      editAddress: this.data.address,
-      editDescription: this.data.description,
-      editLatitude: this.data.latitude,
-      editLongitude: this.data.longitude,
-      editGeneratingDescription: false
-    })
-  },
-
-  onCloseEditSheet() {
-    this.setData({
-      editSheetVisible: false
-    })
-  },
-
-  preventBubble() {},
-
-  onEditAddressInput(e) {
-    this.setData({
-      editAddress: e.detail.value
-    })
-  },
-
-  onEditDescriptionInput(e) {
-    this.setData({
-      editDescription: e.detail.value
-    })
-  },
-
-  // 编辑弹窗里的 AI 生成：只重写打卡内容，不改地址。
-  async onGenerateEditDescription() {
-    if (this.data.editGeneratingDescription) return
-
-    this.setData({
-      editGeneratingDescription: true
-    })
-
-    const address = this.data.editAddress || this.data.address || ''
-    const spotName = this.data.spotName || '当前位置'
-    const aiResult = await this._generateAIContent()
-    const fallback = this._getFallbackContent(spotName, address)
-    const nextDescription = aiResult.success
-      ? (aiResult.description || fallback.description)
-      : fallback.description
-    console.log('aiResult', aiResult.type)
-
-    this.setData({
-      editDescription: nextDescription,
-      editGeneratingDescription: false
-    })
-  },
-
-  onPickEditLocation() {
-    wx.chooseLocation({
-      success: (res) => {
-        const nextAddress = res.address || res.name || ''
-        this.setData({
-          editAddress: nextAddress,
-          editLatitude: res.latitude || null,
-          editLongitude: res.longitude || null
-        })
+      editSheetData: {
+        spotName: this.data.spotName,
+        address: this.data.address,
+        description: this.data.description,
+        latitude: this.data.latitude,
+        longitude: this.data.longitude
       }
     })
   },
 
+  onCloseEditSheet() {
+    this.setData({ editSheetVisible: false })
+  },
+
+  // 组件确认事件：将编辑结果回写到页面
+  onConfirmEditSheet(e) {
+    const { spotName, address, description, latitude, longitude } = e.detail
+    this.setData({
+      spotName,
+      address,
+      typedAddress: address,
+      description,
+      typedDescription: description,
+      latitude,
+      longitude,
+      editSheetVisible: false
+    })
+  },
+
+  // 组件触发 AI 生成打卡名称
+  async onEditGenerateSpotName() {
+    const aiResult = await this._generateAIContent()
+    const fallback = this._getFallbackContent(
+      this.data.spotName || '当前位置',
+      this.data.address || ''
+    )
+    const name = aiResult.success ? (aiResult.title || fallback.title) : fallback.title
+    const sheet = this.selectComponent('#editSheet')
+    if (sheet) sheet.onAISpotNameResult(name)
+  },
+
+  // 组件触发 AI 生成打卡内容
+  async onEditGenerateDescription() {
+    const spotName = this.data.spotName || '当前位置'
+    const address = this.data.address || ''
+    const aiResult = await this._generateAIContent()
+    const fallback = this._getFallbackContent(spotName, address)
+    const desc = aiResult.success ? (aiResult.description || fallback.description) : fallback.description
+    const sheet = this.selectComponent('#editSheet')
+    if (sheet) sheet.onAIDescriptionResult(desc)
+  },
+
   // 随机切换候选地址
-  onRefreshSpotName() {
+  onRefreshAddress() {
     const candidates = this.data.locationCandidates
     if (candidates.length <= 1) return
-    const current = this.data.spotName || ''
+    const current = this.data.address || ''
+
+    const fullAddrs = candidates.map(c => {
+      if (typeof c === 'string') return c
+      return c.address || c.name || ''
+    })
+
     let next
     do {
-      next = candidates[Math.floor(Math.random() * candidates.length)]
-    } while (next === current && candidates.length > 1)
-    this.setData({ spotName: next })
+      next = fullAddrs[Math.floor(Math.random() * fullAddrs.length)]
+    } while (next === current && fullAddrs.length > 1)
+    this.setData({
+      address: next,
+      typedAddress: next
+    })
   },
 
   onConfirmEditSheet() {
     this.setData({
+      spotName: this.data.editSpotName,
       address: this.data.editAddress,
-      description: this.data.editDescription,
       typedAddress: this.data.editAddress,
+      description: this.data.editDescription,
       typedDescription: this.data.editDescription,
-      latitude: this.data.editLatitude,
-      longitude: this.data.editLongitude,
       editSheetVisible: false
     })
   },
@@ -380,7 +381,8 @@ Page({
       address,
       latitude: locationResult.latitude,
       longitude: locationResult.longitude,
-      locationCandidates: locationResult.candidates || []
+      locationCandidates: locationResult.candidates || [],
+      addressComponent: locationResult.addressComponent || null
     })
 
     await this._typeToField('typedAddress', address, 30, token)
@@ -395,8 +397,9 @@ Page({
     const aiResult = await this._generateAIContent()
     if (token !== this._flowToken) return
 
-    // AI 匹配到地点名称则优先使用，否则用定位结果
-    const finalSpotName = aiResult.matchedName || locationResult.spotName || '当前位置'
+    // AI 识别照片内容作为名称，失败则用匹配名兜底
+    const aiPhotoName = aiResult.success ? (aiResult.title || aiResult.matchedName) : null
+    const finalSpotName = aiPhotoName || '当前位置'
     const fallback = this._getFallbackContent(finalSpotName, address)
     const finalTitle = aiResult.success ? (aiResult.title || finalSpotName) : fallback.title
     const finalDescription = aiResult.success ? (aiResult.description || fallback.description) : fallback.description
@@ -461,12 +464,18 @@ Page({
 
           checkinUtil.reverseGeocode(latitude, longitude)
             .then((geo) => {
+              const candidates = geo.candidates || []
+              // 默认地址使用最佳匹配 POI 的完整地址，与刷新地点同源
+              const defaultAddress = (candidates.length > 0 && candidates[0].address)
+                ? candidates[0].address
+                : (geo.address || '')
               finish({
                 spotName: geo.spotName || geo.district || geo.city || '当前位置',
-                address: geo.address || '',
+                address: defaultAddress,
                 latitude,
                 longitude,
-                candidates: geo.candidates || []
+                candidates,
+                addressComponent: geo.addressComponent || null
               })
             })
             .catch(() => {
@@ -602,7 +611,7 @@ Page({
   },
 
   // 保存采集：不再进入成功页，直接完成并跳去采集本。
-  onSaveCheckin() {
+  async onSaveCheckin() {
     if (this.data.saving) return
     if (this.data.confirmLoading) {
       wx.showToast({
@@ -617,8 +626,23 @@ Page({
     try {
       if (!checkinUtil) throw new Error('checkinUtil not loaded')
 
-      checkinUtil.saveCheckin({
-        photoPath: this.data.photoPath,
+      // 预生成记录 id，用于上传失败时绑定补传队列，补传成功后回写 cloudFileID
+      const recordId = 'CK' + Date.now().toString(36).toUpperCase()
+
+      // 1. 持久化图片（本地 + 云端）
+      let photoPath = this.data.photoPath
+      let cloudFileID = ''
+      if (photoStorage) {
+        const result = await photoStorage.persistPhoto(this.data.photoPath, { recordId })
+        photoPath = result.localPath
+        cloudFileID = result.cloudFileID
+      }
+
+      // 2. 保存打卡记录
+      const saved = await checkinUtil.saveCheckinAsync({
+        id: recordId,
+        photoPath,
+        cloudFileID,
         spotName: this.data.spotName || '当前位置',
         address: this.data.address || '',
         latitude: this.data.latitude,

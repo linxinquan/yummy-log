@@ -1,4 +1,35 @@
 /* 觅食图 V1 - 想去清单页样式 */
+.loading-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+}
+
+.loading-spinner {
+  width: 64rpx;
+  height: 64rpx;
+  border: 6rpx solid #F0F0F0;
+  border-top-color: #1A2739;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 32rpx;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: #9DA4AD;
+  font-size: 28rpx;
+  line-height: 28rpx;
+}
+
 .container {
   position: relative;
   min-height: 100vh;
@@ -15,6 +46,8 @@
   align-items: center;
   justify-content: space-between;
   padding-left: 48rpx;
+  /* 和“攻略”页保持一致，给一级导航补一段底部呼吸感。 */
+  padding-bottom: 24rpx;
   background: #FFFFFF;
   box-sizing: content-box;
 }
@@ -26,14 +59,15 @@
 }
 
 .tab-item text {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 48rpx;
-  line-height: 48rpx;
+  /* 一级导航标题使用更宽松的行高，视觉会更稳。 */
+  line-height: 64rpx;
   font-weight: 500;
 }
 
 .tab-item.active text {
-  color: #242529;
+  color: #1A2739;
 }
 
 .tab-right {
@@ -56,35 +90,31 @@
 }
 
 .empty-illustration {
-  width: 240rpx;
-  height: 240rpx;
-  border-radius: 999rpx;
-  background: #F7F8FA;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 48rpx;
+  width: 320rpx;
+  height: 320rpx;
+  margin-bottom: 32rpx;
 }
 
-.empty-icon {
-  font-size: 120rpx;
-  color: #A0A4AE;
+.empty-image {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .empty-title {
-  color: #242529;
-  font-size: 40rpx;
-  line-height: 40rpx;
-  margin-bottom: 32rpx;
+  color: #1A2739;
+  font-size: 32rpx;
+  line-height: 32rpx;
+  margin-bottom: 24rpx;
   font-weight: 500;
 }
 
 .empty-hint {
-  color: #6E727A;
+  color: #808B9A;
   font-size: 28rpx;
   line-height: 28rpx;
   text-align: center;
-  margin-bottom: 48rpx;
+  margin-bottom: 32rpx;
 }
 
 .empty-btn {
@@ -92,7 +122,7 @@
   height: 80rpx;
   padding: 0 32rpx;
   border-radius: 999rpx;
-  background: #242529;
+  background: #25BBE7;
   color: #FFFFFF;
   font-size: 28rpx;
   display: flex;
@@ -115,17 +145,178 @@
   padding-bottom: calc(132rpx + env(safe-area-inset-bottom));
 }
 
+/* 筛选结果为空时，在“想去”页内容区展示页内空状态，不切成整页空白。 */
+.inline-empty {
+  padding: 96rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inline-empty-illustration {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 32rpx;
+}
+
+.inline-empty-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.inline-empty-hint {
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  text-align: center;
+}
+
+.visited-layout {
+  box-sizing: border-box;
+  padding-right: 48rpx;
+  padding-bottom: calc(132rpx + env(safe-area-inset-bottom));
+  padding-left: 48rpx;
+}
+
+/* 足迹顶部地图卡片：只保留一层轻背景，避免页面显得太重。 */
+.visited-map-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 32rpx;
+  background: #F6F8FA;
+}
+
+.visited-map {
+  width: 100%;
+  height: 654rpx;
+}
+
+/* 足迹地图上的两个悬浮按钮直接复用探索页的白底小浮块风格。 */
+.visited-map-action {
+  position: absolute;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 24rpx;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.visited-map-action i {
+  color: #1A2739;
+  font-size: 48rpx;
+  line-height: 48rpx;
+}
+
+.visited-map-action-top {
+  top: 24rpx;
+  right: 24rpx;
+}
+
+.visited-map-action-bottom {
+  right: 24rpx;
+  bottom: 24rpx;
+}
+
+/* “添加足迹”是文字按钮，不再和右上角定位按钮共用正方形尺寸。 */
+.visited-map-action-text {
+  width: auto;
+  min-width: 168rpx;
+  gap: 8rpx;
+  padding: 0 24rpx;
+  box-sizing: border-box;
+}
+
+.visited-map-action-text .visited-map-action-icon {
+  color: #25BBE7;
+  font-size: 40rpx;
+  line-height: 40rpx;
+}
+
+.visited-map-action-label {
+  color: #25BBE7;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  font-weight: 500;
+}
+
+/* 统计卡片现在固定 4 张，直接两列排布，版面会更整齐。 */
+.visited-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24rpx;
+  margin-top: 32rpx;
+}
+
+.visited-stat-card {
+  position: relative;
+  min-height: 168rpx;
+  padding: 32rpx;
+  border-radius: 32rpx;
+  background: #F6F8FA;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+/* 左侧只放数字和文案，保证信息层级清楚。 */
+.visited-stat-main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.visited-stat-value {
+  color: #1A2739;
+  font-size: 48rpx;
+  line-height: 48rpx;
+  font-weight: 600;
+}
+
+.visited-stat-label {
+  margin-top: 16rpx;
+  color: #1A2739;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  font-weight: 400;
+}
+
+.visited-stat-icon-wrap {
+  position: absolute;
+  right: 20rpx;
+  bottom: 16rpx;
+  z-index: 0;
+}
+
+.visited-stat-icon {
+  /* 统计图标跟“我的”页收藏/采集图标统一为浅蓝灰渐变。 */
+  display: inline-block;
+  font-size: 80rpx;
+  line-height: 80rpx;
+  background: linear-gradient(180deg, #C5D3E3 0%, #D8E1EC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .want-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16rpx;
   width: 100%;
   height: 56rpx;
   margin-bottom: 48rpx;
 }
 
 .want-toolbar-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   line-height: 32rpx;
   font-weight: 500;
@@ -138,7 +329,7 @@
   height: auto;
   padding: 16rpx 24rpx;
   border-radius: 999rpx;
-  background: #242529;
+  background: #25BBE7;
   box-sizing: border-box;
 }
 
@@ -172,6 +363,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* 默认完全隐藏，只有开始左滑后再显示，避免未滑开时透出来。 */
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.place-delete-action.show {
+  opacity: 1;
 }
 
 .place-delete-inner {
@@ -208,7 +406,7 @@
   right: 32rpx;
   height: 320rpx;
   border-radius: 24rpx;
-  background: #F7F8FA;
+  background: #F6F8FA;
   z-index: 0;
 }
 
@@ -282,7 +480,7 @@
   font-size: 32rpx;
   line-height: 48rpx;
   font-weight: 500;
-  color: #242529;
+  color: #1A2739;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -301,7 +499,7 @@
   font-size: 24rpx;
   line-height: 24rpx;
   font-weight: 400;
-  color: #A0A4AE;
+  color: #9DA4AD;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -313,8 +511,8 @@
   right: 32rpx;
   top: 208rpx;
   height: 2rpx;
-  background: linear-gradient(to right, #EEF0F3 50%, transparent 50%);
-  background-size: 16rpx 2rpx;
+  background: linear-gradient(to right, #F6F8FA 50%, transparent 50%);
+  background-size: 12rpx 2rpx;
   z-index: 2;
 }
 
@@ -382,7 +580,7 @@
 
 .route-author,
 .route-city {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx;
   line-height: 24rpx;
   font-weight: 400;
@@ -407,6 +605,7 @@
   gap: 24rpx;
   min-height: 160rpx;
   background: #FFFFFF;
+  border-radius: 24rpx;
   transition: transform 0.2s ease;
   box-sizing: border-box;
 }
@@ -476,7 +675,7 @@
 .place-name {
   width: 100%;
   gap: 16rpx;
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   line-height: 32rpx;
   font-weight: 400;
@@ -502,10 +701,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FDF8E3;
+  background: #FFF7E8;
   border-radius: 12rpx;
   padding: 8rpx 16rpx;
-  color: #EE8733;
+  color: #FF7D00;
   font-size: 24rpx;
   line-height: 24rpx;
   flex-shrink: 0;
@@ -513,10 +712,10 @@
 
 /* 普通标签 */
 .place-tag-chip {
-  background: #F7F8FA;
+  background: #F6F8FA;
   border-radius: 12rpx;
   padding: 8rpx 16rpx;
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx;
   line-height: 24rpx;
   white-space: nowrap;
@@ -533,13 +732,13 @@
 
 .place-footer-text,
 .place-footer-separator {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx;
   line-height: 28rpx;
   flex-shrink: 0;
 }
 
-/* 右侧箭头：这里只是进入详情，不改语义 */
+/* 右侧加号：单独点击后弹出路线列表，把地点加到路线里。 */
 .place-arrow {
   width: 40rpx;
   height: 40rpx;
@@ -550,8 +749,29 @@
 }
 
 .place-arrow i {
-  color: #C7CAD1;
+  color: #BAC4CC;
   font-size: 40rpx;
+  line-height: 40rpx;
+}
+
+.route-picker-sheet {
+  max-height: 80vh;
+}
+
+.route-picker-scroll {
+  max-height: 58vh;
+}
+
+.route-picker-empty {
+  padding: 48rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.route-picker-empty-text {
+  color: #808B9A;
+  font-size: 28rpx;
   line-height: 40rpx;
 }
 
@@ -584,62 +804,6 @@
   transform: translateY(0);
 }
 
-.route-action-mask {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0);
-  z-index: 1004;
-  pointer-events: none;
-  transition: background 0.3s;
-}
-
-.route-action-mask.show {
-  background: rgba(0, 0, 0, 0.4);
-  pointer-events: auto;
-}
-
-.route-action-sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #FFFFFF;
-  border-radius: 32rpx 32rpx 0 0;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.route-action-mask.show .route-action-sheet {
-  transform: translateY(0);
-}
-
-.route-action-header {
-  height: 128rpx;
-  padding: 0 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-sizing: border-box;
-}
-
-.route-action-title {
-  color: #242529;
-  font-size: 40rpx;
-  line-height: 100%;
-  font-weight: 500;
-}
-
-.route-action-close {
-  color: #242529;
-  font-size: 40rpx;
-  line-height: 40rpx;
-}
-
-.route-action-body {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
-  box-sizing: border-box;
-}
-
 .route-action-grid {
   display: flex;
   flex-direction: column;
@@ -650,7 +814,7 @@
   width: 100%;
   min-height: 104rpx;
   border-radius: 24rpx;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   background: #FFFFFF;
   display: flex;
   flex-direction: row;
@@ -662,7 +826,7 @@
 }
 
 .route-action-card.active {
-  border-color: #242529;
+  border-color: #1A2739;
 }
 
 .route-action-card.danger .route-action-icon,
@@ -676,14 +840,14 @@
 }
 
 .route-action-icon {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   line-height: 40rpx;
   flex-shrink: 0;
 }
 
 .route-action-label {
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   line-height: 32rpx;
   font-weight: 400;
@@ -696,7 +860,7 @@
   width: 100%;
   height: 96rpx;
   border-radius: 999rpx;
-  background: #242529;
+  background: #25BBE7;
   color: #FFFFFF;
   font-size: 32rpx;
   line-height: 32rpx;
@@ -704,6 +868,47 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.route-delete-confirm-body {
+  padding-top: 0;
+}
+
+.route-delete-confirm-desc {
+  display: block;
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 44rpx;
+}
+
+.route-delete-confirm-actions {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 48rpx;
+}
+
+.route-delete-confirm-btn {
+  height: 96rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 32rpx;
+}
+
+.route-delete-confirm-btn.cancel {
+  width: 160rpx;
+  background: #F2F4F7;
+  color: #1A2739;
+  flex-shrink: 0;
+}
+
+.route-delete-confirm-btn.danger {
+  flex: 1;
+  background: #FF5A5F;
+  color: #FFFFFF;
 }
 
 .plan-day-header {
@@ -716,24 +921,24 @@
 }
 
 .plan-day-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   line-height: 40rpx;
   font-weight: 500;
 }
 
 .plan-day-close {
-  width: 48rpx;
-  height: rpx;
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #242529;
-  font-size: 48rpx;
+  color: #1A2739;
+  font-size: 40rpx;
 }
 
 .plan-day-body {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  padding: 0 48rpx 48rpx;
 }
 
 .plan-day-picker-view {
@@ -746,7 +951,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #242529;
+  color: #1A2739;
   font-size: 48rpx;
   line-height: 48rpx;
 }
@@ -755,7 +960,7 @@
   height: 96rpx;
   border-radius: 999rpx;
   margin-top: 32rpx;
-  background: #242529;
+  background: #25BBE7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -764,3 +969,30 @@
   line-height: 32rpx;
   font-weight: 500;
 }
+
+/* ─── 城市筛选 ───────────────────────────── */
+.want-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 8rpx 16rpx 8rpx 0;
+  flex-shrink: 0;
+}
+
+.want-toolbar-arrow {
+  color: #1A2739;
+  font-size: 40rpx;
+  line-height: 40rpx;
+}
+
+/* 城市选择沿用现有底部弹窗结构，但选中后不做颜色变化。 */
+.city-filter-card.active,
+.city-filter-card.active .route-action-label {
+  border-color: #F6F8FA;
+  color: #1A2739;
+}
+
+
+
+
+

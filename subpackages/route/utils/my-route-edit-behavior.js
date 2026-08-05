@@ -1,3 +1,5 @@
+const { buildTabs, buildSummaryText, stripEditState, flattenDaySections } = require('../../../utils/routeHelper')
+
 module.exports = Behavior({
  data: {},
  methods: {
@@ -21,7 +23,7 @@ module.exports = Behavior({
     });
     return;
    }
-   const restored = syncDaySections(
+   const restored = this.syncDaySections(
     this.data.originalDaySections || [],
     this.data.cityInfo
    );

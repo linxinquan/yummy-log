@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "test": "jest --config __tests__/jest.config.js --coverage"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
   "dependencies": {
     "miniprogram-ci": "^2.1.31"
   }

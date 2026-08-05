@@ -31,16 +31,39 @@
 .icon-btn {
   width: 64rpx; /* 32px */
   height: 64rpx; /* 32px */
-  background: rgba(0, 0, 0, 0.24);
+  /* 顶部返回 / 分享按钮统一改成白底黑图标，和详情页其他操作保持一致。 */
+  background: #FFFFFF;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* 分享按钮拆成“视觉层 + 透明点击层”，避免原生 button 把白色圆底撑变形。 */
+.share-btn-wrap {
+  position: relative;
+}
+
+.share-hit-btn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  opacity: 0;
+}
+
+.share-hit-btn::after {
+  border: none;
+}
+
 .icon-btn i {
   font-size: 40rpx; /* 20px */
-  color: #FFFFFF;
+  color: #1A2739;
 }
 
 .hero-stats {
@@ -119,7 +142,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 32rpx; /* 16px */
+  gap: 24rpx; /* 12px */
 }
 
 .tags-row {
@@ -129,7 +152,7 @@
 }
 
 .rating-badge {
-  background: #FDF8E3;
+  background: #FFF7E8;
   padding: 8rpx 16rpx;
   border-radius: 12rpx;
   display: flex;
@@ -138,13 +161,13 @@
 }
 
 .rating-val {
-  color: #EE8733;
+  color: #FF7D00;
   font-size: 24rpx; /* 12px */
   font-weight: 400;
 }
 
 .tag-badge {
-  background: #F7F8FA;
+  background: #F6F8FA;
   padding: 8rpx 16rpx;
   border-radius: 12rpx;
   display: flex;
@@ -153,22 +176,22 @@
 }
 
 .tag-badge text {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx; /* 12px */
 }
 
 .spot-title {
   font-size: 48rpx; /* 24px */
   font-weight: 500;
-  color: #242529;
-  line-height: 48rpx;
+  color: #1A2739;
+  line-height: 64rpx;
 }
 
 .open-time {
   font-size: 24rpx; /* 12px */
-  color: #A0A4AE;
+  color: #9DA4AD;
   line-height: 24rpx; /* 12px */
-  margin-top: 24rpx; /* 12px 距离上方标题 */
+  margin-top: 16rpx; /* 8px 距离上方标题 */
 }
 
 .address-box {
@@ -177,7 +200,7 @@
   align-items: center;
   gap: 24rpx; /* 12px */
   align-self: stretch;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   border-radius: 24rpx; /* 12px */
   box-sizing: border-box;
   margin-top: 48rpx; /* 24px 距离上面的营业时间 */
@@ -193,14 +216,14 @@
 
 .phone-label {
   font-size: 24rpx;
-  color: #A0A4AE;
+  color: #9DA4AD;
   line-height: 24rpx;
 }
 
 .phone-text {
   font-size: 28rpx;
   font-weight: 500;
-  color: #242529;
+  color: #1A2739;
   line-height: 28rpx;
 }
 
@@ -217,7 +240,7 @@
   font-family: "PingFang SC";
   font-size: 24rpx; /* 12px */
   font-weight: 400;
-  color: #A0A4AE;
+  color: #9DA4AD;
   line-height: 100%; /* 12px */
 }
 
@@ -225,7 +248,7 @@
   font-family: "PingFang SC";
   font-size: 28rpx; /* 14px */
   font-weight: 500;
-  color: #242529;
+  color: #1A2739;
   line-height: 28rpx; /* 14px */
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -236,12 +259,12 @@
 
 .arrow-icon {
   font-size: 40rpx; /* 20px */
-  color: #C7CAD1;
+  color: #BAC4CC;
 }
 
 .spot-desc {
   font-size: 32rpx; /* 16px */
-  color: #242529;
+  color: #1A2739;
   line-height: 48rpx; /* 24px */
   margin-top: 32rpx; /* 16px 距离上面的地址卡片 */
 }
@@ -264,7 +287,7 @@
 .section-title {
   font-size: 32rpx; /* 17px */
   font-weight: 500;
-  color: #242529;
+  color: #1A2739;
   line-height: 32rpx;
 }
 
@@ -273,7 +296,7 @@
   height: 240rpx; /* 120px */
   border-radius: 24rpx; /* 12px */
   overflow: hidden;
-  background: #F7F8FA;
+  background: #F6F8FA;
 }
 
 .mini-map {
@@ -299,7 +322,7 @@
 
 .more-btn {
   font-size: 28rpx; /* 14px */
-  color: #A0A4AE;
+  color: #9DA4AD;
 }
 
 /* 横向滚动区：这里负责真正的左右滚动和两侧留白 */
@@ -342,7 +365,7 @@
   width: 240rpx; /* 120px */
   height: 240rpx; /* 140px */
   border-radius: 24rpx; /* 12px */
-  background: #F7F8FA;
+  background: #F6F8FA;
 }
 
 .nearby-info {
@@ -353,7 +376,7 @@
 
 .nearby-name {
   font-size: 32rpx; /* 16px */
-  color: #242529;
+  color: #1A2739;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -362,7 +385,7 @@
 
 .nearby-meta {
   font-size: 24rpx; /* 12px */
-  color: #A0A4AE;
+  color: #9DA4AD;
   line-height: 32rpx;
 }
 
@@ -397,7 +420,7 @@
   height: 96rpx; /* 48px */
   flex-shrink: 0;
   border-radius: 999rpx;
-  background: #F2F4F7;
+  background: #F6F8FA; /* 收藏按钮灰底改回当前统一的浅灰背景色 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -405,19 +428,19 @@
 }
 
 .collect-action-icon {
-  font-size: 48rpx; /* 24px */
-  color: #242529;
+  font-size: 48rpx; /* 2px */
+  color: #1A2739;
   line-height: 1;
 }
 
 .collect-action-icon.collected {
-  color: #EEB237;
+  color: #EEB237; /* 恢复收藏态星标颜色，不跟主题色联动 */
 }
 
 .want-btn {
   flex: 1;
   height: 96rpx; /* 48px */
-  background: #242529;
+  background: #25BBE7;
   border-radius: 999rpx;
   display: flex;
   align-items: center;
@@ -433,7 +456,7 @@
 }
 
 .want-action-icon.wanted {
-  color: #FF5A5F;
+  color: #ffffff;
 }
 
 .want-btn text {
@@ -471,11 +494,6 @@
   pointer-events: auto;
 }
 
-/* 导航地图弹窗需要压过其它底部弹窗，避免被后面的面板盖住 */
-.nav-map-sheet-mask {
-  z-index: 1003;
-}
-
 .sheet-panel {
   position: fixed;
   left: 0;
@@ -507,28 +525,25 @@
 }
 
 .sheet-modal-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   font-weight: 500;
   line-height: 40rpx;
 }
 
 .sheet-modal-close {
-  width: 48rpx;
-  height: 48rpx;
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #242529;
-  font-size: 48rpx;
-}
-
-.route-action-sheet {
-  z-index: 1002;
+  color: #1A2739;
+  font-size: 40rpx;
 }
 
 .route-sheet-option-list {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  /* 公用底部弹窗壳已经统一提供内边距，这里只保留选项列表本身。 */
+  padding: 0;
 }
 
 .route-sheet-option {
@@ -538,7 +553,7 @@
   height: 104rpx;
   padding: 0 32rpx;
   border-radius: 24rpx;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   background: #FFFFFF;
 }
 
@@ -550,12 +565,12 @@
   display: flex;
   align-items: center;
   gap: 16rpx;
-  color: #242529;
+  color: #1A2739;
 }
 
 .route-sheet-option-main i {
   font-size: 40rpx;
-  color: #242529;
+  color: #1A2739;
 }
 
 /* 地图品牌图片：统一控制尺寸，保证两张 png 显示一致 */
@@ -569,10 +584,10 @@
 .route-sheet-option-main text {
   font-size: 32rpx;
   line-height: 32rpx;
-  color: #242529;
+  color: #1A2739;
 }
 
 .route-sheet-option-arrow {
   font-size: 36rpx;
-  color: #C7CAD1;
+  color: #BAC4CC;
 }

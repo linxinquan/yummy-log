@@ -1,0 +1,63 @@
+.nav-map-sheet-mask {
+  z-index: 1003;
+}
+
+.nav-map-sheet-panel {
+  z-index: 1004;
+}
+
+.nav-map-option-list {
+  padding: 0;
+}
+
+.nav-map-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx 0;
+  background: #FFFFFF;
+}
+
+.nav-map-option + .nav-map-option {
+  margin-top: 24rpx;
+}
+
+.nav-map-option-main {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  color: #1A2739;
+}
+
+.nav-map-option-logo {
+  width: 40rpx;
+  height: 40rpx;
+  flex-shrink: 0;
+  display: block;
+}
+
+.nav-map-option-main-text {
+  font-size: 32rpx;
+  line-height: 32rpx;
+  color: #1A2739;
+}
+
+.nav-map-option-arrow {
+  width: 36rpx;
+  height: 36rpx;
+  flex-shrink: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M15.707 11.293a1 1 0 0 1 0 1.414l-5.657 5.657a1 1 0 1 1-1.414-1.414l4.95-4.95-4.95-4.95a1 1 0 0 1 1.414-1.414l5.657 5.657Z' fill='%23BAC4CC'/%3E%3C/svg%3E");
+}
+
+.nav-map-option-icon-copy {
+  width: 40rpx;
+  height: 40rpx;
+  flex-shrink: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 2a2 2 0 0 0-2 2v2h2V4h11v11h-2v2h2a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM4 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zm0 2h11v11H4z' fill='%231A2739'/%3E%3C/svg%3E");
+}

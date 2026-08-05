@@ -38,17 +38,292 @@
   justify-content: center;
 }
 
+/* 中间添加按钮保持静态展示，点击后不再旋转。 */
 .tabbar-icon-add .add-icon {
   transform: rotate(0deg) scale(1);
-  transform-origin: center;
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
 }
 
+/* 激活态也保持和默认态一致，避免点击后出现旋转动画。 */
 .tabbar-icon-add.is-active .add-icon {
-  transform: rotate(45deg) scale(1.04);
+  transform: rotate(0deg) scale(1);
 }
 
 .tabbar-text {
   font-size: 22rpx;
+}
+
+/* 中间“添加”按钮打开后的遮罩层。 */
+.entry-sheet-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.28s ease;
+}
+
+.entry-sheet-mask.show {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+/* “添加”底部弹窗：承载三张入口卡片。 */
+.entry-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 221;
+  /* 把整组内容往下放一点，让关闭按钮不要离底部太远。 */
+  padding: 0 48rpx calc(160rpx + env(safe-area-inset-bottom));
+  background: transparent;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.entry-sheet.show {
+  transform: translateY(0);
+}
+
+.entry-sheet-body {
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 关闭按钮独立居中显示，不再和底部添加图标绑定。 */
+.entry-sheet-close-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 48rpx;
+}
+
+.entry-sheet-close-btn {
+  width: 72rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 功能已废弃，保留样式避免编译报错 */
+}
+
+.entry-sheet-close-icon {
+  color: #FFFFFF;
+  font-size: 64rpx;
+  line-height: 64rpx;
+  /* 功能已废弃，保留样式避免编译报错 */
+}
+
+/* 三张卡片纵向排列，并统一居中显示。 */
+.entry-card-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.entry-action-card {
+  position: relative;
+  /* 卡片宽度按最新确认调整为 480rpx。 */
+  width: 480rpx;
+  height: 164rpx;
+  border-radius: 48rpx;
+  background: linear-gradient(180deg, #FFF 0%, #FFFFFF 100%);
+  overflow: hidden;
+}
+
+/* 长条卡片内部使用左右结构：左边文字，右边图标。 */
+.entry-action-card-bar {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.entry-action-card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+}
+
+/* 入口图标固定贴在卡片内容区右下角，和文字区分层排布。 */
+.entry-action-card-icon {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  font-size: 48rpx;
+  line-height: 48rpx;
+  flex: 0 0 auto;
+}
+
+/* 图标沿用“我的-快捷入口”里收藏/采集图标的浅蓝灰渐变色。 */
+.entry-action-card-icon-gradient {
+  background: linear-gradient(180deg, #C5D3E3 0%, #D8E1EC 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 标题和说明文案纵向排列，方便用户快速理解入口用途。 */
+.entry-action-card-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24rpx;
+  flex: 1;
+  min-width: 0;
+  max-width: calc(100% - 96rpx);
+}
+
+.entry-action-card-label {
+  color: #1A2739;
+  font-size: 36rpx;
+  font-weight: 400;
+  line-height: 36rpx;
+  text-align: left;
+}
+
+.entry-action-card-desc {
+  color: #7B808A;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* 解析路线输入弹窗：保留原来底部输入交互。 */
+.import-sheet-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 230;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.28s ease;
+}
+
+.import-sheet-mask.show {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.import-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 231;
+  padding: 0 0 calc(24rpx + env(safe-area-inset-bottom));
+  border-radius: 32rpx 32rpx 0 0;
+  background: #FFFFFF;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.import-sheet.show {
+  transform: translateY(0);
+}
+
+.import-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 128rpx;
+  padding: 0 48rpx;
+  box-sizing: border-box;
+}
+
+.import-sheet-title {
+  color: #1A2739;
+  font-size: 40rpx;
+  font-weight: 500;
+  line-height: 100%;
+}
+
+.import-sheet-close {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1A2739;
+}
+
+.import-sheet-close i {
+  font-size: 48rpx;
+}
+
+.import-sheet-body {
+  padding: 0 48rpx;
+  box-sizing: border-box;
+}
+
+.import-input-wrap {
+  box-sizing: border-box;
+  min-height: 320rpx;
+  padding: 32rpx;
+  background: #F6F8FA;
+  border: 2rpx solid #F6F8FA;
+  border-radius: 24rpx;
+}
+
+.import-textarea {
+  width: 100%;
+  min-height: 240rpx;
+  color: #1A2739;
+  font-size: 32rpx;
+  line-height: 48rpx;
+}
+
+.import-placeholder {
+  /* 占位文字与输入文字共用同一组尺寸，避免视觉偏移。 */
+  color: #BAC4CC;
+  font-size: 32rpx;
+  line-height: 48rpx;
+}
+
+.import-hint-list {
+  margin-top: 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.import-hint {
+  color: #808B9A;
+  font-size: 24rpx;
+  line-height: 24rpx;
+}
+
+.import-sheet-footer {
+  display: flex;
+  gap: 24rpx;
+  padding: 48rpx 48rpx 0;
+}
+
+.import-secondary-btn,
+.import-primary-btn {
+  height: 96rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  line-height: 32rpx;
+  font-weight: 500;
+}
+
+.import-secondary-btn {
+  width: 220rpx;
+  flex: 0 0 220rpx;
+  background: #F2F4F7;
+  color: #1A2739;
+}
+
+.import-primary-btn {
+  flex: 1;
+  background: #25BBE7;
+  color: #FFFFFF;
 }

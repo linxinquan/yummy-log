@@ -19,12 +19,32 @@ const CURRENT_LOCATION_FOCUS_SCALE = 15
 
 // 根据攻略标题、城市等字段推断城市和中心点。
 const CITY_PRESETS = [
-  { match: /西安|长安/, name: '西安市', lat: 34.3416, lng: 108.9398 },
+  { match: /香港/, name: '香港特别行政区', lat: 22.3193, lng: 114.1694 },
+  { match: /上海/, name: '上海市', lat: 31.2304, lng: 121.4737 },
+  { match: /北京/, name: '北京市', lat: 39.9042, lng: 116.4074 },
   { match: /广州/, name: '广州市', lat: 23.1291, lng: 113.2644 },
-  { match: /汕头/, name: '汕头市', lat: 23.3541, lng: 116.6819 },
-  { match: /湛江/, name: '湛江市', lat: 21.2707, lng: 110.3594 },
-  { match: /佛山/, name: '佛山市', lat: 23.0218, lng: 113.1219 },
-  { match: /珠海/, name: '珠海市', lat: 22.2707, lng: 113.5767 },
+  { match: /杭州/, name: '杭州市', lat: 30.2741, lng: 120.1551 },
+  { match: /台北/, name: '台北市', lat: 25.0330, lng: 121.5654 },
+  { match: /澳门/, name: '澳门特别行政区', lat: 22.1987, lng: 113.5439 },
+  { match: /成都/, name: '成都市', lat: 30.5728, lng: 104.0668 },
+  { match: /厦门/, name: '厦门市', lat: 24.4798, lng: 118.0894 },
+  { match: /南京/, name: '南京市', lat: 32.0603, lng: 118.7969 },
+  { match: /苏州/, name: '苏州市', lat: 31.2990, lng: 120.5853 },
+  { match: /福州/, name: '福州市', lat: 26.0745, lng: 119.2965 },
+  { match: /台州/, name: '台州市', lat: 28.6564, lng: 121.4208 },
+  { match: /台南/, name: '台南市', lat: 22.9999, lng: 120.2270 },
+  { match: /台中/, name: '台中市', lat: 24.1477, lng: 120.6736 },
+  { match: /高雄/, name: '高雄市', lat: 22.6273, lng: 120.3014 },
+  { match: /温州/, name: '温州市', lat: 27.9939, lng: 120.6994 },
+  { match: /泉州/, name: '泉州市', lat: 24.8746, lng: 118.6759 },
+  { match: /扬州/, name: '扬州市', lat: 32.3936, lng: 119.4213 },
+  { match: /常州/, name: '常州市', lat: 31.8101, lng: 119.9736 },
+  { match: /新北/, name: '新北市', lat: 25.0620, lng: 121.4570 },
+  { match: /新竹县/, name: '新竹县', lat: 24.8393, lng: 121.0020 },
+  { match: /新竹/, name: '新竹市', lat: 24.8036, lng: 120.9686 },
+  { match: /宁德/, name: '宁德市', lat: 26.6657, lng: 119.5482 },
+  { match: /惠州/, name: '惠州市', lat: 23.1118, lng: 114.4168 },
+  { match: /乌兰察布/, name: '乌兰察布市', lat: 41.0006, lng: 113.1336 },
   { match: /深圳|南山|福田|罗湖|宝安|龙岗|盐田|龙华|光明|坪山|大鹏/, name: '深圳市', lat: 22.5431, lng: 114.0579 }
 ]
 
@@ -173,7 +193,7 @@ function syncDaySections(daySections, cityInfo) {
         id: item.id || `day-${dayIndex}-item-${itemIndex}`,
         name: item.name || '待补充地点',
         tag,
-        image: item.image || matched?.image || matched?.logo || '/images/app-logo.jpg',
+        image: item.coverImage || '/images/app-logo.jpg',
         type: item.type || matched?.type || (tag === '美食' ? 'food' : 'spot'),
         rating: item.rating || matched?.rating || matched?.score || '',
         tags: item.tags || matched?.tags || [],
@@ -300,7 +320,7 @@ function convertRoutesToDaySections(routes) {
         id: place.id || `day-${dayIndex}-item-${itemIndex}`,
         name: place.name || '待补充地点',
         tag: place.tag || inferTag(place.name),
-        image: place.coverImage || place.displayImage || '/images/app-logo.jpg',
+        coverImage: place.coverImage || '/images/app-logo.jpg',
         type: place.type || (place.tag === '美食' ? 'food' : 'spot'),
         rating: place.rating || place.score || '',
         tags: place.tags || [],
@@ -345,28 +365,6 @@ function buildDaySections(guide, cityInfo) {
   return syncDaySections(buildGenericSections(guide, covers), cityInfo)
 }
 
-// 兼容旧路线结构，生成 daySummaries / dayDetails。
-function buildLegacyRouteData(daySections) {
-  const daySummaries = daySections.map((day, index) => ({
-    location: '',
-    route: (day.items || []).map(item => item.name).join(' --- '),
-    image: (day.items && day.items[0] && day.items[0].image) || '/images/app-logo.jpg',
-  }))
-
-  const dayDetails = daySections.map(day => (day.items || []).map(item => ({
-    name: item.name,
-    desc: item.travelText,
-    travelText: item.travelText,
-    tag: item.tag,
-    image: item.image,
-    type: item.type,
-    lat: item.lat,
-    lng: item.lng
-  })))
-
-  return { daySummaries, dayDetails }
-}
-
 Page({
   data: {
     guide: null,
@@ -377,6 +375,7 @@ Page({
     viewMode: 'list',
     currentTab: 0,
     currentMapDay: -1,
+    detailScrollTop: 0,
     sheetScrollTarget: '',
     cityText: '深圳市',
     summaryText: '',
@@ -412,7 +411,8 @@ Page({
     navMapSheetVisible: false,
     navMapTarget: null,
     placeIntroVisible: false,
-    placeIntroData: null
+    placeIntroData: null,
+    isRouteSaved: false
   },
 
   // 页面初始化：解析攻略数据，并同步列表、地图和预览卡片。
@@ -448,9 +448,37 @@ Page({
       summaryText: buildSummaryText(guide, daySections)
     })
 
+    // 进入攻略路线详情时，先同步一次“是否已经保存到我的路线”。
+    this.syncSavedRouteState(guide)
+
     // this.updateMapData(daySections, cityInfo, 0)
     this.refreshMapPreview(daySections, 0)
     this.syncCurrentLocation()
+  },
+
+  // 页面再次显示时，重新读取本地 savedRoutes，
+  // 避免用户从别处返回后，底部按钮状态还是旧的。
+  onShow() {
+    this.syncSavedRouteState()
+  },
+
+  // 根据当前攻略 id，判断这条攻略路线是否已经保存到“我的路线”。
+  syncSavedRouteState(guideData) {
+    const guide = guideData || this.data.guide
+    if (!guide || !guide.id) {
+      this.setData({ isRouteSaved: false })
+      return
+    }
+
+    const savedRoutes = util.loadData('savedRoutes', [])
+    const isRouteSaved = savedRoutes.some((item) => {
+      return (
+        String(item.id) === String(guide.id) ||
+        String(item.guideId || '') === String(guide.id)
+      )
+    })
+
+    this.setData({ isRouteSaved })
   },
 
   // 刷新详情页地图：包括标记点、折线和当前选中的天数。
@@ -490,7 +518,7 @@ Page({
           color: '#FFFFFF',
           fontWeight: 'bold',
           borderRadius: 15,
-          bgColor: '#47BFFE',
+          bgColor: '#25BBE7',
           padding: 8,
           borderWidth: 2,
           borderColor: '#FFFFFF',
@@ -653,6 +681,65 @@ Page({
     })
   },
 
+  // 地图放大一级：
+  // 这里只改缩放级别，不主动改中心点，手感更接近双指缩放。
+  onMapZoomIn() {
+    const currentScale = Number(this.data.mapScale) || 12
+    if (currentScale >= 20) return
+    this.setData({
+      mapScale: Math.min(currentScale + 1, 20)
+    })
+  },
+
+  // 地图缩小一级：
+  // 这里只改缩放级别，不主动改中心点，手感更接近双指缩放。
+  onMapZoomOut() {
+    const currentScale = Number(this.data.mapScale) || 12
+    if (currentScale <= 3) return
+    this.setData({
+      mapScale: Math.max(currentScale - 1, 3)
+    })
+  },
+
+  // 地图区域变化结束后，同步真实中心点。
+  // 这样点完缩放按钮后，下一次继续缩放会围绕当前屏幕中心。
+  onMapRegionChange(e) {
+    if (!e || e.type !== 'end') return
+
+    if (!this._guideDetailMapCtx) {
+      this._guideDetailMapCtx = wx.createMapContext('guideDetailMap', this)
+    }
+
+    this._guideDetailMapCtx.getCenterLocation({
+      success: (res) => {
+        if (
+          typeof res.latitude !== 'number' ||
+          Number.isNaN(res.latitude) ||
+          typeof res.longitude !== 'number' ||
+          Number.isNaN(res.longitude)
+        ) {
+          return
+        }
+
+        const nextCenter = {
+          lat: res.latitude,
+          lng: res.longitude
+        }
+        const currentCenter = this.data.mapCenter || {}
+        if (
+          Math.abs((currentCenter.lat || 0) - nextCenter.lat) < 0.000001 &&
+          Math.abs((currentCenter.lng || 0) - nextCenter.lng) < 0.000001
+        ) {
+          return
+        }
+
+        this.setData({
+          mapCenter: nextCenter
+        })
+      }
+    })
+  },
+
   // 刷新地图模式顶部的预览卡片。
   refreshMapPreview(daySections, previewIndex = 0, currentDayOverride) {
     const places = flattenDaySections(daySections)
@@ -741,33 +828,39 @@ Page({
     this.updateMapData(this.data.daySections, this.data.cityInfo, mapDayIndex)
   },
 
-  // 把这篇攻略保存成"我的路线"
+  // 把这篇攻略保存成"我的路线"（本地优先 + 后台同步）
   onSaveRoute() {
-    const { guide, daySections, summaryText } = this.data
-    const { daySummaries, dayDetails } = buildLegacyRouteData(daySections)
+    const { guide, daySections, summaryText, isRouteSaved } = this.data
+    if (isRouteSaved) {
+      wx.showToast({ title: '路线已保存，请去我的路线查看', icon: 'none' })
+      return
+    }
+
     const routeCard = {
       id: guide.id,
       title: guide.title,
       subtitle: summaryText,
-      image: guide.coverImage || daySummaries[0]?.image || '/images/app-logo.jpg',
+      image: guide.coverImage || '/images/app-logo.jpg',
       author: guide.author || '匿名',
       city: this.data.cityText,
       guideId: guide.id,
       daySections,
-      daySummaries,
-      dayDetails,
       createdAt: Date.now()
     }
 
     const savedRoutes = util.loadData('savedRoutes', [])
     const exists = savedRoutes.find(item => String(item.id) === String(routeCard.id))
     if (exists) {
-      wx.showToast({ title: '已保存过', icon: 'none' })
+      this.setData({ isRouteSaved: true })
+      wx.showToast({ title: '路线已保存，请去我的路线查看', icon: 'none' })
       return
     }
 
-    savedRoutes.push(routeCard)
-    wx.setStorageSync('savedRoutes', savedRoutes)
+    // saveRouteAsync 内部会立即写本地 + 后台推云端
+    util.saveRouteAsync(routeCard)
+
+    // 本地已立即写入，直接把按钮切到“已保存路线”状态。
+    this.setData({ isRouteSaved: true })
     wx.showToast({ title: '已保存到路线', icon: 'success' })
   },
 
@@ -810,8 +903,17 @@ Page({
   // 列表模式顶部 Tab 切换
   onTabTap(e) {
     const index = parseInt(e.currentTarget.dataset.index, 10)
-    const sheetScrollTarget = index === 0 ? 'guide-overview-anchor' : `day-anchor-${index - 1}`
-    this.setData({ currentTab: index, sheetScrollTarget })
+    this.setData(
+      {
+        currentTab: index,
+        sheetScrollTarget: '',
+      },
+      () => {
+        wx.nextTick(() => {
+          this.scrollListToTab(index)
+        })
+      }
+    )
 
     if (this.data.viewMode === 'map') {
       const nextMapDay = index > 0 ? index - 1 : (this.data.daySections.length ? 0 : -1)
@@ -823,6 +925,47 @@ Page({
       )
       this.updateMapData(this.data.daySections, this.data.cityInfo, nextMapDay)
     }
+  },
+
+  // 把 rpx 换算成当前设备下的 px，用来保持标题距离吸顶 Tab 固定 48rpx 的留白。
+  rpxToPx(rpx) {
+    const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : {}
+    const windowWidth = windowInfo.windowWidth || 375
+    return (Number(rpx) * windowWidth) / 750
+  },
+
+  // 点击“行程总览 / 第几天”时，直接按真实渲染位置滚动，不再依赖固定负锚点。
+  scrollListToTab(index) {
+    const safeIndex = Number(index) || 0
+    const fallbackTarget = safeIndex === 0 ? 'guide-overview-anchor' : `day-anchor-${safeIndex - 1}`
+    const targetSelector = safeIndex === 0 ? '#guide-overview-title' : `#guide-day-header-${safeIndex - 1}`
+    const query = wx.createSelectorQuery().in(this)
+    query.select('.detail-scroll').boundingClientRect()
+    query.select('.detail-scroll').scrollOffset()
+    query.select('.tab-sticky-wrap').boundingClientRect()
+    query.select(targetSelector).boundingClientRect()
+    query.exec((result) => {
+      const [scrollRect, scrollOffset, stickyRect, targetRect] = result || []
+      if (!scrollRect || !scrollOffset || !stickyRect || !targetRect) {
+        this.setData({ sheetScrollTarget: fallbackTarget })
+        return
+      }
+
+      const gapPx = this.rpxToPx(48)
+      const nextScrollTop = Math.max(
+        0,
+        Math.round(
+          (scrollOffset.scrollTop || 0) +
+          (targetRect.top - scrollRect.top) -
+          (stickyRect.height || 0) -
+          gapPx
+        )
+      )
+
+      this.setData({
+        detailScrollTop: nextScrollTop,
+      })
+    })
   },
 
   // 切换地图预览中的当前地点
@@ -959,6 +1102,7 @@ Page({
   onOpenPlaceIntroNavigation() {
     const target = this.data.placeIntroData
     if (!target) return
+    this.onClosePlaceIntro()
     this.setData({
       navMapSheetVisible: true,
       navMapTarget: {
@@ -976,35 +1120,6 @@ Page({
       navMapSheetVisible: false,
       navMapTarget: null
     })
-  },
-
-  // 在导航弹窗里选择地图应用或复制地址。
-  onSelectNavMapOption(e) {
-    const type = e.currentTarget.dataset.type
-    const target = this.data.navMapTarget
-    if (!type || !target) return
-
-    if (type === 'tencent') {
-      util.openWechatNavigation(target)
-      this.onCloseNavMapSheet()
-      return
-    }
-
-    if (type === 'gaode') {
-      util.openGaodeNavigation(target.lat, target.lng, target.name)
-      this.onCloseNavMapSheet()
-      return
-    }
-
-    if (type === 'copy') {
-      wx.setClipboardData({
-        data: target.address || target.name,
-        success: () => {
-          wx.showToast({ title: '地址已复制', icon: 'success' })
-          this.onCloseNavMapSheet()
-        }
-      })
-    }
   },
 
   // 小程序右上角分享文案

@@ -1,8 +1,8 @@
 {
-  "usingComponents": {
-    "custom-tabbar": "/custom-tabbar/index"
-  },
   "navigationBarTitleText": "探索",
   "navigationStyle": "custom",
-  "enablePullDownRefresh": false
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "no-more": "/components/no-more/no-more"
+  }
 }

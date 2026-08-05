@@ -1,9 +1,9 @@
 {
-  "usingComponents": {
-    "custom-tabbar": "/custom-tabbar/index"
-  },
   "navigationBarTitleText": "我的",
   "navigationBarBackgroundColor": "#ffffff",
   "navigationBarTextStyle": "black",
-  "navigationStyle": "custom"
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "bottom-action-sheet": "/components/bottom-action-sheet/index"
+  }
 }

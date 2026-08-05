@@ -2,6 +2,22 @@
 // 腾讯地图逆地理接口（直接用 wx.request，无需 SDK 文件）
 const util = require('./util')
 
+// ─── 云端数据访问层（懒加载）────────────────────
+let _dbCheckinRecords = null
+
+function _getDbCheckinRecords() {
+  if (!_dbCheckinRecords) _dbCheckinRecords = require('./db/checkinRecords')
+  return _dbCheckinRecords
+}
+
+/**
+ * 判断当前是否已登录（云端模式）
+ * @returns {boolean}
+ */
+function _isCloudMode() {
+  return util.isCloudMode()
+}
+
 const QQMAP_KEY = 'SWGBZ-7P2CB-LK2UO-JZYYV-6BZYQ-KEBUG'
 
 /**
@@ -28,13 +44,11 @@ function reverseGeocode(latitude, longitude) {
         'Referer': 'https://meitour.app'   // 腾讯地图 WebService API 要求
       },
       success: (res) => {
-        console.log('[checkinUtil] 逆地理响应 statusCode:', res.statusCode)
         if (res.statusCode === 200) {
           const data = res.data
           if (data.status === 0) {
             const result = data.result || {}
             const pois = result.pois || []
-            console.log('pois-5', pois)
 
             // ── 多级筛选 ──
 
@@ -95,14 +109,24 @@ function reverseGeocode(latitude, longitude) {
 
             const city = result.ad_info ? result.ad_info.city : extractCity(result.address || '')
 
-            console.log('[checkinUtil] 解析结果 - spotName:', spotName, '| address:', result.address, ' | candidatePOIs:', candidatePOIs)
+            console.log('[checkinUtil] 解析结果 - spotName:', spotName, '| address:', result.address)
 
             resolve({
               spotName: spotName,
               address: result.address || '',
               district: result.ad_info ? result.ad_info.district : '',
               city: city,
-              candidates: candidatePOIs.map(p => (p.title || p.name))
+              addressComponent: result.address_component ? {
+                province: result.address_component.province || '',
+                city: result.address_component.city || '',
+                district: result.address_component.district || '',
+                street: result.address_component.street || '',
+                street_number: result.address_component.street_number || ''
+              } : null,
+              candidates: candidatePOIs.map(p => ({
+                name: p.title || p.name,
+                address: p.address || ''
+              }))
             })
           } else {
             console.error('[checkinUtil] 逆地理状态码错误:', data.status, data.message)
@@ -124,15 +148,17 @@ function reverseGeocode(latitude, longitude) {
  * 提取城市名
  */
 function extractCity(address) {
-  if (!address) return '深圳'
+  if (!address) return '广州'
   const match = address.match(/([^省市区县]+?[市])/)
-  return match ? match[1] : '深圳'
+  return match ? match[1] : '广州'
 }
 
 /**
  * 获取打卡采集列表
  */
 function getCheckins() {
+  // 先做一次历史数据清理，把以前误写进采集里的足迹迁出去。
+  util.migrateLegacyFootprintsFromCheckins()
   return wx.getStorageSync('checkin_records') || []
 }
 
@@ -147,9 +173,10 @@ function saveCheckin(data) {
     type: data.type
   }, data.type)
   const checkin = {
-    id: 'CK' + Date.now().toString(36).toUpperCase(),
+    id: data.id || ('CK' + Date.now().toString(36).toUpperCase()),
     type: data.type || 'food',       // 'food' 美食 | 'spot' 景点
     photoPath: data.photoPath,
+    cloudFileID: data.cloudFileID || '',    // 云端 fileID，用于跨设备降级
     spotName: data.spotName || '',
     address: data.address || '',
     latitude: data.latitude,
@@ -205,16 +232,19 @@ function deleteCheckin(id) {
 function getCheckinStats() {
   const checkins = getCheckins()
   const cities = new Set()
+  const places = new Set()
   let spotCount = 0
   let foodCount = 0
   checkins.forEach(c => {
     if (c.city) cities.add(c.city)
+    if (c.spotName) places.add(c.spotName)
     if (c.type === 'spot') spotCount++
     if (c.type === 'food') foodCount++
   })
   return {
     totalCount: checkins.length,
     cityCount: cities.size,
+    visitedCount: places.size,
     spotCount,
     foodCount
   }
@@ -251,6 +281,91 @@ function formatStampDate(isoString) {
   return mm + '/' + dd + '/' + yyyy
 }
 
+// ============================================================
+// 云端异步版（已登录走云端，未登录走本地）
+// ============================================================
+
+/**
+ * 获取打卡记录列表（纯本地）
+ * @returns {Array}
+ */
+function getCheckinsAsync() {
+  return getCheckins()
+}
+
+/**
+ * 保存打卡记录（本地优先 + 后台同步）
+ * @param {Object} data - 打卡数据
+ * @returns {Object} 保存后的记录
+ */
+function saveCheckinAsync(data) {
+  // 1. 立即写本地（零等待）
+  const record = saveCheckin(data)
+
+  // 2. 后台推云端（fire-and-forget）
+  if (_isCloudMode() && record) {
+    _getDbCheckinRecords().add(data).then(res => {
+      if (res.success && res.data) {
+        // 用云端 _id 更新本地记录
+        updateCheckin(record.id, { _id: res.data })
+      }
+    }).catch(err => {
+      console.warn('[checkinUtil] 云端保存失败，数据已在本地:', err)
+    })
+  }
+
+  return record
+}
+
+/**
+ * 更新打卡记录（本地优先 + 后台同步）
+ * @param {string} id  - 记录 id
+ * @param {Object} patchData - 要更新的字段
+ * @returns {Object|null}
+ */
+function updateCheckinAsync(id, patchData) {
+  // 1. 立即更新本地
+  const result = updateCheckin(id, patchData)
+
+  // 2. 后台推云端
+  if (_isCloudMode()) {
+    _getDbCheckinRecords().update(id, patchData).catch(err => {
+      console.warn('[checkinUtil] 云端更新失败，数据已在本地:', err)
+    })
+  }
+
+  return result
+}
+
+/**
+ * 删除打卡记录（本地优先 + 后台同步）
+ * @param {string} id - 记录 id
+ * @returns {Array} 删除后的列表
+ */
+function deleteCheckinAsync(id) {
+  // 1. 立即删除本地
+  const filtered = deleteCheckin(id)
+
+  // 2. 后台推云端
+  if (_isCloudMode()) {
+    _getDbCheckinRecords().remove(id).catch(err => {
+      console.warn('[checkinUtil] 云端删除失败，本地已删除:', err)
+    })
+  }
+
+  return filtered
+}
+
+/**
+ * 获取打卡统计（纯本地）
+ * @returns {Object}
+ */
+function getCheckinStatsAsync() {
+  return getCheckinStats()
+}
+
+// ─── 导出 ─────────────────────────────────────
+
 module.exports = {
   getCheckins,
   saveCheckin,
@@ -259,5 +374,11 @@ module.exports = {
   getCheckinStats,
   reverseGeocode,
   generateDescription,
-  formatStampDate
+  formatStampDate,
+  // 云端异步版
+  getCheckinsAsync,
+  saveCheckinAsync,
+  updateCheckinAsync,
+  deleteCheckinAsync,
+  getCheckinStatsAsync,
 }

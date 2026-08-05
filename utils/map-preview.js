@@ -76,18 +76,13 @@ function buildDisplayMeta(place) {
 
 function buildDescription(place) {
   if (!place) return ''
-  const hours = place.businessText || place.openTimeText || place.openingHours || place.openHours || place.hours
-  if (hours) {
-    return `营业时间:${hours}`
-  }
-  return '营业时间待补充'
+  return place.openHours ? `营业时间:${place.openHours}` : '营业时间待补充'
 }
 
 function buildFeeText(place) {
   if (!place) return ''
   if (place.free === true) return '免费'
-  if (place.price) return `¥${place.price}/人`
-  return '收费待定'
+  return place.avgPrice ? `¥${place.avgPrice}/人` : '收费待定'
 }
 
 function decoratePreviewPlace(place) {

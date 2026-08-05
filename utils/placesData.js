@@ -32,7 +32,46 @@ function normalizeLocation(place) {
 
 const CACHE_KEY = 'places_cache'       // localStorage key
 const CACHE_VERSION = 1                // 缓存版本，结构变更时递增使旧缓存失效
-const DEFAULT_CITY = '深圳'            // 首屏城市
+const DEFAULT_CITY = '广州'            // 兜底城市
+
+/**
+ * 加载当前城市的首屏数据（20 条）。
+ * 由 app.js 在定位完成（whenDistrictReady 回调）后调用，传入真实当前城市。
+ * 仅在尚无全量数据时生效，避免用 20 条覆盖已有的全量缓存。
+ * @param {string} city - 当前城市短名（如 '深圳'），为空时回退默认城市
+ */
+async function loadCityFirstScreen(city) {
+  // 已有全量数据（缓存命中或 Phase 2 已完成）时，不再用 20 条覆盖
+  if (_fullReady && _allPlacesCache && _allPlacesCache.length > 0) return
+
+  const firstCity = (city && String(city).replace(/市$|自治州$|盟$/, '').trim()) || DEFAULT_CITY
+  console.log('[placesData] 首屏加载当前城市:', firstCity)
+  try {
+    let cityData = await cloudData.getPlacesByCity(firstCity, 20)
+    // 当前城市查不到数据时，回退拉默认城市，避免首屏空白
+    if ((!cityData || cityData.length === 0) && firstCity !== DEFAULT_CITY) {
+      console.warn('[placesData] 当前城市', firstCity, '无数据，回退加载', DEFAULT_CITY)
+      cityData = await cloudData.getPlacesByCity(DEFAULT_CITY, 20)
+    }
+    const normalized = (cityData || []).map(normalizeLocation)
+    _fillCache(normalized)
+    _initialized = true
+
+    console.log('[placesData] 首屏加载完成 -', firstCity + ':', _allPlacesCache.length,
+                '景点:', _spotsCache.length, '美食:', _foodsCache.length)
+
+    _resolveReady()
+    // 通知页面用当前城市数据刷新（全量回来前的首屏兜底）
+    _fireOnUpdate()
+  } catch (err) {
+    console.error('[placesData] 首屏加载失败', err)
+    if (!_initialized) {
+      _fillCache([])
+      _initialized = true
+      _resolveReady()
+    }
+  }
+}
 
 /**
  * 序列化前剥离不可 JSON 化的 GeoPoint 对象（已有 lat/lng 兜底）
@@ -149,32 +188,17 @@ async function _doInit(force) {
     return
   }
 
-  // ── Phase 1: 无缓存，拉默认城市 20 条 ──
-  console.log('[placesData] Phase 1：加载', DEFAULT_CITY, '数据...')
-  try {
-    const cityData = await cloudData.getPlacesByCity(DEFAULT_CITY, 20)
-    const normalized = (cityData || []).map(normalizeLocation)
-    _fillCache(normalized)
-    _initialized = true
+  // ── Phase 1: 无缓存，先用空数据放行 ready（页面可渲染），
+  // 当前城市的首屏 20 条由 app 定位完成后调用 loadCityFirstScreen 单独加载，
+  // 全量数据在后台拉取。 ──
+  _fillCache([])
+  _initialized = true
+  _resolveReady()
 
-    console.log('[placesData] Phase 1 完成 -', DEFAULT_CITY + ':', _allPlacesCache.length,
-                '景点:', _spotsCache.length, '美食:', _foodsCache.length)
+  console.log('[placesData] Phase 1（无缓存）已放行，等待定位后加载当前城市首屏，全量后台拉取...')
 
-    _resolveReady()
-
-    // ── Phase 2: 后台拉全量 ──
-    await _fetchFullAndMerge()
-
-  } catch (err) {
-    console.error('[placesData] 数据加载失败', err)
-    if (!_initialized) {
-      _allPlacesCache = []
-      _spotsCache = []
-      _foodsCache = []
-      _initialized = true
-      _resolveReady()
-    }
-  }
+  // ── Phase 2: 后台拉全量 ──
+  _backgroundRefresh()
 }
 
 /**
@@ -380,6 +404,7 @@ function getShenzhenSpots() { return getSpots('深圳') }
 
 module.exports = {
   init,
+  loadCityFirstScreen,
   whenReady,
   whenFullyReady,
   onUpdate,

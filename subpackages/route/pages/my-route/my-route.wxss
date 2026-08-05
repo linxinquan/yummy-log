@@ -25,11 +25,6 @@
   pointer-events: auto;
 }
 
-/* 导航地图弹窗要盖在地点简介上面，避免点击地址后看不到选择面板 */
-.nav-map-sheet-mask {
-  z-index: 1003;
-}
-
 /* 通用底部弹窗面板：默认在底部隐藏，显示时上滑出现 */
 .sheet-panel {
   position: fixed;
@@ -63,7 +58,7 @@
 }
 
 .sheet-modal-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   font-weight: 500;
   line-height: 100%;
@@ -75,7 +70,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #242529;
+  color: #1A2739;
   font-size: 48rpx;
 }
 
@@ -101,9 +96,83 @@
   margin: 0 48rpx;
 }
 
+/* 每天标题和起点卡片之间保持和路线规划页一致的留白。 */
+.day-header {
+  margin-bottom: 48rpx;
+}
+
+/* 起点卡片恢复成页面内样式，不再依赖组件。 */
+.day-start-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24rpx;
+  min-height: 112rpx;
+  margin: 0 48rpx 48rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: #F6F8FA;
+  box-sizing: border-box;
+}
+
+.day-start-trigger-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10rpx;
+}
+
+.day-start-trigger-label {
+  flex-shrink: 0;
+  color: #1A2739;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  font-weight: 500;
+}
+
+.day-start-trigger-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  flex-shrink: 0;
+  min-height: 64rpx;
+  padding: 16rpx;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  box-sizing: border-box;
+}
+
+.day-start-trigger-action i {
+  flex-shrink: 0;
+  color: #1A2739;
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+.day-start-trigger-action text {
+  color: #1A2739;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.day-start-trigger-address {
+  width: 100%;
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .day-anchor {
   position: relative;
-  top: -132rpx;
+  /* my-route 页本地有同名样式覆盖，这里同步跟随新的锚点偏移。 */
+  top: -184rpx;
   height: 0;
 }
 
@@ -224,7 +293,7 @@
 
 .route-place-name {
   width: 100%;
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx; /* 16px */
   line-height: 32rpx;
   font-weight: 400;
@@ -249,8 +318,8 @@
   justify-content: center;
   padding: 8rpx 16rpx; /* 4px 8px */
   border-radius: 12rpx; /* 6px */
-  background: #FDF8E3;
-  color: #EE8733;
+  background: #FFF7E8;
+  color: #FF7D00;
   font-size: 24rpx; /* 12px */
   line-height: 24rpx;
   flex-shrink: 0;
@@ -262,8 +331,9 @@
   justify-content: center;
   padding: 8rpx 16rpx; /* 4px 8px */
   border-radius: 12rpx; /* 6px */
-  background: #F6F6F6;
-  color: #BABABA;
+  /* 普通地点标签统一使用当前浅灰底和弱提示文字。 */
+  background: #F6F8FA;
+  color: #9DA4AD;
   font-size: 24rpx; /* 12px */
   line-height: 24rpx;
   flex-shrink: 0;
@@ -294,29 +364,36 @@
 }
 
 .route-place-travel-mode i {
-  color: #A0A4AE;
+  color: #9DA4AD;
 }
 
 .route-place-travel-summary i {
-  color: #C7CAD1;
+  color: #BAC4CC;
 }
 
 .route-place-travel-mode text {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx; /* 12px */
   line-height: 24rpx;
   white-space: nowrap;
 }
 
 .route-place-travel-summary text {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx; /* 12px */
   line-height: 24rpx;
   white-space: nowrap;
 }
 
+/* 待计划地点：提示文字，与交通行保持相同行高和颜色。 */
+.pending-travel-hint {
+  color: #9DA4AD;
+  font-size: 24rpx;
+  line-height: 24rpx;
+}
+
 .place-handle i {
-  color: #C7CAD1;
+  color: #BAC4CC;
   font-size: 36rpx;
 }
 
@@ -335,7 +412,7 @@
 }
 
 .place-arrow i {
-  color: #C7CAD1;
+  color: #BAC4CC;
   font-size: 40rpx; /* 20px */
   line-height: 40rpx;
 }
@@ -349,18 +426,18 @@
   margin-bottom: 48rpx;
   border-radius: 24rpx;
   background: #ffffff;
-  color: #242529;
+  color: #1A2739;
   font-size: 28rpx;
-  border: 2rpx solid #F7F8FA;
+  border: 2rpx solid #F6F8FA;
 }
 
 .add-place-entry i {
   font-size: 32rpx;
-  color: #6E727A;
+  color: #808B9A;
 }
 
 .add-place-entry text {
-  color: #6E727A;
+  color: #808B9A;
 }
 
 .add-place-entry-empty {
@@ -381,47 +458,34 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24rpx;
+  gap: 32rpx;
   min-height: 360rpx;
-  padding: 32rpx 32rpx;
   border-radius: 32rpx;
   background: #ffffff;
   box-sizing: border-box;
 }
 
 .route-empty-icon {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 50%;
-  background: #F7F8FA;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 200rpx;
+  height: 200rpx;
 }
 
-.route-empty-icon i {
-  color: #A0A4AE;
-  font-size: 48rpx;
-  line-height: 48rpx;
-}
-
-.route-empty-title {
-  color: #242529;
-  font-size: 32rpx;
-  line-height: 32rpx;
-  font-weight: 500;
+.empty-image {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .route-empty-hint {
-  color: #6E727A;
-  font-size: 26rpx;
-  line-height: 38rpx;
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 28rpx;
   text-align: center;
 }
 
 .overview-empty {
   padding: 24rpx 0 8rpx;
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 26rpx;
   line-height: 38rpx;
 }
@@ -460,6 +524,29 @@
   align-items: center;
 }
 
+/* 编辑态顶部添加按钮单独改成圆形，图标保持 40rpx 并居中。 */
+.editing-add-item {
+  width: 64rpx;
+  min-width: 64rpx;
+  min-height: 64rpx;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editing-add-item i {
+  /* 字体图标默认按文字基线排版，这里改成固定尺寸的居中盒子，避免视觉偏心。 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40rpx;
+  height: 40rpx;
+  font-size: 40rpx;
+  line-height: 1;
+}
+
 .edit-header-title {
   display: flex;
   align-items: center;
@@ -467,65 +554,25 @@
 }
 
 .edit-header-title text {
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   line-height: 40rpx;
   font-weight: 500;
 }
 
-/* 编辑路线规划底部弹窗：路线详情和规划路线详情统一 */
-.reorder-sheet-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  background: rgba(0, 0, 0, 0.26);
-}
-
+/* 编辑路线规划底部弹窗：只复用公用外壳组件，保留页面内选项内容样式。 */
 .reorder-sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 91;
-  border-radius: 32rpx 32rpx 0 0;
-  background: #FFFFFF;
+  padding-bottom: 0;
+}
+
+.reorder-sheet-body {
   padding: 0 0 calc(24rpx + env(safe-area-inset-bottom));
-}
-
-.reorder-sheet-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 128rpx;
-  padding: 0 48rpx;
-  box-sizing: border-box;
-}
-
-.reorder-sheet-title {
-  color: #242529;
-  font-size: 40rpx;
-  font-weight: 500;
-  line-height: 100%;
-}
-
-.reorder-sheet-close {
-  width: 48rpx;
-  height: 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #242529;
-}
-
-.reorder-sheet-close i {
-  font-size: 48rpx;
 }
 
 .reorder-sheet-option-list {
   display: flex;
   flex-direction: column;
   gap: 32rpx;
-  padding: 0 48rpx;
   box-sizing: border-box;
 }
 
@@ -537,12 +584,12 @@
   min-height: 148rpx;
   padding: 30rpx;
   background: #FFFFFF;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   border-radius: 24rpx;
 }
 
 .reorder-sheet-option.active {
-  border-color: #242529;
+  border-color: #1A2739;
 }
 
 .reorder-option-main {
@@ -556,21 +603,21 @@
 
 .reorder-option-icon {
   flex-shrink: 0;
-  color: #242529;
+  color: #1A2739;
   font-size: 40rpx;
   line-height: 40rpx;
 }
 
 .reorder-option-title {
   display: block;
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   line-height: 32rpx;
 }
 
 .reorder-option-desc {
   display: block;
-  color: #6E727A;
+  color: #808B9A;
   font-size: 28rpx;
   line-height: 28rpx;
 }
@@ -590,7 +637,7 @@
 
 .exit-confirm-desc {
   display: block;
-  color: #6E727A;
+  color: #808B9A;
   font-size: 28rpx;
   line-height: 44rpx;
 }
@@ -618,39 +665,94 @@
 }
 
 .exit-confirm-btn.secondary {
-  border: 2rpx solid #E5E7EB;
-  background: #FFFFFF;
+  background: #F2F4F7;
 }
 
 .exit-confirm-btn.secondary text {
-  color: #242529;
+  color: #1A2739;
 }
 
 .exit-confirm-btn.primary {
-  background: #242529;
+  background: #25BBE7;
 }
 
 .exit-confirm-btn.primary text {
   color: #FFFFFF;
 }
 
-/* 添加地点底部弹窗 */
-.place-picker-mask {
+/* 添加地点弹窗重新接回公用外壳，只保留面板高度和内容区布局差异。 */
+.place-picker-sheet {
+  height: 78vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.route-sheet-option-list {
+  /* 公用底部弹窗壳已经统一提供内边距，这里只保留选项列表本身。 */
+  padding: 0;
+}
+
+/* 起点选择弹窗恢复成页面内结构，不再依赖公用组件样式。 */
+.day-start-sheet-mask {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0);
-  z-index: 90;
+  z-index: 1004;
   pointer-events: none;
   transition: background 0.3s;
 }
 
-/* 路线详情里的操作弹窗：用于选择导航地图 */
-.route-action-sheet {
-  z-index: 1002;
+.day-start-sheet-mask.show {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
 }
 
-.route-sheet-option-list {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+.day-start-sheet-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #FFFFFF;
+  border-radius: 32rpx 32rpx 0 0;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 1005;
+}
+
+.day-start-sheet-panel.show {
+  transform: translateY(0);
+}
+
+.day-start-sheet-header {
+  height: 128rpx;
+  padding: 0 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.day-start-sheet-title {
+  color: #1A2739;
+  font-size: 40rpx;
+  line-height: 100%;
+  font-weight: 500;
+}
+
+.day-start-sheet-close {
+  width: 40rpx;
+  height: 40rpx;
+  color: #1A2739;
+  font-size: 40rpx;
+  line-height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-start-sheet-body {
+  padding: 0 48rpx 48rpx;
+  box-sizing: border-box;
 }
 
 .route-sheet-option {
@@ -660,7 +762,7 @@
   height: 104rpx;
   padding: 0 32rpx;
   border-radius: 24rpx;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   background: #FFFFFF;
 }
 
@@ -668,16 +770,26 @@
   margin-top: 24rpx;
 }
 
+/* “清空起点位置”属于危险操作，用红色做语义强调。 */
 .route-sheet-option-main {
   display: flex;
   align-items: center;
   gap: 16rpx;
-  color: #242529;
+  color: #1A2739;
+}
+
+.route-sheet-option-main-danger {
+  color: #FF5A5F;
 }
 
 .route-sheet-option-main i {
   font-size: 40rpx;
-  color: #242529;
+  color: #1A2739;
+}
+
+.route-sheet-option-main-danger i,
+.route-sheet-option-main-danger text {
+  color: #FF5A5F;
 }
 
 /* 地图品牌图片：统一控制尺寸，保证两张 png 显示一致 */
@@ -691,13 +803,19 @@
 .route-sheet-option-main text {
   font-size: 32rpx;
   line-height: 32rpx;
-  color: #242529;
+  color: #1A2739;
+}
+
+/* 提高选择器优先级，避免通用文字颜色把“清空起点位置”的红色覆盖掉。 */
+.route-sheet-option-main.route-sheet-option-main-danger text {
+  color: #FF5A5F;
 }
 
 .route-sheet-option-arrow {
   font-size: 36rpx;
-  color: #C7CAD1;
+  color: #BAC4CC;
 }
+
 
 /* 地点简介底部弹窗：只保留封面和探索详情里的核心信息 */
 .place-intro-sheet {
@@ -710,7 +828,7 @@
 }
 
 .place-intro-body {
-  padding: 0 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  padding: 0 48rpx 48rpx;
   box-sizing: border-box;
 }
 
@@ -736,11 +854,11 @@
   justify-content: center;
   padding: 8rpx 16rpx;
   border-radius: 12rpx;
-  background: #F7F8FA;
+  background: #F6F8FA;
 }
 
 .tag-badge text {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx;
   line-height: 24rpx;
 }
@@ -748,7 +866,7 @@
 .place-intro-title {
   display: block;
   margin-top: 24rpx;
-  color: #242529;
+  color: #1A2739;
   font-size: 48rpx;
   line-height: 64rpx;
   font-weight: 500;
@@ -757,7 +875,7 @@
 .place-intro-open-time {
   display: block;
   margin-top: 24rpx;
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx;
   line-height: 24rpx;
 }
@@ -768,7 +886,7 @@
   gap: 24rpx;
   padding: 24rpx 32rpx;
   margin-top: 48rpx;
-  border: 2rpx solid #E5E7EB;
+  border: 2rpx solid #F6F8FA;
   border-radius: 24rpx;
   box-sizing: border-box;
 }
@@ -782,13 +900,13 @@
 }
 
 .place-intro-address-label {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx;
   line-height: 24rpx;
 }
 
 .place-intro-address-text {
-  color: #242529;
+  color: #1A2739;
   font-size: 28rpx;
   line-height: 40rpx;
   font-weight: 500;
@@ -796,68 +914,19 @@
 
 .place-intro-address-icon {
   font-size: 40rpx;
-  color: #C7CAD1;
+  color: #BAC4CC;
 }
 
 .place-intro-desc {
   display: block;
   margin-top: 32rpx;
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   line-height: 48rpx;
 }
 
-.place-picker-mask.show {
-  background: rgba(0, 0, 0, 0.4);
-  pointer-events: auto;
-}
-
-.place-picker-panel {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 78vh;
-  background: #FFFFFF;
-  border-radius: 48rpx 48rpx 0 0;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.place-picker-mask.show .place-picker-panel {
-  transform: translateY(0);
-}
-
-.picker-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 128rpx;
-  padding: 0 48rpx;
-  box-sizing: border-box;
-}
-
-.picker-title {
-  color: #242529;
-  font-size: 40rpx;
-  font-weight: 500;
-  line-height: 40rpx;
-}
-
-.picker-close {
-  width: 48rpx;
-  height: 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #242529;
-  font-size: 48rpx;
-}
-
-.picker-body {
+.place-picker-body {
+  /* 覆盖组件默认的 body padding，内部继续沿用页面原有布局。 */
   padding: 0;
   flex: 1;
   min-height: 0;
@@ -870,35 +939,39 @@
   align-items: center;
   justify-content: space-between;
   gap: 24rpx;
-  padding: 0 48rpx 48rpx;
+  padding: 0 0 48rpx;
 }
 
 .picker-tabs {
   display: flex;
   align-items: center;
-  gap: 24rpx;
+  gap: 16rpx;
   flex: 1;
   min-width: 0;
 }
 
 .picker-tab {
-  min-width: 104rpx;        /* 标签最小宽度 */
-  height: 60rpx;            /* 标签固定高度 */
-  padding: 0 24rpx;         /* 左右内边距，上下无内边距 */
-  border-radius: 999rpx;    /* 超大圆角，做成胶囊样式 */
-  background: #F7F8FA;      /* 浅灰色背景色 */
-  color: #A0A4AE;           /* 默认文字浅灰色 */
-  font-size: 24rpx;         /* 文字字号大小 */
-  line-height: 60rpx;       /* 行高等同高度，文字垂直居中 */
-  text-align: center;       /* 文字水平居中 */
-  font-weight: 400;         /* 常规字体粗细，不加粗 */
-  box-sizing: border-box;   /* 内边距圆角不撑开元素尺寸 */
-  flex-shrink: 0;           /* 弹性布局禁止标签被压缩缩小 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 104rpx;
+  min-height: 64rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid #E6EBF0;
+  background: #FFFFFF;
+  box-sizing: border-box;
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  text-align: center;
+  font-weight: 400;
+  flex-shrink: 0;
 }
 
 .picker-tab.active {
-  background: #242529;
-  color: #FFFFFF;
+  color: #25BBE7;
+  border-color: #25BBE7;
   font-weight: 400;
 }
 
@@ -910,7 +983,7 @@
   height: 64rpx;
   padding: 0 24rpx;
   border-radius: 999rpx;
-  background: #242529;
+  background: #25BBE7;
   color: #FFFFFF;
   flex-shrink: 0;
 }
@@ -930,7 +1003,7 @@
 .place-picker-scroll {
   flex: 1;
   min-height: 0;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  padding-bottom: 24rpx;
   box-sizing: border-box;
 }
 
@@ -938,7 +1011,6 @@
   display: flex;
   align-items: center;
   gap: 24rpx;
-  padding: 0 48rpx;
   margin-bottom: 48rpx;
   min-height: 160rpx;
   box-sizing: border-box;
@@ -1009,7 +1081,7 @@
 }
 
 .picker-place-name {
-  color: #242529;
+  color: #1A2739;
   font-size: 32rpx;
   line-height: 32rpx;
   font-weight: 400;
@@ -1032,21 +1104,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #FDF8E3;
+  background: #FFF7E8;
   border-radius: 12rpx;
   padding: 8rpx 16rpx;
   font-size: 24rpx;
-  color: #EE8733;
+  color: #FF7D00;
   line-height: 24rpx;
   flex-shrink: 0;
 }
 
 .picker-place-chip {
-  background: #F7F8FA;
+  background: #F6F8FA;
   border-radius: 12rpx;
   padding: 8rpx 16rpx;
   font-size: 24rpx;
-  color: #A0A4AE;
+  color: #9DA4AD;
   line-height: 24rpx;
   flex-shrink: 0;
   white-space: nowrap;
@@ -1059,7 +1131,7 @@
 }
 
 .picker-place-meta {
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 24rpx;
   line-height: 24rpx;
   white-space: nowrap;
@@ -1080,23 +1152,39 @@
 
 .picker-place-add-btn i {
   font-size: 40rpx;
-  color: #242529;
+  color: #1A2739;
 }
 
 .picker-empty {
+  padding: 96rpx 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 240rpx;
-  color: #6E727A;
-  font-size: 26rpx;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+}
+
+.picker-empty-illustration {
+  width: 200rpx;
+  height: 200rpx;
+  margin-bottom: 32rpx;
+}
+
+.picker-empty-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.picker-empty-hint {
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  text-align: center;
 }
 
 .map-panel {
   position: fixed;
-  left: 48rpx;
-  right: 48rpx;
+  left: 32rpx;
+  right: 32rpx;
   bottom: 48rpx;
   z-index: 20;
 }
@@ -1105,6 +1193,31 @@
   border-radius: 32rpx;
   background: #FFFFFF;
   box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 地图空状态卡片：
+和正常地图悬浮卡片保持同一块白色容器，只是内容改成空状态提示。 */
+.map-empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+  padding: 40rpx 32rpx;
+  min-height: 320rpx;
+  box-sizing: border-box;
+}
+
+.map-empty-icon {
+  width: 200rpx;
+  height: 200rpx;
+}
+
+.map-empty-hint {
+  color: #808B9A;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  text-align: center;
 }
 
 .route-map-preview-card {
@@ -1130,21 +1243,31 @@
 .preview-tab-row {
   display: inline-flex;
   align-items: center;
-  gap: 32rpx;
+  gap: 16rpx;
   min-width: 100%;
   white-space: nowrap;
 }
 
 .preview-tab-item {
-  flex-shrink: 0;
-  color: #A0A4AE;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid #E6EBF0;
+  background: #FFFFFF;
+  box-sizing: border-box;
+  color: #808B9A;
   font-size: 28rpx;
+  font-weight: 400;
   line-height: 28rpx;
-  font-weight: 500;
+  flex-shrink: 0;
 }
 
 .preview-tab-item.active {
-  color: #242529;
+  color: #25BBE7;
+  border-color: #25BBE7;
 }
 
 .preview-tab-divider {
@@ -1201,7 +1324,7 @@
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  color: #242529;
+  color: #1A2739;
   font-size: 36rpx;
   line-height: 36rpx;
   font-weight: 400;
@@ -1224,8 +1347,8 @@
   max-width: 160rpx;
   padding: 8rpx 16rpx;
   border-radius: 12rpx;
-  background: #F7F8FA;
-  color: #A0A4AE;
+  background: #F6F8FA;
+  color: #9DA4AD;
   font-size: 22rpx;
   line-height: 22rpx;
   white-space: nowrap;
@@ -1234,8 +1357,8 @@
 }
 
 .preview-chip.score {
-  background: #FDF8E3;
-  color: #ee8733;
+  background: #FFF7E8;
+  color: #FF7D00;
 }
 
 .preview-desc-row {
@@ -1249,7 +1372,7 @@
 .preview-desc-left,
 .preview-desc-right {
   min-width: 0;
-  color: #6E727A;
+  color: #808B9A;
   font-size: 24rpx;
   line-height: 24rpx;
   white-space: nowrap;
@@ -1280,7 +1403,7 @@
 .preview-footer-side {
   min-width: 72rpx;
   height: 32rpx;
-  color: #6E727A;
+  color: #808B9A;
   font-size: 24rpx;
   line-height: 24rpx;
   display: flex;

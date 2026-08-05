@@ -1,3 +1,6 @@
 {
-  "navigationBarTitleText": ""
+  "navigationBarTitleText": "",
+  "usingComponents": {
+    "bottom-action-sheet": "/components/bottom-action-sheet/index"
+  }
 }

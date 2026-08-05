@@ -15,23 +15,23 @@
 }
 
 .link-import-title {
-  color: #242529;
+  color: #1A2739;
   font-size: 48rpx;
   font-weight: 500;
   line-height: 48rpx;
 }
 
 .link-import-close {
-  width: 48rpx;
-  height: 48rpx;
+  width: 40rpx;
+  height: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #242529;
+  color: #1A2739;
 }
 
 .link-import-close i {
-  font-size: 48rpx;
+  font-size: 40rpx;
 }
 
 .link-import-body {
@@ -43,22 +43,22 @@
   box-sizing: border-box;
   min-height: 320rpx;
   padding: 32rpx;
-  background: #F7F8FA;
-  border: 2rpx solid #E5E7EB;
+  background: #F6F8FA;
+  border: 2rpx solid #F6F8FA;
   border-radius: 24rpx;
 }
 
 .link-textarea {
   width: 100%;
   min-height: 240rpx;
-  color: #242529;
+  color: #1A2739;
   font-size: 28rpx;
   line-height: 44rpx;
 }
 
 .link-placeholder {
   /* 占位文字补齐字号和行高，和输入内容保持同样的视觉基线。 */
-  color: #A0A4AE;
+  color: #9DA4AD;
   font-size: 28rpx;
   line-height: 44rpx;
 }
@@ -71,7 +71,7 @@
 }
 
 .link-hint {
-  color: #6E727A;
+  color: #808B9A;
   font-size: 24rpx;
   line-height: 24rpx;
 }
@@ -102,11 +102,11 @@
   width: 220rpx;
   flex: 0 0 220rpx;
   background: #F2F4F7;
-  color: #242529;
+  color: #1A2739;
 }
 
 .link-primary-btn {
   flex: 1;
-  background: #242529;
+  background: #25BBE7;
   color: #FFFFFF;
 }

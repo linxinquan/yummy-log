@@ -7,11 +7,11 @@
   <!-- 空状态 -->
   <view class="empty-state" wx:if="{{showEmpty}}">
     <view class="empty-illustration">
-      <i class="mgc_star_line empty-icon"></i>
+      <image class="empty-image" src="/images/empty/暂无收藏.png" mode="aspectFit" />
     </view>
-    <text class="empty-title">我的收藏</text>
+    <text class="empty-title">还没有收藏的地点~</text>
     <text class="empty-hint">{{emptyText}}</text>
-    <view class="empty-btn" bindtap="onBack">去探索</view>
+    <view class="empty-btn" bindtap="onGoExplore">探索地点</view>
   </view>
 
   <!-- 收藏列表 -->
@@ -20,54 +20,73 @@
     scroll-y 
     wx:if="{{!showEmpty}}"
   >
-    <view 
-      class="card-item" 
-      wx:for="{{allList}}" 
-      wx:key="id"
-      bindtap="onItemTap"
-      data-item="{{item}}"
-    >
-      <!-- 左边封面 + 中间信息：整体复用探索页的三段式结构 -->
-      <view class="card-main">
-        <view class="card-img-wrap">
-          <image 
-            class="card-img" 
-            src="{{item.displayImage}}" 
-            mode="aspectFill"
-            binderror="onImageError"
-            data-index="{{index}}"
-          />
-          <view class="card-cat-badge">{{item.displayCategory}}</view>
-        </view>
-
-        <!-- 中间信息：标题、标签、想去人数和距离 -->
-        <view class="card-info">
-          <view class="card-name">{{item.name}}</view>
-          <view class="card-rating">
-            <view class="rating-star" wx:if="{{item.rating}}">
-              <text>{{item.rating}}</text>
-            </view>
-            <text class="spot-tag" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
-          </view>
-          <view class="card-footer">
-            <text class="card-desc">{{item.displayWantCount}} 人想去</text>
-            <text class="card-separator">·</text>
-            <text class="card-desc">{{item.distanceText}}</text>
+    <block wx:for="{{allList}}" wx:key="id">
+      <view class="place-swipe-item">
+        <!-- 左滑后露出的删除操作：这里只删除收藏，不影响想去。 -->
+        <view class="place-delete-action {{(item.swipeOffset || 0) < 0 ? 'show' : ''}}" catchtap="onRemoveCollect" data-id="{{item.id}}">
+          <view class="place-delete-inner">
+            <i class="mgc_delete_2_line place-delete-icon"></i>
+            <text class="place-delete-text">删除</text>
           </view>
         </view>
-      </view>
 
-      <!-- 右侧：星星按钮，点击后直接取消收藏 -->
-      <view class="shop-action-icons">
-        <view
-          class="collect-icon"
-          catchtap="onRemoveCollect"
+        <view 
+          class="place-row" 
+          bindtap="onItemTap"
+          bindtouchstart="onCardTouchStart"
+          bindtouchmove="onCardTouchMove"
+          bindtouchend="onCardTouchEnd"
+          bindtouchcancel="onCardTouchEnd"
           data-item="{{item}}"
+          data-index="{{index}}"
+          style="transform: translateX({{item.swipeOffset || 0}}px);"
         >
-          <i class="mgc_star_fill icon-btn-text"></i>
+          <!-- 卡片结构直接对齐“想去”页：左封面，中间信息，右操作。 -->
+          <view class="place-card-main">
+            <view class="place-cover-wrap">
+              <image 
+                class="place-cover" 
+                src="{{item.coverImage}}" 
+                mode="aspectFill"
+                binderror="onImageError"
+                data-index="{{index}}"
+              />
+              <view class="card-cat-badge">{{item.displayCategory}}</view>
+            </view>
+
+            <!-- 中间信息和右侧操作区的布局也保持和“想去”页一致。 -->
+            <view class="place-info-row">
+              <view class="place-main">
+                <text class="place-name">{{item.name}}</text>
+                <view class="place-tags">
+                  <view class="place-rating" wx:if="{{item.rating}}">
+                    <!-- 评分标签沿用“想去”页同一套展示。 -->
+                  <text>{{item.rating}}</text>
+                </view>
+                  <text class="place-tag-chip" wx:for="{{item.tags}}" wx:key="*this" wx:for-item="tag">{{tag}}</text>
+                </view>
+                <view class="place-footer">
+                  <text class="place-footer-text">{{item.displayWantCount}} 人想去</text>
+                  <text class="place-footer-separator">·</text>
+                  <text class="place-footer-text">{{item.distanceText}}</text>
+                </view>
+              </view>
+
+              <!-- 按用户前一条要求，右侧继续保留心形加入想去功能。 -->
+              <view class="place-arrow">
+                <view
+                  class="want-icon"
+                  catchtap="onAddWant"
+                  data-item="{{item}}"
+                >
+                  <i class="{{item.isWanted ? 'mgc_heart_fill' : 'mgc_heart_line'}} icon-btn-text {{item.isWanted ? 'active' : ''}}"></i>
+                </view>
+              </view>
+            </view>
+          </view>
         </view>
       </view>
-    </view>
+    </block>
 
     <!-- 底部安全区 -->
     <view class="safe-area-bottom"></view>

@@ -1,9 +1,12 @@
-﻿// 觅食图 - 攻略页
+// 觅食图 - 攻略页
 const app = getApp();
 const { normalizeTripDurationText } = require("../../utils/trip-duration");
 const { backfillStoredGuides } = require("../../utils/guide-backfill");
 const { DEFAULT_COVER_POOL } = require("../../config/cover-pool");
 const placesData = require("../../utils/placesData");
+const util = require("../../utils/util");
+// 读取首页当前选中的城市时，和首页共用同一个缓存 key。
+const EXPLORE_SELECTED_CITY_STORAGE_KEY = "selectedExploreCity";
 
 // 云端头像资源路径
 const cloudFile =
@@ -18,6 +21,80 @@ const authorImages = [
  "img_00007.jpg",
  "img_00008.jpg",
 ];
+
+// 不同城市对应不同的行政区 Tab。
+// 攻略页顶部地区栏要跟首页当前选中的城市保持一致。
+const CITY_DISTRICT_MAP = {
+ 深圳: [
+  { name: "福田区", id: "futian" },
+  { name: "南山区", id: "nanshan" },
+  { name: "罗湖区", id: "luohu" },
+  { name: "宝安区", id: "baoan" },
+  { name: "龙岗区", id: "longgang" },
+  { name: "龙华区", id: "longhua" },
+  { name: "光明区", id: "guangming" },
+  { name: "坪山区", id: "pingshan" },
+  { name: "盐田区", id: "yantian" },
+  { name: "大鹏新区", id: "dapeng" },
+ ],
+ 广州: [
+  { name: "天河区", id: "tianhe" },
+  { name: "越秀区", id: "yuexiu" },
+  { name: "海珠区", id: "haizhu" },
+  { name: "荔湾区", id: "liwan" },
+  { name: "白云区", id: "baiyun" },
+  { name: "黄埔区", id: "huangpu" },
+  { name: "番禺区", id: "panyu" },
+  { name: "花都区", id: "huadu" },
+  { name: "南沙区", id: "nansha" },
+  { name: "从化区", id: "conghua" },
+  { name: "增城区", id: "zengcheng" },
+ ],
+ 汕头: [
+  { name: "金平区", id: "jinping" },
+  { name: "龙湖区", id: "longhu" },
+  { name: "濠江区", id: "haojiang" },
+  { name: "潮阳区", id: "chaoyang" },
+  { name: "潮南区", id: "chaonan" },
+  { name: "澄海区", id: "chenghai" },
+  { name: "南澳县", id: "nanao" },
+ ],
+ 佛山: [
+  { name: "禅城区", id: "chancheng" },
+  { name: "南海区", id: "nanhai" },
+  { name: "顺德区", id: "shunde" },
+  { name: "三水区", id: "sanshui" },
+  { name: "高明区", id: "gaoming" },
+ ],
+ 珠海: [
+  { name: "香洲区", id: "xiangzhou" },
+  { name: "斗门区", id: "doumen" },
+  { name: "金湾区", id: "jinwan" },
+ ],
+};
+
+// 把城市名称统一成简称，方便读取对应的行政区配置。
+function normalizeGuideCityName(cityName = "") {
+ return util.getCityShortName(String(cityName || "").trim() || "深圳市");
+}
+
+// 优先读取首页当前选中的城市。
+// 如果用户还没手动切过城市，再退回定位得到的当前城市。
+function getSelectedExploreCity() {
+ const savedCity =
+  wx.getStorageSync(EXPLORE_SELECTED_CITY_STORAGE_KEY) ||
+  app.globalData.selectedExploreCity ||
+  (app.globalData.districtInfo && app.globalData.districtInfo.city) ||
+  "深圳市";
+ return normalizeGuideCityName(savedCity);
+}
+
+// 根据当前城市生成对应的地区 Tab。
+// 没配到的城市先兜底回深圳，避免页面出现空数组。
+function getDistrictsByCity(cityName = "") {
+ const cityShortName = normalizeGuideCityName(cityName);
+ return CITY_DISTRICT_MAP[cityShortName] || CITY_DISTRICT_MAP.深圳;
+}
 
 // 随机获取一个作者头像
 function getRandomAuthorAvatar() {
@@ -36,12 +113,33 @@ function inferGuideCity(guide = {}) {
   ...(guide.shops || []),
  ].join(" ");
 
- if (/西安|长安/.test(sourceText)) return "西安市";
+ if (/香港/.test(sourceText)) return "香港特别行政区";
+ if (/上海/.test(sourceText)) return "上海市";
+ if (/北京/.test(sourceText)) return "北京市";
  if (/广州/.test(sourceText)) return "广州市";
- if (/汕头/.test(sourceText)) return "汕头市";
- if (/佛山/.test(sourceText)) return "佛山市";
- if (/珠海/.test(sourceText)) return "珠海市";
- return "深圳市";
+ if (/杭州/.test(sourceText)) return "杭州市";
+ if (/台北/.test(sourceText)) return "台北市";
+ if (/澳门/.test(sourceText)) return "澳门特别行政区";
+ if (/成都/.test(sourceText)) return "成都市";
+ if (/厦门/.test(sourceText)) return "厦门市";
+ if (/南京/.test(sourceText)) return "南京市";
+ if (/苏州/.test(sourceText)) return "苏州市";
+ if (/福州/.test(sourceText)) return "福州市";
+ if (/台州/.test(sourceText)) return "台州市";
+ if (/台南/.test(sourceText)) return "台南市";
+ if (/台中/.test(sourceText)) return "台中市";
+ if (/高雄/.test(sourceText)) return "高雄市";
+ if (/温州/.test(sourceText)) return "温州市";
+ if (/泉州/.test(sourceText)) return "泉州市";
+ if (/扬州/.test(sourceText)) return "扬州市";
+ if (/常州/.test(sourceText)) return "常州市";
+ if (/新北/.test(sourceText)) return "新北市";
+ if (/新竹县/.test(sourceText)) return "新竹县";
+ if (/新竹/.test(sourceText)) return "新竹市";
+ if (/宁德/.test(sourceText)) return "宁德市";
+if (/惠州/.test(sourceText)) return "惠州市";
+if (/乌兰察布/.test(sourceText)) return "乌兰察布市";
+return "深圳市";
 }
 
 // 统计这篇攻略被保存成路线的次数。
@@ -107,18 +205,8 @@ Page({
   contentTop: 108,
 
   // 区域
-  districts: [
-   { name: "福田区", id: "futian" },
-   { name: "南山区", id: "nanshan" },
-   { name: "罗湖区", id: "luohu" },
-   { name: "宝安区", id: "baoan" },
-   { name: "龙岗区", id: "longgang" },
-   { name: "龙华区", id: "longhua" },
-   { name: "光明区", id: "guangming" },
-   { name: "坪山区", id: "pingshan" },
-   { name: "盐田区", id: "yantian" },
-   { name: "大鹏新区", id: "dapeng" },
-  ],
+  currentCity: "深圳",
+  districts: getDistrictsByCity("深圳"),
 
   // 分类
   categories: [
@@ -133,11 +221,16 @@ Page({
   // 攻略列表
   allGuides: [],
   currentGuides: [],
- },
+
+},
+
 
  // 页面初始化：计算顶部安全区，并首次加载攻略数据。
  onLoad() {
-  const windowInfo = wx.getWindowInfo();
+  // 低版本基础库没有 getWindowInfo 时，退回到更稳的同步系统信息。
+  const windowInfo = wx.getWindowInfo
+   ? wx.getWindowInfo()
+   : wx.getSystemInfoSync();
   const menuButtonInfo = wx.getMenuButtonBoundingClientRect
    ? wx.getMenuButtonBoundingClientRect()
    : null;
@@ -158,12 +251,26 @@ Page({
    contentTop,
   });
 
+  // 首次进入攻略页时，先按首页当前城市刷新顶部地区 Tab。
+  this.syncDistrictTabsWithSelectedCity();
+
   this.loadGuides();
  },
 
  // 每次回到页面都重新加载，保证新发布的攻略能出现。
  onShow() {
+  // 首页切换城市后再进入攻略页，这里要同步刷新地区 Tab。
+  this.syncDistrictTabsWithSelectedCity();
   this.loadGuides(this.data.currentCategory || "全部");
+ },
+
+// 让攻略页顶部地区 Tab 跟首页当前城市保持一致。
+ syncDistrictTabsWithSelectedCity() {
+  const currentCity = getSelectedExploreCity();
+  this.setData({
+   currentCity,
+   districts: getDistrictsByCity(currentCity),
+  });
  },
 
  // 根据顶部分类切换当前列表。
@@ -497,7 +604,7 @@ const allGuides = [
   });
  },
 
- // 点击顶部分类，切换“全部 / 推荐”。
+ // 点击顶部分类，切换"全部 / 推荐"。
  onCategoryChange(e) {
   const categoryName = e.currentTarget.dataset.name;
   this.refreshGuideList(categoryName);
@@ -511,5 +618,18 @@ const allGuides = [
     JSON.stringify(guide)
    )}`,
   });
+ },
+
+ // 创建路线：由组件 emit 事件触发
+ onEntryCreateRoute() {
+  wx.navigateTo({
+   url: "/subpackages/route/pages/route-basic-edit/route-basic-edit?create=1",
+  });
+ },
+
+ // 解析确认后跳转：由组件 emit confirmlink 事件触发
+ onEntryConfirmLink(e) {
+  const { url } = e.detail
+  wx.navigateTo({ url })
  },
 });

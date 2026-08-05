@@ -1,4 +1,5 @@
 // 觅食迹 - 工具函数库
+const syncManager = require('./db/syncManager')
 
 /**
  * 计算两点之间的距离（米）
@@ -457,10 +458,130 @@ function buildFootprintItem(record = {}) {
   }
 }
 
+// 手动添加的足迹单独存一份，避免污染“我的采集”的图片列表和地图。
+function getManualFootprintRecords() {
+  return loadData('manual_footprint_records', []) || []
+}
+
+// 统一给足迹原始记录生成一个稳定 key。
+// 这样做迁移和去重时，就不会因为 id 不同把同一地点重复写进去。
+function buildFootprintRecordKey(record = {}) {
+  return [
+    String(record.type || 'spot'),
+    normalizeCompareText(record.spotName || record.name || ''),
+    normalizeCompareText(record.address || ''),
+    String(record.latitude || ''),
+    String(record.longitude || '')
+  ].join(':')
+}
+
+// 这批历史遗留数据的共同点是：
+// 1. 曾经被误写进了 checkin_records
+// 2. 没有照片，也没有云端图片 id
+// 3. 当时“添加足迹”只写景点类型，所以这里一并用 type=spot 收口
+function isLegacyManualFootprintRecord(record = {}) {
+  const hasPhoto = Boolean(record.photoPath || record.cloudFileID)
+  const hasLocation = Number(record.latitude) || Number(record.longitude)
+  return record.type === 'spot' && !hasPhoto && Boolean(hasLocation)
+}
+
+let _isMigratingLegacyFootprints = false
+
+// 自动把历史上误写进采集记录的“足迹”迁出来。
+// 迁移后：
+// - 采集页只保留真正的采集记录
+// - 足迹页继续能读到这些地点，不丢数据
+function migrateLegacyFootprintsFromCheckins() {
+  if (_isMigratingLegacyFootprints) return 0
+
+  const checkinRecords = loadData('checkin_records', []) || []
+  if (!checkinRecords.length) return 0
+
+  const manualRecords = getManualFootprintRecords()
+  const manualRecordKeys = new Set(manualRecords.map(item => buildFootprintRecordKey(item)))
+  const nextCheckins = []
+  const nextManualRecords = manualRecords.slice()
+  let movedCount = 0
+
+  _isMigratingLegacyFootprints = true
+  try {
+    checkinRecords.forEach(record => {
+      if (!isLegacyManualFootprintRecord(record)) {
+        nextCheckins.push(record)
+        return
+      }
+
+      const recordKey = buildFootprintRecordKey(record)
+      if (!manualRecordKeys.has(recordKey)) {
+        nextManualRecords.push({
+          id: record.id || ('FP' + Date.now().toString(36).toUpperCase()),
+          type: 'spot',
+          spotName: record.spotName || record.name || '',
+          address: record.address || '',
+          latitude: Number(record.latitude) || 0,
+          longitude: Number(record.longitude) || 0,
+          description: record.description || '',
+          date: record.date || new Date().toISOString(),
+          city: record.city || ''
+        })
+        manualRecordKeys.add(recordKey)
+      }
+      movedCount += 1
+    })
+
+    if (movedCount > 0) {
+      saveData('checkin_records', nextCheckins)
+      saveData('manual_footprint_records', nextManualRecords)
+    }
+  } finally {
+    _isMigratingLegacyFootprints = false
+  }
+
+  if (movedCount > 0) {
+    syncLegacyCheckedInFromRecords()
+  }
+
+  return movedCount
+}
+
+// 新增一条“手动足迹”记录：
+// 这里只保存地点本身，不要求照片，也不进入采集记录。
+function saveManualFootprintRecord(data = {}) {
+  const manualRecords = getManualFootprintRecords()
+  const record = {
+    id: 'FP' + Date.now().toString(36).toUpperCase(),
+    type: data.type || 'spot',
+    spotName: data.spotName || '',
+    address: data.address || '',
+    latitude: Number(data.latitude) || 0,
+    longitude: Number(data.longitude) || 0,
+    description: data.description || '',
+    date: data.date || new Date().toISOString(),
+    city: data.city || ''
+  }
+
+  manualRecords.unshift(record)
+  saveData('manual_footprint_records', manualRecords)
+  // 老页面如果还在读 userCheckedIn，这里也顺手同步一下。
+  syncLegacyCheckedInFromRecords()
+  return record
+}
+
+// 足迹页的真实来源分成两部分：
+// 1. 采集打卡生成的记录
+// 2. 地图选点新增的手动足迹
+function getFootprintSourceRecords() {
+  migrateLegacyFootprintsFromCheckins()
+  const checkinRecords = loadData('checkin_records', []) || []
+  const manualRecords = getManualFootprintRecords()
+  // 采集记录放前面，和手动足迹重复时优先保留采集那条。
+  return checkinRecords.concat(manualRecords)
+}
+
 // 统一读取"足迹/已去过"的真实数据源。
-// 这里以 checkin_records 为准，并按地点去重，避免同一个地方多次采集重复展示。
+// 这里把“采集记录”和“手动足迹”合并后再去重，避免同一地点重复展示。
 function getFootprintItems() {
-  const records = loadData('checkin_records', []) || []
+  const records = getFootprintSourceRecords()
   const seenKeys = new Set()
   const items = []
 
@@ -525,8 +646,7 @@ function requireLogin(options = {}) {
     toastText = '请先登录',
     duration = 1500
   } = options
-  const userInfo = loadData('userInfo', null)
-  if (userInfo) return true
+  if (isCloudMode()) return true
   wx.showToast({
     title: toastText,
     icon: 'none',
@@ -684,9 +804,8 @@ const isLiked = isWant
 // 收藏功能（支持美食和景点）
 // ============================================================
 
-function toggleCollect(id, type = 'food') {
-  const key = type === 'food' ? 'userCollectedFoods' : 'userCollectedSpots'
-  const list = loadData(key, [])
+function toggleCollect(id) {
+  const list = loadData('userCollectedSpots', [])
   const strId = String(id)
   const idx = list.findIndex(v => String(v) === strId)
   if (idx > -1) {
@@ -694,13 +813,12 @@ function toggleCollect(id, type = 'food') {
   } else {
     list.push(strId)
   }
-  saveData(key, list)
+  saveData('userCollectedSpots', list)
   return list.includes(strId)
 }
 
-function isCollected(id, type = 'food') {
-  const key = type === 'food' ? 'userCollectedFoods' : 'userCollectedSpots'
-  return loadData(key, []).some(v => String(v) === String(id))
+function isCollected(id) {
+  return loadData('userCollectedSpots', []).some(v => String(v) === String(id))
 }
 
 // ============================================================
@@ -793,49 +911,66 @@ function getSpotCategoryColor(category) {
  */
 function getCityShortName(fullCityName) {
   const cityMap = {
-    '北京市': '北京', '上海市': '上海', '广州市': '广州', '深圳市': '深圳',
-    '天津市': '天津', '重庆市': '重庆', '成都市': '成都', '杭州市': '杭州',
-    '南京市': '南京', '武汉市': '武汉', '西安市': '西安', '长沙市': '长沙',
-    '青岛市': '青岛', '大连市': '大连', '厦门市': '厦门', '苏州市': '苏州',
-    '宁波市': '宁波', '无锡市': '无锡', '佛山市': '佛山', '东莞市': '东莞',
-    '汕头市': '汕头', '湛江市': '湛江', '汕尾市': '汕尾', '清远市': '清远',
-    '珠海市': '珠海', '中山市': '中山', '江门市': '江门', '惠州市': '惠州',
-    '肇庆市': '肇庆', '茂名市': '茂名', '阳江市': '阳江', '梅州市': '梅州',
-    '河源市': '河源', '韶关市': '韶关', '揭阳市': '揭阳', '潮州市': '潮州',
-    '云浮市': '云浮'
+    '香港特别行政区': '香港', '上海市': '上海', '北京市': '北京', '广州市': '广州',
+    '杭州市': '杭州', '台北市': '台北', '澳门特别行政区': '澳门', '成都市': '成都',
+    '厦门市': '厦门', '南京市': '南京', '苏州市': '苏州', '福州市': '福州',
+    '台州市': '台州', '台南市': '台南', '台中市': '台中', '高雄市': '高雄',
+    '温州市': '温州', '泉州市': '泉州', '扬州市': '扬州', '常州市': '常州',
+    '新北市': '新北', '新竹县': '新竹县', '新竹市': '新竹', '宁德市': '宁德',
+    '惠州市': '惠州', '乌兰察布市': '乌兰察布', '深圳市': '深圳'
   }
-  return cityMap[fullCityName] || fullCityName.replace('市', '')
+  return cityMap[fullCityName] || fullCityName.replace(/[市县特别行政区]$/, '')
+}
+
+/**
+ * 根据城市短名（如'深圳'）反查完整名称（如'深圳市'）
+ * @param {string} shortName - 城市短名
+ * @returns {string} 城市完整名称
+ */
+function getCityFullName(shortName) {
+  if (!shortName) return '广州市'
+  // 如果已经是完整名称，直接返回
+  if (/[市县特别行政区]$/.test(shortName)) return shortName
+  // 在 GUANGDONG_CITIES 中查找匹配
+  const found = GUANGDONG_CITIES.find(c => c.name === shortName)
+  return found ? found.fullName : shortName + '市'
 }
 
 
 /**
  * 城市数据工具函数
- * 包含广东省城市列表和生成城市选项的函数
+ * 包含觅食图城市列表和生成城市选项的函数
  */
 
-// 广东省城市列表
+// 觅食图城市列表
 const GUANGDONG_CITIES = [
-  { id: 1, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 8970 },
-  { id: 2, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 8270 },
-  { id: 3, name: '汕头', fullName: '汕头市', lat: 23.3541, lng: 116.6819, bgColor: '#E4D8DC' },
-  { id: 4, name: '湛江', fullName: '湛江市', lat: 21.2707, lng: 110.3594, bgColor: '#E6DBD8' },
-  { id: 5, name: '汕尾', fullName: '汕尾市', lat: 22.7862, lng: 115.3751, bgColor: '#DAE5E8' },
-  { id: 6, name: '清远', fullName: '清远市', lat: 23.6817, lng: 113.056, bgColor: '#E0E0E0' },
-  { id: 7, name: '佛山', fullName: '佛山市', lat: 23.0215, lng: 113.1214, bgColor: '#DCE5DE' },
-  { id: 8, name: '东莞', fullName: '东莞市', lat: 23.0207, lng: 113.7518, bgColor: '#D8E3E8' },
-  { id: 9, name: '珠海', fullName: '珠海市', lat: 22.271, lng: 113.5767, bgColor: '#E3DBE6' },
-  { id: 10, name: '中山', fullName: '中山市', lat: 22.5176, lng: 113.3928, bgColor: '#E5DFDA' },
-  { id: 11, name: '江门', fullName: '江门市', lat: 22.5787, lng: 113.0819, bgColor: '#DCE5E3' },
-  { id: 12, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168, bgColor: '#DCE3E8' },
-  { id: 13, name: '肇庆', fullName: '肇庆市', lat: 23.0472, lng: 112.4651, bgColor: '#E6DDE2' },
-  { id: 14, name: '茂名', fullName: '茂名市', lat: 21.6633, lng: 110.9255, bgColor: '#E6E0DA' },
-  { id: 15, name: '阳江', fullName: '阳江市', lat: 21.8579, lng: 111.9822, bgColor: '#DCE7E0' },
-  { id: 16, name: '梅州', fullName: '梅州市', lat: 24.2886, lng: 116.1176, bgColor: '#D9E3E8' },
-  { id: 17, name: '河源', fullName: '河源市', lat: 23.7437, lng: 114.7004, bgColor: '#E4DCE3' },
-  { id: 18, name: '韶关', fullName: '韶关市', lat: 24.8104, lng: 113.5972, bgColor: '#E3DFDB' },
-  { id: 19, name: '揭阳', fullName: '揭阳市', lat: 23.5498, lng: 116.3728, bgColor: '#DCE5E1' },
-  { id: 20, name: '潮州', fullName: '潮州市', lat: 23.6567, lng: 116.6226, bgColor: '#D7E2E6' },
-  { id: 21, name: '云浮', fullName: '云浮市', lat: 22.9153, lng: 112.0445, bgColor: '#E2DEE0' }
+  { id: 1, name: '深圳', fullName: '深圳市', lat: 22.5431, lng: 114.0579, bgColor: '#DAE5E8', wantCount: 8270 },
+  { id: 2, name: '广州', fullName: '广州市', lat: 23.1291, lng: 113.2644, bgColor: '#DBE8DD', wantCount: 8970 },
+  { id: 3, name: '香港', fullName: '香港特别行政区', lat: 22.3193, lng: 114.1694, bgColor: '#E8D5D5' },
+  { id: 4, name: '北京', fullName: '北京市', lat: 39.9042, lng: 116.4074, bgColor: '#E4D8DC' },
+  { id: 5, name: '上海', fullName: '上海市', lat: 31.2304, lng: 121.4737, bgColor: '#DAE5E8' },
+  { id: 6, name: '杭州', fullName: '杭州市', lat: 30.2741, lng: 120.1551, bgColor: '#DCE5DE' },
+  { id: 7, name: '台北', fullName: '台北市', lat: 25.0330, lng: 121.5654, bgColor: '#D8E3E8' },
+  { id: 8, name: '澳门', fullName: '澳门特别行政区', lat: 22.1987, lng: 113.5439, bgColor: '#E3DBE6' },
+  { id: 9, name: '成都', fullName: '成都市', lat: 30.5728, lng: 104.0668, bgColor: '#E6DBD8' },
+  { id: 10, name: '厦门', fullName: '厦门市', lat: 24.4798, lng: 118.0894, bgColor: '#DAE5E8' },
+  { id: 11, name: '南京', fullName: '南京市', lat: 32.0603, lng: 118.7969, bgColor: '#E5DFDA' },
+  { id: 12, name: '苏州', fullName: '苏州市', lat: 31.2990, lng: 120.5853, bgColor: '#DCE5E3' },
+  { id: 13, name: '福州', fullName: '福州市', lat: 26.0745, lng: 119.2965, bgColor: '#DCE3E8' },
+  { id: 14, name: '台州', fullName: '台州市', lat: 28.6564, lng: 121.4208, bgColor: '#E6DDE2' },
+  { id: 15, name: '台南', fullName: '台南市', lat: 22.9999, lng: 120.2270, bgColor: '#E6E0DA' },
+  { id: 16, name: '台中', fullName: '台中市', lat: 24.1477, lng: 120.6736, bgColor: '#DCE7E0' },
+  { id: 17, name: '高雄', fullName: '高雄市', lat: 22.6273, lng: 120.3014, bgColor: '#D9E3E8' },
+  { id: 18, name: '温州', fullName: '温州市', lat: 27.9939, lng: 120.6994, bgColor: '#E4DCE3' },
+  { id: 19, name: '泉州', fullName: '泉州市', lat: 24.8746, lng: 118.6759, bgColor: '#E3DFDB' },
+  { id: 20, name: '扬州', fullName: '扬州市', lat: 32.3936, lng: 119.4213, bgColor: '#DCE5E1' },
+  { id: 21, name: '常州', fullName: '常州市', lat: 31.8101, lng: 119.9736, bgColor: '#D7E2E6' },
+  { id: 22, name: '新北', fullName: '新北市', lat: 25.0620, lng: 121.4570, bgColor: '#E2DEE0' },
+  { id: 23, name: '新竹县', fullName: '新竹县', lat: 24.8393, lng: 121.0020, bgColor: '#E0E0E0' },
+  { id: 24, name: '新竹', fullName: '新竹市', lat: 24.8036, lng: 120.9686, bgColor: '#DCE5DE' },
+  { id: 25, name: '宁德', fullName: '宁德市', lat: 26.6657, lng: 119.5482, bgColor: '#E6DBD8' },
+  { id: 26, name: '惠州', fullName: '惠州市', lat: 23.1118, lng: 114.4168, bgColor: '#DCE3E8' },
+  { id: 27, name: '乌兰察布', fullName: '乌兰察布市', lat: 41.0006, lng: 113.1336, bgColor: '#E0E6DC' }
 ]
 
 /**
@@ -853,6 +988,366 @@ function getCityOptions(coverPool) {
 }
 
 
+
+// ============================================================
+// 云端数据访问层（DAL）— 已登录用户走云端，未登录继续读本地
+// ============================================================
+let _dbWantList = null
+let _dbCollectedList = null
+let _dbUserAddedShops = null
+let _dbRoutes = null
+let _dbCheckinRecords = null
+
+function _getDbWantList() {
+  if (!_dbWantList) _dbWantList = require('./db/wantList')
+  return _dbWantList
+}
+
+function _getDbCollectedList() {
+  if (!_dbCollectedList) _dbCollectedList = require('./db/collectedList')
+  return _dbCollectedList
+}
+
+function _getDbUserAddedShops() {
+  if (!_dbUserAddedShops) _dbUserAddedShops = require('./db/userAddedShops')
+  return _dbUserAddedShops
+}
+
+function _getDbRoutes() {
+  if (!_dbRoutes) _dbRoutes = require('./db/routes')
+  return _dbRoutes
+}
+
+function _getDbCheckinRecords() {
+  if (!_dbCheckinRecords) _dbCheckinRecords = require('./db/checkinRecords')
+  return _dbCheckinRecords
+}
+
+/**
+ * 判断当前是否已真实登录（云端模式）
+ *
+ * 旧版假登录只存了 { nickName, avatarUrl }，没有 _id / openid，
+ * 如果无真实云端身份，视为未登录（走本地模式）。
+ * @returns {boolean}
+ */
+function isCloudMode() {
+  const info = loadData('userInfo', null)
+  return !!(info && (info._id || info.openid))
+}
+
+// 内部快捷引用，给 _isCloudMode 保留别名兼容
+const _isCloudMode = isCloudMode
+
+// ─── 想去（云端异步版）────────────────────────
+
+
+/**
+ * 获取想去列表（纯本地）
+ * @returns {string[]}
+ */
+function getWantListAsync() {
+  return getWantList()
+}
+
+/**
+ * 切换想去状态（本地优先 + 后台同步）
+ * @param {string|number} id
+ * @param {string} [placeType='food']
+ * @returns {boolean} true = 已想去
+ */
+function toggleWantAsync(id) {
+  const strId = String(id)
+  // 1. 立即翻转变更（零等待）
+  const list = getWantList()
+  const idx = list.indexOf(strId)
+  let isWantNow
+  if (idx > -1) { list.splice(idx, 1); isWantNow = false }
+  else          { list.push(strId); isWantNow = true }
+  saveData('userWantList', list)
+
+  // 2. 后台异步推云端（节流，不等待结果）
+  if (_isCloudMode()) {
+    syncManager.enqueuePush('wantList')
+  }
+
+  return isWantNow
+}
+
+/**
+ * 检查是否已想去（读本地）
+ * @param {string|number} id
+ * @returns {boolean}
+ */
+function isWantAsync(id) {
+  return isWant(id)
+}
+
+// ─── 收藏（云端异步版）────────────────────────
+
+/**
+ * 获取所有收藏 ID（纯本地）
+ * @returns {string[]}
+ */
+function getCollectedListAsync() {
+  return [
+    ...loadData('userCollectedFoods', []),
+    ...loadData('userCollectedSpots', [])
+  ].map(v => String(v))
+}
+
+/**
+ * 切换收藏状态（本地优先 + 后台同步）
+ * @param {string|number} id
+ * @returns {boolean} true = 已收藏
+ */
+function toggleCollectAsync(id) {
+  const strId = String(id)
+  // 1. 立即翻转本地
+  const list = loadData('userCollectedSpots', [])
+  const idx = list.findIndex(v => String(v) === strId)
+  let isNow
+  if (idx > -1) { list.splice(idx, 1); isNow = false }
+  else          { list.push(strId); isNow = true }
+  saveData('userCollectedSpots', list)
+
+  // 2. 后台异步推云端（节流）
+  if (_isCloudMode()) {
+    syncManager.enqueuePush('collectedList')
+  }
+
+  return isNow
+}
+
+/**
+ * 检查是否已收藏（读本地）
+ * @param {string|number} id
+ * @returns {boolean}
+ */
+function isCollectedAsync(id) {
+  return isCollected(id)
+}
+
+// ─── 用户自建店铺（云端异步版）─────────────────────
+
+/**
+ * 获取当前用户的自建店铺列表（纯本地）
+ * @returns {Array}
+ */
+function getUserShopsAsync() {
+  return loadData('userAddedShops', [])
+}
+
+/**
+ * 删除用户自建店铺（本地优先 + 后台同步）
+ * @param {string} id - 店铺 _id
+ * @returns {boolean}
+ */
+function deleteUserShopAsync(id) {
+  // 1. 立即删除本地
+  const list = loadData('userAddedShops', [])
+  const filtered = list.filter(s => String(s._id) !== String(id) && String(s.id) !== String(id))
+  saveData('userAddedShops', filtered)
+
+  // 2. 后台推云端
+  if (_isCloudMode()) {
+    _getDbUserAddedShops().remove(id).catch(err => {
+      console.warn('[util] 云端删除店铺失败，本地已删除:', err)
+    })
+  }
+  return true
+}
+
+// ─── 路线（云端异步版）────────────────────────
+
+/**
+ * 获取当前用户的路线列表（纯本地）
+ * @returns {Array}
+ */
+function getRoutesAsync() {
+  return loadData('savedRoutes', [])
+}
+
+/**
+ * 删除路线（本地优先 + 后台同步）
+ * @param {string} id - 路线 _id
+ * @returns {boolean}
+ */
+function deleteRouteAsync(id) {
+  // 1. 立即删除本地
+  const list = loadData('savedRoutes', [])
+  const filtered = list.filter(r => String(r._id) !== String(id) && String(r.id) !== String(id))
+  saveData('savedRoutes', filtered)
+
+  // 2. 后台推云端
+  if (_isCloudMode()) {
+    _getDbRoutes().remove(id).catch(err => {
+      console.warn('[util] 云端删除路线失败，本地已删除:', err)
+    })
+  }
+  return true
+}
+
+/**
+ * 保存/新增路线（本地优先 + 后台同步）
+ * @param {Object} routeData - 路线数据
+ * @returns {Object} 保存后的路线
+ */
+function saveRouteAsync(routeData) {
+  // 1. 立即写本地
+  // 如果本地已经有同一条路线（同 id 或同 _id），这里直接覆盖，
+  // 避免上层已经先写过一次本地后，又在这里追加出重复卡片。
+  const list = loadData('savedRoutes', [])
+  const idx = list.findIndex(route =>
+    String(route.id) === String(routeData.id) ||
+    (routeData._id && String(route._id) === String(routeData._id))
+  )
+  if (idx > -1) {
+    list[idx] = { ...list[idx], ...routeData }
+  } else {
+    list.push(routeData)
+  }
+  saveData('savedRoutes', list)
+
+  // 2. 后台推云端
+  if (_isCloudMode()) {
+    const { _openid, ...cleanData } = routeData
+    _getDbRoutes().add(cleanData).then(res => {
+      if (res.success && res.data) {
+        // 用云端 _id 更新本地缓存
+        const updatedList = loadData('savedRoutes', [])
+        const idx = updatedList.findIndex(r => String(r.id) === String(routeData.id))
+        if (idx > -1) {
+          updatedList[idx] = { ...updatedList[idx], _id: res.data }
+          saveData('savedRoutes', updatedList)
+        }
+      }
+    }).catch(err => {
+      console.warn('[util] 云端保存路线失败，数据已在本地:', err)
+    })
+  }
+  return routeData
+}
+
+/**
+ * 更新路线（本地优先 + 后台同步）
+ * @param {string|number} id - 路线 _id 或本地 id
+ * @param {Object} patchData - 要更新的字段
+ * @returns {Object|null}
+ */
+function updateRouteAsync(id, patchData) {
+  // 1. 立即更新本地
+  const list = loadData('savedRoutes', [])
+  const idx = list.findIndex(r => String(r._id) === String(id) || String(r.id) === String(id))
+  if (idx > -1) {
+    list[idx] = { ...list[idx], ...patchData }
+    saveData('savedRoutes', list)
+  } else {
+    return null
+  }
+
+  // 2. 后台推云端
+  if (_isCloudMode()) {
+    const cloudId = patchData._id || id
+    const { _openid, _id: _patchId, ...cleanData } = patchData
+    _getDbRoutes().update(cloudId, cleanData).catch(err => {
+      console.warn('[util] 云端更新路线失败，本地已更新:', err)
+    })
+  }
+
+  return list[idx] || null
+}
+
+// ─── 足迹（云端异步版）────────────────────────
+
+/**
+ * 获取足迹/已去过列表（纯本地）
+ * 从本地打卡记录派生，按地点去重
+ * @returns {Array}
+ */
+function getFootprintItemsAsync() {
+  return getFootprintItems()
+}
+
+// ─── 云存储 fileID → 临时 URL ──────────────────
+
+/**
+ * 批量将 cloud:// 文件 ID 转为可访问的临时 HTTPS URL
+ * 使用 wx.cloud.getTempFileURL 转换
+ * 非 cloud:// 的 URL 原样保留
+ * 
+ * @param {string[]} fileIDs - 云文件 ID 数组
+ * @returns {Promise<Object<string, string>>} fileID → tempURL 映射
+ */
+async function resolveCloudFileIDs(fileIDs) {
+  if (!fileIDs || fileIDs.length === 0) return {}
+  const cloudIDs = fileIDs.filter(id => id && typeof id === 'string' && id.startsWith('cloud://'))
+  if (cloudIDs.length === 0) return {}
+  const map = {}
+  // 微信云 API 限制单次 fileList 最多 50 个，分批转换
+  const MAX_BATCH = 50
+  for (let i = 0; i < cloudIDs.length; i += MAX_BATCH) {
+    const batch = cloudIDs.slice(i, i + MAX_BATCH)
+    try {
+      const res = await wx.cloud.getTempFileURL({ fileList: batch })
+      if (res && res.fileList) {
+        res.fileList.forEach(item => { map[item.fileID] = item.tempFileURL || item.fileID })
+      }
+    } catch (err) {
+      console.warn('[util] getTempFileURL 失败:', err)
+    }
+  }
+  return map
+}
+
+/**
+ * 将对象数组中指定字段的 cloud:// 地址批量转为临时 URL
+ * 原地修改（mutable）传入的数组对象
+ * 
+ * @param {Object[]} items - 数据对象数组
+ * @param {string|string[]} urlFields - 要转换的字段名，如 'coverImage' 或 ['coverImage', 'avatarUrl']
+ * @returns {Promise<void>}
+ */
+async function resolveCloudUrls(items, urlFields) {
+  if (!items || items.length === 0) return
+  const fields = Array.isArray(urlFields) ? urlFields : [urlFields]
+  const allFileIDs = []
+  items.forEach(item => {
+    fields.forEach(field => {
+      const val = item[field]
+      if (val && typeof val === 'string' && val.startsWith('cloud://')) {
+        allFileIDs.push(val)
+      }
+    })
+  })
+  if (allFileIDs.length === 0) return
+  const urlMap = await resolveCloudFileIDs(allFileIDs)
+  items.forEach(item => {
+    fields.forEach(field => {
+      if (item[field] && urlMap[item[field]]) {
+        item[field] = urlMap[item[field]]
+      }
+    })
+  })
+}
+
+/**
+ * 获取足迹原始记录（纯本地）
+ * @returns {Array}
+ */
+function getFootprintSourceRecordsAsync() {
+  return getFootprintSourceRecords()
+}
+
+/**
+ * 保存手动足迹（纯本地）
+ * @param {Object} data - 地点数据
+ * @returns {Object}
+ */
+function saveManualFootprintAsync(data) {
+  return saveManualFootprintRecord(data)
+}
+
+// ─── 导出扩展 ─────────────────────────────────
 
 module.exports = {
   getDistance,
@@ -876,6 +1371,8 @@ module.exports = {
   getUserShops,
   findKnownPlace,
   getFootprintItems,
+  getFootprintSourceRecords,
+  migrateLegacyFootprintsFromCheckins,
   syncLegacyCheckedInFromRecords,
   requireLogin,
   toggleLike,
@@ -887,8 +1384,30 @@ module.exports = {
   getSpotCategoryColor,
   SPOT_CATEGORY_COLORS,
   getCityShortName,
+  getCityFullName,
   getWantList,
   toggleWant,
   isWant,
-  getCityOptions
+  getCityOptions,
+  // 云端异步版
+  getWantListAsync,
+  toggleWantAsync,
+  isWantAsync,
+  getCollectedListAsync,
+  toggleCollectAsync,
+  isCollectedAsync,
+  getUserShopsAsync,
+  deleteUserShopAsync,
+  getRoutesAsync,
+  saveRouteAsync,
+  updateRouteAsync,
+  deleteRouteAsync,
+  getFootprintItemsAsync,
+  getFootprintSourceRecordsAsync,
+  saveManualFootprintAsync,
+  // 登录状态判断
+  isCloudMode,
+  // 云存储 fileID 转换
+  resolveCloudFileIDs,
+  resolveCloudUrls,
 }
