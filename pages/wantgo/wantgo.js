@@ -750,8 +750,11 @@ Page({
       importEntryVisible: false
     }
 
-    // 是否需要重新加载数据：有 pendingTab 切换 或 首次进入/页面重建时
-    const needsDataLoad = !!pendingTab || this.data.items.length === 0
+    // 是否需要重新加载数据：有 pendingTab 切换、从路线详情返回、或 首次进入/页面重建时
+    const pendingRouteRefresh = !!this._pendingRouteRefresh
+    this._pendingRouteRefresh = false
+    const needsDataLoad =
+      !!pendingTab || pendingRouteRefresh || this.data.items.length === 0
 
     if (!needsDataLoad) {
       // 已在当前页且有数据：只做轻量更新，不重新加载，避免闪烁。
@@ -947,6 +950,9 @@ Page({
   // ─── 点击路线卡片：进入我的路线详情 ─────────────────────────────
   onRouteCardTap(e) {
     if (Date.now() - (this._lastRouteLongPressTime || 0) < 350) return
+    // 标记从路线详情返回后需要刷新路线列表：
+    // 因为详情页里可能保存了地点增删，返回后要重新读本地存储，避免展示旧数据。
+    this._pendingRouteRefresh = true
     const route = e.currentTarget.dataset.route
     const routeStr = encodeURIComponent(JSON.stringify(route))
     wx.navigateTo({ url: `/subpackages/route/pages/my-route/my-route?route=${routeStr}` })
